@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './LandingPage.css';
-import Header from './components/Header';
-import Hero from './components/Hero';
-import TrustedBy from './components/TrustedBy';
-import Features from './components/Features';
-import HowItWorks from './components/HowItWorks';
-import Courses from './components/Courses';
-import Pricing from './components/Pricing';
-import CTA from './components/CTA';
-import Footer from './components/Footer';
-import MobileDrawer from './components/MobileDrawer';
+import Header from './components/landing/Header';
+import Hero from './components/landing/Hero';
+import TrustedBy from './components/landing/TrustedBy';
+import Features from './components/landing/Features';
+import HowItWorks from './components/landing/HowItWorks';
+import Courses from './components/landing/Courses';
+import Pricing from './components/landing/Pricing';
+import CTA from './components/landing/CTA';
+import Footer from './components/landing/Footer';
+import MobileDrawer from './components/landing/MobileDrawer';
 
 const LandingPage: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
