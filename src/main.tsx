@@ -64,7 +64,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      {/* main landing goes here */}
+      {/* main App landing goes here */}
     </ThemeProvider>
   </StrictMode>,
 )
