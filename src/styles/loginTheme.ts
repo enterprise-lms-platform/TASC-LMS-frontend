@@ -47,6 +47,19 @@ export const loginSpacing = {
   12: '3rem',
   16: '4rem',
 };
+export const fontSizing = {
+  1: '0.25rem',
+  2: '0.5rem',
+  3: '0.75rem',
+  4: '0.875 rem',
+  5: '1rem',
+  6: '1.25rem',
+  7: '1.5rem',
+  8: '2rem',
+  10: '2.5rem',
+  12: '3rem',
+  16: '4rem',
+}
 
 export const loginStyles = {
   // Container styles
@@ -105,6 +118,20 @@ export const loginStyles = {
     fontWeight: 700,
     color: loginColors.neutral[800],
   },
+  // login features flex container
+  featureContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: loginSpacing[6],
+    marginBottom: loginSpacing[16]
+  },
+  // panel card custom styling
+  featureTitle: {
+    fontSize: fontSizing[4],
+    fontWeight: 600,
+    color: loginColors.neutral[800],
+    marginBottom: loginSpacing[1],
+},
 
   // Tagline
   tagline: {
@@ -118,10 +145,10 @@ export const loginStyles = {
   featureItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: 2,
-    padding: 2,
+    gap: loginSpacing[4],
+    padding: loginSpacing[4],
     backgroundColor: 'white',
-    borderRadius: 2,
+    borderRadius: loginSpacing[4],
     boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
     border: `1px solid ${loginColors.neutral[200]}`,
     mb: 3,
@@ -141,7 +168,8 @@ export const loginStyles = {
   },
 
   featureText: {
-    textAlign: 'left',
+    color: loginColors.neutral[500],
+    fontSize: fontSizing[4]
   },
 
   // Right panel (form)
