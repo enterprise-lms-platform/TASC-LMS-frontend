@@ -105,7 +105,7 @@ export const loginStyles = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
-    mb: 4,
+    marginBottom: loginSpacing[8]
   },
 
   logoIcon: {
@@ -135,9 +135,9 @@ export const loginStyles = {
 
   // Tagline
   tagline: {
-    fontSize: '1.5rem',
+    fontSize: '1.25rem',
     color: loginColors.neutral[700],
-    mb: 3,
+    marginBottom: loginSpacing[6],
     fontWeight: 600,
   },
 

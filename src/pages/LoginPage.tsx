@@ -37,10 +37,12 @@ const LoginPage = () =>{
                 <FontAwesomeIcon icon={faGraduationCap} />
               </Box>
               <Typography sx = {loginStyles.logoText}>
-                Empower Your Learning Journey
+                TASC
               </Typography>
             </Box>
-
+            <Typography sx={loginStyles.tagline}>
+              Empowering your Learning Journey
+            </Typography>
           <Stack sx={loginStyles.featureContainer}>
 
           <FeatureItem
@@ -60,8 +62,17 @@ const LoginPage = () =>{
             />
           </Stack>
           </Stack>
+
+          <Typography sx={loginStyles.copyright}>
+            © 2025 TASC Learning Management System. All rights reserved.
+          </Typography>
         </Box>
-        <Box sx={loginStyles.rightPanel} >jf
+        {/* right panel */}
+        <Box sx={loginStyles.rightPanel} >
+          <Box sx={loginStyles.formContainer}>
+            
+
+          </Box>
 
         </Box>
 
