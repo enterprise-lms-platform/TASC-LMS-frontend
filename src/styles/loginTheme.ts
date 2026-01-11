@@ -206,7 +206,9 @@ export const loginStyles = {
 
   // Form inputs
   inputField: {
+    width: '100%',
     '& .MuiOutlinedInput-root': {
+      fontSize: '1rem',
       '&:hover fieldset': {
         borderColor: loginColors.primary[500],
       },
@@ -214,6 +216,15 @@ export const loginStyles = {
         borderColor: loginColors.primary[500],
         boxShadow: `0 0 0 3px rgba(255, 183, 77, 0.1)`,
       },
+    },
+    '& .MuiOutlinedInput-input::placeholder': {
+      color: loginColors.neutral[400],
+      opacity: 1,
+    },
+    '& .MuiFormHelperText-root.Mui-error': {
+      color: loginColors.status.error,
+      marginTop: '4px',
+      fontSize: '0.75rem',
     },
   },
 
@@ -313,17 +324,21 @@ export const loginStyles = {
   mfaInput: {
     width: 45,
     height: 55,
-    '& input': {
+    '& .MuiOutlinedInput-root': {
       textAlign: 'center',
       fontSize: '1.25rem',
       fontWeight: 600,
-      padding: '8px',
-    },
-    '& .MuiOutlinedInput-root': {
+      '&:hover fieldset': {
+        borderColor: loginColors.primary[500],
+      },
       '&.Mui-focused fieldset': {
         borderColor: loginColors.primary[500],
         boxShadow: `0 0 0 3px rgba(255, 183, 77, 0.1)`,
       },
+    },
+    '& .MuiOutlinedInput-input': {
+      padding: '8px',
+      textAlign: 'center',
     },
   },
 

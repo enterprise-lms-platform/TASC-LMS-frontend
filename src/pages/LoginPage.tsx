@@ -1,10 +1,10 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'  //this is a stubborn import
-import { faBookOpen, faCertificate, faChalkboardTeacher, faEye, faGraduationCap, faSign, faSignIn } from '@fortawesome/free-solid-svg-icons'
+import { faBookOpen, faCertificate, faChalkboardTeacher, faEye, faEyeSlash, faGraduationCap, faSignIn, faShieldAlt, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import {  loginStyles } from '../styles/loginTheme'
 
-import { Box, Button, Divider, Stack, Typography } from "@mui/material"
-import Loginbtn from '../components/reusable/Loginbtn';
+import { Box, Button, Divider, Stack, Typography, TextField, FormControlLabel, Checkbox } from "@mui/material"
 import { faGoogle, faLinkedin, faMicrosoft } from '@fortawesome/free-brands-svg-icons';
+import { useState } from 'react';
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -28,99 +28,334 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) =
   );
 };
 
-const LoginPage = () =>{
-  return(
+const LoginPage = () => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showMFA, setShowMFA] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [mfaCodes, setMfaCodes] = useState(['', '', '', '', '', '']);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handlePasswordToggle = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const isValidEmail = (emailAddress: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(emailAddress);
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    // Reset errors
+    setEmailError('');
+    setPasswordError('');
+    
+    let isValid = true;
+    
+    // Validate email
+    if (!email.trim()) {
+      setEmailError('Email is required');
+      isValid = false;
+    } else if (!isValidEmail(email)) {
+      setEmailError('Please enter a valid email address');
+      isValid = false;
+    }
+    
+    // Validate password
+    if (!password.trim()) {
+      setPasswordError('Password is required');
+      isValid = false;
+    } else if (password.length < 8) {
+      setPasswordError('Password must be at least 8 characters');
+      isValid = false;
+    }
+    
+    if (isValid) {
+      setIsLoading(true);
+      // Simulate API call
+      setTimeout(() => {
+        // For demo purposes, show MFA for specific emails
+        if (email.includes('mfa')) {
+          setShowMFA(true);
+        } else {
+          alert('Login successful! Redirecting to dashboard...');
+        }
+        setIsLoading(false);
+      }, 1500);
+    }
+  };
+
+  const handleMFAInputChange = (index: number, value: string) => {
+    if (/^[0-9]?$/.test(value)) {
+      const newCodes = [...mfaCodes];
+      newCodes[index] = value;
+      setMfaCodes(newCodes);
+      
+      // Auto-focus to next input
+      if (value && index < 5) {
+        const nextInput = document.getElementById(`mfa-input-${index + 1}`) as HTMLInputElement;
+        nextInput?.focus();
+      }
+    }
+  };
+
+  return (
     <>
-    <Box sx={loginStyles.loginContainer}>
-        <Box sx={loginStyles.leftPanel} >
-          <Stack sx ={loginStyles.leftPanelContent}  >
-            <Box sx={loginStyles.logoContainer} >
+      <Box sx={loginStyles.loginContainer}>
+        {/* Left Panel - Branding & Info */}
+        <Box sx={loginStyles.leftPanel}>
+          <Stack sx={loginStyles.leftPanelContent}>
+            <Box sx={loginStyles.logoContainer}>
               <Box sx={loginStyles.logoIcon}>
                 <FontAwesomeIcon icon={faGraduationCap} />
               </Box>
-              <Typography sx = {loginStyles.logoText}>
-                TASC
+              <Typography sx={loginStyles.logoText}>
+                TASC LMS
               </Typography>
             </Box>
             <Typography sx={loginStyles.tagline}>
-              Empowering your Learning Journey
+              Empower Your Learning Journey
             </Typography>
-          <Stack sx={loginStyles.featureContainer}>
-
-          <FeatureItem
-              icon={<FontAwesomeIcon icon={faBookOpen} />}
-              title="Comprehensive Course Library"
-              description="Access hundreds of courses across multiple disciplines"
-            />
-            <FeatureItem
-              icon={<FontAwesomeIcon icon={faChalkboardTeacher} />}
-              title="Expert Instructors"
-              description="Learn from industry professionals and certified experts"
-            />
-            <FeatureItem
-              icon={<FontAwesomeIcon icon={faCertificate} />}
-              title="Verified Certifications"
-              description="Earn recognized certificates upon course completion"
-            />
-          </Stack>
+            <Stack sx={loginStyles.featureContainer}>
+              <FeatureItem
+                icon={<FontAwesomeIcon icon={faBookOpen} />}
+                title="Comprehensive Course Library"
+                description="Access hundreds of courses across multiple disciplines"
+              />
+              <FeatureItem
+                icon={<FontAwesomeIcon icon={faChalkboardTeacher} />}
+                title="Expert Instructors"
+                description="Learn from industry professionals and certified experts"
+              />
+              <FeatureItem
+                icon={<FontAwesomeIcon icon={faCertificate} />}
+                title="Verified Certifications"
+                description="Earn recognized certificates upon course completion"
+              />
+            </Stack>
           </Stack>
 
           <Typography sx={loginStyles.copyright}>
             © 2025 TASC Learning Management System. All rights reserved.
           </Typography>
         </Box>
-        {/* right panel */}
-        <Box sx={loginStyles.rightPanel} >
+
+        {/* Right Panel - Login Form */}
+        <Box sx={loginStyles.rightPanel}>
           <Box sx={loginStyles.formContainer}>
-            <Stack sx={loginStyles.formHeader}>
-              <Typography sx={loginStyles.formTitle}>Welcome Back</Typography>
-              <Typography sx={loginStyles.formSubtitle}>Sign In into your TASC LMS Account</Typography>
-            </Stack>
-              {/* form input */}
-              <form method='POST' >
-                <label htmlFor="email">Email</label>
-                <input type="email" name="Email" id="email"  />
-
-                <label htmlFor="password">Password</label>
-                <input type="password" name="Password" id="password"  />
-                <button>
-                  <FontAwesomeIcon icon={faEye} />
-                </button>
-                <Box>
-                  {/* checkbox */}
-                  <Box>
-                    <input type="checkbox" name="checkbox" id="rememberMe" />
-                    <label htmlFor="rememberMe">Remember Me</label>
-                  </Box>
-                  {/* password reset link */}
-                  <a href="#">Forgot Password?</a>
-                </Box>
-                {/* loginBtn */}
-                <Button startIcon={<FontAwesomeIcon icon={faSignIn}/>} variant='contained' sx={loginStyles.primaryButton}>Sign In</Button>
-
-              {/* Divider */}
-                <Divider sx={loginStyles.divider}/>
-                <Stack sx={loginStyles.socialBtnContainer}>
-
-                <Button startIcon={<FontAwesomeIcon icon={faGoogle} />} variant='outlined' sx={[loginStyles.socialButton, loginStyles.googleButton]}>
-                  Continue with Google
-                </Button>
-                <Button startIcon={<FontAwesomeIcon icon={faMicrosoft} />} variant='outlined' sx={[loginStyles.socialButton, loginStyles.microsoftButton]}>
-                  Continue with Microsoft
-                </Button>
-                <Button startIcon={<FontAwesomeIcon icon={faLinkedin} />} variant='outlined' sx={[loginStyles.socialButton, loginStyles.linkedinButton]}>
-                  Continue with LinkedIn
-                </Button>
+            {!showMFA ? (
+              <>
+                <Stack sx={loginStyles.formHeader}>
+                  <Typography sx={loginStyles.formTitle}>Welcome Back</Typography>
+                  <Typography sx={loginStyles.formSubtitle}>Sign in to your TASC LMS account</Typography>
                 </Stack>
-              </form>
-            
+
+                <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {/* Email Field */}
+                  <Box>
+                    <Typography sx={{ fontSize: '0.875rem', fontWeight: 500, color: '#3f3f46', mb: 0.5 }}>
+                      Email Address
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      id="email"
+                      type="email"
+                      placeholder="Enter your email address"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      error={!!emailError}
+                      helperText={emailError}
+                      size="small"
+                      sx={loginStyles.inputField}
+                    />
+                  </Box>
+
+                  {/* Password Field */}
+                  <Box>
+                    <Typography sx={{ fontSize: '0.875rem', fontWeight: 500, color: '#3f3f46', mb: 0.5 }}>
+                      Password
+                    </Typography>
+                    <Box sx={{ position: 'relative' }}>
+                      <TextField
+                        fullWidth
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        error={!!passwordError}
+                        helperText={passwordError}
+                        size="small"
+                        sx={loginStyles.inputField}
+                      />
+                      <Button
+                        type="button"
+                        onClick={handlePasswordToggle}
+                        sx={{
+                          position: 'absolute',
+                          right: 12,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          minWidth: 'auto',
+                          padding: '4px 8px',
+                          color: '#71717a',
+                          '&:hover': { backgroundColor: 'transparent' },
+                        }}
+                      >
+                        <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                      </Button>
+                    </Box>
+                  </Box>
+
+                  {/* Remember Me & Forgot Password */}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={rememberMe}
+                          onChange={(e) => setRememberMe(e.target.checked)}
+                          size="small"
+                          sx={{ color: '#a1a1aa', '&.Mui-checked': { color: '#ffa424' } }}
+                        />
+                      }
+                      label={<Typography sx={{ fontSize: '0.875rem', color: '#52525b' }}>Remember me</Typography>}
+                    />
+                    <Button
+                      href="#"
+                      onClick={(e) => e.preventDefault()}
+                      sx={{
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: '#ffa424',
+                        textDecoration: 'none',
+                        textTransform: 'none',
+                        '&:hover': { textDecoration: 'underline', color: '#f97316' },
+                      }}
+                    >
+                      Forgot password?
+                    </Button>
+                  </Box>
+
+                  {/* Sign In Button */}
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    disabled={isLoading}
+                    sx={loginStyles.primaryButton}
+                  >
+                    <FontAwesomeIcon icon={isLoading ? faSpinner : faSignIn} style={{ marginRight: '8px' }} />
+                    {isLoading ? 'Signing in...' : 'Sign In'}
+                  </Button>
+
+                  {/* Divider */}
+                  <Divider sx={loginStyles.divider}>Or continue with</Divider>
+
+                  {/* Social Login Buttons */}
+                  <Stack sx={loginStyles.socialBtnContainer}>
+                    <Button
+                      startIcon={<FontAwesomeIcon icon={faGoogle} />}
+                      variant="outlined"
+                      sx={[loginStyles.socialButton, loginStyles.googleButton]}
+                    >
+                      Continue with Google
+                    </Button>
+                    <Button
+                      startIcon={<FontAwesomeIcon icon={faMicrosoft} />}
+                      variant="outlined"
+                      sx={[loginStyles.socialButton, loginStyles.microsoftButton]}
+                    >
+                      Continue with Microsoft
+                    </Button>
+                    <Button
+                      startIcon={<FontAwesomeIcon icon={faLinkedin} />}
+                      variant="outlined"
+                      sx={[loginStyles.socialButton, loginStyles.linkedinButton]}
+                    >
+                      Continue with LinkedIn
+                    </Button>
+                  </Stack>
+                </Box>
+
+                {/* Sign Up Link */}
+                <Box sx={loginStyles.signupSection}>
+                  Don't have an account?
+                  <Button
+                    href="#"
+                    onClick={(e) => e.preventDefault()}
+                    sx={{
+                      color: '#ffa424',
+                      textDecoration: 'none',
+                      fontWeight: 600,
+                      textTransform: 'none',
+                      ml: 0.5,
+                      '&:hover': { textDecoration: 'underline' },
+                    }}
+                  >
+                    Sign up now
+                  </Button>
+                </Box>
+              </>
+            ) : (
+              <>
+                {/* MFA Section */}
+                <Box sx={loginStyles.mfaSection}>
+                  <Box sx={loginStyles.mfaHeader}>
+                    <FontAwesomeIcon icon={faShieldAlt} style={{ color: '#ffa424', fontSize: '1.25rem' }} />
+                    <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#3f3f46', ml: 1 }}>
+                      Two-Factor Authentication
+                    </Typography>
+                  </Box>
+
+                  <Typography sx={{ fontSize: '0.875rem', color: '#52525b', mb: 2, mt: 2 }}>
+                    Enter the 6-digit verification code sent to your email.
+                  </Typography>
+
+                  <Box sx={loginStyles.mfaInputContainer}>
+                    {mfaCodes.map((code, index) => (
+                      <TextField
+                        key={index}
+                        id={`mfa-input-${index}`}
+                        type="text"
+                        inputProps={{ maxLength: 1, pattern: '[0-9]', inputMode: 'numeric' }}
+                        value={code}
+                        onChange={(e) => handleMFAInputChange(index, e.target.value)}
+                        sx={loginStyles.mfaInput}
+                      />
+                    ))}
+                  </Box>
+
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+                    <Button
+                      href="#"
+                      onClick={(e) => e.preventDefault()}
+                      sx={{
+                        color: '#ffa424',
+                        textDecoration: 'none',
+                        fontSize: '0.875rem',
+                        textTransform: 'none',
+                        '&:hover': { textDecoration: 'underline' },
+                      }}
+                    >
+                      Resend code
+                    </Button>
+                    <Button variant="contained" sx={loginStyles.primaryButton}>
+                      Verify
+                    </Button>
+                  </Box>
+                </Box>
+              </>
+            )}
           </Box>
-
         </Box>
-
-    </Box>
+      </Box>
     </>
-  )
-}
+  );
+};
 
 export default LoginPage
