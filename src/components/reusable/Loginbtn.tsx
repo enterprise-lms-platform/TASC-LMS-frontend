@@ -1,16 +1,22 @@
 import { Button } from "@mui/material"
 
+interface btnProps {
+  icon: React.ReactNode, 
+  text: string,
+  color: string,
+  borderColor: string,
+}
 
-function Loginbtn( {icon, text}: {icon: React.ReactNode, text: string} ) {
+function Loginbtn( {icon, text, color, borderColor}: btnProps ) {
   return (
     <Button 
-      variant="contained"  
+      variant='contained'
       color="primary"
       startIcon={icon}
       sx={{
         font:'inter',
         textTransform: 'none',
-        color: '#fff',
+        color: `${color}`,
         padding: '16px',
         fontWeight: 600,
         fontSize: '16px',
@@ -20,6 +26,7 @@ function Loginbtn( {icon, text}: {icon: React.ReactNode, text: string} ) {
         alignItems: "center",
         width: '100%',
         gap: '4px',
+        borderColor: `${borderColor}`
       }}>
         { text }
     </Button>

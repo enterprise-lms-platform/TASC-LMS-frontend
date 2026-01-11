@@ -1,8 +1,10 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'  //this is a stubborn import
-import { faBookOpen, faCertificate, faChalkboardTeacher, faGraduationCap } from '@fortawesome/free-solid-svg-icons'
+import { faBookOpen, faCertificate, faChalkboardTeacher, faEye, faGraduationCap, faSign, faSignIn } from '@fortawesome/free-solid-svg-icons'
 import {  loginStyles } from '../styles/loginTheme'
 
-import { Box,  Stack, Typography } from "@mui/material"
+import { Box, Button, Divider, Stack, Typography } from "@mui/material"
+import Loginbtn from '../components/reusable/Loginbtn';
+import { faGoogle, faLinkedin, faMicrosoft } from '@fortawesome/free-brands-svg-icons';
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -70,8 +72,48 @@ const LoginPage = () =>{
         {/* right panel */}
         <Box sx={loginStyles.rightPanel} >
           <Box sx={loginStyles.formContainer}>
-            
+            <Stack sx={loginStyles.formHeader}>
+              <Typography sx={loginStyles.formTitle}>Welcome Back</Typography>
+              <Typography sx={loginStyles.formSubtitle}>Sign In into your TASC LMS Account</Typography>
+            </Stack>
+              {/* form input */}
+              <form method='POST' >
+                <label htmlFor="email">Email</label>
+                <input type="email" name="Email" id="email"  />
 
+                <label htmlFor="password">Password</label>
+                <input type="password" name="Password" id="password"  />
+                <button>
+                  <FontAwesomeIcon icon={faEye} />
+                </button>
+                <Box>
+                  {/* checkbox */}
+                  <Box>
+                    <input type="checkbox" name="checkbox" id="rememberMe" />
+                    <label htmlFor="rememberMe">Remember Me</label>
+                  </Box>
+                  {/* password reset link */}
+                  <a href="#">Forgot Password?</a>
+                </Box>
+                {/* loginBtn */}
+                <Button startIcon={<FontAwesomeIcon icon={faSignIn}/>} variant='contained' sx={loginStyles.primaryButton}>Sign In</Button>
+
+              {/* Divider */}
+                <Divider sx={loginStyles.divider}/>
+                <Stack sx={loginStyles.socialBtnContainer}>
+
+                <Button startIcon={<FontAwesomeIcon icon={faGoogle} />} variant='outlined' sx={[loginStyles.socialButton, loginStyles.googleButton]}>
+                  Continue with Google
+                </Button>
+                <Button startIcon={<FontAwesomeIcon icon={faMicrosoft} />} variant='outlined' sx={[loginStyles.socialButton, loginStyles.microsoftButton]}>
+                  Continue with Microsoft
+                </Button>
+                <Button startIcon={<FontAwesomeIcon icon={faLinkedin} />} variant='outlined' sx={[loginStyles.socialButton, loginStyles.linkedinButton]}>
+                  Continue with LinkedIn
+                </Button>
+                </Stack>
+              </form>
+            
           </Box>
 
         </Box>

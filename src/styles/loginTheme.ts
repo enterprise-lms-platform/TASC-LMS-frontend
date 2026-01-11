@@ -189,7 +189,7 @@ export const loginStyles = {
 
   formHeader: {
     textAlign: 'center',
-    mb: 4,
+    marginBottom: loginSpacing[8]
   },
 
   formTitle: {
@@ -217,6 +217,12 @@ export const loginStyles = {
     },
   },
 
+  // 
+  socialBtnContainer:{
+    display: 'flex',
+    flexDirection: 'column',
+    gap: loginSpacing[3]
+  },
   // Buttons
   primaryButton: {
     backgroundColor: loginColors.primary[600],
