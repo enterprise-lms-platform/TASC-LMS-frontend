@@ -66,13 +66,14 @@ export const loginStyles = {
   loginContainer: {
     display: 'flex',
     minHeight: '100vh',
+    flexDirection: { xs: 'column', lg: 'row' },
   },
 
   // Left panel (branding)
   leftPanel: {
     flex: 1,
     background: 'linear-gradient(135deg, rgba(255, 164, 36, 0.1) 0%, rgba(255, 183, 77, 0.05) 100%)',
-    display: 'flex',
+    display: { xs: 'none', lg: 'flex' },
     flexDirection: 'column' as const,
     alignItems: 'center',
     justifyContent: 'center',
@@ -178,7 +179,7 @@ export const loginStyles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 4,
+    padding: { xs: 2, sm: 4, lg: 4 },
     backgroundColor: 'white',
   },
 
@@ -316,14 +317,14 @@ export const loginStyles = {
 
   mfaInputContainer: {
     display: 'flex',
-    gap: 1,
+    gap: { xs: 1, sm: 2 },
     justifyContent: 'center',
     my: 2,
   },
 
   mfaInput: {
-    width: 45,
-    height: 55,
+    width: { xs: 40, sm: 45 },
+    height: { xs: 50, sm: 55 },
     '& .MuiOutlinedInput-root': {
       textAlign: 'center',
       fontSize: '1.25rem',
