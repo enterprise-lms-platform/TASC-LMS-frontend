@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface HeaderProps {
   scrolled: boolean;
@@ -140,7 +141,8 @@ const Header: React.FC<HeaderProps> = ({ scrolled, onMobileMenuToggle, isMobile 
           {/* Desktop Actions */}
           {!isMobile && (
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button
+              <Link
+                to="/login"
                 style={{
                   padding: '8px 20px',
                   border: '1px solid #d4d4d8',
@@ -149,11 +151,14 @@ const Header: React.FC<HeaderProps> = ({ scrolled, onMobileMenuToggle, isMobile 
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontWeight: 500,
+                  textDecoration: 'none',
+                  display: 'inline-block'
                 }}
               >
                 Log In
-              </button>
-              <button
+              </Link>
+              <Link
+                to="/register"
                 style={{
                   padding: '8px 20px',
                   backgroundColor: '#ffa424',
@@ -162,10 +167,12 @@ const Header: React.FC<HeaderProps> = ({ scrolled, onMobileMenuToggle, isMobile 
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontWeight: 500,
+                  textDecoration: 'none',
+                  display: 'inline-block'
                 }}
               >
                 Start Free Trial
-              </button>
+              </Link>
             </div>
           )}
 

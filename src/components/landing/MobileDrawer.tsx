@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 interface MobileDrawerProps {
   open: boolean;
@@ -141,7 +142,8 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ open, onClose }) => {
 
         {/* Action Buttons */}
         <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <button
+          <Link
+            to="/login"
             style={{
               padding: '12px 16px',
               backgroundColor: 'white',
@@ -151,19 +153,23 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ open, onClose }) => {
               fontWeight: 600,
               cursor: 'pointer',
               transition: 'all 0.3s',
+              textAlign: 'center',
+              textDecoration: 'none',
+              display: 'block'
             }}
             onMouseEnter={(e) => {
-              const target = e.currentTarget as HTMLButtonElement;
+              const target = e.currentTarget as HTMLElement;
               target.style.backgroundColor = '#fff9f5';
             }}
             onMouseLeave={(e) => {
-              const target = e.currentTarget as HTMLButtonElement;
+              const target = e.currentTarget as HTMLElement;
               target.style.backgroundColor = 'white';
             }}
           >
             Sign In
-          </button>
-          <button
+          </Link>
+          <Link
+            to="/register"
             style={{
               padding: '12px 16px',
               backgroundColor: '#ffa424',
@@ -173,18 +179,21 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ open, onClose }) => {
               fontWeight: 600,
               cursor: 'pointer',
               transition: 'all 0.3s',
+              textAlign: 'center',
+              textDecoration: 'none',
+              display: 'block'
             }}
             onMouseEnter={(e) => {
-              const target = e.currentTarget as HTMLButtonElement;
+              const target = e.currentTarget as HTMLElement;
               target.style.backgroundColor = '#f97316';
             }}
             onMouseLeave={(e) => {
-              const target = e.currentTarget as HTMLButtonElement;
+              const target = e.currentTarget as HTMLElement;
               target.style.backgroundColor = '#ffa424';
             }}
           >
             Start Learning Free
-          </button>
+          </Link>
         </div>
       </div>
     </>

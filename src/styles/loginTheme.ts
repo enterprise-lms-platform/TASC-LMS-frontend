@@ -392,6 +392,62 @@ export const loginStyles = {
       flexDirection: { xs: 'column', lg: 'row' },
     },
   },
+
+  // Registration specific
+  stepperContainer: {
+    width: '100%',
+    mb: 4,
+    '& .MuiStepLabel-label': {
+      fontSize: '0.875rem',
+      fontWeight: 500,
+    },
+    '& .MuiStepIcon-root': {
+      color: loginColors.neutral[300],
+      '&.Mui-active': {
+        color: loginColors.primary[600],
+      },
+      '&.Mui-completed': {
+        color: loginColors.status.success,
+      },
+    },
+  },
+
+  roleCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    p: 2,
+    border: `1px solid ${loginColors.neutral[200]}`,
+    borderRadius: 2,
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    backgroundColor: 'white',
+    height: '100%',
+    '&:hover': {
+      borderColor: loginColors.primary[400],
+      backgroundColor: loginColors.neutral[50],
+      transform: 'translateY(-2px)',
+    },
+  },
+
+  roleCardSelected: {
+    borderColor: loginColors.primary[600],
+    backgroundColor: 'rgba(255, 164, 36, 0.05)',
+    boxShadow: `0 0 0 2px ${loginColors.primary[600]}`,
+    '&:hover': {
+      backgroundColor: 'rgba(255, 164, 36, 0.08)',
+    },
+  },
+
+  roleIcon: {
+    fontSize: '2rem',
+    color: loginColors.neutral[400],
+    mb: 1.5,
+  },
+
+  roleIconSelected: {
+    color: loginColors.primary[600],
+  },
 };
 
 // MUI Theme overrides for login page

@@ -1,4 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'  //this is a stubborn import
+import { Link } from 'react-router-dom';
 import { faBookOpen, faCertificate, faChalkboardTeacher, faEye, faEyeSlash, faGraduationCap, faSignIn, faShieldAlt, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import {  loginStyles } from '../styles/loginTheme'
 
@@ -287,8 +288,8 @@ const LoginPage = () => {
                 <Box sx={loginStyles.signupSection}>
                   Don't have an account?
                   <Button
-                    href="#"
-                    onClick={(e) => e.preventDefault()}
+                    component={Link}
+                    to="/register"
                     sx={{
                       color: '#ffa424',
                       textDecoration: 'none',
