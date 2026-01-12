@@ -4,7 +4,8 @@ import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import '@fontsource-variable/inter/opsz-italic.css'
 import './index.css'
-import LoginPage from './pages/LoginPage'
+// import LoginPage from './pages/LoginPage'
+import LandingPage from './pages/LandingPage'
 // import App from './App'
 declare module '@mui/material/styles' {
   interface Shape {
@@ -68,7 +69,8 @@ createRoot(document.getElementById('root')!).render(
       <CssBaseline />
       {/* main App landing goes here */}
       {/* <App /> */}
-      <LoginPage />
+      <LandingPage />
+      {/* <LoginPage /> */}
      
     </ThemeProvider>
   </StrictMode>,

@@ -1,3 +1,4 @@
+// import { Link } from '@mui/material';
 import React, { useState } from 'react';
 
 interface HeaderProps {
@@ -8,7 +9,6 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ scrolled, onMobileMenuToggle, isMobile }) => {
   const [coursesMenuOpen, setCoursesMenuOpen] = useState(false);
-
   return (
     <header
       className={`landing-page-header ${scrolled ? 'scrolled' : ''}`}
@@ -140,6 +140,7 @@ const Header: React.FC<HeaderProps> = ({ scrolled, onMobileMenuToggle, isMobile 
           {/* Desktop Actions */}
           {!isMobile && (
             <div style={{ display: 'flex', gap: '12px' }}>
+              
               <button
                 style={{
                   padding: '8px 20px',
@@ -151,7 +152,8 @@ const Header: React.FC<HeaderProps> = ({ scrolled, onMobileMenuToggle, isMobile 
                   fontWeight: 500,
                 }}
               >
-                Log In
+                
+                 Log In
               </button>
               <button
                 style={{
