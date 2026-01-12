@@ -258,7 +258,8 @@ export const loginStyles = {
     fontWeight: 500,
     textTransform: 'none' as const,
     padding: '10px 16px',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
+    // putting icon and text in the center with gap
     gap: 2,
     '&:hover': {
       backgroundColor: loginColors.neutral[50],

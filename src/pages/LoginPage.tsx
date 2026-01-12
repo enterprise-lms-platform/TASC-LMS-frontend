@@ -3,8 +3,9 @@ import { faBookOpen, faCertificate, faChalkboardTeacher, faEye, faEyeSlash, faGr
 import {  loginStyles } from '../styles/loginTheme'
 
 import { Box, Button, Divider, Stack, Typography, TextField, FormControlLabel, Checkbox } from "@mui/material"
-import { faGoogle, faLinkedin, faMicrosoft } from '@fortawesome/free-brands-svg-icons';
+import {  faLinkedin } from '@fortawesome/free-brands-svg-icons';
 import { useState } from 'react';
+import { GoogleIcon, MicrosoftIcon } from '../components/customIcons';
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -259,21 +260,21 @@ const LoginPage = () => {
                   {/* Social Login Buttons */}
                   <Stack sx={loginStyles.socialBtnContainer}>
                     <Button
-                      startIcon={<FontAwesomeIcon icon={faGoogle} />}
+                      startIcon={<GoogleIcon />}
                       variant="outlined"
                       sx={[loginStyles.socialButton, loginStyles.googleButton]}
                     >
                       Continue with Google
                     </Button>
                     <Button
-                      startIcon={<FontAwesomeIcon icon={faMicrosoft} />}
+                      startIcon={<MicrosoftIcon />}
                       variant="outlined"
                       sx={[loginStyles.socialButton, loginStyles.microsoftButton]}
                     >
                       Continue with Microsoft
                     </Button>
                     <Button
-                      startIcon={<FontAwesomeIcon icon={faLinkedin} />}
+                      startIcon={<FontAwesomeIcon icon={faLinkedin} color='#0b65c4' />}
                       variant="outlined"
                       sx={[loginStyles.socialButton, loginStyles.linkedinButton]}
                     >
