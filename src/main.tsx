@@ -48,7 +48,7 @@ const theme = createTheme({
   },
     
   typography: {
-    fontFamily: 'Inter, sans-serif',
+    fontFamily: 'SF Pro Display, Inter, sans-serif',
   },
   spacing: [1, 2, 3, 4, 5, 6, 8,10, 12, 16, 20, 24], //calling theme.spacing(2, 5) will give 3px, and 6px  like an index
   shape: {
