@@ -4,7 +4,10 @@ import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import '@fontsource-variable/inter/opsz-italic.css'
 import './index.css'
+import LoginPage from './pages/LoginPage'
+import LandingPage from './pages/LandingPage'
 import App from './App'
+// import App from './App'
 declare module '@mui/material/styles' {
   interface Shape {
     borderRadiusSm: number;

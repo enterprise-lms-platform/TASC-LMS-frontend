@@ -1,3 +1,4 @@
+// import { Link } from '@mui/material';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -9,7 +10,6 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ scrolled, onMobileMenuToggle, isMobile }) => {
   const [coursesMenuOpen, setCoursesMenuOpen] = useState(false);
-
   return (
     <header
       className={`landing-page-header ${scrolled ? 'scrolled' : ''}`}
