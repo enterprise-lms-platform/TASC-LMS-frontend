@@ -1,6 +1,7 @@
 // styles/verificationTheme.ts
 // Verification/MFA setup page theme - Orange theme
 
+
 export const verificationColors = {
   primary: {
     600: '#ffa424',
@@ -44,6 +45,36 @@ export const verificationSpacing = {
   16: '4rem',
 };
 
+export const verificationFont = {
+  sizing: {
+    xs: '0.75rem',
+    sm: '0.875rem',
+    base: '1rem',
+    lg: '1.125rem',
+    xl: '1.25rem',
+    xl2: '1.5rem',
+    xl3: '1.875rem',
+    xl4: '2.25rem'
+}
+}
+export const verificationRadius = {
+    sm: '0.25rem',
+    base: '0.5rem',
+    md: '0.75rem',
+    lg: '1rem',
+    xl: '1.5rem'
+};
+
+export const verificationShadow = {
+  shadow: {
+    sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+    base: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+  }
+}
+
 export const verificationStyles = {
   // Container
   container: {
@@ -60,7 +91,7 @@ export const verificationStyles = {
     flexDirection: 'column' as const,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 4,
+    padding: verificationSpacing[4],
     position: 'relative',
     overflow: 'hidden',
     '&::before': {
@@ -88,8 +119,8 @@ export const verificationStyles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
-    marginBottom: 4,
+    gap: verificationSpacing[4],
+    marginBottom: verificationSpacing[8],
   },
 
   logoIcon: {
@@ -98,35 +129,36 @@ export const verificationStyles = {
   },
 
   logoText: {
-    fontSize: '1.875rem',
+    fontSize: verificationFont.sizing.xl3,
     fontWeight: 700,
     color: verificationColors.neutral[800],
   },
 
   // Security content
   tagline: {
-    fontSize: '1.25rem',
+    fontSize: verificationFont.sizing.xl,
     color: verificationColors.neutral[700],
-    marginBottom: 2,
+    marginBottom: verificationSpacing[6],
     fontWeight: 600,
   },
 
   benefitsContainer: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 2,
-    marginBottom: 6,
+    gap: verificationSpacing[6],
+    marginBottom: verificationSpacing[12],
   },
 
   benefitItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: 2,
-    padding: 2,
+    gap: verificationSpacing[4],
+    padding: verificationSpacing[4],
     backgroundColor: 'white',
-    borderRadius: 1,
-    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+    borderRadius: verificationRadius.lg,
+    boxShadow: verificationShadow.shadow.sm,
     border: `1px solid ${verificationColors.neutral[200]}`,
+    textAlign: 'left',
   },
 
   benefitIcon: {
@@ -134,32 +166,32 @@ export const verificationStyles = {
     height: 48,
     backgroundColor: verificationColors.primary[500],
     color: 'white',
-    borderRadius: 0.5,
+    borderRadius: verificationRadius.base,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '1.125rem',
+    fontSize: verificationFont.sizing.lg,
     flexShrink: 0,
   },
 
   benefitText: {
     color: verificationColors.neutral[500],
-    fontSize: '0.875rem',
+    fontSize: verificationFont.sizing.sm,
   },
 
   benefitTitle: {
-    fontSize: '1rem',
+    fontSize: verificationFont.sizing.base,
     fontWeight: 600,
     color: verificationColors.neutral[800],
-    marginBottom: 0.25,
+    marginBottom: verificationSpacing[1],
   },
 
   // Statistics
   statistics: {
     background: 'white',
-    padding: 3,
-    borderRadius: 1,
-    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+    padding: verificationSpacing[6],
+    borderRadius: verificationRadius.lg,
+    boxShadow: verificationShadow.shadow.sm,
     border: `1px solid ${verificationColors.neutral[200]}`,
     textAlign: 'center',
   },
@@ -167,7 +199,7 @@ export const verificationStyles = {
   statisticsTitle: {
     fontWeight: 600,
     color: verificationColors.neutral[800],
-    marginBottom: 2,
+    marginBottom: verificationSpacing[4],
   },
 
   statisticsGrid: {
@@ -181,13 +213,13 @@ export const verificationStyles = {
   },
 
   statValue: {
-    fontSize: '1.5rem',
+    fontSize: verificationFont.sizing.xl2,
     fontWeight: 700,
     color: verificationColors.primary[600],
   },
 
   statLabel: {
-    fontSize: '0.75rem',
+    fontSize: verificationFont.sizing.xs,
     color: verificationColors.neutral[500],
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
@@ -218,6 +250,7 @@ export const verificationStyles = {
     width: '100%',
     maxWidth: '500px',
   },
+// 
 
   // State styles
   state: {
@@ -250,12 +283,12 @@ export const verificationStyles = {
   methodSelection: {
     display: 'grid',
     gridTemplateColumns: { xs: '1fr', sm: 'repeat(auto-fit, minmax(180px, 1fr))' },
-    gap: 2,
+    gap: verificationSpacing[4],
     margin: '2rem 0',
   },
 
   methodCard: {
-    padding: 3,
+    padding: verificationSpacing[6],
     border: `2px solid ${verificationColors.neutral[200]}`,
     borderRadius: 1,
     textAlign: 'center',
@@ -278,9 +311,9 @@ export const verificationStyles = {
   },
 
   methodIcon: {
-    fontSize: '2.25rem',
+    fontSize: verificationFont.sizing.xl3,
     color: verificationColors.primary[500],
-    marginBottom: 2,
+    marginBottom: verificationSpacing[4],
     width: 64,
     height: 64,
     display: 'flex',
@@ -293,13 +326,13 @@ export const verificationStyles = {
   methodName: {
     fontWeight: 600,
     color: verificationColors.neutral[800],
-    marginBottom: 0.5,
+    marginBottom: verificationSpacing[2],
   },
 
   methodDescription: {
-    fontSize: '0.875rem',
+    fontSize: verificationFont.sizing.sm,
     color: verificationColors.neutral[500],
-    marginBottom: 2,
+    marginBottom: verificationSpacing[4],
   },
 
   methodBadge: {
