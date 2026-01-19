@@ -59,6 +59,7 @@ interface MethodCardProps {
   onClick?: () => void;
 }
 
+// Method cards component
 const MethodCard: React.FC<MethodCardProps> = ({
   icon,
   name,
@@ -123,6 +124,11 @@ const VerificationPage = () => {
   const [loginOtpCodes, setLoginOtpCodes] = useState(['', '', '', '', '', '']);
   const [otpError, setOtpError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [countryCode, setCountryCode] = useState('+1');
+  const [emailResendTimer, setEmailResendTimer] = useState(0);
+  const [userEmail, setUserEmail] = useState('john.doe@example.com');
+  const [codeSentViaEmail, setCodeSentViaEmail] = useState(false);
 
   const handleMethodSelect = (method: string) => {
     setSelectedMethod(method);
@@ -149,7 +155,8 @@ const VerificationPage = () => {
     // Email resend timer functionality - ready for future email verification integration
   };
 
-  const handleOtpChange = (index: number, value: string, isLogin: boolean = false) => {
+  // for the OTP Page
+  const handleOtpChange = ( index: number, value: string, isLogin: boolean = false) => {
     if (!/^[0-9]?$/.test(value)) return;
 
     const codes = isLogin ? [...loginOtpCodes] : [...otpCodes];
@@ -274,7 +281,7 @@ const VerificationPage = () => {
             </Stack>
           </>
         );
-
+// Authenticator setup page
       case 'authenticatorSetup':
         return (
           <>
@@ -388,6 +395,281 @@ const VerificationPage = () => {
           </>
         );
 
+      // SMS Setup page
+      case 'smsSetup':
+        return (
+          <>
+            <Box sx={verificationStyles.stateHeader}>
+              <Typography sx={verificationStyles.stateTitle}>Set Up SMS Verification</Typography>
+              <Typography sx={verificationStyles.stateSubtitle}>Receive verification codes via text message</Typography>
+            </Box>
+
+            <Paper
+              sx={[verificationStyles.infoBox, verificationStyles.infoBoxInfo]}
+              elevation={0}
+            >
+              <Box sx={verificationStyles.infoTitle}>
+                <FontAwesomeIcon icon={faInfoCircle} style={{ color: verificationColors.status.info }} />
+                <span>Phone Number Required</span>
+              </Box>
+              <Typography sx={verificationStyles.infoText}>
+                We'll send a 6-digit verification code to your phone number. Standard message rates may apply.
+              </Typography>
+            </Paper>
+
+            <Box sx={{ marginTop: '24px', marginBottom: '24px' }}>
+              <Box sx={{ marginBottom: '16px' }}>
+                <Typography sx={{ fontWeight: 500, marginBottom: '8px', fontSize: '0.875rem' }}>
+                  Phone Number <span style={{ color: verificationColors.status.error }}>*</span>
+                </Typography>
+                <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    style={{
+                      flex: '0 0 100px',
+                      padding: '12px',
+                      border: `1px solid ${verificationColors.neutral[300]}`,
+                      borderRadius: '4px',
+                      fontFamily: 'inherit',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    <option value="+1">+1 (US)</option>
+                    <option value="+256">+256 (UG)</option>
+                    <option value="+254">+254 (KE)</option>
+                    <option value="+255">+255 (TZ)</option>
+                    <option value="+44">+44 (UK)</option>
+                  </select>
+                  <TextField
+                    fullWidth
+                    placeholder="Phone number"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    variant="outlined"
+                    size="small"
+                    inputProps={{ inputMode: 'numeric' }}
+                  />
+                </Box>
+              </Box>
+
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<FontAwesomeIcon icon={faEnvelope} />}
+                onClick={() => {
+                  if (phoneNumber.trim()) {
+                    setIsLoading(true);
+                    setTimeout(() => {
+                      setIsLoading(false);
+                      setOtpCodes(['', '', '', '', '', '']);
+                    }, 1000);
+                  }
+                }}
+                disabled={!phoneNumber.trim() || isLoading}
+                sx={verificationStyles.primaryButton}
+              >
+                {isLoading ? 'Sending...' : 'Send Verification Code'}
+              </Button>
+            </Box>
+
+            {otpCodes.some((code) => code) && (
+              <>
+                <Box sx={verificationStyles.otpContainer}>
+                  {otpCodes.map((code, index) => (
+                    <TextField
+                      key={index}
+                      id={`otp-${index}`}
+                      type="text"
+                      inputProps={{ maxLength: 1, pattern: '[0-9]', inputMode: 'numeric' }}
+                      value={code}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      size="small"
+                      sx={verificationStyles.otpInput}
+                    />
+                  ))}
+                </Box>
+
+                {otpError && (
+                  <Paper
+                    sx={[verificationStyles.infoBox, verificationStyles.infoBoxError]}
+                    elevation={0}
+                  >
+                    <Box sx={verificationStyles.infoTitle}>
+                      <FontAwesomeIcon icon={faExclamationCircle} style={{ color: verificationColors.status.error }} />
+                      <span>Invalid Code</span>
+                    </Box>
+                    <Typography sx={verificationStyles.infoText}>{otpError}</Typography>
+                  </Paper>
+                )}
+              </>
+            )}
+
+            <Stack sx={verificationStyles.buttonGroup}>
+              <Button
+                variant="outlined"
+                startIcon={<FontAwesomeIcon icon={faArrowLeft} />}
+                onClick={() => setCurrentState('methodSelection')}
+                sx={verificationStyles.secondaryButton}
+              >
+                Back
+              </Button>
+              <Button
+                variant="contained"
+                disabled={isLoading || otpCodes.join('').length !== 6}
+                endIcon={<FontAwesomeIcon icon={isLoading ? faSpinner : faCheck} />}
+                onClick={handleVerifyAuthenticator}
+                sx={verificationStyles.primaryButton}
+              >
+                {isLoading ? 'Verifying...' : 'Verify & Enable'}
+              </Button>
+            </Stack>
+          </>
+        );
+
+      // Email Setup page
+      case 'emailSetup':
+        return (
+          <>
+            <Box sx={verificationStyles.stateHeader}>
+              <Typography sx={verificationStyles.stateTitle}>Set Up Email Verification</Typography>
+              <Typography sx={verificationStyles.stateSubtitle}>Receive verification codes via email</Typography>
+            </Box>
+
+            <Paper
+              sx={[verificationStyles.infoBox, verificationStyles.infoBoxInfo]}
+              elevation={0}
+            >
+              <Box sx={verificationStyles.infoTitle}>
+                <FontAwesomeIcon icon={faInfoCircle} style={{ color: verificationColors.status.info }} />
+                <span>Email Verification</span>
+              </Box>
+              <Typography sx={verificationStyles.infoText}>
+                We'll send a 6-digit verification code to your registered email address:{' '}
+                <strong>{userEmail}</strong>
+              </Typography>
+            </Paper>
+
+            {!codeSentViaEmail ? (
+              <Box sx={{ marginTop: '24px', marginBottom: '24px', textAlign: 'center' }}>
+                <Button
+                  variant="contained"
+                  fullWidth
+                  startIcon={<FontAwesomeIcon icon={faEnvelope} />}
+                  onClick={() => {
+                    setIsLoading(true);
+                    setTimeout(() => {
+                      setIsLoading(false);
+                      setCodeSentViaEmail(true);
+                      setEmailResendTimer(60);
+                      // Start countdown timer
+                      const timer = setInterval(() => {
+                        setEmailResendTimer((prev) => {
+                          if (prev <= 1) {
+                            clearInterval(timer);
+                            return 0;
+                          }
+                          return prev - 1;
+                        });
+                      }, 1000);
+                    }, 1000);
+                  }}
+                  disabled={isLoading}
+                  sx={verificationStyles.primaryButton}
+                >
+                  {isLoading ? 'Sending...' : 'Send Verification Code to Email'}
+                </Button>
+              </Box>
+            ) : (
+              <>
+                <Box sx={verificationStyles.otpContainer}>
+                  {otpCodes.map((code, index) => (
+                    <TextField
+                      key={index}
+                      id={`otp-${index}`}
+                      type="text"
+                      inputProps={{ maxLength: 1, pattern: '[0-9]', inputMode: 'numeric' }}
+                      value={code}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      size="small"
+                      sx={verificationStyles.otpInput}
+                    />
+                  ))}
+                </Box>
+
+                {otpError && (
+                  <Paper
+                    sx={[verificationStyles.infoBox, verificationStyles.infoBoxError]}
+                    elevation={0}
+                  >
+                    <Box sx={verificationStyles.infoTitle}>
+                      <FontAwesomeIcon icon={faExclamationCircle} style={{ color: verificationColors.status.error }} />
+                      <span>Invalid Code</span>
+                    </Box>
+                    <Typography sx={verificationStyles.infoText}>{otpError}</Typography>
+                  </Paper>
+                )}
+
+                <Box sx={verificationStyles.resendContainer}>
+                  <Typography sx={{ fontSize: '0.875rem', marginBottom: '8px' }}>
+                    Didn't receive the code?{' '}
+                    <Button
+                      sx={verificationStyles.linkButton}
+                      disabled={emailResendTimer > 0}
+                      onClick={() => {
+                        setIsLoading(true);
+                        setTimeout(() => {
+                          setIsLoading(false);
+                          setOtpCodes(['', '', '', '', '', '']);
+                          setEmailResendTimer(60);
+                          // Start countdown timer again
+                          const timer = setInterval(() => {
+                            setEmailResendTimer((prev) => {
+                              if (prev <= 1) {
+                                clearInterval(timer);
+                                return 0;
+                              }
+                              return prev - 1;
+                            });
+                          }, 1000);
+                        }, 1000);
+                      }}
+                      size="small"
+                    >
+                      Resend code {emailResendTimer > 0 && `(${emailResendTimer}s)`}
+                    </Button>
+                  </Typography>
+                </Box>
+              </>
+            )}
+
+            <Stack sx={verificationStyles.buttonGroup}>
+              <Button
+                variant="outlined"
+                startIcon={<FontAwesomeIcon icon={faArrowLeft} />}
+                onClick={() => {
+                  setCurrentState('methodSelection');
+                  setCodeSentViaEmail(false);
+                  setEmailResendTimer(0);
+                }}
+                sx={verificationStyles.secondaryButton}
+              >
+                Back
+              </Button>
+              <Button
+                variant="contained"
+                disabled={isLoading || !codeSentViaEmail || otpCodes.join('').length !== 6}
+                endIcon={<FontAwesomeIcon icon={isLoading ? faSpinner : faCheck} />}
+                onClick={handleVerifyAuthenticator}
+                sx={verificationStyles.primaryButton}
+              >
+                {isLoading ? 'Verifying...' : 'Verify & Enable'}
+              </Button>
+            </Stack>
+          </>
+        );
+
+        // Otp codes still part of the authenticator option
       case 'backupCodes':
         return (
           <>
@@ -535,6 +817,7 @@ const VerificationPage = () => {
               ))}
             </Box>
 
+
             {otpError && (
               <Paper
                 sx={[verificationStyles.infoBox, verificationStyles.infoBoxError]}
@@ -583,6 +866,7 @@ const VerificationPage = () => {
     }
   };
 
+  // Main render - final return
   return (
     <Box sx={verificationStyles.container}>
       {/* Left Panel - Security Info */}
