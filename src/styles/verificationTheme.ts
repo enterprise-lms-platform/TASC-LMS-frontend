@@ -1,77 +1,79 @@
 // styles/verificationTheme.ts
 // Verification/MFA setup page theme - Orange theme
 
+import { globalBorderRadius, globalColors, globalFontSizes, globalShadows, globalSpacing } from "./globaltheme";
+
 
 export const verificationColors = {
   primary: {
-    600: '#ffa424',
-    500: '#ffb74d',
-    400: '#ffcc80',
+    600: globalColors.primary[600],
+    500: globalColors.primary[500],
+    400: globalColors.primary[400],
   },
   accent: {
-    500: '#f97316',
-    400: '#fb923c',
+    500: globalColors.accent[500],
+    400: globalColors.accent[400],
   },
   neutral: {
-    50: '#fafafa',
-    100: '#f4f4f5',
-    200: '#e4e4e7',
-    300: '#d4d4d8',
-    400: '#a1a1aa',
-    500: '#71717a',
-    600: '#52525b',
-    700: '#3f3f46',
-    800: '#27272a',
-    900: '#18181b',
+    50: globalColors.neutral[50],
+    100: globalColors.neutral[100],
+    200: globalColors.neutral[200],
+    300: globalColors.neutral[300],
+    400: globalColors.neutral[400],
+    500: globalColors.neutral[500],
+    600: globalColors.neutral[600],
+    700: globalColors.neutral[700],
+    800: globalColors.neutral[800],
+    900: globalColors.neutral[900],
   },
   status: {
-    success: '#10b981',
-    warning: '#f59e0b',
-    error: '#ef4444',
-    info: '#3b82f6',
+    success: globalColors.status.success,
+    warning: globalColors.status.warning,
+    error: globalColors.status.error,
+    info: globalColors.status.info,
   },
 };
 
 export const verificationSpacing = {
-  1: '0.25rem',
-  2: '0.5rem',
-  3: '0.75rem',
-  4: '1rem',
-  5: '1.25rem',
-  6: '1.5rem',
-  8: '2rem',
-  10: '2.5rem',
-  12: '3rem',
-  16: '4rem',
+  1: globalSpacing[0],
+  2: globalSpacing[1],
+  3: globalSpacing[2],
+  4: globalSpacing[3],
+  5: globalSpacing[4],
+  6: globalSpacing[5],
+  8: globalSpacing[6],
+  10: globalSpacing[7],
+  12: globalSpacing[8],
+  16: globalSpacing[9],
 };
 
 export const verificationFont = {
   sizing: {
-    xs: '0.75rem',
-    sm: '0.875rem',
-    base: '1rem',
-    lg: '1.125rem',
-    xl: '1.25rem',
-    xl2: '1.5rem',
-    xl3: '1.875rem',
-    xl4: '2.25rem'
+    xs: globalFontSizes.xs,
+    sm: globalFontSizes.sm,
+    base: globalFontSizes.md,
+    lg: globalFontSizes.lg,
+    xl: globalFontSizes.xl,
+    xl2: globalFontSizes['2xl'],
+    xl3: globalFontSizes['3xl'],
+    xl4: globalFontSizes['4xl']
 }
 }
 export const verificationRadius = {
-    sm: '0.25rem',
-    base: '0.5rem',
-    md: '0.75rem',
-    lg: '1rem',
-    xl: '1.5rem'
+    sm: globalBorderRadius.sm,
+    base: globalBorderRadius.base,
+    md: globalBorderRadius.md,
+    lg: globalBorderRadius.lg,
+    xl: globalBorderRadius.xl
 };
 
 export const verificationShadow = {
   shadow: {
-    sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-    base: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+    sm: globalShadows.sm,
+    base: globalShadows.base,
+    md: globalShadows.md,
+    lg: globalShadows.lg,
+    xl: globalShadows.xl
   }
 }
 

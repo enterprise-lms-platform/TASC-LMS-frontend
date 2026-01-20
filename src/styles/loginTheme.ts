@@ -1,64 +1,66 @@
 // styles/loginTheme.ts
 // Orange theme configuration for login page
 
+import { globalColors, globalFontSizes, globalSpacing } from "./globaltheme";
+
 export const loginColors = {
   primary: {
-    600: '#ffa424',
-    500: '#ffb74d',
-    400: '#ffcc80',
+    600: globalColors.primary[600],
+    500: globalColors.primary[500],
+    400: globalColors.primary[400],
   },
   accent: {
-    500: '#f97316',
-    400: '#fb923c',
+    500: globalColors.accent[500],
+    400: globalColors.accent[400],
   },
   neutral: {
-    50: '#fafafa',
-    100: '#f4f4f5',
-    200: '#e4e4e7',
-    300: '#d4d4d8',
-    400: '#a1a1aa',
-    500: '#71717a',
-    600: '#52525b',
-    700: '#3f3f46',
-    800: '#27272a',
-    900: '#18181b',
+    50: globalColors.neutral[50],
+    100: globalColors.neutral[100],
+    200: globalColors.neutral[200],
+    300: globalColors.neutral[300],
+    400: globalColors.neutral[400],
+    500: globalColors.neutral[500],
+    600: globalColors.neutral[600],
+    700: globalColors.neutral[700],
+    800: globalColors.neutral[800],
+    900: globalColors.neutral[900],
   },
   status: {
-    success: '#10b981',
-    warning: '#f59e0b',
-    error: '#ef4444',
+    success: globalColors.status.success,
+    warning: globalColors.status.warning,
+    error: globalColors.status.error,
   },
   social: {
-    google: '#ea4335',
-    microsoft: '#00a4ef',
-    linkedin: '#0077b5',
+    google: globalColors.social.google,
+    microsoft: globalColors.social.microsoft,
+    linkedin: globalColors.social.linkedin,
   }
 };
 
 export const loginSpacing = {
-  1: '0.25rem',
-  2: '0.5rem',
-  3: '0.75rem',
-  4: '1rem',
-  5: '1.25rem',
-  6: '1.5rem',
-  8: '2rem',
-  10: '2.5rem',
-  12: '3rem',
-  16: '4rem',
+  1: globalSpacing[0],
+  2: globalSpacing[1],
+  3: globalSpacing[2],
+  4: globalSpacing[3],
+  5: globalSpacing[4],
+  6: globalSpacing[5],
+  8: globalSpacing[6],
+  10: globalSpacing[7],
+  12: globalSpacing[8],
+  16: globalSpacing[9],
 };
 export const fontSizing = {
-  1: '0.25rem',
-  2: '0.5rem',
-  3: '0.75rem',
-  4: '0.875 rem',
-  5: '1rem',
-  6: '1.25rem',
-  7: '1.5rem',
-  8: '2rem',
-  10: '2.5rem',
-  12: '3rem',
-  16: '4rem',
+  1: globalFontSizes.xs,
+  2: globalFontSizes.xs,
+  3: globalFontSizes.sm,
+  4: globalFontSizes.sm,
+  5: globalFontSizes.md,
+  6: globalFontSizes.lg,
+  7: globalFontSizes['2xl'],
+  8: globalFontSizes['3xl'],
+  10: globalFontSizes['4xl'],
+  12: globalFontSizes['5xl'],
+  16: globalFontSizes['6xl'],
 }
 
 export const loginStyles = {
