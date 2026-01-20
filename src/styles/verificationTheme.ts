@@ -588,6 +588,11 @@ export const verificationStyles = {
     backgroundColor: `rgba(239, 68, 68, 0.05)`,
   },
 
+  infoBoxInfo: {
+    borderLeftColor: verificationColors.status.info,
+    backgroundColor: `rgba(2, 136, 209, 0.08)`,
+  },
+  
   infoTitle: {
     display: 'flex',
     alignItems: 'center',

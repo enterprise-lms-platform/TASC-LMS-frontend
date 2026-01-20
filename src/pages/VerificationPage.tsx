@@ -130,6 +130,10 @@ const VerificationPage = () => {
   const [userEmail, setUserEmail] = useState('john.doe@example.com');
   const [codeSentViaEmail, setCodeSentViaEmail] = useState(false);
 
+  const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setUserEmail(event.target.value);
+  };
+
   const handleMethodSelect = (method: string) => {
     setSelectedMethod(method);
   };
@@ -156,7 +160,7 @@ const VerificationPage = () => {
   };
 
   // for the OTP Page
-  const handleOtpChange = ( index: number, value: string, isLogin: boolean = false) => {
+  const handleOtpChange = (index: number, value: string, isLogin: boolean = false) => {
     if (!/^[0-9]?$/.test(value)) return;
 
     const codes = isLogin ? [...loginOtpCodes] : [...otpCodes];
@@ -281,7 +285,7 @@ const VerificationPage = () => {
             </Stack>
           </>
         );
-// Authenticator setup page
+      // Authenticator setup page
       case 'authenticatorSetup':
         return (
           <>
@@ -545,13 +549,24 @@ const VerificationPage = () => {
                 <span>Email Verification</span>
               </Box>
               <Typography sx={verificationStyles.infoText}>
-                We'll send a 6-digit verification code to your registered email address:{' '}
-                <strong>{userEmail}</strong>
+                We'll send a 6-digit verification code to your email address.
               </Typography>
             </Paper>
 
+            <Box sx={{ marginTop: '24px', marginBottom: '16px' }}>
+              <TextField
+                fullWidth
+                label="Email Address"
+                value={userEmail}
+                onChange={handleEmailChange}
+                variant="outlined"
+                size="small"
+                disabled={codeSentViaEmail}
+              />
+            </Box>
+
             {!codeSentViaEmail ? (
-              <Box sx={{ marginTop: '24px', marginBottom: '24px', textAlign: 'center' }}>
+              <Box sx={{ marginBottom: '24px', textAlign: 'center' }}>
                 <Button
                   variant="contained"
                   fullWidth
@@ -669,7 +684,7 @@ const VerificationPage = () => {
           </>
         );
 
-        // Otp codes still part of the authenticator option
+      // Otp codes still part of the authenticator option
       case 'backupCodes':
         return (
           <>
