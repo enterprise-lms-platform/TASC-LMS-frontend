@@ -14,15 +14,14 @@ const theme = createTheme({
   typography: {
     fontFamily: 'SF Pro Display, Inter, sans-serif',
   },
-  // breakpoints:{
-  //   values: {
-  //     xs: 575,
-  //     sm: 769,
-  //     md: 991,
-  //     lg: 1025,
-  //     xl: 1699,
-  //   }
-  // }
+  // spacing: default 8px scaling is better
+  shape: {
+    borderRadius: 8,  //make sure to add interface above for these new shape properties to work.
+    borderRadiusSm: 4,
+    borderRadiusMd: 8,
+    borderRadiusLg: 16,
+    borderRadiusXl: 24,
+  },
   
 });
 

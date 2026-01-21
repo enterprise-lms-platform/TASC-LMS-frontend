@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { loginStyles, loginColors } from '../styles/loginTheme';
 import { 
@@ -22,7 +22,24 @@ import { faCertificate, faChartLine, faEye, faEyeSlash, faGraduationCap, faSpinn
 import { GoogleIcon, MicrosoftIcon } from '../components/customIcons';
 import { faLinkedin } from '@fortawesome/free-brands-svg-icons';
 
+// Map role IDs to dashboard routes
+const getDashboardRoute = (role: string): string => {
+    switch (role) {
+        case 'learner':
+            return '/learner';
+        case 'instructor':
+            return '/learner'; // Instructor uses learner dashboard for now
+        case 'lms_manager':
+            return '/manager';
+        case 'platform_admin':
+            return '/superadmin';
+        default:
+            return '/learner';
+    }
+};
+
 const RegistrationPage: React.FC = () => {
+    const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(0); // 0-indexed for MUI Stepper
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -198,6 +215,11 @@ const RegistrationPage: React.FC = () => {
         </Box>
     );
 
+    const handleGoToDashboard = () => {
+        const dashboardRoute = getDashboardRoute(formData.role);
+        navigate(dashboardRoute);
+    };
+
     if (isSuccess) {
         return (
             <Box sx={loginStyles.loginContainer}>
@@ -229,7 +251,7 @@ const RegistrationPage: React.FC = () => {
                          <Typography sx={{ color: loginColors.neutral[600], mb: 4 }}>
                              We've sent a verification email to your inbox. Please click the link in the email to activate your account.
                          </Typography>
-                         <Button component={Link} to="/" variant="contained" sx={loginStyles.primaryButton}>
+                         <Button onClick={handleGoToDashboard} variant="contained" sx={loginStyles.primaryButton}>
                             Go to Dashboard
                          </Button>
                     </Box>
