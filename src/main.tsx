@@ -15,13 +15,13 @@ const theme = createTheme({
     fontFamily: 'SF Pro Display, Inter, sans-serif',
   },
   // spacing: default 8px scaling is better
-  shape: {
-    borderRadius: 8,  //make sure to add interface above for these new shape properties to work.
-    borderRadiusSm: 4,
-    borderRadiusMd: 8,
-    borderRadiusLg: 16,
-    borderRadiusXl: 24,
-  },
+  // shape: {
+  //   borderRadius: 8,  //make sure to add interface above for these new shape properties to work.
+  //   borderRadiusSm: 4,
+  //   borderRadiusMd: 8,
+  //   borderRadiusLg: 16,
+  //   borderRadiusXl: 24,
+  // },
   
 });
 
