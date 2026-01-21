@@ -1,7 +1,7 @@
 // styles/verificationTheme.ts
 // Verification/MFA setup page theme - Orange theme
 
-import { globalBorderRadius, globalColors, globalFontSizes, globalShadows, globalSpacing } from "./globaltheme";
+import { globalBorderRadius, globalColors, globalFonts, globalFontSizes, globalShadows, globalSpacing } from "./globaltheme";
 
 
 export const verificationColors = {
@@ -82,7 +82,8 @@ export const verificationStyles = {
   container: {
     display: 'flex',
     minHeight: '100vh',
-    flexDirection: { xs: 'column', lg: 'row' },
+    flexDirection: { sm: 'column', lg: 'row' },
+    fontFamily: globalFonts,
   },
 
   // Left panel
@@ -93,7 +94,7 @@ export const verificationStyles = {
     flexDirection: 'column' as const,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: verificationSpacing[4],
+    padding: verificationSpacing[8],
     position: 'relative',
     overflow: 'hidden',
     '&::before': {
