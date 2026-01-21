@@ -50,7 +50,7 @@ const theme = createTheme({
   typography: {
     fontFamily: 'SF Pro Display, Inter, sans-serif',
   },
-  spacing: [1, 2, 3, 4, 5, 6, 8,10, 12, 16, 20, 24], //calling theme.spacing(2, 5) will give 3px, and 6px  like an index
+  // spacing: default 8px scaling is better
   shape: {
     borderRadius: 8,  //make sure to add interface above for these new shape properties to work.
     borderRadiusSm: 4,

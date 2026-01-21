@@ -29,6 +29,7 @@ import {
 import { Box, Button, Stack, Typography, TextField, Paper } from '@mui/material';
 import { verificationStyles, verificationColors } from '../styles/verificationTheme';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface BenefitItemProps {
   icon: React.ReactNode;
@@ -118,6 +119,7 @@ const InstructionStep: React.FC<InstructionStepProps> = ({ number, title, descri
 type VerificationState = 'methodSelection' | 'authenticatorSetup' | 'smsSetup' | 'emailSetup' | 'backupCodes' | 'success' | 'loginVerification';
 
 const VerificationPage = () => {
+  const navigate = useNavigate();
   const [currentState, setCurrentState] = useState<VerificationState>('methodSelection');
   const [selectedMethod, setSelectedMethod] = useState<string>('');
   const [otpCodes, setOtpCodes] = useState(['', '', '', '', '', '']);
@@ -791,6 +793,7 @@ const VerificationPage = () => {
                 variant="contained"
                 startIcon={<FontAwesomeIcon icon={faThLarge} />}
                 sx={verificationStyles.primaryButton}
+                onClick={() => navigate('/learner')}
               >
                 Go to Dashboard
               </Button>

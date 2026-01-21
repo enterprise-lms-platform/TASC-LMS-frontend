@@ -1,0 +1,48 @@
+/* LearnerDashboard.css - Minimal CSS for special effects only */
+/* Most styling should use MUI sx prop */
+
+/* Sidebar navigation active state */
+.nav-item.active {
+  background-color: rgba(255, 164, 36, 0.1);
+  color: #ffa424;
+  border-right: 3px solid #ffa424;
+}
+
+.nav-item:hover {
+  background-color: #fafafa;
+  color: #ffa424;
+}
+
+/* Card hover effects */
+.course-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Session and activity item hover */
+.session-item:hover,
+.activity-item:hover {
+  border-color: #ffb74d;
+  background-color: rgba(255, 164, 36, 0.05);
+}
+
+/* Certificate card hover */
+.certificate-card:hover {
+  border-color: #ffb74d;
+  background-color: rgba(255, 164, 36, 0.05);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
