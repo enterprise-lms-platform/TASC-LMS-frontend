@@ -1,27 +1,28 @@
 import React from 'react';
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface FooterProps {}
+interface FooterProps {
+  isMobile?: boolean;
+}
 
-const Footer: React.FC<FooterProps> = () => {
+const Footer: React.FC<FooterProps> = ({ isMobile = false }) => {
   const currentYear = new Date().getFullYear();
 
   const columns = [
     {
-      title: 'Product',
-      links: ['Courses', 'Pricing', 'Live Sessions', 'Certificates', 'Mobile App'],
+      title: 'Platform',
+      links: ['Browse Courses', 'Categories', 'Pricing', 'For Business', 'Become an Instructor'],
     },
     {
       title: 'Resources',
-      links: ['Blog', 'Documentation', 'Video Tutorials', 'Community Forum', 'Status'],
+      links: ['Help Center', 'Documentation', 'Blog', 'Community', 'Webinars'],
     },
     {
       title: 'Company',
-      links: ['About Us', 'Careers', 'Press', 'Contact', 'Partners'],
+      links: ['About Us', 'Careers', 'Press', 'Partners', 'Contact'],
     },
     {
-      title: 'Legal',
-      links: ['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'Accessibility', 'Support'],
+      title: 'Support',
+      links: ['Contact Support', 'FAQs', 'System Status', 'Accessibility', 'Sitemap'],
     },
   ];
 
@@ -29,59 +30,63 @@ const Footer: React.FC<FooterProps> = () => {
     { icon: 'facebook-f', label: 'Facebook' },
     { icon: 'twitter', label: 'Twitter' },
     { icon: 'linkedin-in', label: 'LinkedIn' },
-    { icon: 'youtube', label: 'YouTube' },
     { icon: 'instagram', label: 'Instagram' },
+    { icon: 'youtube', label: 'YouTube' },
   ];
 
+  const getGridColumns = () => {
+    if (isMobile) return '1fr';
+    return '2fr repeat(4, 1fr)';
+  };
+
   return (
-    <footer className="footer-section" style={{ backgroundColor: '#18181b', color: '#a1a1aa', paddingTop: '80px', paddingBottom: '40px' }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
+    <footer
+      className="footer-section"
+      style={{
+        backgroundColor: '#18181b',
+        color: 'white',
+        padding: isMobile ? '48px 0 32px' : '80px 0 32px',
+      }}
+    >
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px' }}>
         {/* Main Footer Content */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr',
-            gap: '48px',
-            marginBottom: '48px',
-            gridAutoFlow: 'column',
+            gridTemplateColumns: getGridColumns(),
+            gap: isMobile ? '32px' : '48px',
+            marginBottom: '64px',
           }}
           className="footer-grid"
         >
           {/* Brand Column */}
-          <div>
+          <div style={{ maxWidth: isMobile ? '100%' : '300px', gridColumn: isMobile ? '1' : 'auto' }}>
             <div
               className="footer-logo"
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
+                gap: '12px',
                 marginBottom: '24px',
-                fontSize: '1.5rem',
-                fontWeight: 700,
               }}
             >
-              <div
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  backgroundColor: '#ffa424',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontSize: '1.25rem',
-                }}
-              >
-                <i className="fas fa-graduation-cap" />
-              </div>
-              <span style={{ color: 'white' }}>TASC</span>
+              <i className="fas fa-graduation-cap" style={{ fontSize: '1.5rem', color: '#ffb74d' }} />
+              <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'white' }}>TASC LMS</span>
             </div>
-            <p style={{ marginBottom: '24px', lineHeight: 1.6, margin: '0 0 24px 0' }}>
-              Empowering learners worldwide with high-quality courses and expert instruction.
+            <p
+              className="footer-description"
+              style={{
+                fontSize: '0.875rem',
+                color: '#a1a1aa',
+                lineHeight: 1.7,
+                marginBottom: '24px',
+              }}
+            >
+              Empowering learners worldwide with world-class education. Transform your career with expert-led courses
+              and recognized certifications.
             </p>
 
-            <div className="footer-social" style={{ display: 'flex', gap: '16px' }}>
+            <div className="footer-social" style={{ display: 'flex', gap: '12px', marginBottom: isMobile ? '24px' : 0 }}>
               {socialLinks.map((social) => (
                 <a
                   key={social.icon}
@@ -90,16 +95,24 @@ const Footer: React.FC<FooterProps> = () => {
                   style={{
                     width: '40px',
                     height: '40px',
-                    backgroundColor: '#27272a',
-                    borderRadius: '50%',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#ffa424',
+                    color: 'white',
                     transition: 'all 0.3s',
                     textDecoration: 'none',
                   }}
                   title={social.label}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLAnchorElement).style.backgroundColor = '#ffa424';
+                    (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-4px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                    (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(0)';
+                  }}
                 >
                   <i className={`fab fa-${social.icon}`} />
                 </a>
@@ -109,32 +122,35 @@ const Footer: React.FC<FooterProps> = () => {
 
           {/* Footer Columns */}
           {columns.map((column) => (
-            <div key={column.title}>
+            <div key={column.title} className="footer-column">
               <h4
                 className="footer-column-title"
                 style={{
-                  fontSize: '0.875rem',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
+                  fontSize: '1rem',
+                  fontWeight: 600,
                   color: 'white',
-                  marginBottom: '16px',
-                  margin: '0 0 16px 0',
+                  marginBottom: '24px',
                 }}
               >
                 {column.title}
               </h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {column.links.map((link) => (
-                  <li key={link} style={{ marginBottom: '12px', margin: '0 0 12px 0' }}>
+                  <li key={link} style={{ marginBottom: '12px' }}>
                     <a
                       href="#"
                       className="footer-link"
                       style={{
                         color: '#a1a1aa',
                         textDecoration: 'none',
-                        transition: 'color 0.3s',
                         fontSize: '0.875rem',
+                        transition: 'color 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLAnchorElement).style.color = '#ffb74d';
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLAnchorElement).style.color = '#a1a1aa';
                       }}
                     >
                       {link}
@@ -150,79 +166,55 @@ const Footer: React.FC<FooterProps> = () => {
         <div
           className="footer-bottom"
           style={{
-            borderTop: '1px solid #27272a',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
             paddingTop: '32px',
             display: 'flex',
-            flexDirection: 'column',
+            flexDirection: isMobile ? 'column' : 'row',
+            justifyContent: 'space-between',
+            alignItems: isMobile ? 'center' : 'center',
             gap: '16px',
+            textAlign: isMobile ? 'center' : 'left',
           }}
         >
-          <div
+          <p
+            className="footer-copyright"
             style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '16px',
+              fontSize: '0.875rem',
+              color: '#71717a',
+              margin: 0,
             }}
           >
-            <p
-              className="footer-copyright"
-              style={{
-                fontSize: '0.875rem',
-                color: '#52525b',
-                margin: 0,
-              }}
-            >
-              &copy; {currentYear} TASC Learning Management System. All rights reserved.
-            </p>
-            <div
-              className="footer-policy-links"
-              style={{
-                display: 'flex',
-                gap: '24px',
-                alignItems: 'center',
-              }}
-            >
+            © {currentYear} TASC Learning Management System. All rights reserved.
+          </p>
+          <div
+            className="footer-legal"
+            style={{
+              display: 'flex',
+              gap: '24px',
+              flexWrap: 'wrap',
+              justifyContent: isMobile ? 'center' : 'flex-end',
+            }}
+          >
+            {['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'GDPR'].map((item) => (
               <a
+                key={item}
                 href="#"
-                className="footer-link"
                 style={{
                   fontSize: '0.875rem',
-                  color: '#52525b',
+                  color: '#71717a',
                   textDecoration: 'none',
-                  transition: 'color 0.3s',
+                  transition: 'color 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLAnchorElement).style.color = '#ffb74d';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLAnchorElement).style.color = '#71717a';
                 }}
               >
-                Privacy
+                {item}
               </a>
-              <span style={{ color: '#27272a' }}>•</span>
-              <a
-                href="#"
-                className="footer-link"
-                style={{
-                  fontSize: '0.875rem',
-                  color: '#52525b',
-                  textDecoration: 'none',
-                  transition: 'color 0.3s',
-                }}
-              >
-                Terms
-              </a>
-              <span style={{ color: '#27272a' }}>•</span>
-              <a
-                href="#"
-                className="footer-link"
-                style={{
-                  fontSize: '0.875rem',
-                  color: '#52525b',
-                  textDecoration: 'none',
-                  transition: 'color 0.3s',
-                }}
-              >
-                Cookies
-              </a>
-            </div>
+            ))}
           </div>
         </div>
       </div>

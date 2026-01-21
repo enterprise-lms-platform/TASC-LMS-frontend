@@ -14,14 +14,14 @@ const Certificates: React.FC = () => {
     <Paper
       elevation={0}
       sx={{
-        p: 3,
+        p: { xs: 2, md: 3 },
         borderRadius: 3,
         border: 1,
         borderColor: 'divider',
       }}
     >
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: { xs: 2, md: 3 } }}>
         <Typography variant="h6" fontWeight={700}>
           My Certificates
         </Typography>

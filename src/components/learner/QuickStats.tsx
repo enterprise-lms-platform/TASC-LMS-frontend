@@ -32,7 +32,7 @@ const stats = [
 
 const QuickStats: React.FC = () => {
   return (
-    <Grid container spacing={3} sx={{ mb: 4 }}>
+    <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
       {stats.map((stat, index) => (
         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
           <Paper

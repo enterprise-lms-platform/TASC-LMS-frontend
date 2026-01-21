@@ -41,7 +41,7 @@ const kpiData = [
 
 const KPIGrid: React.FC = () => {
   return (
-    <Grid container spacing={3} sx={{ mb: 4 }}>
+    <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
       {kpiData.map((kpi) => (
         <Grid key={kpi.title} size={{ xs: 12, sm: 6, lg: 3 }}>
           <KPICard {...kpi} />

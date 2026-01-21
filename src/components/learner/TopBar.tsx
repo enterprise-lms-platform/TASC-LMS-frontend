@@ -53,11 +53,21 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
         </IconButton>
 
         {/* Page Title */}
-        <Box>
-          <Typography variant="h6" fontWeight={700} noWrap>
+        <Box sx={{ minWidth: 0, flex: { xs: 1, sm: 'none' } }}>
+          <Typography 
+            variant="h6" 
+            fontWeight={700} 
+            noWrap
+            sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}
+          >
             Learner Dashboard
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            sx={{ display: { xs: 'none', sm: 'block' } }}
+            noWrap
+          >
             Continue your learning journey and track your progress
           </Typography>
         </Box>
@@ -109,13 +119,13 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
         </Box>
 
         {/* Action Icons */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton color="inherit">
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.5 } }}>
+          <IconButton color="inherit" size="small">
             <Badge badgeContent={userData.notificationCount} color="error">
               <NotificationsIcon />
             </Badge>
           </IconButton>
-          <IconButton color="inherit">
+          <IconButton color="inherit" size="small" sx={{ display: { xs: 'none', sm: 'flex' } }}>
             <HelpIcon />
           </IconButton>
 

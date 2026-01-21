@@ -7,6 +7,9 @@ import TrustedBy from '../components/landing/TrustedBy';
 import Features from '../components/landing/Features';
 import HowItWorks from '../components/landing/HowItWorks';
 import Courses from '../components/landing/Courses';
+import Categories from '../components/landing/Categories';
+import Testimonials from '../components/landing/Testimonials';
+import StatsBanner from '../components/landing/StatsBanner';
 import Pricing from '../components/landing/Pricing';
 import CTA from '../components/landing/CTA';
 import Footer from '../components/landing/Footer';
@@ -58,13 +61,20 @@ const LandingPage: React.FC = () => {
 
       <Courses isMobile={isMobile} />
 
+      <Categories isMobile={isMobile} />
+
+      <Testimonials isMobile={isMobile} />
+
+      <StatsBanner isMobile={isMobile} />
+
       <Pricing isMobile={isMobile} />
 
       <CTA isMobile={isMobile} />
 
-      <Footer />
+      <Footer isMobile={isMobile} />
     </div>
   );
 };
 
 export default LandingPage;
+

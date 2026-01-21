@@ -41,7 +41,7 @@ const financialData = [
 
 const FinancialOverview: React.FC = () => {
   return (
-    <Grid container spacing={3} sx={{ mb: 4 }}>
+    <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
       {financialData.map((card) => (
         <Grid key={card.title} size={{ xs: 12, sm: 6, lg: 3 }}>
           <FinancialCard {...card} />

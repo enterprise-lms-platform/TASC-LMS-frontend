@@ -41,7 +41,7 @@ const CourseGrid: React.FC = () => {
   return (
     <Box sx={{ mb: 4 }}>
       {/* Section Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: { xs: 2, md: 3 } }}>
         <Typography variant="h6" fontWeight={700}>
           Continue Learning
         </Typography>
@@ -54,7 +54,7 @@ const CourseGrid: React.FC = () => {
       </Box>
 
       {/* Courses Grid */}
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 2, md: 3 }}>
         {coursesData.map((course) => (
           <Grid size={{ xs: 12, sm: 6, md: 4 }} key={course.id}>
             <CourseCard course={course} />

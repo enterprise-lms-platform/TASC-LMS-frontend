@@ -43,12 +43,14 @@ const ManagerDashboard: React.FC = () => {
           flexDirection: 'column',
           width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
           minHeight: '100vh',
+          minWidth: 0, // Prevent flex item from overflowing
+          maxWidth: '100vw', 
         }}
       >
         <Toolbar /> {/* Spacer for fixed AppBar */}
 
         {/* Dashboard Content */}
-        <Box sx={{ flex: 1, p: 3 }}>
+        <Box sx={{ flex: 1, p: { xs: 2, md: 3 }, overflowX: 'hidden' }}>
           {/* Welcome Banner */}
           <WelcomeBanner />
 
@@ -59,7 +61,7 @@ const ManagerDashboard: React.FC = () => {
           <QuickActions />
 
           {/* Main Grid - Left (2fr) + Right (1fr) */}
-          <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 3 }}>
             {/* Left Column - Tables & Charts */}
             <Grid size={{ xs: 12, lg: 8 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -90,7 +92,7 @@ const ManagerDashboard: React.FC = () => {
           </Grid>
 
           {/* Bottom Grid - 3 Columns */}
-          <Grid container spacing={3}>
+          <Grid container spacing={{ xs: 2, md: 3 }}>
             <Grid size={{ xs: 12, md: 4 }}>
               <CourseCategories />
             </Grid>

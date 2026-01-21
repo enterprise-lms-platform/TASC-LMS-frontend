@@ -27,7 +27,12 @@ const WelcomeBanner: React.FC = () => {
           Your platform is running smoothly. Here's what's happening across all organizations today.
         </Typography>
       </Box>
-      <Box sx={{ display: 'flex', gap: 1.5 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: 1.5,
+        width: { xs: '100%', sm: 'auto' }
+      }}>
         <Button
           variant="contained"
           startIcon={<DownloadIcon />}
@@ -35,6 +40,7 @@ const WelcomeBanner: React.FC = () => {
             bgcolor: 'white',
             color: 'text.primary',
             '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+            width: { xs: '100%', sm: 'auto' },
           }}
         >
           Export Report
@@ -46,6 +52,7 @@ const WelcomeBanner: React.FC = () => {
             bgcolor: 'white',
             color: 'text.primary',
             '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+            width: { xs: '100%', sm: 'auto' },
           }}
         >
           System Settings

@@ -9,12 +9,40 @@ const Hero: React.FC<HeroProps> = ({ isMobile }) => {
     <section
       className="hero-section"
       style={{
-        paddingTop: '160px',
-        paddingBottom: '96px',
+        padding: '96px 0 80px',
         background: 'linear-gradient(135deg, rgba(255, 164, 36, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)',
+        marginTop: '72px',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
+      {/* Background decorations */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '-50%',
+          right: '-20%',
+          width: '800px',
+          height: '800px',
+          background: 'radial-gradient(circle, rgba(255, 164, 36, 0.1) 0%, transparent 70%)',
+          borderRadius: '50%',
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '-30%',
+          left: '-10%',
+          width: '600px',
+          height: '600px',
+          background: 'radial-gradient(circle, rgba(249, 115, 22, 0.08) 0%, transparent 70%)',
+          borderRadius: '50%',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1 }}>
         <div
           style={{
             display: 'grid',
@@ -24,7 +52,7 @@ const Hero: React.FC<HeroProps> = ({ isMobile }) => {
           }}
         >
           {/* Left Content */}
-          <div>
+          <div style={{ maxWidth: '600px' }}>
             <div
               className="chip-badge"
               style={{
@@ -33,24 +61,25 @@ const Hero: React.FC<HeroProps> = ({ isMobile }) => {
                 gap: '8px',
                 backgroundColor: '#fff3e0',
                 color: '#ffa424',
-                padding: '6px 12px',
-                borderRadius: '20px',
+                padding: '8px 16px',
+                borderRadius: '9999px',
                 fontWeight: 600,
                 marginBottom: '24px',
                 fontSize: '0.875rem',
               }}
             >
-              <i className="fas fa-wand-magic-sparkles" />
+              <i className="fas fa-sparkles" />
               New: AI-Powered Learning Paths
             </div>
 
-            <h2
+            <h1
               className="hero-title"
               style={{
-                fontSize: isMobile ? '2rem' : '3rem',
+                fontSize: isMobile ? '2.25rem' : '3rem',
                 fontWeight: 800,
+                color: '#18181b',
+                lineHeight: 1.1,
                 marginBottom: '24px',
-                lineHeight: 1.2,
               }}
             >
               Transform Your Career with{' '}
@@ -64,7 +93,7 @@ const Hero: React.FC<HeroProps> = ({ isMobile }) => {
               >
                 World-Class Learning
               </span>
-            </h2>
+            </h1>
 
             <p
               className="hero-description"
@@ -80,102 +109,235 @@ const Hero: React.FC<HeroProps> = ({ isMobile }) => {
             </p>
 
             <div
-              className="hero-buttons"
+              className="hero-actions"
               style={{
                 display: 'flex',
-                flexDirection: isMobile ? 'column' : 'row',
                 gap: '16px',
-                marginBottom: '48px',
+                marginBottom: '40px',
+                flexDirection: isMobile ? 'column' : 'row',
               }}
             >
-              <button
+              <a
+                href="#"
+                className="btn btn-primary btn-xl"
                 style={{
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  padding: '12px 32px',
+                  padding: '20px 40px',
                   backgroundColor: '#ffa424',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
-                  cursor: 'pointer',
                   fontWeight: 600,
-                  fontSize: '1rem',
+                  fontSize: '1.125rem',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s',
                 }}
               >
-                <i className="fas fa-play" />
+                <i className="fas fa-play-circle" />
                 Start Learning Free
-              </button>
-              <button
+              </a>
+              <a
+                href="#"
+                className="btn btn-outline-primary btn-xl"
                 style={{
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  padding: '12px 32px',
-                  backgroundColor: 'white',
+                  padding: '18px 38px',
+                  backgroundColor: 'transparent',
                   color: '#ffa424',
                   border: '2px solid #ffa424',
                   borderRadius: '8px',
-                  cursor: 'pointer',
                   fontWeight: 600,
-                  fontSize: '1rem',
+                  fontSize: '1.125rem',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s',
                 }}
               >
-                <i className="fas fa-briefcase" />
+                <i className="fas fa-building" />
                 For Organizations
-              </button>
+              </a>
             </div>
 
-            {/* Stats */}
+            {/* Hero Stats */}
             <div
               className="hero-stats"
               style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                gap: '32px',
+                display: 'flex',
+                gap: '40px',
+                flexWrap: 'wrap',
               }}
             >
-              <div className="stat-card" style={{ textAlign: 'center' }}>
-                <div className="stat-number" style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '8px' }}>
-                  1000+
-                </div>
-                <p style={{ fontSize: '0.875rem', color: '#71717a', margin: 0 }}>Expert-Led Courses</p>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: '1.875rem', fontWeight: 700, color: '#18181b' }}>1000+</div>
+                <div style={{ fontSize: '0.875rem', color: '#71717a' }}>Expert-Led Courses</div>
               </div>
-              <div className="stat-card" style={{ textAlign: 'center' }}>
-                <div className="stat-number" style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '8px' }}>
-                  50K+
-                </div>
-                <p style={{ fontSize: '0.875rem', color: '#71717a', margin: 0 }}>Active Learners</p>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: '1.875rem', fontWeight: 700, color: '#18181b' }}>50K+</div>
+                <div style={{ fontSize: '0.875rem', color: '#71717a' }}>Active Learners</div>
               </div>
-              <div className="stat-card" style={{ textAlign: 'center' }}>
-                <div className="stat-number" style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '8px' }}>
-                  4.8
-                </div>
-                <p style={{ fontSize: '0.875rem', color: '#71717a', margin: 0 }}>Average Rating</p>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: '1.875rem', fontWeight: 700, color: '#18181b' }}>4.8</div>
+                <div style={{ fontSize: '0.875rem', color: '#71717a' }}>Average Rating</div>
               </div>
             </div>
           </div>
 
-          {/* Right Content - Image Placeholder */}
+          {/* Right Content - Hero Visual */}
           {!isMobile && (
-            <div
-              className="course-image"
-              style={{
-                height: '400px',
-                borderRadius: '16px',
-                overflow: 'hidden',
-                background: 'linear-gradient(135deg, #ffb74d, #f97316)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-              }}
-            >
-              <div style={{ textAlign: 'center' }}>
-                <i className="fas fa-play" style={{ fontSize: '80px', opacity: 0.9, marginBottom: '16px' }} />
-                <p style={{ fontSize: '1.125rem', margin: 0 }}>Start Your Learning Journey</p>
+            <div style={{ position: 'relative' }}>
+              {/* Main Image Container */}
+              <div
+                className="hero-image-container"
+                style={{
+                  borderRadius: '32px',
+                  overflow: 'hidden',
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                }}
+              >
+                <div
+                  style={{
+                    width: '100%',
+                    aspectRatio: '4/3',
+                    background: 'linear-gradient(135deg, #ffb74d, #f97316)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                  }}
+                >
+                  <i className="fas fa-play-circle" style={{ fontSize: '5rem', marginBottom: '16px', opacity: 0.9 }} />
+                  <span style={{ fontSize: '1.125rem', fontWeight: 500, opacity: 0.9 }}>
+                    Start Your Learning Journey
+                  </span>
+                </div>
+              </div>
+
+              {/* Floating Card 1 - Verified Certificates */}
+              <div
+                className="hero-floating-card"
+                style={{
+                  position: 'absolute',
+                  top: '10%',
+                  left: '-10%',
+                  backgroundColor: 'white',
+                  borderRadius: '16px',
+                  padding: '16px',
+                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  animation: 'float 3s ease-in-out infinite',
+                }}
+              >
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    color: '#10b981',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.25rem',
+                  }}
+                >
+                  <i className="fas fa-certificate" />
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#27272a', margin: 0 }}>
+                    Verified Certificates
+                  </h4>
+                  <p style={{ fontSize: '0.75rem', color: '#71717a', margin: 0 }}>Industry-recognized credentials</p>
+                </div>
+              </div>
+
+              {/* Floating Card 2 - 200+ Instructors */}
+              <div
+                className="hero-floating-card"
+                style={{
+                  position: 'absolute',
+                  bottom: '20%',
+                  right: '-5%',
+                  backgroundColor: 'white',
+                  borderRadius: '16px',
+                  padding: '16px',
+                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  animation: 'float 3s ease-in-out infinite',
+                  animationDelay: '1s',
+                }}
+              >
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(255, 164, 36, 0.1)',
+                    color: '#ffa424',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.25rem',
+                  }}
+                >
+                  <i className="fas fa-users" />
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#27272a', margin: 0 }}>
+                    200+ Instructors
+                  </h4>
+                  <p style={{ fontSize: '0.75rem', color: '#71717a', margin: 0 }}>Learn from the best</p>
+                </div>
+              </div>
+
+              {/* Floating Card 3 - Live Sessions */}
+              <div
+                className="hero-floating-card"
+                style={{
+                  position: 'absolute',
+                  bottom: '5%',
+                  left: '5%',
+                  backgroundColor: 'white',
+                  borderRadius: '16px',
+                  padding: '16px',
+                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  animation: 'float 3s ease-in-out infinite',
+                  animationDelay: '2s',
+                }}
+              >
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    color: '#3b82f6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.25rem',
+                  }}
+                >
+                  <i className="fas fa-video" />
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#27272a', margin: 0 }}>
+                    Live Sessions
+                  </h4>
+                  <p style={{ fontSize: '0.75rem', color: '#71717a', margin: 0 }}>Interactive learning</p>
+                </div>
               </div>
             </div>
           )}

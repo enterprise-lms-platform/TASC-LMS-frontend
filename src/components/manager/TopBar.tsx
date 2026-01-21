@@ -56,11 +56,21 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
         </IconButton>
 
         {/* Page Title */}
-        <Box>
-          <Typography variant="h6" fontWeight={700} noWrap>
+        <Box sx={{ minWidth: 0, flex: { xs: 1, sm: 'none' } }}>
+          <Typography 
+            variant="h6" 
+            fontWeight={700} 
+            noWrap
+            sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}
+          >
             LMS Manager Dashboard
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            sx={{ display: { xs: 'none', sm: 'block' } }}
+            noWrap
+          >
             Manage users, courses, and track organizational learning
           </Typography>
         </Box>
@@ -112,18 +122,18 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
         </Box>
 
         {/* Action Icons */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <IconButton color="inherit">
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.5 } }}>
+          <IconButton color="inherit" size="small">
             <Badge badgeContent={managerData.notificationCount} color="error">
               <NotificationsIcon />
             </Badge>
           </IconButton>
-          <IconButton color="inherit">
+          <IconButton color="inherit" size="small" sx={{ display: { xs: 'none', sm: 'flex' } }}>
             <Badge badgeContent={managerData.messageCount} color="error">
               <EmailIcon />
             </Badge>
           </IconButton>
-          <IconButton color="inherit">
+          <IconButton color="inherit" size="small" sx={{ display: { xs: 'none', md: 'flex' } }}>
             <HelpIcon />
           </IconButton>
 

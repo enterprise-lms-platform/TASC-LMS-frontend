@@ -34,13 +34,15 @@ const FinanceDashboard: React.FC = () => {
           ml: { lg: `${DRAWER_WIDTH}px` },
           display: 'flex',
           flexDirection: 'column',
+          minWidth: 0,
+          maxWidth: '100vw',
         }}
       >
         {/* Top Bar */}
         <TopBar onMenuClick={handleMobileToggle} />
 
         {/* Dashboard Content */}
-        <Box sx={{ flex: 1, p: 3, overflowY: 'auto' }}>
+        <Box sx={{ flex: 1, p: { xs: 2, md: 3 }, overflowX: 'hidden', overflowY: 'auto' }}>
           {/* Welcome Banner */}
           <WelcomeBanner />
 
@@ -48,7 +50,7 @@ const FinanceDashboard: React.FC = () => {
           <FinancialOverview />
 
           {/* Charts Section */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
             <Grid size={{ xs: 12, lg: 8 }}>
               <RevenueChart />
             </Grid>
@@ -58,7 +60,7 @@ const FinanceDashboard: React.FC = () => {
           </Grid>
 
           {/* Data Section */}
-          <Grid container spacing={3}>
+          <Grid container spacing={{ xs: 2, md: 3 }}>
             <Grid size={{ xs: 12, lg: 8 }}>
               <TransactionsTable />
             </Grid>

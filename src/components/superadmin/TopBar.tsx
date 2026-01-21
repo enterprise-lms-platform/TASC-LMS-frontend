@@ -54,11 +54,26 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
           >
             <MenuIcon />
           </IconButton>
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
+          <Box sx={{ minWidth: 0, flex: { xs: 1, md: 'none' } }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontWeight: 700, 
+                color: 'text.primary',
+                fontSize: { xs: '1rem', sm: '1.25rem' },
+              }}
+              noWrap
+            >
               Super Admin Dashboard
             </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: 'text.secondary',
+                display: { xs: 'none', sm: 'block' }
+              }}
+              noWrap
+            >
               Platform Overview & System Management
             </Typography>
           </Box>
@@ -92,16 +107,16 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
           </Box>
 
           {/* Action Icons */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton sx={{ color: 'text.secondary' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 1 } }}>
+            <IconButton sx={{ color: 'text.secondary' }} size="small">
               <Badge badgeContent={5} color="error">
                 <NotificationsIcon />
               </Badge>
             </IconButton>
-            <IconButton sx={{ color: 'text.secondary' }}>
+            <IconButton sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'flex' } }} size="small">
               <HelpIcon />
             </IconButton>
-            <IconButton sx={{ color: 'text.secondary' }}>
+            <IconButton sx={{ color: 'text.secondary', display: { xs: 'none', md: 'flex' } }} size="small">
               <FullscreenIcon />
             </IconButton>
 

@@ -34,8 +34,11 @@ const LearnerDashboard: React.FC = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: { xs: 2, md: 3 },
           width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+          overflowX: 'hidden',
+          minWidth: 0, 
+          maxWidth: '100vw',
         }}
       >
         <Toolbar /> {/* Spacer for fixed AppBar */}
@@ -50,7 +53,7 @@ const LearnerDashboard: React.FC = () => {
         <CourseGrid />
 
         {/* Upcoming Sessions & Recent Activity */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
           <Grid size={{ xs: 12, lg: 8 }}>
             <UpcomingSessions />
           </Grid>

@@ -158,7 +158,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
           sx={{
             width: 40,
             height: 40,
-            background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+            background: 'linear-gradient(135deg, #ffb74d, #f97316)',
             fontWeight: 600,
           }}
         >
@@ -168,7 +168,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
           <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
             {financeUser.name}
           </Typography>
-          <Typography variant="caption" sx={{ color: '#8b5cf6', fontWeight: 500 }}>
+          <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 500 }}>
             {financeUser.role}
           </Typography>
         </Box>

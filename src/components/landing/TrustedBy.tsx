@@ -5,95 +5,70 @@ interface TrustedByProps {
 }
 
 const TrustedBy: React.FC<TrustedByProps> = ({ isMobile }) => {
-  const companies = ['Acme Corp', 'Global Tech', 'Innovation Labs', 'Future Systems', 'Tech Solutions', 'Digital Ventures'];
+  const companies = [
+    { icon: 'building', name: 'Acme Corp' },
+    { icon: 'globe', name: 'Global Tech' },
+    { icon: 'rocket', name: 'Innovate' },
+    { icon: 'bolt', name: 'Future Dynamics' },
+    { icon: 'star', name: 'NextGen' },
+  ];
 
   return (
     <section
       className="trusted-by-section"
       style={{
-        paddingTop: '64px',
-        paddingBottom: '64px',
-        backgroundColor: '#f9fafb',
+        padding: '48px 0',
+        backgroundColor: '#fafafa',
+        borderTop: '1px solid #e4e4e7',
+        borderBottom: '1px solid #e4e4e7',
       }}
     >
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <p
-            style={{
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              color: '#ffa424',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              marginBottom: '8px',
-              margin: '0 0 8px 0',
-            }}
-          >
-            Trusted by Industry Leaders
-          </p>
-          <h2
-            style={{
-              fontSize: '1.875rem',
-              fontWeight: 700,
-              marginBottom: '32px',
-              margin: '0 0 32px 0',
-            }}
-          >
-            Partnered with Thousands of Organizations
-          </h2>
-        </div>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px' }}>
+        <p
+          style={{
+            textAlign: 'center',
+            fontSize: '0.875rem',
+            color: '#71717a',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            marginBottom: '32px',
+          }}
+        >
+          Trusted by Leading Organizations Worldwide
+        </p>
 
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(6, 1fr)',
-            gap: '24px',
+            display: 'flex',
             alignItems: 'center',
+            justifyContent: 'center',
+            gap: isMobile ? '24px' : '48px',
+            flexWrap: 'wrap',
           }}
         >
           {companies.map((company, index) => (
             <div
-              key={company}
+              key={index}
+              className="trusted-logo"
               style={{
-                padding: '24px',
-                backgroundColor: 'white',
-                borderRadius: '12px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
-                border: '1px solid #e4e4e7',
-                transition: 'all 0.3s',
+                gap: '8px',
+                color: '#a1a1aa',
+                fontSize: '1.25rem',
+                fontWeight: 700,
+                transition: 'color 0.3s',
                 cursor: 'pointer',
               }}
               onMouseEnter={(e) => {
-                const target = e.currentTarget as HTMLDivElement;
-                target.style.borderColor = '#ffa424';
-                target.style.boxShadow = '0 4px 12px rgba(255, 164, 36, 0.15)';
+                (e.currentTarget as HTMLDivElement).style.color = '#52525b';
               }}
               onMouseLeave={(e) => {
-                const target = e.currentTarget as HTMLDivElement;
-                target.style.borderColor = '#e4e4e7';
-                target.style.boxShadow = 'none';
+                (e.currentTarget as HTMLDivElement).style.color = '#a1a1aa';
               }}
             >
-              <div
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  backgroundColor: `hsla(${index * 60}, 80%, 60%, 0.1)`,
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: `hsl(${index * 60}, 80%, 50%)`,
-                }}
-              >
-                <i className="fas fa-building" />
-              </div>
-              <span style={{ fontWeight: 600, color: '#18181b', fontSize: '0.875rem' }}>
-                {company}
-              </span>
+              <i className={`fas fa-${company.icon}`} style={{ fontSize: '1.5rem' }} />
+              <span>{company.name}</span>
             </div>
           ))}
         </div>

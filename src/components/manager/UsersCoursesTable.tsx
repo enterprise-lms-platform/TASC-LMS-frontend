@@ -135,13 +135,15 @@ const UsersCoursesTable: React.FC = () => {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              p: 2.5,
-              px: 3,
+              p: { xs: 2, md: 2.5 },
+              px: { xs: 2, md: 3 },
+              flexWrap: 'wrap',
+              gap: 1,
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <UsersIcon sx={{ color: 'primary.dark' }} />
-              <Typography variant="subtitle1" fontWeight={600}>
+              <UsersIcon sx={{ color: 'primary.dark', fontSize: { xs: 20, md: 24 } }} />
+              <Typography variant="subtitle1" fontWeight={600} sx={{ fontSize: { xs: '0.9rem', md: '1rem' } }}>
                 Recent Users
               </Typography>
             </Box>
@@ -150,7 +152,12 @@ const UsersCoursesTable: React.FC = () => {
                 variant="outlined"
                 size="small"
                 startIcon={<FilterIcon />}
-                sx={{ textTransform: 'none', fontWeight: 500 }}
+                sx={{ 
+                  textTransform: 'none', 
+                  fontWeight: 500,
+                  fontSize: { xs: '0.75rem', md: '0.875rem' },
+                  px: { xs: 1, md: 2 },
+                }}
               >
                 Filter
               </Button>
@@ -163,6 +170,8 @@ const UsersCoursesTable: React.FC = () => {
                   fontWeight: 500,
                   bgcolor: 'primary.dark',
                   '&:hover': { bgcolor: 'primary.main' },
+                  fontSize: { xs: '0.75rem', md: '0.875rem' },
+                  px: { xs: 1, md: 2 },
                 }}
               >
                 Add User
@@ -171,8 +180,8 @@ const UsersCoursesTable: React.FC = () => {
           </Box>
 
           {/* Table */}
-          <TableContainer>
-            <Table>
+          <TableContainer sx={{ overflowX: 'auto', width: '100%' }}>
+            <Table sx={{ minWidth: 650 }}>
               <TableHead>
                 <TableRow sx={{ bgcolor: 'grey.50' }}>
                   <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'text.secondary' }}>
@@ -181,10 +190,10 @@ const UsersCoursesTable: React.FC = () => {
                   <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'text.secondary' }}>
                     Role
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'text.secondary' }}>
+                  <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'text.secondary', display: { xs: 'none', md: 'table-cell' } }}>
                     Department
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'text.secondary' }}>
+                  <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'text.secondary', display: { xs: 'none', sm: 'table-cell' } }}>
                     Enrolled Courses
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'text.secondary' }}>
@@ -233,10 +242,10 @@ const UsersCoursesTable: React.FC = () => {
                         }}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                       <Typography variant="body2">{user.department}</Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                       <Typography variant="body2">{user.courses}</Typography>
                     </TableCell>
                     <TableCell>

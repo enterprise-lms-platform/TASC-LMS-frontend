@@ -7,7 +7,7 @@ const WelcomeBanner: React.FC = () => {
     <Paper
       elevation={0}
       sx={{
-        background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+        background: 'linear-gradient(135deg, #ffa424, #f97316)',
         color: 'white',
         p: 4,
         borderRadius: 3,
@@ -27,7 +27,12 @@ const WelcomeBanner: React.FC = () => {
           Track revenue, manage payments, and generate financial reports across your organization.
         </Typography>
       </Box>
-      <Box sx={{ display: 'flex', gap: 1.5 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: 1.5,
+        width: { xs: '100%', sm: 'auto' }
+      }}>
         <Button
           variant="contained"
           startIcon={<DownloadIcon />}
@@ -35,6 +40,7 @@ const WelcomeBanner: React.FC = () => {
             bgcolor: 'white',
             color: 'text.primary',
             '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+            width: { xs: '100%', sm: 'auto' },
           }}
         >
           Export Report
@@ -46,6 +52,7 @@ const WelcomeBanner: React.FC = () => {
             bgcolor: 'white',
             color: 'text.primary',
             '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+            width: { xs: '100%', sm: 'auto' },
           }}
         >
           New Invoice

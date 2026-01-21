@@ -53,11 +53,26 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
           >
             <MenuIcon />
           </IconButton>
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
+          <Box sx={{ minWidth: 0, flex: { xs: 1, md: 'none' } }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontWeight: 700, 
+                color: 'text.primary',
+                fontSize: { xs: '1rem', sm: '1.25rem' },
+              }}
+              noWrap
+            >
               Finance Dashboard
             </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: 'text.secondary',
+                display: { xs: 'none', sm: 'block' }
+              }}
+              noWrap
+            >
               Revenue analytics, payment tracking, and financial reporting
             </Typography>
           </Box>
@@ -91,13 +106,13 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
           </Box>
 
           {/* Action Icons */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton sx={{ color: 'text.secondary' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 1 } }}>
+            <IconButton sx={{ color: 'text.secondary' }} size="small">
               <Badge badgeContent={4} color="error">
                 <NotificationsIcon />
               </Badge>
             </IconButton>
-            <IconButton sx={{ color: 'text.secondary' }}>
+            <IconButton sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'flex' } }} size="small">
               <HelpIcon />
             </IconButton>
 
@@ -118,7 +133,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                 sx={{
                   width: 40,
                   height: 40,
-                  background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+                  background: 'linear-gradient(135deg, #ffb74d, #f97316)',
                   fontWeight: 700,
                 }}
               >
@@ -128,7 +143,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                 <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
                   Lisa Thompson
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#8b5cf6', fontWeight: 500 }}>
+                <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 500 }}>
                   Finance Manager
                 </Typography>
               </Box>

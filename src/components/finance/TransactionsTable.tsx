@@ -141,7 +141,7 @@ const TransactionsTable: React.FC = () => {
       </Box>
 
       {/* Table */}
-      <TableContainer>
+      <TableContainer sx={{ width: '100%', overflowX: 'auto' }}>
         <Table>
           <TableHead>
             <TableRow sx={{ bgcolor: 'grey.50' }}>

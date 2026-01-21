@@ -115,7 +115,14 @@ const OrganizationsTable: React.FC = () => {
         borderColor: 'divider',
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: 3,
+        flexWrap: 'wrap',
+        gap: 2
+      }}>
         <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
           Top Organizations
         </Typography>
@@ -139,7 +146,7 @@ const OrganizationsTable: React.FC = () => {
         </Box>
       </Box>
 
-      <TableContainer>
+      <TableContainer sx={{ width: '100%', overflowX: 'auto' }}>
         <Table>
           <TableHead>
             <TableRow>
