@@ -7,6 +7,7 @@ import LearnerDashboard from './pages/LearnerDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
 import SuperadminDashboard from './pages/SuperadminDashboard';
 import FinanceDashboard from './pages/FinanceDashboard';
+import PasswordResetPage from './pages/PasswordReset';
 
 const App = () => {
   return (
@@ -16,6 +17,7 @@ const App = () => {
         <Route path="/register" element={<RegistrationPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/verify" element={<VerificationPage />} />
+        <Route path="/passwordreset" element={<PasswordResetPage />} />
         <Route path="/learner" element={<LearnerDashboard />} />
         <Route path="/manager" element={<ManagerDashboard />} />
         <Route path="/superadmin" element={<SuperadminDashboard />} />
