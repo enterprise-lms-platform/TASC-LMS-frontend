@@ -60,7 +60,7 @@ const Footer: React.FC<FooterProps> = ({ isMobile = false }) => {
           className="footer-grid"
         >
           {/* Brand Column */}
-          <div style={{ maxWidth: isMobile ? '100%' : '300px', gridColumn: isMobile ? '1' : 'auto' }}>
+          <div style={{ maxWidth: isMobile ? '100%' : '300px', gridColumn: isMobile ? '1' : 'auto', textAlign: isMobile ? 'center' : 'left' }}>
             <div
               className="footer-logo"
               style={{
@@ -68,6 +68,7 @@ const Footer: React.FC<FooterProps> = ({ isMobile = false }) => {
                 alignItems: 'center',
                 gap: '12px',
                 marginBottom: '24px',
+                justifyContent: isMobile ? 'center' : 'flex-start',
               }}
             >
               <i className="fas fa-graduation-cap" style={{ fontSize: '1.5rem', color: '#ffb74d' }} />
@@ -80,13 +81,15 @@ const Footer: React.FC<FooterProps> = ({ isMobile = false }) => {
                 color: '#a1a1aa',
                 lineHeight: 1.7,
                 marginBottom: '24px',
+                maxWidth: isMobile ? '100%' : 'auto',
+                margin: isMobile ? '0 auto 24px' : '0 0 24px',
               }}
             >
               Empowering learners worldwide with world-class education. Transform your career with expert-led courses
               and recognized certifications.
             </p>
 
-            <div className="footer-social" style={{ display: 'flex', gap: '12px', marginBottom: isMobile ? '24px' : 0 }}>
+            <div className="footer-social" style={{ display: 'flex', gap: '12px', marginBottom: isMobile ? '24px' : 0, justifyContent: isMobile ? 'center' : 'flex-start' }}>
               {socialLinks.map((social) => (
                 <a
                   key={social.icon}
@@ -122,7 +125,7 @@ const Footer: React.FC<FooterProps> = ({ isMobile = false }) => {
 
           {/* Footer Columns */}
           {columns.map((column) => (
-            <div key={column.title} className="footer-column">
+            <div key={column.title} className="footer-column" style={{ textAlign: isMobile ? 'center' : 'left' }}>
               <h4
                 className="footer-column-title"
                 style={{
