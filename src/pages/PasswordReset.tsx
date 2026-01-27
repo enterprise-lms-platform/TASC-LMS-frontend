@@ -34,6 +34,41 @@ const StatCard = ({label, value} : {label:string, value: string}) =>{
   )
 } 
 
+// Right Panel tabs
+// Password Reset Form
+const ResetForm = () => {
+  return(
+    <>
+      <Box sx={passwordResetStyles.resetForm}>
+        <Box sx={[passwordResetStyles.formStep, passwordResetStyles.active]}>
+
+        </Box>
+      </Box>
+    </>
+  )
+}
+// Step 2: OTP Verification
+const OTPVerification = () => {
+  return(
+    <>
+    </>
+  )
+}
+
+// Step 3:New Password
+
+const NewPassword = () => {
+
+}
+
+// Success State
+
+const SuccessTab = () => {
+
+}
+
+
+
 function PasswordResetPage() {
   return (
     <>
@@ -82,8 +117,14 @@ function PasswordResetPage() {
           />
         </Stack>
 
+      <Box sx={passwordResetStyles.copyright}>
+        &copy; 2025 TASC Learning Management System. All rights reserved.
       </Box>
+      </Box>
+      
+      {/* Right Panel */}
     </Box>
+
     </>
   )
 }
