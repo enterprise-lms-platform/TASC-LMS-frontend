@@ -10,6 +10,7 @@ import FinanceDashboard from './pages/FinanceDashboard';
 import CourseCataloguePage from './pages/CourseCataloguePage';
 import ForBusinessPage from './pages/ForBusinessPage';
 import CourseLandingPage from './pages/CourseLandingPage';
+import PasswordResetPage from './pages/PasswordReset';
 
 const App = () => {
   return (
@@ -22,6 +23,7 @@ const App = () => {
         <Route path="/register" element={<RegistrationPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/verify" element={<VerificationPage />} />
+        <Route path="/passwordreset" element={<PasswordResetPage />} />
         <Route path="/learner" element={<LearnerDashboard />} />
         <Route path="/manager" element={<ManagerDashboard />} />
         <Route path="/superadmin" element={<SuperadminDashboard />} />

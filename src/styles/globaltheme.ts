@@ -38,7 +38,7 @@ export const globalFonts = {
 }
 
 // global spacing scale in rem units called like an index
-export const globalSpacing = ['0.25rem', '0.5rem', '0.75rem', '1rem', '1.25rem', '1.5rem', '2rem', '2.5rem', '3rem', '4rem']; //calling theme.spacing(2, 5) will give 3px, and 6px  like an index
+export const globalSpacing = ['none', '0.25rem', '0.5rem', '0.75rem', '1rem', '1.25rem', '1.5rem', '2rem', '2.5rem', '3rem', '4rem']; //calling theme.spacing(2, 5) will give 3px, and 6px  like an index
 
 export const globalFontSizes = {
     xs: '0.75rem',
