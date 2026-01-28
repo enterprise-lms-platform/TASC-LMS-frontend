@@ -24,6 +24,7 @@ const userData = {
   name: 'Emma Chen',
   plan: 'Pro Learner',
   initials: 'EC',
+  avatar: '/avatars/female face (1).jpg',
   notificationCount: 3,
 };
 
@@ -154,6 +155,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
             }}
           >
             <Avatar
+              src={userData.avatar}
               sx={{
                 width: 36,
                 height: 36,

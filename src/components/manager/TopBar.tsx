@@ -26,6 +26,7 @@ const managerData = {
   name: 'Sarah Johnson',
   role: 'LMS Manager',
   initials: 'SJ',
+  avatar: '/avatars/female face (3).jpg',
   notificationCount: 8,
   messageCount: 3,
 };
@@ -165,6 +166,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
             }}
           >
             <Avatar
+              src={managerData.avatar}
               sx={{
                 width: 36,
                 height: 36,

@@ -130,6 +130,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
               }}
             >
               <Avatar
+                src="/avatars/female face (4).jpg"
                 sx={{
                   width: 40,
                   height: 40,

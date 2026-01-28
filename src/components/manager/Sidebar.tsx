@@ -53,6 +53,7 @@ const managerData = {
   name: 'Sarah Johnson',
   role: 'LMS Manager',
   initials: 'SJ',
+  avatar: '/avatars/female face (3).jpg',
   organization: 'Acme Corporation',
 };
 
@@ -177,6 +178,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
           <Avatar
+            src={managerData.avatar}
             sx={{
               width: 48,
               height: 48,

@@ -41,6 +41,7 @@ const financeUser = {
   name: 'Lisa Thompson',
   role: 'Finance Manager',
   initials: 'LT',
+  avatar: '/avatars/female face (4).jpg',
 };
 
 // Type for navigation items
@@ -155,6 +156,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
         }}
       >
         <Avatar
+          src={financeUser.avatar}
           sx={{
             width: 40,
             height: 40,

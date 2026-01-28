@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import { PlayArrow, Search } from '@mui/icons-material';
 
@@ -8,6 +9,8 @@ const userData = {
 };
 
 const WelcomeBanner: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <Paper
       elevation={0}
@@ -84,6 +87,7 @@ const WelcomeBanner: React.FC = () => {
           variant="outlined"
           startIcon={<Search />}
           size="small"
+          onClick={() => navigate('/learner/courses')}
           sx={{
             color: 'white',
             borderColor: 'rgba(255,255,255,0.5)',

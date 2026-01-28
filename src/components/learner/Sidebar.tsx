@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Drawer,
@@ -26,6 +27,10 @@ import {
   TrendingUp as ProgressIcon,
   Quiz as QuizIcon,
   Assignment as AssignmentIcon,
+  Person as PersonIcon,
+  CardMembership as CardMembershipIcon,
+  Receipt as ReceiptIcon,
+  Settings as SettingsIcon,
 } from '@mui/icons-material';
 
 // Sidebar width constant
@@ -36,33 +41,42 @@ const navSections = [
   {
     title: 'Dashboard',
     items: [
-      { text: 'Overview', icon: <DashboardIcon />, active: true },
-      { text: 'My Courses', icon: <MenuBookIcon /> },
-      { text: 'Notifications', icon: <NotificationsIcon />, badge: 3 },
+      { text: 'Overview', icon: <DashboardIcon />, path: '/learner' },
+      { text: 'My Courses', icon: <MenuBookIcon />, path: '/learner/my-courses' },
+      { text: 'Notifications', icon: <NotificationsIcon />, badge: 3, path: '/learner/notifications' },
     ],
   },
   {
     title: 'Learning',
     items: [
-      { text: 'Continue Learning', icon: <SchoolIcon /> },
-      { text: 'Browse Courses', icon: <SearchIcon /> },
-      { text: 'My Schedule', icon: <DateRangeIcon /> },
-      { text: 'Saved Courses', icon: <BookmarkIcon /> },
+      { text: 'Continue Learning', icon: <SchoolIcon />, path: '/learner/continue' },
+      { text: 'Browse Courses', icon: <SearchIcon />, path: '/learner/courses' },
+      { text: 'My Schedule', icon: <DateRangeIcon />, path: '/learner/schedule' },
+      { text: 'Saved Courses', icon: <BookmarkIcon />, path: '/learner/saved' },
     ],
   },
   {
     title: 'Achievements',
     items: [
-      { text: 'Certificates', icon: <EmojiEventsIcon /> },
-      { text: 'Badges', icon: <BadgeIcon /> },
-      { text: 'Progress', icon: <ProgressIcon /> },
+      { text: 'Certificates', icon: <EmojiEventsIcon />, path: '/learner/certificates' },
+      { text: 'Badges', icon: <BadgeIcon />, path: '/learner/badges' },
+      { text: 'Progress', icon: <ProgressIcon />, path: '/learner/progress' },
     ],
   },
   {
     title: 'Assessments',
     items: [
-      { text: 'Quizzes', icon: <QuizIcon /> },
-      { text: 'Assignments', icon: <AssignmentIcon /> },
+      { text: 'Quizzes', icon: <QuizIcon />, path: '/learner/quizzes' },
+      { text: 'Assignments', icon: <AssignmentIcon />, path: '/learner/assignments' },
+    ],
+  },
+  {
+    title: 'Account',
+    items: [
+      { text: 'Profile', icon: <PersonIcon />, path: '/learner/profile' },
+      { text: 'Subscription', icon: <CardMembershipIcon />, path: '/learner/subscription' },
+      { text: 'Payment History', icon: <ReceiptIcon />, path: '/learner/payments' },
+      { text: 'Settings', icon: <SettingsIcon />, path: '/learner/settings' },
     ],
   },
 ];
@@ -72,6 +86,7 @@ const userData = {
   name: 'Emma Chen',
   plan: 'Pro Learner',
   initials: 'EC',
+  avatar: '/avatars/female face (1).jpg',
   overallProgress: 65,
 };
 
@@ -81,6 +96,15 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleNavClick = (path: string) => {
+    navigate(path);
+    if (onMobileClose) {
+      onMobileClose();
+    }
+  };
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -114,6 +138,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
         }}
       >
         <Avatar
+          src={userData.avatar}
           sx={{
             width: 40,
             height: 40,
@@ -153,10 +178,13 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
                   </Typography>
                 </Box>
               </ListItem>
-              {section.items.map((item) => (
+              {section.items.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
                 <ListItem key={item.text} disablePadding>
                   <ListItemButton
-                    className={`nav-item ${item.active ? 'active' : ''}`}
+                    onClick={() => handleNavClick(item.path)}
+                    className={`nav-item ${isActive ? 'active' : ''}`}
                     sx={{
                       py: 1,
                       px: 3,
@@ -172,7 +200,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
                     <ListItemIcon
                       sx={{
                         minWidth: 40,
-                        color: item.active ? 'primary.dark' : 'inherit',
+                        color: isActive ? 'primary.dark' : 'inherit',
                       }}
                     >
                       {item.badge ? (
@@ -196,7 +224,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
                     />
                   </ListItemButton>
                 </ListItem>
-              ))}
+              );
+              })}
             </List>
             <Divider sx={{ my: 1 }} />
           </Box>

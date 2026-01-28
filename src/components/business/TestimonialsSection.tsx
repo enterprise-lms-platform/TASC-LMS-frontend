@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, Typography, Chip, Grid, Paper, Stack } from '@mui/material';
+import { Box, Container, Typography, Chip, Grid, Paper, Stack, Avatar } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import StarIcon from '@mui/icons-material/Star';
 
@@ -9,6 +9,7 @@ const testimonials = [
     name: 'Sarah Kimani',
     role: 'Head of L&D',
     company: 'TechCorp International',
+    avatar: '/avatars/female face (6).jpg',
     text: '"TASC LMS transformed our onboarding process. New hires are now productive 40% faster, and our training costs dropped by 60%. The analytics help us continuously improve our programs."',
   },
   {
@@ -16,6 +17,7 @@ const testimonials = [
     name: 'James Mwangi',
     role: 'VP of Human Resources',
     company: 'Global Finance Ltd',
+    avatar: '/avatars/male face (16).jpg',
     text: '"The ability to create custom learning paths for different teams has been game-changing. Our completion rates went from 45% to 89% after switching to TASC LMS."',
   },
   {
@@ -23,6 +25,7 @@ const testimonials = [
     name: 'Amina Nakato',
     role: 'Chief Learning Officer',
     company: 'Innovate Solutions',
+    avatar: '/avatars/female face (9).jpg',
     text: '"The enterprise security features and SSO integration made it easy to get IT approval. Now 2,000+ employees across 12 countries use TASC LMS daily. Best L&D investment we\'ve made."',
   },
 ];
@@ -53,22 +56,18 @@ const TestimonialsSection: React.FC = () => {
                 </Stack>
                 <Typography sx={{ color: '#52525b', lineHeight: 1.8, mb: 3, position: 'relative', zIndex: 1 }}>{t.text}</Typography>
                 <Stack direction="row" alignItems="center" spacing={2}>
-                  <Box
+                  <Avatar
+                    src={t.avatar}
                     sx={{
                       width: 56,
                       height: 56,
-                      borderRadius: '50%',
                       background: 'linear-gradient(135deg, #ffa424, #f97316)',
-                      color: 'white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
                       fontWeight: 600,
                       fontSize: '1.125rem',
                     }}
                   >
                     {t.initials}
-                  </Box>
+                  </Avatar>
                   <Box>
                     <Typography sx={{ fontWeight: 600, color: '#27272a' }}>{t.name}</Typography>
                     <Typography sx={{ fontSize: '0.875rem', color: '#71717a' }}>{t.role}</Typography>

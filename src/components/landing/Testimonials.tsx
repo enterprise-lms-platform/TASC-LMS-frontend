@@ -10,18 +10,21 @@ const Testimonials: React.FC<TestimonialsProps> = ({ isMobile }) => {
       initials: 'JK',
       name: 'James Kariuki',
       role: 'Senior Developer at TechCorp',
+      avatar: '/avatars/male face (14).jpg',
       text: '"TASC LMS completely transformed my career. The React course helped me land a senior developer position at a top tech company. The hands-on projects were invaluable!"',
     },
     {
       initials: 'AN',
       name: 'Amina Nakato',
       role: 'Data Analyst at Global Analytics',
+      avatar: '/avatars/female face (5).jpg',
       text: '"The live sessions are amazing! Being able to interact with instructors in real-time made complex data science concepts so much easier to understand."',
     },
     {
       initials: 'PO',
       name: 'Peter Ochieng',
       role: 'HR Director at Innovate Solutions',
+      avatar: '/avatars/male face (8).jpg',
       text: '"We enrolled our entire team in TASC LMS. The enterprise features and progress tracking helped us upskill 50+ employees efficiently. Highly recommend for organizations!"',
     },
   ];
@@ -121,22 +124,35 @@ const Testimonials: React.FC<TestimonialsProps> = ({ isMobile }) => {
 
               {/* Author */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div
-                  style={{
-                    width: '56px',
-                    height: '56px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #ffb74d, #f97316)',
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.125rem',
-                    fontWeight: 600,
-                  }}
-                >
-                  {testimonial.initials}
-                </div>
+                {testimonial.avatar ? (
+                  <img
+                    src={testimonial.avatar}
+                    alt={testimonial.name}
+                    style={{
+                      width: '56px',
+                      height: '56px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: '56px',
+                      height: '56px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #ffb74d, #f97316)',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.125rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {testimonial.initials}
+                  </div>
+                )}
                 <div>
                   <h4 style={{ fontSize: '1rem', fontWeight: 600, color: '#27272a', margin: 0 }}>
                     {testimonial.name}
