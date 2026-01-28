@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { loginStyles, loginColors } from '../styles/loginTheme';
@@ -22,21 +22,7 @@ import { faCertificate, faChartLine, faEye, faEyeSlash, faGraduationCap, faSpinn
 import { GoogleIcon, MicrosoftIcon } from '../components/customIcons';
 import { faLinkedin } from '@fortawesome/free-brands-svg-icons';
 
-// Map role IDs to dashboard routes
-const getDashboardRoute = (role: string): string => {
-    switch (role) {
-        case 'learner':
-            return '/learner';
-        case 'instructor':
-            return '/learner'; // Instructor uses learner dashboard for now
-        case 'lms_manager':
-            return '/manager';
-        case 'platform_admin':
-            return '/superadmin';
-        default:
-            return '/learner';
-    }
-};
+
 
 const RegistrationPage: React.FC = () => {
     const navigate = useNavigate();
@@ -44,6 +30,8 @@ const RegistrationPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [resendTimer, setResendTimer] = useState(0);
+    const [canResend, setCanResend] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -55,7 +43,7 @@ const RegistrationPage: React.FC = () => {
         phone: '',
         country: '',
         timezone: '',
-        role: '',
+        role: 'learner',
         terms: false,
         newsletter: false
     });
@@ -63,7 +51,7 @@ const RegistrationPage: React.FC = () => {
     // Error State
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const steps = ['Account', 'Profile', 'Role'];
+    const steps = ['Account', 'Profile', 'Confirm'];
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
@@ -78,11 +66,6 @@ const RegistrationPage: React.FC = () => {
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
-    };
-
-    const handleRoleSelect = (role: string) => {
-        setFormData(prev => ({ ...prev, role }));
-        if (errors.role) setErrors(prev => ({ ...prev, role: '' }));
     };
 
     const validateStep1 = () => {
@@ -144,11 +127,6 @@ const RegistrationPage: React.FC = () => {
         const newErrors: Record<string, string> = {};
         let isValid = true;
 
-        if (!formData.role) {
-            newErrors.role = 'Please select your role';
-            isValid = false;
-        }
-
         if (!formData.terms) {
             newErrors.terms = 'You must accept the terms and conditions';
             isValid = false;
@@ -180,8 +158,31 @@ const RegistrationPage: React.FC = () => {
             setTimeout(() => {
                 setIsLoading(false);
                 setIsSuccess(true);
+                setResendTimer(30);
+                setCanResend(false);
                 console.log('Registration Data:', formData);
             }, 2000);
+        }
+    };
+
+    useEffect(() => {
+        let timer: any;
+        if (isSuccess && resendTimer > 0) {
+            timer = setInterval(() => {
+                setResendTimer((prev) => prev - 1);
+            }, 1000);
+        } else if (resendTimer === 0) {
+            setCanResend(true);
+        }
+        return () => clearInterval(timer);
+    }, [isSuccess, resendTimer]);
+
+    const handleResendEmail = () => {
+        if (canResend) {
+            // Simulate resend email API
+            console.log('Resending verification email to:', formData.email);
+            setResendTimer(30);
+            setCanResend(false);
         }
     };
 
@@ -215,9 +216,8 @@ const RegistrationPage: React.FC = () => {
         </Box>
     );
 
-    const handleGoToDashboard = () => {
-        const dashboardRoute = getDashboardRoute(formData.role);
-        navigate(dashboardRoute);
+    const handleGoToLogin = () => {
+        navigate('/login');
     };
 
     if (isSuccess) {
@@ -251,8 +251,21 @@ const RegistrationPage: React.FC = () => {
                          <Typography sx={{ color: loginColors.neutral[600], mb: 4 }}>
                              We've sent a verification email to your inbox. Please click the link in the email to activate your account.
                          </Typography>
-                         <Button onClick={handleGoToDashboard} variant="contained" sx={loginStyles.primaryButton}>
-                            Go to Dashboard
+                         
+                         <Box sx={{ mb: 4 }}>
+                            {resendTimer > 0 ? (
+                                <Typography sx={{ fontSize: '0.875rem', color: loginColors.neutral[500] }}>
+                                    Didn't receive the email? Resend in <b>{resendTimer}s</b>
+                                </Typography>
+                            ) : (
+                                <Typography sx={{ fontSize: '0.875rem', color: loginColors.neutral[600] }}>
+                                    Didn't receive the email? <Button onClick={handleResendEmail} sx={{ p: 0, minWidth: 'auto', textTransform: 'none', fontWeight: 600, color: loginColors.primary[600], '&:hover': { background: 'transparent', textDecoration: 'underline' } }}>Resend Link</Button>
+                                </Typography>
+                            )}
+                         </Box>
+
+                         <Button onClick={handleGoToLogin} variant="contained" sx={loginStyles.primaryButton}>
+                            Go to Login
                          </Button>
                     </Box>
                 </Box>
@@ -473,34 +486,6 @@ const RegistrationPage: React.FC = () => {
 
                         {currentStep === 2 && (
                             <Stack spacing={3}>
-                                <Box>
-                                    <Typography sx={{ fontSize: '0.875rem', fontWeight: 500, color: '#3f3f46', mb: 1.5 }}>Select Your Role *</Typography>
-                                    {errors.role && <Typography color="error" variant="caption" display="block" sx={{mb: 1}}>{errors.role}</Typography>}
-                                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
-                                        {[
-                                            { id: 'learner', icon: 'fa-user-graduate', name: 'Learner', desc: 'Take courses and earn certificates' },
-                                            { id: 'instructor', icon: 'fa-chalkboard-teacher', name: 'Instructor', desc: 'Create and teach courses' },
-                                            { id: 'lms_manager', icon: 'fa-tasks', name: 'LMS Manager', desc: 'Manage courses and users' },
-                                            { id: 'platform_admin', icon: 'fa-cog', name: 'Platform Admin', desc: 'Organization administration' }
-                                        ].map(role => (
-                                            <Box 
-                                                key={role.id}
-                                                onClick={() => handleRoleSelect(role.id)}
-                                                sx={[
-                                                    loginStyles.roleCard,
-                                                    formData.role === role.id && loginStyles.roleCardSelected
-                                                ]}
-                                            >
-                                                <Box sx={[loginStyles.roleIcon, formData.role === role.id && loginStyles.roleIconSelected]}>
-                                                    <i className={`fas ${role.icon}`}></i>
-                                                </Box>
-                                                <Typography variant="subtitle2" fontWeight={600} gutterBottom>{role.name}</Typography>
-                                                <Typography variant="caption" color="text.secondary" align="center">{role.desc}</Typography>
-                                            </Box>
-                                        ))}
-                                    </Box>
-                                </Box>
-
                                 <Box>
                                     <FormControlLabel
                                         control={

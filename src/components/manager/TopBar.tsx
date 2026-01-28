@@ -8,6 +8,8 @@ import {
   InputBase,
   Badge,
   Avatar,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -33,6 +35,17 @@ interface TopBarProps {
 }
 
 const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+
   return (
     <AppBar
       position="fixed"
@@ -139,6 +152,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
 
           {/* User Info (Desktop) */}
           <Box
+            onClick={handleUserMenuOpen}
             sx={{
               ml: 1.5,
               display: { xs: 'none', md: 'flex' },
@@ -171,6 +185,17 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
             </Box>
             <ExpandMoreIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
           </Box>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleUserMenuClose}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          >
+            <MenuItem onClick={handleUserMenuClose}>Profile</MenuItem>
+            <MenuItem onClick={handleUserMenuClose}>Settings</MenuItem>
+            <MenuItem onClick={handleUserMenuClose}>Logout</MenuItem>
+          </Menu>
         </Box>
       </Toolbar>
     </AppBar>

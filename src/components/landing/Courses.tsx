@@ -1,10 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import EnrollmentModal from '../catalogue/EnrollmentModal';
 
 interface CoursesProps {
   isMobile: boolean;
 }
 
 const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
+  const navigate = useNavigate();
+  const [enrollModalOpen, setEnrollModalOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<{ title: string; price: string } | null>(null);
+
+  const handleEnroll = (course: { title: string; price: string }) => {
+    setSelectedCourse(course);
+    setEnrollModalOpen(true);
+  };
+
   const courses = [
     {
       category: 'Web Development',
@@ -17,7 +28,7 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
       price: '$129.99',
       original: '$199.99',
       badge: 'Bestseller',
-      bg: 'linear-gradient(135deg, #667eea, #764ba2)',
+      image: 'https://images.unsplash.com/photo-1616400619175-5beda3a17896?q=80&w=1074',
     },
     {
       category: 'Data Science',
@@ -29,7 +40,7 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
       reviews: '856',
       price: 'Free',
       badge: 'New',
-      bg: 'linear-gradient(135deg, #11998e, #38ef7d)',
+      image: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?q=80&w=1170',
     },
     {
       category: 'Cybersecurity',
@@ -40,7 +51,7 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
       rating: 4.7,
       reviews: '642',
       price: '$89.99',
-      bg: 'linear-gradient(135deg, #eb3349, #f45c43)',
+      image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=1171',
     },
   ];
 
@@ -96,6 +107,7 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
             </p>
           </div>
           <button
+            onClick={() => navigate('/courses')}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -138,14 +150,34 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
                   position: 'relative',
                   height: '200px',
                   overflow: 'hidden',
-                  background: course.bg,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'white',
                 }}
               >
-                <i className="fas fa-code" style={{ fontSize: '64px' }} />
+                <img
+                  src={course.image}
+                  alt={course.title}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+                
+                {/* Overlay gradient for text readability if needed, or just hover effect */}
+                <div 
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0,0,0,0.1)',
+                    transition: 'background 0.3s ease'
+                  }}
+                  className="image-overlay"
+                />
                 {course.badge && (
                   <div
                     className="course-badge"
@@ -201,9 +233,11 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
                     }}
                   >
                     {course.instructor
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')}
+                      ? course.instructor
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')
+                      : 'IN'}
                   </div>
                   <p style={{ fontSize: '0.875rem', color: '#71717a', margin: 0 }}>{course.instructor}</p>
                 </div>
@@ -269,6 +303,7 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
                     )}
                   </div>
                   <button
+                    onClick={() => handleEnroll(course)}
                     style={{
                       padding: '6px 16px',
                       backgroundColor: '#ffa424',
@@ -288,6 +323,13 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
           ))}
         </div>
       </div>
+      
+      <EnrollmentModal 
+        open={enrollModalOpen} 
+        onClose={() => setEnrollModalOpen(false)} 
+        courseTitle={selectedCourse?.title || ''} 
+        coursePrice={selectedCourse?.price || ''} 
+      />
     </section>
   );
 };

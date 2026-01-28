@@ -35,18 +35,21 @@ const StatCard = ({label, value} : {label:string, value: string}) =>{
 } 
 
 // Right Panel tabs
+/* 
 // Password Reset Form
 const ResetForm = () => {
   return(
     <>
       <Box sx={passwordResetStyles.resetForm}>
-        <Box sx={[passwordResetStyles.formStep, passwordResetStyles.active]}>
+        <Box sx={passwordResetStyles.formStep} className="active">
 
         </Box>
       </Box>
     </>
   )
 }
+*/
+/* 
 // Step 2: OTP Verification
 const OTPVerification = () => {
   return(
@@ -66,6 +69,7 @@ const NewPassword = () => {
 const SuccessTab = () => {
 
 }
+*/
 
 
 

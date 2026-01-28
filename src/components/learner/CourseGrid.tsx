@@ -14,6 +14,7 @@ const coursesData = [
     lessonsCompleted: 8,
     totalLessons: 12,
     rating: 4.8,
+    image: 'https://images.unsplash.com/photo-1616400619175-5beda3a17896?q=80&w=1074',
   },
   {
     id: '2',
@@ -24,6 +25,7 @@ const coursesData = [
     lessonsCompleted: 10,
     totalLessons: 12,
     rating: 4.9,
+    image: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?q=80&w=1170',
   },
   {
     id: '3',
@@ -34,6 +36,7 @@ const coursesData = [
     lessonsCompleted: 5,
     totalLessons: 11,
     rating: 4.7,
+    image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=1171',
   },
 ];
 

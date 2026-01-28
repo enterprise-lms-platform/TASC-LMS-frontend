@@ -1,10 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface HeroProps {
   isMobile: boolean;
 }
 
 const Hero: React.FC<HeroProps> = ({ isMobile }) => {
+  const navigate = useNavigate();
   return (
     <section
       className="hero-section"
@@ -117,8 +119,8 @@ const Hero: React.FC<HeroProps> = ({ isMobile }) => {
                 flexDirection: isMobile ? 'column' : 'row',
               }}
             >
-              <a
-                href="#"
+              <button
+                onClick={() => navigate('/login')}
                 className="btn btn-primary btn-xl"
                 style={{
                   display: 'inline-flex',
@@ -134,13 +136,14 @@ const Hero: React.FC<HeroProps> = ({ isMobile }) => {
                   fontSize: '1.125rem',
                   textDecoration: 'none',
                   transition: 'all 0.2s',
+                  cursor: 'pointer',
                 }}
               >
                 <i className="fas fa-play-circle" />
                 Start Learning Free
-              </a>
-              <a
-                href="#"
+              </button>
+              <button
+                onClick={() => navigate('/for-business')}
                 className="btn btn-outline-primary btn-xl"
                 style={{
                   display: 'inline-flex',
@@ -156,11 +159,12 @@ const Hero: React.FC<HeroProps> = ({ isMobile }) => {
                   fontSize: '1.125rem',
                   textDecoration: 'none',
                   transition: 'all 0.2s',
+                  cursor: 'pointer',
                 }}
               >
                 <i className="fas fa-building" />
                 For Organizations
-              </a>
+              </button>
             </div>
 
             {/* Hero Stats */}
@@ -199,23 +203,18 @@ const Hero: React.FC<HeroProps> = ({ isMobile }) => {
                   boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
                 }}
               >
-                <div
+                <video
+                  src="/video/Hero.mkv.m4v"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
                   style={{
                     width: '100%',
                     aspectRatio: '4/3',
-                    background: 'linear-gradient(135deg, #ffb74d, #f97316)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
+                    objectFit: 'cover',
                   }}
-                >
-                  <i className="fas fa-play-circle" style={{ fontSize: '5rem', marginBottom: '16px', opacity: 0.9 }} />
-                  <span style={{ fontSize: '1.125rem', fontWeight: 500, opacity: 0.9 }}>
-                    Start Your Learning Journey
-                  </span>
-                </div>
+                />
               </div>
 
               {/* Floating Card 1 - Verified Certificates */}

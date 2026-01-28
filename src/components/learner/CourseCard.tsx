@@ -11,6 +11,7 @@ interface Course {
   lessonsCompleted: number;
   totalLessons: number;
   rating: number;
+  image?: string;
 }
 
 interface CourseCardProps {
@@ -39,8 +40,20 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
           position: 'relative',
           height: 160,
           background: 'linear-gradient(135deg, #ffb74d, #f97316)',
+          overflow: 'hidden',
         }}
       >
+        {course.image && (
+          <img
+            src={course.image}
+            alt={course.title}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
+        )}
         <Chip
           label={course.category}
           size="small"
