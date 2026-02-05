@@ -17,6 +17,7 @@ const theme = createTheme({
       main: globalColors.primary[500],    // #ffb74d - orange
       dark: globalColors.primary[600],    // #ffa424 - darker orange
       light: globalColors.primary[400],   // #ffcc80 - lighter orange
+      contrastText: '#ffffff',
     },
   },
   typography: {

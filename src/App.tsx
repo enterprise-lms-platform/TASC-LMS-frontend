@@ -17,6 +17,16 @@ import CourseCataloguePage from './pages/CourseCataloguePage';
 import ForBusinessPage from './pages/ForBusinessPage';
 import CourseLandingPage from './pages/CourseLandingPage';
 import PasswordResetPage from './pages/PasswordReset';
+import InstructorDashboard from './pages/InstructorDashboard';
+import CourseCreationPage from './pages/CourseCreationPage';
+import CourseStructurePage from './pages/CourseStructurePage';
+import ContentUploadPage from './pages/ContentUploadPage';
+import CoursePreviewPage from './pages/CoursePreviewPage';
+import QuizBuilderPage from './pages/QuizBuilderPage';
+import QuestionBankPage from './pages/QuestionBankPage';
+import AssignmentCreationPage from './pages/AssignmentCreationPage';
+import GradingPage from './pages/GradingPage';
+import SessionSchedulingPage from './pages/SessionSchedulingPage';
 
 const App = () => {
   return (
@@ -42,6 +52,16 @@ const App = () => {
         <Route path="/manager" element={<ManagerDashboard />} />
         <Route path="/superadmin" element={<SuperadminDashboard />} />
         <Route path="/finance" element={<FinanceDashboard />} />
+        <Route path="/instructor" element={<InstructorDashboard />} />
+        <Route path="/instructor/course/create" element={<CourseCreationPage />} />
+        <Route path="/instructor/course/:courseId/structure" element={<CourseStructurePage />} />
+        <Route path="/instructor/course/:courseId/upload" element={<ContentUploadPage />} />
+        <Route path="/instructor/course/:courseId/preview" element={<CoursePreviewPage />} />
+        <Route path="/instructor/course/:courseId/quiz/builder" element={<QuizBuilderPage />} />
+        <Route path="/instructor/question-bank" element={<QuestionBankPage />} />
+        <Route path="/instructor/assignment/create" element={<AssignmentCreationPage />} />
+        <Route path="/instructor/grading" element={<GradingPage />} />
+        <Route path="/instructor/sessions/schedule" element={<SessionSchedulingPage />} />
       </Routes>
     </BrowserRouter>
   )
