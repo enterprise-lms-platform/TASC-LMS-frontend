@@ -21,6 +21,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCertificate, faChartLine, faEye, faEyeSlash, faGraduationCap, faSpinner, faCheckCircle, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { GoogleIcon, MicrosoftIcon } from '../components/customIcons';
 import { faLinkedin } from '@fortawesome/free-brands-svg-icons';
+import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 
 
 
@@ -114,6 +115,7 @@ const RegistrationPage: React.FC = () => {
             isValid = false;
         }
 
+        // eslint-disable-next-line no-useless-escape
         if (formData.phone && !/^[\+]?[1-9][\d\-\(\)\.\s]*$/.test(formData.phone)) {
             newErrors.phone = 'Please enter a valid phone number';
             isValid = false;
@@ -200,7 +202,7 @@ const RegistrationPage: React.FC = () => {
     const strengthColor = strength <= 1 ? loginColors.status.error : strength <= 3 ? loginColors.status.warning : loginColors.status.success;
     const strengthText = strength <= 1 ? 'Weak' : strength <= 3 ? 'Fair' : 'Strong';
 
-    const FeatureItem = ({ icon, title, description }: any) => (
+    const FeatureItem = ({ icon, title, description }: {icon: IconProp, title: string, description: string}) => (
         <Box sx={loginStyles.featureItem}>
             <Box sx={loginStyles.featureIcon}>
                 <FontAwesomeIcon icon={icon} />
