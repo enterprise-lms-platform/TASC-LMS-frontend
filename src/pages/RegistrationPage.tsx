@@ -15,23 +15,28 @@ import {
     Checkbox, 
     FormControlLabel, 
     MenuItem,
-    LinearProgress
+    LinearProgress,
+    Alert
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCertificate, faChartLine, faEye, faEyeSlash, faGraduationCap, faSpinner, faCheckCircle, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { GoogleIcon, MicrosoftIcon } from '../components/customIcons';
 import { faLinkedin } from '@fortawesome/free-brands-svg-icons';
+import { useAuth } from '../contexts/AuthContext';
+import { authApi } from '../lib/api';
 
 
 
 const RegistrationPage: React.FC = () => {
     const navigate = useNavigate();
+    const { register: registerUser, isAuthenticated, user } = useAuth();
     const [currentStep, setCurrentStep] = useState(0); // 0-indexed for MUI Stepper
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [resendTimer, setResendTimer] = useState(0);
     const [canResend, setCanResend] = useState(false);
+    const [apiError, setApiError] = useState('');
 
     // Form State
     const [formData, setFormData] = useState({
@@ -50,6 +55,22 @@ const RegistrationPage: React.FC = () => {
 
     // Error State
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // Redirect if already authenticated
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            const roleRoutes: Record<string, string> = {
+                learner: '/learner',
+                instructor: '/instructor',
+                org_admin: '/manager',
+                lms_manager: '/manager',
+                finance: '/finance',
+                tasc_admin: '/superadmin',
+            };
+            const redirectTo = roleRoutes[user.role] || '/learner';
+            navigate(redirectTo, { replace: true });
+        }
+    }, [isAuthenticated, user, navigate]);
 
     const steps = ['Account', 'Profile', 'Confirm'];
 
@@ -154,14 +175,30 @@ const RegistrationPage: React.FC = () => {
         e.preventDefault();
         if (validateStep3()) {
             setIsLoading(true);
-            // Simulate API call
-            setTimeout(() => {
-                setIsLoading(false);
+            setApiError('');
+            try {
+                await registerUser({
+                    email: formData.email,
+                    password: formData.password,
+                    confirm_password: formData.confirmPassword,
+                    first_name: formData.firstName,
+                    last_name: formData.lastName,
+                    phone_number: formData.phone || undefined,
+                    country: formData.country || undefined,
+                    timezone: formData.timezone || undefined,
+                    accept_terms: formData.terms,
+                    marketing_opt_in: formData.newsletter,
+                });
                 setIsSuccess(true);
                 setResendTimer(30);
                 setCanResend(false);
-                console.log('Registration Data:', formData);
-            }, 2000);
+            } catch (err: any) {
+                const errorMessage = err.response?.data?.detail || err.message || 'Registration failed';
+                setApiError(errorMessage);
+                console.error('Registration error:', err);
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -177,12 +214,20 @@ const RegistrationPage: React.FC = () => {
         return () => clearInterval(timer);
     }, [isSuccess, resendTimer]);
 
-    const handleResendEmail = () => {
+    const handleResendEmail = async () => {
         if (canResend) {
-            // Simulate resend email API
-            console.log('Resending verification email to:', formData.email);
-            setResendTimer(30);
-            setCanResend(false);
+            setIsLoading(true);
+            try {
+                // TODO: Implement resend verification email endpoint when backend supports it
+                // For now, just reset the timer
+                console.log('Resending verification email to:', formData.email);
+                setResendTimer(30);
+                setCanResend(false);
+            } catch (err) {
+                console.error('Resend error:', err);
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -311,6 +356,13 @@ const RegistrationPage: React.FC = () => {
                     </Stack>
 
                     <form onSubmit={handleSubmit}>
+                        {/* API Error Alert */}
+                        {apiError && (
+                            <Alert severity="error" onClose={() => setApiError('')} sx={{ mb: 2 }}>
+                                {apiError}
+                            </Alert>
+                        )}
+                        
                         {currentStep === 0 && (
                             <Stack spacing={2}>
                                 <Box>
@@ -559,9 +611,16 @@ const RegistrationPage: React.FC = () => {
                         <Divider sx={loginStyles.divider}>Or register with</Divider>
 
                         <Stack sx={loginStyles.socialBtnContainer}>
-                            <Button startIcon={<GoogleIcon />} variant="outlined" sx={[loginStyles.socialButton, loginStyles.googleButton]}>Continue with Google</Button>
-                            <Button startIcon={<MicrosoftIcon />} variant="outlined" sx={[loginStyles.socialButton, loginStyles.microsoftButton]}>Continue with Microsoft</Button>
-                            <Button startIcon={<FontAwesomeIcon icon={faLinkedin} color='#0b65c4' />} variant="outlined" sx={[loginStyles.socialButton, loginStyles.linkedinButton]}>Continue with LinkedIn</Button>
+                            <Button 
+                                startIcon={<GoogleIcon />} 
+                                variant="outlined" 
+                                sx={[loginStyles.socialButton, loginStyles.googleButton]}
+                                onClick={() => {
+                                    window.location.href = authApi.initiateGoogleOAuth();
+                                }}
+                            >
+                                Continue with Google
+                            </Button>
                         </Stack>
 
                         <Box sx={loginStyles.signupSection}>

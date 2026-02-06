@@ -1,12 +1,14 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'  //this is a stubborn import
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { faBookOpen, faCertificate, faChalkboardTeacher, faEye, faEyeSlash, faGraduationCap, faSignIn, faShieldAlt, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import {  loginStyles } from '../styles/loginTheme'
 
-import { Box, Button, Divider, Stack, Typography, TextField, FormControlLabel, Checkbox } from "@mui/material"
+import { Box, Button, Divider, Stack, Typography, TextField, FormControlLabel, Checkbox, Alert } from "@mui/material"
 import {  faLinkedin } from '@fortawesome/free-brands-svg-icons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GoogleIcon, MicrosoftIcon } from '../components/customIcons';
+import { useAuth } from '../contexts/AuthContext';
+import { authApi } from '../lib/api';
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -31,6 +33,8 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) =
 };
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+  const { login, isAuthenticated, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
@@ -39,7 +43,24 @@ const LoginPage = () => {
   const [mfaCodes, setMfaCodes] = useState(['', '', '', '', '', '']);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const roleRoutes: Record<string, string> = {
+        learner: '/learner',
+        instructor: '/instructor',
+        org_admin: '/manager',
+        lms_manager: '/manager',
+        finance: '/finance',
+        tasc_admin: '/superadmin',
+      };
+      const redirectTo = roleRoutes[user.role] || '/learner';
+      navigate(redirectTo, { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handlePasswordToggle = () => {
     setShowPassword(!showPassword);
@@ -50,12 +71,13 @@ const LoginPage = () => {
     return emailRegex.test(emailAddress);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     // Reset errors
     setEmailError('');
     setPasswordError('');
+    setApiError('');
     
     let isValid = true;
     
@@ -79,16 +101,25 @@ const LoginPage = () => {
     
     if (isValid) {
       setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        // For demo purposes, show MFA for specific emails
-        if (email.includes('mfa')) {
-          setShowMFA(true);
+      try {
+        await login({ email, password });
+        // Login successful, user will be redirected by the useEffect above
+      } catch (err: any) {
+        // Handle specific error cases
+        const errorMessage = err.response?.data?.detail || err.message || 'Login failed';
+        
+        // Check for email verification error
+        if (errorMessage.toLowerCase().includes('email') && 
+            (errorMessage.toLowerCase().includes('verify') || errorMessage.toLowerCase().includes('not verified'))) {
+          setApiError('Please verify your email address before logging in. Check your inbox for the verification link.');
+        } else if (errorMessage.toLowerCase().includes('credential')) {
+          setApiError('Invalid email or password. Please try again.');
         } else {
-          alert('Login successful! Redirecting to dashboard...');
+          setApiError(errorMessage);
         }
+      } finally {
         setIsLoading(false);
-      }, 1500);
+      }
     }
   };
 
@@ -158,6 +189,13 @@ const LoginPage = () => {
                 </Stack>
 
                 <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {/* API Error Alert */}
+                  {apiError && (
+                    <Alert severity="error" onClose={() => setApiError('')}>
+                      {apiError}
+                    </Alert>
+                  )}
+                  
                   {/* Email Field */}
                   <Box>
                     <Typography sx={{ fontSize: '0.875rem', fontWeight: 500, color: '#3f3f46', mb: 0.5 }}>
@@ -264,22 +302,11 @@ const LoginPage = () => {
                       startIcon={<GoogleIcon />}
                       variant="outlined"
                       sx={[loginStyles.socialButton, loginStyles.googleButton]}
+                      onClick={() => {
+                        window.location.href = authApi.initiateGoogleOAuth();
+                      }}
                     >
                       Continue with Google
-                    </Button>
-                    <Button
-                      startIcon={<MicrosoftIcon />}
-                      variant="outlined"
-                      sx={[loginStyles.socialButton, loginStyles.microsoftButton]}
-                    >
-                      Continue with Microsoft
-                    </Button>
-                    <Button
-                      startIcon={<FontAwesomeIcon icon={faLinkedin} color='#0b65c4' />}
-                      variant="outlined"
-                      sx={[loginStyles.socialButton, loginStyles.linkedinButton]}
-                    >
-                      Continue with LinkedIn
                     </Button>
                   </Stack>
                 </Box>
