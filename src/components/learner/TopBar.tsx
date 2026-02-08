@@ -21,6 +21,7 @@ import {
   Logout as LogoutIcon,
   Person as PersonIcon,
   Settings as SettingsIcon,
+  KeyboardArrowDown as ArrowDownIcon,
 } from '@mui/icons-material';
 import { DRAWER_WIDTH } from './Sidebar';
 import { useAuth } from '../../contexts/AuthContext';
@@ -185,7 +186,9 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
               alignItems: 'center',
               gap: 1.5,
               cursor: 'pointer',
-              '&:hover': { opacity: 0.8 },
+              p: 1,
+              borderRadius: 1,
+              '&:hover': { bgcolor: 'grey.100' },
             }}
           >
             <Avatar
@@ -208,6 +211,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
                 {userRole.replace('_', ' ')}
               </Typography>
             </Box>
+            <ArrowDownIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
           </Box>
 
           {/* Mobile Avatar */}

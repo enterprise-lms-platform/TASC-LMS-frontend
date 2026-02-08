@@ -19,6 +19,9 @@ import {
   Menu as MenuIcon,
   KeyboardArrowDown as ArrowDownIcon,
 } from '@mui/icons-material';
+import { useLogout } from '../../hooks/useLogout';
+import { useAuth } from '../../contexts/AuthContext';
+import { getUserDisplayName, getUserInitials, getRoleDisplayName } from '../../utils/userHelpers';
 
 interface TopBarProps {
   onMenuClick: () => void;
@@ -26,6 +29,8 @@ interface TopBarProps {
 
 const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const handleLogout = useLogout();
+  const { user } = useAuth();
 
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -34,6 +39,16 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   const handleUserMenuClose = () => {
     setAnchorEl(null);
   };
+
+  const onLogoutClick = () => {
+    handleUserMenuClose();
+    handleLogout();
+  };
+
+  // Get user display values
+  const userName = getUserDisplayName(user?.first_name, user?.last_name, user?.email);
+  const userInitials = getUserInitials(user?.first_name, user?.last_name);
+  const userRole = user?.role ? getRoleDisplayName(user.role) : 'User';
 
   return (
     <AppBar
@@ -134,7 +149,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
               }}
             >
               <Avatar
-                src="/avatars/male face (12).jpg"
+                src={user?.google_picture}
                 sx={{
                   width: 40,
                   height: 40,
@@ -142,14 +157,14 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                   fontWeight: 700,
                 }}
               >
-                SA
+                {userInitials}
               </Avatar>
               <Box sx={{ display: { xs: 'none', md: 'block' } }}>
                 <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                  Super Admin
+                  {userName}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 500 }}>
-                  Platform Administrator
+                  {userRole}
                 </Typography>
               </Box>
               <ArrowDownIcon sx={{ color: 'text.secondary', fontSize: 16 }} />
@@ -164,7 +179,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
             >
               <MenuItem onClick={handleUserMenuClose}>Profile</MenuItem>
               <MenuItem onClick={handleUserMenuClose}>Settings</MenuItem>
-              <MenuItem onClick={handleUserMenuClose}>Logout</MenuItem>
+              <MenuItem onClick={onLogoutClick}>Logout</MenuItem>
             </Menu>
           </Box>
         </Box>
