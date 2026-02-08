@@ -65,6 +65,18 @@ export interface ChangePasswordRequest {
   confirm_password: string;
 }
 
+export interface InviteUserRequest {
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: UserRole;
+}
+
+export interface SetPasswordFromInviteRequest {
+  new_password: string;
+  confirm_password: string;
+}
+
 // Auth API Responses
 export interface RegisterResponse {
   message: string;
@@ -90,6 +102,15 @@ export interface EmailVerificationResponse {
 
 export interface PasswordResetResponse {
   message: string;
+}
+
+export interface InviteUserResponse {
+  detail: string;
+  email: string;
+}
+
+export interface SetPasswordFromInviteResponse {
+  detail: string;
 }
 
 // API Error Response

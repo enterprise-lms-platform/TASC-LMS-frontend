@@ -17,6 +17,10 @@ import type {
   PasswordResetResponse,
   PasswordResetConfirmRequest,
   ChangePasswordRequest,
+  InviteUserRequest,
+  InviteUserResponse,
+  SetPasswordFromInviteRequest,
+  SetPasswordFromInviteResponse,
   ApiErrorResponse,
 } from '../types/api';
 
@@ -229,6 +233,28 @@ export const authApi = {
   // Google OAuth initiation (returns redirect URL)
   initiateGoogleOAuth: (): string => {
     return `${API_BASE_URL}${API_VERSION}/auth/google/login/`;
+  },
+
+  // Invite user (admin only)
+  inviteUser: async (data: InviteUserRequest): Promise<InviteUserResponse> => {
+    const response = await apiClient.post<InviteUserResponse>(
+      '/admin/users/invite/',
+      data
+    );
+    return response.data;
+  },
+
+  // Set password from invite
+  setPasswordFromInvite: async (
+    uidb64: string,
+    token: string,
+    data: SetPasswordFromInviteRequest
+  ): Promise<SetPasswordFromInviteResponse> => {
+    const response = await apiClient.post<SetPasswordFromInviteResponse>(
+      `/auth/set-password/${uidb64}/${token}/`,
+      data
+    );
+    return response.data;
   },
 };
 

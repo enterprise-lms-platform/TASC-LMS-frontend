@@ -29,6 +29,8 @@ import QuestionBankPage from './pages/QuestionBankPage';
 import AssignmentCreationPage from './pages/AssignmentCreationPage';
 import GradingPage from './pages/GradingPage';
 import SessionSchedulingPage from './pages/SessionSchedulingPage';
+import InviteUserPage from './pages/InviteUserPage';
+import SetPasswordPage from './pages/SetPasswordPage';
 
 const App = () => {
   return (
@@ -44,6 +46,7 @@ const App = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/verify-email/:uidb64/:token" element={<EmailVerificationPage />} />
           <Route path="/passwordreset" element={<PasswordResetPage />} />
+          <Route path="/set-password/:uidb64/:token" element={<SetPasswordPage />} />
           
           {/* Protected Learner Routes */}
           <Route path="/learner" element={<ProtectedRoute><LearnerDashboard /></ProtectedRoute>} />
@@ -75,6 +78,7 @@ const App = () => {
           
           {/* Protected Admin Routes */}
           <Route path="/superadmin" element={<ProtectedRoute requiredRole="tasc_admin"><SuperadminDashboard /></ProtectedRoute>} />
+          <Route path="/superadmin/add-user" element={<ProtectedRoute requiredRole="tasc_admin"><InviteUserPage /></ProtectedRoute>} />
           
           {/* Protected Finance Routes */}
           <Route path="/finance" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceDashboard /></ProtectedRoute>} />
