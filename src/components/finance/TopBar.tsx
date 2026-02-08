@@ -145,7 +145,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
               }}
             >
               <Avatar
-                src={user?.google_picture}
+                src={user?.google_picture ?? undefined}
                 sx={{
                   width: 40,
                   height: 40,

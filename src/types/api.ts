@@ -18,6 +18,8 @@ export interface User {
   country?: string;
   timezone?: string;
   profile_picture?: string;
+  google_picture?: string | null;
+  avatar?: string | null;
   date_joined?: string;
 }
 

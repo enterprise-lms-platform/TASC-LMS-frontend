@@ -4,9 +4,8 @@ import { faBookOpen, faCertificate, faChalkboardTeacher, faEye, faEyeSlash, faGr
 import {  loginStyles } from '../styles/loginTheme'
 
 import { Box, Button, Divider, Stack, Typography, TextField, FormControlLabel, Checkbox, Alert } from "@mui/material"
-import {  faLinkedin } from '@fortawesome/free-brands-svg-icons';
 import { useState, useEffect } from 'react';
-import { GoogleIcon, MicrosoftIcon } from '../components/customIcons';
+import { GoogleIcon } from '../components/customIcons';
 import { useAuth } from '../contexts/AuthContext';
 import { authApi } from '../lib/api';
 
@@ -37,7 +36,6 @@ const LoginPage = () => {
   const { login, isAuthenticated, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [showMFA, setShowMFA] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mfaCodes, setMfaCodes] = useState(['', '', '', '', '', '']);
@@ -45,6 +43,8 @@ const LoginPage = () => {
   const [passwordError, setPasswordError] = useState('');
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  // MFA feature not yet implemented
+  const showMFA = false;
 
   // Redirect if already authenticated
   useEffect(() => {

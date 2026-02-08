@@ -171,7 +171,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
             }}
           >
             <Avatar
-              src={user?.google_picture}
+              src={user?.google_picture ?? undefined}
               sx={{
                 width: 36,
                 height: 36,

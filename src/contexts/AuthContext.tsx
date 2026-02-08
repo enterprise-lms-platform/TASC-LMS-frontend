@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { authApi, getAccessToken, getRefreshToken, clearTokens, getErrorMessage } from '../lib/api';
 import type { User, LoginRequest, RegisterRequest } from '../types/api';
 
