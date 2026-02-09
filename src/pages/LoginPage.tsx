@@ -5,9 +5,8 @@ import {  loginStyles } from '../styles/loginTheme'
 
 import { Box, Button, Divider, Stack, Typography, TextField, FormControlLabel, Checkbox, Alert } from "@mui/material"
 import { useState, useEffect } from 'react';
-import { GoogleIcon } from '../components/customIcons';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
-import { authApi } from '../lib/api';
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -33,7 +32,7 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) =
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated, user } = useAuth();
+  const { login, loginWithGoogle, isAuthenticated, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [email, setEmail] = useState('');
@@ -298,16 +297,29 @@ const LoginPage = () => {
 
                   {/* Social Login Buttons */}
                   <Stack sx={loginStyles.socialBtnContainer}>
-                    <Button
-                      startIcon={<GoogleIcon />}
-                      variant="outlined"
-                      sx={[loginStyles.socialButton, loginStyles.googleButton]}
-                      onClick={() => {
-                        window.location.href = authApi.initiateGoogleOAuth();
+                    <GoogleLogin
+                      onSuccess={async (credentialResponse) => {
+                        if (!credentialResponse.credential) {
+                          setApiError('Google sign-in failed. No credential received.');
+                          return;
+                        }
+                        try {
+                          await loginWithGoogle(credentialResponse.credential);
+                          // Login successful, user will be redirected by the useEffect above
+                        } catch (err) {
+                          // Error already set by loginWithGoogle
+                          console.error('Google login error:', err);
+                        }
                       }}
-                    >
-                      Continue with Google
-                    </Button>
+                      onError={() => {
+                        setApiError('Google sign-in failed. Please try again.');
+                      }}
+                      useOneTap={false}
+                      theme="outline"
+                      size="large"
+                      text="continue_with"
+                      width="100%"
+                    />
                   </Stack>
                 </Box>
 

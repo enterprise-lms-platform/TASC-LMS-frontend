@@ -20,15 +20,14 @@ import {
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCertificate, faChartLine, faEye, faEyeSlash, faGraduationCap, faSpinner, faCheckCircle, faGlobe } from '@fortawesome/free-solid-svg-icons';
-import { GoogleIcon } from '../components/customIcons';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
-import { authApi } from '../lib/api';
 
 
 
 const RegistrationPage: React.FC = () => {
     const navigate = useNavigate();
-    const { register: registerUser, isAuthenticated, user } = useAuth();
+    const { register: registerUser, loginWithGoogle, isAuthenticated, user } = useAuth();
     const [currentStep, setCurrentStep] = useState(0); // 0-indexed for MUI Stepper
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -611,16 +610,29 @@ const RegistrationPage: React.FC = () => {
                         <Divider sx={loginStyles.divider}>Or register with</Divider>
 
                         <Stack sx={loginStyles.socialBtnContainer}>
-                            <Button 
-                                startIcon={<GoogleIcon />} 
-                                variant="outlined" 
-                                sx={[loginStyles.socialButton, loginStyles.googleButton]}
-                                onClick={() => {
-                                    window.location.href = authApi.initiateGoogleOAuth();
+                            <GoogleLogin
+                                onSuccess={async (credentialResponse) => {
+                                    if (!credentialResponse.credential) {
+                                        setApiError('Google sign-in failed. No credential received.');
+                                        return;
+                                    }
+                                    try {
+                                        await loginWithGoogle(credentialResponse.credential);
+                                        // Login successful, user will be redirected by the useEffect above
+                                    } catch (err) {
+                                        // Error already set by loginWithGoogle
+                                        console.error('Google login error:', err);
+                                    }
                                 }}
-                            >
-                                Continue with Google
-                            </Button>
+                                onError={() => {
+                                    setApiError('Google sign-in failed. Please try again.');
+                                }}
+                                useOneTap={false}
+                                theme="outline"
+                                size="large"
+                                text="continue_with"
+                                width="100%"
+                            />
                         </Stack>
 
                         <Box sx={loginStyles.signupSection}>
