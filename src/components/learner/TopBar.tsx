@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -10,29 +11,28 @@ import {
   Avatar,
   Menu,
   MenuItem,
+  Divider,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   Search as SearchIcon,
   Notifications as NotificationsIcon,
   HelpOutline as HelpIcon,
+  Logout as LogoutIcon,
+  Person as PersonIcon,
+  Settings as SettingsIcon,
+  KeyboardArrowDown as ArrowDownIcon,
 } from '@mui/icons-material';
 import { DRAWER_WIDTH } from './Sidebar';
-
-// User data (will come from backend later)
-const userData = {
-  name: 'Emma Chen',
-  plan: 'Pro Learner',
-  initials: 'EC',
-  avatar: '/avatars/female face (1).jpg',
-  notificationCount: 3,
-};
+import { useAuth } from '../../contexts/AuthContext';
 
 interface TopBarProps {
   onMobileMenuToggle: () => void;
 }
 
 const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -42,6 +42,40 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
   const handleUserMenuClose = () => {
     setAnchorEl(null);
   };
+
+  const handleLogout = async () => {
+    handleUserMenuClose();
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Navigate to login anyway
+      navigate('/login');
+    }
+  };
+
+  const handleProfile = () => {
+    handleUserMenuClose();
+    navigate('/learner/profile');
+  };
+
+  const handleSettings = () => {
+    handleUserMenuClose();
+    navigate('/learner/settings');
+  };
+
+  // Get user initials
+  const getInitials = (name: string) => {
+    const names = name.split(' ');
+    return names.length > 1 
+      ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
+      : name.substring(0, 2).toUpperCase();
+  };
+
+  const userName = user?.name || `${user?.first_name} ${user?.last_name}` || 'User';
+  const userInitials = user ? getInitials(userName) : 'U';
+  const userRole = user?.role || 'learner';
 
 
   return (
@@ -135,7 +169,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
         {/* Action Icons */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.5 } }}>
           <IconButton color="inherit" size="small">
-            <Badge badgeContent={userData.notificationCount} color="error">
+            <Badge badgeContent={0} color="error">
               <NotificationsIcon />
             </Badge>
           </IconButton>
@@ -152,10 +186,13 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
               alignItems: 'center',
               gap: 1.5,
               cursor: 'pointer',
+              p: 1,
+              borderRadius: 1,
+              '&:hover': { bgcolor: 'grey.100' },
             }}
           >
             <Avatar
-              src={userData.avatar}
+              src={user?.profile_picture}
               sx={{
                 width: 36,
                 height: 36,
@@ -164,27 +201,70 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
                 fontWeight: 600,
               }}
             >
-              {userData.initials}
+              {userInitials}
             </Avatar>
             <Box>
               <Typography variant="body2" fontWeight={600} lineHeight={1.2}>
-                {userData.name}
+                {userName}
               </Typography>
-              <Typography variant="caption" sx={{ color: 'primary.dark', fontWeight: 500 }}>
-                {userData.plan}
+              <Typography variant="caption" sx={{ color: 'primary.dark', fontWeight: 500, textTransform: 'capitalize' }}>
+                {userRole.replace('_', ' ')}
               </Typography>
             </Box>
+            <ArrowDownIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
           </Box>
+
+          {/* Mobile Avatar */}
+          <IconButton
+            onClick={handleUserMenuOpen}
+            sx={{ display: { xs: 'flex', md: 'none' }, ml: 1 }}
+          >
+            <Avatar
+              src={user?.profile_picture}
+              sx={{
+                width: 32,
+                height: 32,
+                background: 'linear-gradient(135deg, #ffb74d, #f97316)',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+              }}
+            >
+              {userInitials}
+            </Avatar>
+          </IconButton>
+
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
             onClose={handleUserMenuClose}
             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            PaperProps={{
+              sx: { minWidth: 200, mt: 1 }
+            }}
           >
-            <MenuItem onClick={handleUserMenuClose}>Profile</MenuItem>
-            <MenuItem onClick={handleUserMenuClose}>Settings</MenuItem>
-            <MenuItem onClick={handleUserMenuClose}>Logout</MenuItem>
+            <Box sx={{ px: 2, py: 1.5 }}>
+              <Typography variant="body2" fontWeight={600}>
+                {userName}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {user?.email}
+              </Typography>
+            </Box>
+            <Divider />
+            <MenuItem onClick={handleProfile} sx={{ gap: 1.5, py: 1 }}>
+              <PersonIcon fontSize="small" />
+              Profile
+            </MenuItem>
+            <MenuItem onClick={handleSettings} sx={{ gap: 1.5, py: 1 }}>
+              <SettingsIcon fontSize="small" />
+              Settings
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={handleLogout} sx={{ gap: 1.5, py: 1, color: 'error.main' }}>
+              <LogoutIcon fontSize="small" />
+              Logout
+            </MenuItem>
           </Menu>
         </Box>
       </Toolbar>

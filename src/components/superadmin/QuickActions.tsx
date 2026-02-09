@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Paper, Typography, Grid } from '@mui/material';
 import {
   PersonAdd as AddUserIcon,
@@ -10,16 +11,25 @@ import {
 interface QuickAction {
   label: string;
   icon: React.ReactNode;
+  path?: string;
 }
 
 const actions: QuickAction[] = [
-  { label: 'Add User', icon: <AddUserIcon /> },
+  { label: 'Add User', icon: <AddUserIcon />, path: '/superadmin/add-user' },
   { label: 'New Org', icon: <OrgIcon /> },
   { label: 'Export Data', icon: <ExportIcon /> },
   { label: 'Settings', icon: <SettingsIcon /> },
 ];
 
 const QuickActions: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleActionClick = (path?: string) => {
+    if (path) {
+      navigate(path);
+    }
+  };
+
   return (
     <Paper
       elevation={0}
@@ -38,6 +48,7 @@ const QuickActions: React.FC = () => {
         {actions.map((action) => (
           <Grid key={action.label} size={6}>
             <Box
+              onClick={() => handleActionClick(action.path)}
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -47,12 +58,12 @@ const QuickActions: React.FC = () => {
                 border: '1px solid',
                 borderColor: 'divider',
                 borderRadius: 2,
-                cursor: 'pointer',
+                cursor: action.path ? 'pointer' : 'default',
                 transition: 'all 0.2s',
                 '&:hover': {
-                  borderColor: 'primary.main',
-                  bgcolor: 'rgba(255, 164, 36, 0.05)',
-                  transform: 'translateY(-2px)',
+                  borderColor: action.path ? 'primary.main' : 'divider',
+                  bgcolor: action.path ? 'rgba(255, 164, 36, 0.05)' : 'transparent',
+                  transform: action.path ? 'translateY(-2px)' : 'none',
                 },
               }}
             >

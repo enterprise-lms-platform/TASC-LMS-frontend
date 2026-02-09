@@ -5,6 +5,7 @@ import { globalColors, globalFontSizes, globalSpacing } from "./globaltheme";
 
 export const loginColors = {
   primary: {
+    700: '#e59420',
     600: globalColors.primary[600],
     500: globalColors.primary[500],
     400: globalColors.primary[400],

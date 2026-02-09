@@ -7,20 +7,49 @@ import {
   IconButton,
   InputBase,
   Badge,
+  Avatar,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   Search as SearchIcon,
   Notifications as NotificationsIcon,
   Add as AddIcon,
+  KeyboardArrowDown as ArrowDownIcon,
 } from '@mui/icons-material';
 import { DRAWER_WIDTH } from './Sidebar';
+import { useLogout } from '../../hooks/useLogout';
+import { useAuth } from '../../contexts/AuthContext';
+import { getUserDisplayName, getUserInitials, getRoleDisplayName } from '../../utils/userHelpers';
 
 interface TopBarProps {
   onMobileMenuToggle: () => void;
 }
 
 const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const handleLogout = useLogout();
+  const { user } = useAuth();
+
+  const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const onLogoutClick = () => {
+    handleUserMenuClose();
+    handleLogout();
+  };
+
+  // Get user display values
+  const userName = getUserDisplayName(user?.first_name, user?.last_name, user?.email);
+  const userInitials = getUserInitials(user?.first_name, user?.last_name);
+  const userRole = user?.role ? getRoleDisplayName(user.role) : 'User';
+
   return (
     <AppBar
       position="fixed"
@@ -121,6 +150,55 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
           <IconButton color="inherit" size="small">
             <AddIcon />
           </IconButton>
+
+          {/* User Profile */}
+          <Box
+            onClick={handleUserMenuOpen}
+            sx={{
+              ml: 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              cursor: 'pointer',
+              p: 0.5,
+              borderRadius: 1,
+              '&:hover': { bgcolor: 'grey.100' },
+            }}
+          >
+            <Avatar
+              src={user?.google_picture ?? undefined}
+              sx={{
+                width: 36,
+                height: 36,
+                background: 'linear-gradient(135deg, #ffb74d, #f97316)',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+              }}
+            >
+              {userInitials}
+            </Avatar>
+            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+              <Typography variant="body2" fontWeight={600} lineHeight={1.2} noWrap sx={{ maxWidth: 120 }}>
+                {userName}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'primary.dark', fontWeight: 500 }} noWrap>
+                {userRole}
+              </Typography>
+            </Box>
+            <ArrowDownIcon sx={{ fontSize: 16, color: 'text.secondary', display: { xs: 'none', sm: 'block' } }} />
+          </Box>
+
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleUserMenuClose}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          >
+            <MenuItem onClick={handleUserMenuClose}>Profile</MenuItem>
+            <MenuItem onClick={handleUserMenuClose}>Settings</MenuItem>
+            <MenuItem onClick={onLogoutClick}>Logout</MenuItem>
+          </Menu>
         </Box>
       </Toolbar>
     </AppBar>

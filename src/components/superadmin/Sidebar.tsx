@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Drawer,
@@ -45,6 +46,7 @@ interface NavItem {
   icon: React.ReactNode;
   active?: boolean;
   badge?: string;
+  path?: string;
 }
 
 interface NavSection {
@@ -57,7 +59,7 @@ const navSections: NavSection[] = [
   {
     title: 'Dashboard',
     items: [
-      { text: 'Overview', icon: <DashboardIcon />, active: true },
+      { text: 'Overview', icon: <DashboardIcon />, active: true, path: '/superadmin' },
       { text: 'Analytics', icon: <AnalyticsIcon />, badge: 'New' },
       { text: 'Notifications', icon: <NotificationsIcon />, badge: '3' },
     ],
@@ -66,7 +68,7 @@ const navSections: NavSection[] = [
     title: 'User Management',
     items: [
       { text: 'All Users', icon: <UsersIcon /> },
-      { text: 'Add User', icon: <AddUserIcon /> },
+      { text: 'Add User', icon: <AddUserIcon />, path: '/superadmin/add-user' },
       { text: 'Roles & Permissions', icon: <RolesIcon /> },
       { text: 'Audit Logs', icon: <AuditIcon /> },
     ],
@@ -114,6 +116,13 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
+  const navigate = useNavigate();
+
+  const handleNavItemClick = (path?: string) => {
+    if (path) {
+      navigate(path);
+    }
+  };
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -174,6 +183,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
                 {section.items.map((item) => (
                   <ListItem key={item.text} disablePadding>
                     <ListItemButton
+                      onClick={() => handleNavItemClick(item.path)}
                       sx={{
                         py: 1,
                         px: 3,
@@ -181,9 +191,10 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
                         bgcolor: item.active ? 'rgba(255, 164, 36, 0.1)' : 'transparent',
                         borderRight: item.active ? '3px solid' : 'none',
                         borderColor: 'primary.main',
+                        cursor: item.path ? 'pointer' : 'default',
                         '&:hover': {
-                          bgcolor: 'action.hover',
-                          color: 'primary.main',
+                          bgcolor: item.path ? 'action.hover' : 'transparent',
+                          color: item.path ? 'primary.main' : 'text.secondary',
                         },
                       }}
                     >

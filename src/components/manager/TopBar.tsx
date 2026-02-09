@@ -20,16 +20,9 @@ import {
   ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { DRAWER_WIDTH } from './Sidebar';
-
-// Manager data (will come from backend later)
-const managerData = {
-  name: 'Sarah Johnson',
-  role: 'LMS Manager',
-  initials: 'SJ',
-  avatar: '/avatars/female face (3).jpg',
-  notificationCount: 8,
-  messageCount: 3,
-};
+import { useLogout } from '../../hooks/useLogout';
+import { useAuth } from '../../contexts/AuthContext';
+import { getUserDisplayName, getUserInitials, getRoleDisplayName } from '../../utils/userHelpers';
 
 interface TopBarProps {
   onMobileMenuToggle: () => void;
@@ -37,6 +30,8 @@ interface TopBarProps {
 
 const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const handleLogout = useLogout();
+  const { user } = useAuth();
 
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -45,6 +40,16 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
   const handleUserMenuClose = () => {
     setAnchorEl(null);
   };
+
+  const onLogoutClick = () => {
+    handleUserMenuClose();
+    handleLogout();
+  };
+
+  // Get user display values
+  const userName = getUserDisplayName(user?.first_name, user?.last_name, user?.email);
+  const userInitials = getUserInitials(user?.first_name, user?.last_name);
+  const userRole = user?.role ? getRoleDisplayName(user.role) : 'User';
 
 
   return (
@@ -138,12 +143,12 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
         {/* Action Icons */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.5 } }}>
           <IconButton color="inherit" size="small">
-            <Badge badgeContent={managerData.notificationCount} color="error">
+            <Badge badgeContent={0} color="error">
               <NotificationsIcon />
             </Badge>
           </IconButton>
           <IconButton color="inherit" size="small" sx={{ display: { xs: 'none', sm: 'flex' } }}>
-            <Badge badgeContent={managerData.messageCount} color="error">
+            <Badge badgeContent={0} color="error">
               <EmailIcon />
             </Badge>
           </IconButton>
@@ -166,7 +171,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
             }}
           >
             <Avatar
-              src={managerData.avatar}
+              src={user?.google_picture ?? undefined}
               sx={{
                 width: 36,
                 height: 36,
@@ -175,14 +180,14 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
                 fontWeight: 600,
               }}
             >
-              {managerData.initials}
+              {userInitials}
             </Avatar>
             <Box>
               <Typography variant="body2" fontWeight={600} lineHeight={1.2}>
-                {managerData.name}
+                {userName}
               </Typography>
               <Typography variant="caption" sx={{ color: 'primary.dark', fontWeight: 500 }}>
-                {managerData.role}
+                {userRole}
               </Typography>
             </Box>
             <ExpandMoreIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
@@ -196,7 +201,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
           >
             <MenuItem onClick={handleUserMenuClose}>Profile</MenuItem>
             <MenuItem onClick={handleUserMenuClose}>Settings</MenuItem>
-            <MenuItem onClick={handleUserMenuClose}>Logout</MenuItem>
+            <MenuItem onClick={onLogoutClick}>Logout</MenuItem>
           </Menu>
         </Box>
       </Toolbar>

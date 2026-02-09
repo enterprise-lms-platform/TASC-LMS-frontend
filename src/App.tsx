@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from "./pages/LandingPage";
 import RegistrationPage from "./pages/RegistrationPage";
 import LoginPage from "./pages/LoginPage";
-import VerificationPage from './pages/VerificationPage';
+import EmailVerificationPage from './pages/EmailVerificationPage';
 import LearnerDashboard from './pages/LearnerDashboard';
 import LearnerCourseCatalogPage from './pages/LearnerCourseCatalogPage';
 import LearnerCourseDetailPage from './pages/LearnerCourseDetailPage';
@@ -27,42 +29,62 @@ import QuestionBankPage from './pages/QuestionBankPage';
 import AssignmentCreationPage from './pages/AssignmentCreationPage';
 import GradingPage from './pages/GradingPage';
 import SessionSchedulingPage from './pages/SessionSchedulingPage';
+import InviteUserPage from './pages/InviteUserPage';
+import SetPasswordPage from './pages/SetPasswordPage';
 
 const App = () => {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/courses" element={<CourseCataloguePage />} />
-        <Route path="/for-business" element={<ForBusinessPage />} />
-        <Route path="/course-details" element={<CourseLandingPage />} />
-        <Route path="/register" element={<RegistrationPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/verify" element={<VerificationPage />} />
-        <Route path="/passwordreset" element={<PasswordResetPage />} />
-        <Route path="/learner" element={<LearnerDashboard />} />
-        <Route path="/learner/courses" element={<LearnerCourseCatalogPage />} />
-        <Route path="/learner/course/:courseId" element={<LearnerCourseDetailPage />} />
-        <Route path="/learner/subscription" element={<SubscriptionManagementPage />} />
-        <Route path="/learner/payments" element={<PaymentHistoryPage />} />
-        <Route path="/learner/profile" element={<SubscriptionManagementPage />} />
-        <Route path="/learner/settings" element={<SubscriptionManagementPage />} />
-        <Route path="/checkout" element={<CheckoutPaymentPage />} />
-        <Route path="/invoice" element={<InvoiceReceiptPage />} />
-        <Route path="/manager" element={<ManagerDashboard />} />
-        <Route path="/superadmin" element={<SuperadminDashboard />} />
-        <Route path="/finance" element={<FinanceDashboard />} />
-        <Route path="/instructor" element={<InstructorDashboard />} />
-        <Route path="/instructor/course/create" element={<CourseCreationPage />} />
-        <Route path="/instructor/course/:courseId/structure" element={<CourseStructurePage />} />
-        <Route path="/instructor/course/:courseId/upload" element={<ContentUploadPage />} />
-        <Route path="/instructor/course/:courseId/preview" element={<CoursePreviewPage />} />
-        <Route path="/instructor/course/:courseId/quiz/builder" element={<QuizBuilderPage />} />
-        <Route path="/instructor/question-bank" element={<QuestionBankPage />} />
-        <Route path="/instructor/assignment/create" element={<AssignmentCreationPage />} />
-        <Route path="/instructor/grading" element={<GradingPage />} />
-        <Route path="/instructor/sessions/schedule" element={<SessionSchedulingPage />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/courses" element={<CourseCataloguePage />} />
+          <Route path="/for-business" element={<ForBusinessPage />} />
+          <Route path="/course-details" element={<CourseLandingPage />} />
+          <Route path="/register" element={<RegistrationPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/verify-email/:uidb64/:token" element={<EmailVerificationPage />} />
+          <Route path="/passwordreset" element={<PasswordResetPage />} />
+          <Route path="/reset-password/:uidb64/:token" element={<PasswordResetPage />} />
+          <Route path="/set-password/:uidb64/:token" element={<SetPasswordPage />} />
+          
+          {/* Protected Learner Routes */}
+          <Route path="/learner" element={<ProtectedRoute><LearnerDashboard /></ProtectedRoute>} />
+          <Route path="/learner/courses" element={<ProtectedRoute><LearnerCourseCatalogPage /></ProtectedRoute>} />
+          <Route path="/learner/course/:courseId" element={<ProtectedRoute><LearnerCourseDetailPage /></ProtectedRoute>} />
+          <Route path="/learner/subscription" element={<ProtectedRoute><SubscriptionManagementPage /></ProtectedRoute>} />
+          <Route path="/learner/payments" element={<ProtectedRoute><PaymentHistoryPage /></ProtectedRoute>} />
+          <Route path="/learner/profile" element={<ProtectedRoute><SubscriptionManagementPage /></ProtectedRoute>} />
+          <Route path="/learner/settings" element={<ProtectedRoute><SubscriptionManagementPage /></ProtectedRoute>} />
+          
+          {/* Protected Checkout & Invoice */}
+          <Route path="/checkout" element={<ProtectedRoute><CheckoutPaymentPage /></ProtectedRoute>} />
+          <Route path="/invoice" element={<ProtectedRoute><InvoiceReceiptPage /></ProtectedRoute>} />
+          
+          {/* Protected Instructor Routes */}
+          <Route path="/instructor" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><InstructorDashboard /></ProtectedRoute>} />
+          <Route path="/instructor/course/create" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><CourseCreationPage /></ProtectedRoute>} />
+          <Route path="/instructor/course/:courseId/structure" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><CourseStructurePage /></ProtectedRoute>} />
+          <Route path="/instructor/course/:courseId/upload" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><ContentUploadPage /></ProtectedRoute>} />
+          <Route path="/instructor/course/:courseId/preview" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><CoursePreviewPage /></ProtectedRoute>} />
+          <Route path="/instructor/course/:courseId/quiz/builder" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><QuizBuilderPage /></ProtectedRoute>} />
+          <Route path="/instructor/question-bank" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><QuestionBankPage /></ProtectedRoute>} />
+          <Route path="/instructor/assignment/create" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><AssignmentCreationPage /></ProtectedRoute>} />
+          <Route path="/instructor/grading" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><GradingPage /></ProtectedRoute>} />
+          <Route path="/instructor/sessions/schedule" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><SessionSchedulingPage /></ProtectedRoute>} />
+          
+          {/* Protected Manager Routes */}
+          <Route path="/manager" element={<ProtectedRoute allowedRoles={['lms_manager', 'org_admin', 'tasc_admin']}><ManagerDashboard /></ProtectedRoute>} />
+          
+          {/* Protected Admin Routes */}
+          <Route path="/superadmin" element={<ProtectedRoute requiredRole="tasc_admin"><SuperadminDashboard /></ProtectedRoute>} />
+          <Route path="/superadmin/add-user" element={<ProtectedRoute requiredRole="tasc_admin"><InviteUserPage /></ProtectedRoute>} />
+          
+          {/* Protected Finance Routes */}
+          <Route path="/finance" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceDashboard /></ProtectedRoute>} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   )
 }
