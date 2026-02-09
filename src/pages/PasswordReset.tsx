@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faClock, faEnvelope, faGraduationCap, faShieldAlt, faCheckCircle, faArrowLeft } from "@fortawesome/free-solid-svg-icons"
 import type { ReactNode } from "react"
 import { useState } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams, useParams } from "react-router-dom"
 import { authApi, getErrorMessage } from "../lib/api"
 import { loginColors } from "../styles/loginTheme"
 
@@ -80,6 +80,7 @@ const SuccessTab = () => {
 function PasswordResetPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const routeParams = useParams<{ uidb64?: string; token?: string }>();
   const [step, setStep] = useState<'request' | 'confirm' | 'success'>('request');
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -88,9 +89,9 @@ function PasswordResetPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Check if we have uidb64 and token in URL params (for password reset confirm)
-  const uidb64 = searchParams.get('uidb64');
-  const token = searchParams.get('token');
+  // Check if we have uidb64 and token - prefer route params, fallback to query params for backward compatibility
+  const uidb64 = routeParams.uidb64 || searchParams.get('uidb64');
+  const token = routeParams.token || searchParams.get('token');
 
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();

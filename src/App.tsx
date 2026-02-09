@@ -46,6 +46,7 @@ const App = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/verify-email/:uidb64/:token" element={<EmailVerificationPage />} />
           <Route path="/passwordreset" element={<PasswordResetPage />} />
+          <Route path="/reset-password/:uidb64/:token" element={<PasswordResetPage />} />
           <Route path="/set-password/:uidb64/:token" element={<SetPasswordPage />} />
           
           {/* Protected Learner Routes */}

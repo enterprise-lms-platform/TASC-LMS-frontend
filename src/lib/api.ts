@@ -213,8 +213,11 @@ export const authApi = {
     data: PasswordResetConfirmRequest
   ): Promise<PasswordResetResponse> => {
     const response = await apiClient.post<PasswordResetResponse>(
-      '/auth/password-reset-confirm/',
-      data
+      `/auth/password-reset-confirm/${data.uidb64}/${data.token}/`,
+      {
+        new_password: data.new_password,
+        confirm_password: data.confirm_password,
+      }
     );
     return response.data;
   },
