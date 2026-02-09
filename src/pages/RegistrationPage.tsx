@@ -245,7 +245,7 @@ const RegistrationPage: React.FC = () => {
     const strengthColor = strength <= 1 ? loginColors.status.error : strength <= 3 ? loginColors.status.warning : loginColors.status.success;
     const strengthText = strength <= 1 ? 'Weak' : strength <= 3 ? 'Fair' : 'Strong';
 
-    const FeatureItem = ({ icon, title, description }: {icon: IconProp, title: string, description: string}) => (
+    const FeatureItem = ({ icon, title, description }: {icon: typeof faGraduationCap, title: string, description: string}) => (
         <Box sx={loginStyles.featureItem}>
             <Box sx={loginStyles.featureIcon}>
                 <FontAwesomeIcon icon={icon} />
