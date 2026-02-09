@@ -231,9 +231,14 @@ export const authApi = {
     return response.data;
   },
 
-  // Google OAuth initiation (returns redirect URL)
-  initiateGoogleOAuth: (): string => {
-    return `${API_BASE_URL}${API_VERSION}/auth/google/login/`;
+  // Google OAuth login
+  googleLogin: async (idToken: string): Promise<LoginResponse> => {
+    const response = await apiClient.post<LoginResponse>('/auth/google/login/', {
+      id_token: idToken,
+    });
+    const { access, refresh } = response.data;
+    setTokens(access, refresh);
+    return response.data;
   },
 
   // Invite user (admin only)
