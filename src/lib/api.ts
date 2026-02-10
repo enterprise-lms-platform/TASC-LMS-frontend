@@ -20,6 +20,11 @@ import type {
   SetPasswordFromInviteRequest,
   SetPasswordFromInviteResponse,
   ApiErrorResponse,
+  PaginatedResponse,
+  PublicCourse,
+  PublicCourseDetail,
+  PublicCategory,
+  PublicTag,
 } from '../types/api';
 
 // Get API base URL from environment variable or use default
@@ -284,6 +289,103 @@ export const getErrorMessage = (error: unknown): string => {
     }
   }
   return 'An unexpected error occurred. Please try again.';
+};
+
+// ========================================
+// Public Catalogue API (no authentication required)
+// ========================================
+
+export const publicCatalogueApi = {
+  /**
+   * Get published courses with optional filtering and pagination
+   * @param params - Query parameters for filtering
+   * @returns Paginated list of published courses
+   */
+  getCourses: async (params?: {
+    featured?: boolean;
+    category?: number;
+    level?: string;
+    page?: number;
+  }): Promise<PaginatedResponse<PublicCourse>> => {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.featured !== undefined) {
+      queryParams.append('featured', String(params.featured));
+    }
+    if (params?.category !== undefined) {
+      queryParams.append('category', String(params.category));
+    }
+    if (params?.level) {
+      queryParams.append('level', params.level);
+    }
+    if (params?.page !== undefined) {
+      queryParams.append('page', String(params.page));
+    }
+
+    const queryString = queryParams.toString();
+    const url = `/public/courses/${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await apiClient.get(url);
+    const data = response.data;
+    
+    // Handle both paginated and non-paginated responses
+    if (Array.isArray(data)) {
+      // Backend returned array directly (no pagination configured)
+      return {
+        count: data.length,
+        next: null,
+        previous: null,
+        results: data,
+      };
+    }
+    
+    // Backend returned paginated response
+    return data;
+  },
+
+  /**
+   * Get course detail by slug
+   * @param slug - Course slug
+   * @returns Course detail with sessions
+   */
+  getCourseBySlug: async (slug: string): Promise<PublicCourseDetail> => {
+    const response = await apiClient.get<PublicCourseDetail>(`/public/courses/${slug}/`);
+    return response.data;
+  },
+
+  /**
+   * Get all active categories
+   * @returns List of active categories
+   */
+  getCategories: async (): Promise<PublicCategory[]> => {
+    const response = await apiClient.get('/public/categories/');
+    const data = response.data;
+    
+    // Handle both paginated and non-paginated responses
+    if (Array.isArray(data)) {
+      return data;
+    }
+    
+    // If paginated, extract results
+    return (data as any).results || [];
+  },
+
+  /**
+   * Get all tags
+   * @returns List of tags
+   */
+  getTags: async (): Promise<PublicTag[]> => {
+    const response = await apiClient.get('/public/tags/');
+    const data = response.data;
+    
+    // Handle both paginated and non-paginated responses
+    if (Array.isArray(data)) {
+      return data;
+    }
+    
+    // If paginated, extract results
+    return (data as any).results || [];
+  },
 };
 
 export default apiClient;
