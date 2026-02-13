@@ -264,7 +264,7 @@ function PasswordResetPage() {
           )}
 
           {/* Confirm Reset Form */}
-          {(uidb64 && token && step !== 'success') && (
+          {(uidb64 && token) && (
             <Box component="form" onSubmit={handleConfirmReset}>
               <Typography variant="h4" fontWeight={700} mb={1} color={loginColors.neutral[800]}>
                 Set New Password
