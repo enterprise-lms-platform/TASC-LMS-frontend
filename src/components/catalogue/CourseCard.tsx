@@ -7,13 +7,11 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
 import StarIcon from '@mui/icons-material/Star';
-import { getLocalThumbnailByCategory } from '../../utils/courseHelpers';
 
 export interface Course {
   id: string;
   title: string;
   category: string;
-  categorySlug?: string; // For fallback image mapping
   instructor: string;
   instructorInitials: string;
   duration: string;
@@ -44,29 +42,12 @@ const getBadgeColor = (badge?: string) => {
 
 const CourseCard: React.FC<CourseCardProps> = ({ course, onEnroll }) => {
   const [isWishlisted, setIsWishlisted] = React.useState(false);
-  const [imageSrc, setImageSrc] = React.useState(course.image);
-  const [imageError, setImageError] = React.useState(false);
-
-  // Fallback to category-based local thumbnail if image fails to load
-  const handleImageError = () => {
-    if (!imageError) {
-      setImageError(true);
-      setImageSrc(getLocalThumbnailByCategory(course.categorySlug));
-    }
-  };
 
   return (
     <Card className="course-card course-card-animate" sx={{ boxShadow: 'none' }}>
       {/* Image */}
       <Box className="course-image">
-        <CardMedia 
-          component="img" 
-          image={imageSrc} 
-          alt={course.title}
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          onError={handleImageError}
-        />
+        <CardMedia component="img" image={course.image} alt={course.title} />
         
         {/* Badges */}
         <Box sx={{ position: 'absolute', top: 12, left: 12, right: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

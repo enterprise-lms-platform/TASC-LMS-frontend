@@ -1,27 +1,11 @@
 import React from 'react';
 import { Box, Pagination as MuiPagination } from '@mui/material';
 
-interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-}
-
-const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
-  const handleChange = (_event: React.ChangeEvent<unknown>, page: number) => {
-    onPageChange(page);
-  };
-
-  if (totalPages <= 1) {
-    return null; // Don't show pagination if only 1 page
-  }
-
+const Pagination: React.FC = () => {
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}>
       <MuiPagination
-        count={totalPages}
-        page={currentPage}
-        onChange={handleChange}
+        count={24}
         variant="outlined"
         shape="rounded"
         sx={{

@@ -9,6 +9,7 @@ import '../styles/CourseCatalogue.css';
 import CatalogueHero from '../components/catalogue/CatalogueHero';
 import FiltersSidebar from '../components/catalogue/FiltersSidebar';
 import CoursesGrid from '../components/catalogue/CoursesGrid';
+import Pagination from '../components/catalogue/Pagination';
 import FeaturedCategories from '../components/catalogue/FeaturedCategories';
 import CatalogueCtaBanner from '../components/catalogue/CatalogueCtaBanner';
 import MobileFilterDrawer from '../components/catalogue/MobileFilterDrawer';
@@ -63,6 +64,7 @@ const CourseCataloguePage: React.FC = () => {
           {/* Grid Content */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <CoursesGrid onMobileFilterOpen={() => setMobileFiltersOpen(true)} />
+            <Pagination />
           </Box>
         </Stack>
       </Container>
