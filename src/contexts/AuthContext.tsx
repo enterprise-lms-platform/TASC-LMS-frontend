@@ -8,7 +8,6 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
-  loginWithGoogle: (idToken: string) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -72,27 +71,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const loginWithGoogle = async (idToken: string) => {
-    setError(null);
-    setIsLoading(true);
-    try {
-      const response = await authApi.googleLogin(idToken);
-      // Use user from response if provided, otherwise fetch from /auth/me/
-      if (response.user) {
-        setUser(response.user);
-      } else {
-        const userData = await authApi.getCurrentUser();
-        setUser(userData);
-      }
-    } catch (err) {
-      const message = getErrorMessage(err);
-      setError(message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const register = async (data: RegisterRequest) => {
     setError(null);
     setIsLoading(true);
@@ -143,7 +121,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
     isAuthenticated: !!user,
     login,
-    loginWithGoogle,
     register,
     logout,
     refreshUser,

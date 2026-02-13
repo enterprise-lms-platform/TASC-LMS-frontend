@@ -2,13 +2,10 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
-import { GoogleOAuthProvider } from '@react-oauth/google'
 import '@fontsource-variable/inter/opsz-italic.css'
 import './index.css'
 import App from './App'
 import { globalColors } from './styles/globaltheme'
-
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 
 declare module '@mui/material/styles' {
   
@@ -39,12 +36,10 @@ const theme = createTheme({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId={googleClientId}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <App />
-       
-      </ThemeProvider>
-    </GoogleOAuthProvider>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <App />
+     
+    </ThemeProvider>
   </StrictMode>,
 )

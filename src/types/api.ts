@@ -88,8 +88,6 @@ export interface RegisterResponse {
 export interface LoginResponse {
   access: string;
   refresh: string;
-  user?: User; // Optional: included in Google OAuth response
-  is_new_user?: boolean; // Optional: included in Google OAuth response
 }
 
 export interface RefreshTokenResponse {
