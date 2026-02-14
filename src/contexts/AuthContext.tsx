@@ -1,28 +1,15 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import type { ReactNode } from 'react';
-import { authApi, getAccessToken, getRefreshToken, clearTokens, getErrorMessage } from '../services/api';
-import type { User, LoginRequest, RegisterRequest } from '../types/types';
-
-interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  login: (credentials: LoginRequest) => Promise<void>;
-  register: (data: RegisterRequest) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
-  error: string | null;
-  clearError: () => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { authApi, getAccessToken, getRefreshToken, clearTokens, getErrorMessage } from '../services/main.api';
+import { AuthContext, type AuthContextType } from './AuthContextDefinition';
+import type { UserMe, LoginRequest, RegisterRequest } from '../types/types';
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserMe | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,8 +26,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       try {
         // Try to fetch current user
-        const userData = await authApi.getCurrentUser();
-        setUser(userData);
+        const response = await authApi.getCurrentUser();
+        setUser(response.data);
       } catch (err) {
         console.error('Failed to authenticate user on startup:', err);
         // If getCurrentUser fails and refresh also fails, tokens will be cleared by interceptor
@@ -60,8 +47,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authApi.login(credentials);
       // After successful login, fetch user data
-      const userData = await authApi.getCurrentUser();
-      setUser(userData);
+      const response = await authApi.getCurrentUser();
+      setUser(response.data);
     } catch (err) {
       const message = getErrorMessage(err);
       setError(message);
@@ -90,7 +77,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async () => {
     setError(null);
     try {
-      await authApi.logout();
+      const refreshToken = getRefreshToken();
+      if (refreshToken) {
+        await authApi.logout(refreshToken);
+      }
     } catch (err) {
       console.error('Logout error:', err);
       // Continue with logout even if API call fails
@@ -103,8 +93,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const refreshUser = async () => {
     setError(null);
     try {
-      const userData = await authApi.getCurrentUser();
-      setUser(userData);
+      const response = await authApi.getCurrentUser();
+      setUser(response.data);
     } catch (err) {
       const message = getErrorMessage(err);
       setError(message);

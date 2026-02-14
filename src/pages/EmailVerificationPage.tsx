@@ -23,7 +23,7 @@ const EmailVerificationPage: React.FC = () => {
       try {
         const response = await authApi.verifyEmail(uidb64, token);
         setStatus('success');
-        setMessage(response.message || 'Email verified successfully! You can now log in.');
+        setMessage(response.data.message || 'Email verified successfully! You can now log in.');
       } catch (err) {
         setStatus('error');
         setMessage(getErrorMessage(err));

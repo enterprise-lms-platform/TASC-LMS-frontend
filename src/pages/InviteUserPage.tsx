@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import Sidebar from '../components/superadmin/Sidebar';
 import TopBar from '../components/superadmin/TopBar';
-import { authApi, getErrorMessage } from '../services/main.api';
+import { getErrorMessage, adminApi } from '../services/main.api';
 import type { UserRole } from '../types/types';
 
 const DRAWER_WIDTH = 280;
@@ -91,10 +91,10 @@ const InviteUserPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const response = await authApi.inviteUser(formData);
+      const response = await adminApi.inviteUser(formData);
       setSnackbar({
         open: true,
-        message: `Invitation sent successfully to ${response.email}`,
+        message: `Invitation sent successfully to ${response.data.email}`,
         severity: 'success',
       });
       // Reset form

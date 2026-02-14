@@ -5,9 +5,7 @@ import {  loginStyles } from '../styles/loginTheme'
 
 import { Box, Button, Divider, Stack, Typography, TextField, FormControlLabel, Checkbox, Alert } from "@mui/material"
 import { useState, useEffect } from 'react';
-import { GoogleIcon } from '../components/customIcons';
 import { useAuth } from '../contexts/AuthContext';
-import { authApi } from '../services/api';
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -104,9 +102,13 @@ const LoginPage = () => {
       try {
         await login({ email, password });
         // Login successful, user will be redirected by the useEffect above
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Handle specific error cases
-        const errorMessage = err.response?.data?.detail || err.message || 'Login failed';
+        let errorMessage = 'Login failed';
+        if (err && typeof err === 'object' && 'response' in err) {
+          const error = err as { response?: { data?: { detail?: string } }; message?: string };
+          errorMessage = error.response?.data?.detail || error.message || 'Login failed';
+        }
         
         // Check for email verification error
         if (errorMessage.toLowerCase().includes('email') && 
@@ -298,16 +300,17 @@ const LoginPage = () => {
 
                   {/* Social Login Buttons */}
                   <Stack sx={loginStyles.socialBtnContainer}>
-                    <Button
+                    {/* Google OAuth handled by backend team */}
+                    {/* <Button
                       startIcon={<GoogleIcon />}
                       variant="outlined"
                       sx={[loginStyles.socialButton, loginStyles.googleButton]}
                       onClick={() => {
-                        window.location.href = authApi.initiateGoogleOAuth();
+                        // window.location.href = authApi.initiateGoogleOAuth();
                       }}
                     >
                       Continue with Google
-                    </Button>
+                    </Button> */}
                   </Stack>
                 </Box>
 

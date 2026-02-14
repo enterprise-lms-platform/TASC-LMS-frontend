@@ -192,7 +192,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
             }}
           >
             <Avatar
-              src={user?.profile_picture}
+              src={(user?.google_picture ?? undefined) as string | undefined}
               sx={{
                 width: 36,
                 height: 36,
@@ -220,7 +220,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
             sx={{ display: { xs: 'flex', md: 'none' }, ml: 1 }}
           >
             <Avatar
-              src={user?.profile_picture}
+              src={(user?.google_picture ?? undefined) as string | undefined}
               sx={{
                 width: 32,
                 height: 32,

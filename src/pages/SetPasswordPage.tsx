@@ -44,7 +44,7 @@ const SetPasswordPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      await authApi.setPasswordFromInvite(uidb64, token, {
+      await authApi.setPassword(uidb64, token, {
         new_password: newPassword,
         confirm_password: confirmPassword,
       });

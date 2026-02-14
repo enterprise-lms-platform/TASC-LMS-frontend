@@ -137,9 +137,7 @@ function PasswordResetPage() {
 
     setIsLoading(true);
     try {
-      await authApi.confirmPasswordReset({
-        uidb64,
-        token,
+      await authApi.confirmPasswordReset(uidb64, token, {
         new_password: newPassword,
         confirm_password: confirmPassword,
       });

@@ -20,9 +20,7 @@ import {
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCertificate, faChartLine, faEye, faEyeSlash, faGraduationCap, faSpinner, faCheckCircle, faGlobe } from '@fortawesome/free-solid-svg-icons';
-import { GoogleIcon } from '../components/customIcons';
 import { useAuth } from '../contexts/AuthContext';
-import { authApi } from '../services/api';
 
 
 
@@ -192,8 +190,12 @@ const RegistrationPage: React.FC = () => {
                 setIsSuccess(true);
                 setResendTimer(30);
                 setCanResend(false);
-            } catch (err: any) {
-                const errorMessage = err.response?.data?.detail || err.message || 'Registration failed';
+            } catch (err: unknown) {
+                let errorMessage = 'Registration failed';
+                if (err && typeof err === 'object' && 'response' in err) {
+                  const error = err as { response?: { data?: { detail?: string } }; message?: string };
+                  errorMessage = error.response?.data?.detail || error.message || 'Registration failed';
+                }
                 setApiError(errorMessage);
                 console.error('Registration error:', err);
             } finally {
@@ -203,7 +205,7 @@ const RegistrationPage: React.FC = () => {
     };
 
     useEffect(() => {
-        let timer: any;
+        let timer: ReturnType<typeof setInterval> | null = null;
         if (isSuccess && resendTimer > 0) {
             timer = setInterval(() => {
                 setResendTimer((prev) => prev - 1);
@@ -211,7 +213,11 @@ const RegistrationPage: React.FC = () => {
         } else if (resendTimer === 0) {
             setCanResend(true);
         }
-        return () => clearInterval(timer);
+        return () => {
+            if (timer !== null) {
+                clearInterval(timer);
+            }
+        };
     }, [isSuccess, resendTimer]);
 
     const handleResendEmail = async () => {
@@ -611,16 +617,17 @@ const RegistrationPage: React.FC = () => {
                         <Divider sx={loginStyles.divider}>Or register with</Divider>
 
                         <Stack sx={loginStyles.socialBtnContainer}>
-                            <Button 
+                            {/* Google OAuth handled by backend team */}
+                            {/* <Button
                                 startIcon={<GoogleIcon />} 
                                 variant="outlined" 
                                 sx={[loginStyles.socialButton, loginStyles.googleButton]}
                                 onClick={() => {
-                                    window.location.href = authApi.initiateGoogleOAuth();
+                                    // window.location.href = authApi.initiateGoogleOAuth();
                                 }}
                             >
                                 Continue with Google
-                            </Button>
+                            </Button> */}
                         </Stack>
 
                         <Box sx={loginStyles.signupSection}>
