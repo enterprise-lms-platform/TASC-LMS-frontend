@@ -7,7 +7,7 @@ import { Box, Button, Divider, Stack, Typography, TextField, FormControlLabel, C
 import { useState, useEffect } from 'react';
 import { GoogleIcon } from '../components/customIcons';
 import { useAuth } from '../contexts/AuthContext';
-import { authApi } from '../lib/api';
+import { authApi } from '../services/api';
 
 interface FeatureItemProps {
   icon: React.ReactNode;

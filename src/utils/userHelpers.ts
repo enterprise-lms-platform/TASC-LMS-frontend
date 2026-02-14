@@ -1,4 +1,4 @@
-import type { UserRole } from '../types/api';
+import type { UserRole } from '../types/types';
 
 /**
  * Maps backend role values to user-friendly display labels

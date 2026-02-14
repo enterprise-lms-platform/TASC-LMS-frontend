@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
-import type { UserRole } from '../types/api';
+import type { UserRole } from '../types/types';
 
 interface ProtectedRouteProps {
   children: React.ReactElement;

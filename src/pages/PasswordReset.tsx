@@ -5,7 +5,7 @@ import { faClock, faEnvelope, faGraduationCap, faShieldAlt, faCheckCircle, faArr
 import type { ReactNode } from "react"
 import { useState } from "react"
 import { useNavigate, useSearchParams, useParams } from "react-router-dom"
-import { authApi, getErrorMessage } from "../lib/api"
+import { authApi, getErrorMessage } from "../services/api"
 import { loginColors } from "../styles/loginTheme"
 
 
