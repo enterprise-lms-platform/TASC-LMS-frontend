@@ -22,6 +22,7 @@ const CourseCataloguePage: React.FC = () => {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsMobile(window.innerWidth < 768);
     }
 

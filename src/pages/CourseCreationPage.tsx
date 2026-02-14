@@ -178,7 +178,7 @@ const CourseCreationPage: React.FC = () => {
     navigate('/instructor/course/1/preview');
   };
 
-  // Completion status items
+  // Completion status items. to be replaced
   const statusItems: StatusItem[] = [
     { id: 'basic', label: 'Basic information', status: basicInfo.title ? 'complete' : 'incomplete' },
     { id: 'thumbnail', label: 'Course thumbnail', status: media.thumbnail ? 'complete' : 'warning' },

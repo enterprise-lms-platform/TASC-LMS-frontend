@@ -21,7 +21,7 @@ import type { GradingCriterion } from '../components/instructor/grading/RubricCr
 import FeedbackSection from '../components/instructor/grading/FeedbackSection';
 import GradingFooter from '../components/instructor/grading/GradingFooter';
 
-// Sample data
+// Sample data; replacewith use effect and the api call from main.ts file
 const sampleSubmissions: SubmissionData[] = [
   {
     id: '1',

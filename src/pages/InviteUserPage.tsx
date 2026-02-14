@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import Sidebar from '../components/superadmin/Sidebar';
 import TopBar from '../components/superadmin/TopBar';
-import { authApi, getErrorMessage } from '../services/api';
+import { authApi, getErrorMessage } from '../services/main.api';
 import type { UserRole } from '../types/types';
 
 const DRAWER_WIDTH = 280;

@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGraduationCap, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
-import { authApi, getErrorMessage } from '../services/api';
+import { authApi, getErrorMessage } from '../services/main.api';
 import { loginColors } from '../styles/loginTheme';
 
 const SetPasswordPage: React.FC = () => {

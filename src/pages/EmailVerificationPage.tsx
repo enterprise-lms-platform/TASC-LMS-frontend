@@ -4,7 +4,7 @@ import { Box, Button, CircularProgress, Typography, Stack } from '@mui/material'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faExclamationCircle, faGraduationCap } from '@fortawesome/free-solid-svg-icons';
 import { loginStyles, loginColors } from '../styles/loginTheme';
-import { authApi, getErrorMessage } from '../services/api';
+import { authApi, getErrorMessage } from '../services/main.api';
 
 const EmailVerificationPage: React.FC = () => {
   const { uidb64, token } = useParams<{ uidb64: string; token: string }>();
