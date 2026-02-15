@@ -25,3 +25,8 @@ dist-ssr
 
 # Local AI assistant config
 WARP.md
+
+# Project documentation (local only)
+srs.md
+PROJECT-CHANGES.md
+userStories.md

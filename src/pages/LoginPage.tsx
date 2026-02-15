@@ -50,7 +50,6 @@ const LoginPage = () => {
       const roleRoutes: Record<string, string> = {
         learner: '/learner',
         instructor: '/instructor',
-        org_admin: '/manager',
         lms_manager: '/manager',
         finance: '/finance',
         tasc_admin: '/superadmin',

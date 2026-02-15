@@ -1,7 +1,7 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { Box, CircularProgress, Typography } from '@mui/material';
-import { useAuth } from '../contexts/AuthContext';
+// import { Navigate } from 'react-router-dom';
+// import { Box, CircularProgress, Typography } from '@mui/material';
+// import { useAuth } from '../contexts/AuthContext';
 import type { UserRole } from '../types/types';
 
 interface ProtectedRouteProps {
@@ -10,11 +10,21 @@ interface ProtectedRouteProps {
   allowedRoles?: UserRole[];
 }
 
+/*
+ * TODO: RESTORE ROUTE PROTECTION BEFORE PRODUCTION
+ * Protection temporarily disabled for development/page building.
+ * Original code is preserved in comments below.
+ */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
-  requiredRole,
-  allowedRoles,
+  // requiredRole,
+  // allowedRoles,
 }) => {
+  // TEMPORARILY BYPASSED — just render children directly
+  return children;
+
+  /*
+  // ========== ORIGINAL PROTECTED ROUTE LOGIC ==========
   const { isAuthenticated, isLoading, user } = useAuth();
 
   // Show loading spinner while checking authentication
@@ -93,6 +103,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // User is authenticated and has required permissions
   return children;
+  // ========== END ORIGINAL LOGIC ==========
+  */
 };
 
 export default ProtectedRoute;

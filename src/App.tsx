@@ -31,6 +31,14 @@ import GradingPage from './pages/GradingPage';
 import SessionSchedulingPage from './pages/SessionSchedulingPage';
 import InviteUserPage from './pages/InviteUserPage';
 import SetPasswordPage from './pages/SetPasswordPage';
+import {
+  AllUsersPage, RolesPermissionsPage, AuditLogsPage,
+  AllOrganizationsPage, AddOrganizationPage, PartnershipsPage,
+  AllCoursesPage, InstructorsPage, CertificationsPage, AssessmentsPage,
+  PaymentsPage, RevenuePage, InvoicesPage, GatewaySettingsPage,
+  SystemSettingsPage, IntegrationsPage, DataMigrationPage, SecurityPage,
+  AnalyticsPage, NotificationsPage,
+} from './pages/superadmin';
 
 const App = () => {
   return (
@@ -75,11 +83,31 @@ const App = () => {
           <Route path="/instructor/sessions/schedule" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><SessionSchedulingPage /></ProtectedRoute>} />
           
           {/* Protected Manager Routes */}
-          <Route path="/manager" element={<ProtectedRoute allowedRoles={['lms_manager', 'org_admin', 'tasc_admin']}><ManagerDashboard /></ProtectedRoute>} />
+          <Route path="/manager" element={<ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerDashboard /></ProtectedRoute>} />
           
           {/* Protected Admin Routes */}
           <Route path="/superadmin" element={<ProtectedRoute requiredRole="tasc_admin"><SuperadminDashboard /></ProtectedRoute>} />
           <Route path="/superadmin/add-user" element={<ProtectedRoute requiredRole="tasc_admin"><InviteUserPage /></ProtectedRoute>} />
+          <Route path="/superadmin/analytics" element={<ProtectedRoute requiredRole="tasc_admin"><AnalyticsPage /></ProtectedRoute>} />
+          <Route path="/superadmin/notifications" element={<ProtectedRoute requiredRole="tasc_admin"><NotificationsPage /></ProtectedRoute>} />
+          <Route path="/superadmin/users" element={<ProtectedRoute requiredRole="tasc_admin"><AllUsersPage /></ProtectedRoute>} />
+          <Route path="/superadmin/roles" element={<ProtectedRoute requiredRole="tasc_admin"><RolesPermissionsPage /></ProtectedRoute>} />
+          <Route path="/superadmin/audit-logs" element={<ProtectedRoute requiredRole="tasc_admin"><AuditLogsPage /></ProtectedRoute>} />
+          <Route path="/superadmin/organizations" element={<ProtectedRoute requiredRole="tasc_admin"><AllOrganizationsPage /></ProtectedRoute>} />
+          <Route path="/superadmin/organizations/add" element={<ProtectedRoute requiredRole="tasc_admin"><AddOrganizationPage /></ProtectedRoute>} />
+          <Route path="/superadmin/partnerships" element={<ProtectedRoute requiredRole="tasc_admin"><PartnershipsPage /></ProtectedRoute>} />
+          <Route path="/superadmin/courses" element={<ProtectedRoute requiredRole="tasc_admin"><AllCoursesPage /></ProtectedRoute>} />
+          <Route path="/superadmin/instructors" element={<ProtectedRoute requiredRole="tasc_admin"><InstructorsPage /></ProtectedRoute>} />
+          <Route path="/superadmin/certifications" element={<ProtectedRoute requiredRole="tasc_admin"><CertificationsPage /></ProtectedRoute>} />
+          <Route path="/superadmin/assessments" element={<ProtectedRoute requiredRole="tasc_admin"><AssessmentsPage /></ProtectedRoute>} />
+          <Route path="/superadmin/payments" element={<ProtectedRoute requiredRole="tasc_admin"><PaymentsPage /></ProtectedRoute>} />
+          <Route path="/superadmin/revenue" element={<ProtectedRoute requiredRole="tasc_admin"><RevenuePage /></ProtectedRoute>} />
+          <Route path="/superadmin/invoices" element={<ProtectedRoute requiredRole="tasc_admin"><InvoicesPage /></ProtectedRoute>} />
+          <Route path="/superadmin/gateway-settings" element={<ProtectedRoute requiredRole="tasc_admin"><GatewaySettingsPage /></ProtectedRoute>} />
+          <Route path="/superadmin/settings" element={<ProtectedRoute requiredRole="tasc_admin"><SystemSettingsPage /></ProtectedRoute>} />
+          <Route path="/superadmin/integrations" element={<ProtectedRoute requiredRole="tasc_admin"><IntegrationsPage /></ProtectedRoute>} />
+          <Route path="/superadmin/data-migration" element={<ProtectedRoute requiredRole="tasc_admin"><DataMigrationPage /></ProtectedRoute>} />
+          <Route path="/superadmin/security" element={<ProtectedRoute requiredRole="tasc_admin"><SecurityPage /></ProtectedRoute>} />
           
           {/* Protected Finance Routes */}
           <Route path="/finance" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceDashboard /></ProtectedRoute>} />

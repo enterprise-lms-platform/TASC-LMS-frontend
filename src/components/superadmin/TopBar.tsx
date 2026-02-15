@@ -25,9 +25,15 @@ import { getUserDisplayName, getUserInitials, getRoleDisplayName } from '../../u
 
 interface TopBarProps {
   onMenuClick: () => void;
+  title?: string;
+  subtitle?: string;
 }
 
-const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
+const TopBar: React.FC<TopBarProps> = ({
+  onMenuClick,
+  title = 'Super Admin Dashboard',
+  subtitle = 'Platform Overview & System Management',
+}) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const handleLogout = useLogout();
   const { user } = useAuth();
@@ -79,17 +85,17 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
               }}
               noWrap
             >
-              Super Admin Dashboard
+              {title}
             </Typography>
-            <Typography 
-              variant="body2" 
-              sx={{ 
+            <Typography
+              variant="body2"
+              sx={{
                 color: 'text.secondary',
                 display: { xs: 'none', sm: 'block' }
               }}
               noWrap
             >
-              Platform Overview & System Management
+              {subtitle}
             </Typography>
           </Box>
         </Box>

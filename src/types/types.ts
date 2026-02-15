@@ -8,7 +8,6 @@
 
 export const UserRole = {
   LEARNER: 'learner',
-  ORG_ADMIN: 'org_admin',
   INSTRUCTOR: 'instructor',
   FINANCE: 'finance',
   TASC_ADMIN: 'tasc_admin',

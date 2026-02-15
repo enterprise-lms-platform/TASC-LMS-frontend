@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Drawer,
@@ -44,7 +44,6 @@ const DRAWER_WIDTH = 280;
 interface NavItem {
   text: string;
   icon: React.ReactNode;
-  active?: boolean;
   badge?: string;
   path?: string;
 }
@@ -59,53 +58,53 @@ const navSections: NavSection[] = [
   {
     title: 'Dashboard',
     items: [
-      { text: 'Overview', icon: <DashboardIcon />, active: true, path: '/superadmin' },
-      { text: 'Analytics', icon: <AnalyticsIcon />, badge: 'New' },
-      { text: 'Notifications', icon: <NotificationsIcon />, badge: '3' },
+      { text: 'Overview', icon: <DashboardIcon />, path: '/superadmin' },
+      { text: 'Analytics', icon: <AnalyticsIcon />, path: '/superadmin/analytics', badge: 'New' },
+      { text: 'Notifications', icon: <NotificationsIcon />, path: '/superadmin/notifications', badge: '3' },
     ],
   },
   {
     title: 'User Management',
     items: [
-      { text: 'All Users', icon: <UsersIcon /> },
+      { text: 'All Users', icon: <UsersIcon />, path: '/superadmin/users' },
       { text: 'Add User', icon: <AddUserIcon />, path: '/superadmin/add-user' },
-      { text: 'Roles & Permissions', icon: <RolesIcon /> },
-      { text: 'Audit Logs', icon: <AuditIcon /> },
+      { text: 'Roles & Permissions', icon: <RolesIcon />, path: '/superadmin/roles' },
+      { text: 'Audit Logs', icon: <AuditIcon />, path: '/superadmin/audit-logs' },
     ],
   },
   {
     title: 'Organizations',
     items: [
-      { text: 'All Organizations', icon: <OrganizationsIcon /> },
-      { text: 'Add Organization', icon: <AddOrgIcon /> },
-      { text: 'Partnerships', icon: <PartnershipsIcon /> },
+      { text: 'All Organizations', icon: <OrganizationsIcon />, path: '/superadmin/organizations' },
+      { text: 'Add Organization', icon: <AddOrgIcon />, path: '/superadmin/organizations/add' },
+      { text: 'Partnerships', icon: <PartnershipsIcon />, path: '/superadmin/partnerships' },
     ],
   },
   {
     title: 'Learning Content',
     items: [
-      { text: 'All Courses', icon: <CoursesIcon /> },
-      { text: 'Instructors', icon: <InstructorsIcon /> },
-      { text: 'Certifications', icon: <CertificationsIcon /> },
-      { text: 'Assessments', icon: <AssessmentsIcon /> },
+      { text: 'All Courses', icon: <CoursesIcon />, path: '/superadmin/courses' },
+      { text: 'Instructors', icon: <InstructorsIcon />, path: '/superadmin/instructors' },
+      { text: 'Certifications', icon: <CertificationsIcon />, path: '/superadmin/certifications' },
+      { text: 'Assessments', icon: <AssessmentsIcon />, path: '/superadmin/assessments' },
     ],
   },
   {
     title: 'Financial',
     items: [
-      { text: 'Payments', icon: <PaymentsIcon /> },
-      { text: 'Revenue Reports', icon: <RevenueIcon /> },
-      { text: 'Invoices', icon: <InvoicesIcon /> },
-      { text: 'Gateway Settings', icon: <GatewayIcon /> },
+      { text: 'Payments', icon: <PaymentsIcon />, path: '/superadmin/payments' },
+      { text: 'Revenue Reports', icon: <RevenueIcon />, path: '/superadmin/revenue' },
+      { text: 'Invoices', icon: <InvoicesIcon />, path: '/superadmin/invoices' },
+      { text: 'Gateway Settings', icon: <GatewayIcon />, path: '/superadmin/gateway-settings' },
     ],
   },
   {
     title: 'System',
     items: [
-      { text: 'System Settings', icon: <SettingsIcon /> },
-      { text: 'Integrations', icon: <IntegrationsIcon /> },
-      { text: 'Data Migration', icon: <DataMigrationIcon /> },
-      { text: 'Security', icon: <SecurityIcon /> },
+      { text: 'System Settings', icon: <SettingsIcon />, path: '/superadmin/settings' },
+      { text: 'Integrations', icon: <IntegrationsIcon />, path: '/superadmin/integrations' },
+      { text: 'Data Migration', icon: <DataMigrationIcon />, path: '/superadmin/data-migration' },
+      { text: 'Security', icon: <SecurityIcon />, path: '/superadmin/security' },
     ],
   },
 ];
@@ -117,10 +116,18 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isActive = (path?: string) => {
+    if (!path) return false;
+    if (path === '/superadmin') return location.pathname === '/superadmin';
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
 
   const handleNavItemClick = (path?: string) => {
     if (path) {
       navigate(path);
+      onMobileClose();
     }
   };
 
@@ -187,14 +194,14 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
                       sx={{
                         py: 1,
                         px: 3,
-                        color: item.active ? 'primary.main' : 'text.secondary',
-                        bgcolor: item.active ? 'rgba(255, 164, 36, 0.1)' : 'transparent',
-                        borderRight: item.active ? '3px solid' : 'none',
+                        color: isActive(item.path) ? 'primary.main' : 'text.secondary',
+                        bgcolor: isActive(item.path) ? 'rgba(255, 164, 36, 0.1)' : 'transparent',
+                        borderRight: isActive(item.path) ? '3px solid' : 'none',
                         borderColor: 'primary.main',
-                        cursor: item.path ? 'pointer' : 'default',
+                        cursor: 'pointer',
                         '&:hover': {
-                          bgcolor: item.path ? 'action.hover' : 'transparent',
-                          color: item.path ? 'primary.main' : 'text.secondary',
+                          bgcolor: 'action.hover',
+                          color: 'primary.main',
                         },
                       }}
                     >

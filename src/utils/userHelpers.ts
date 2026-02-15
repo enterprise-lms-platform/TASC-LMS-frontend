@@ -9,7 +9,6 @@ export const getRoleDisplayName = (role: UserRole): string => {
     lms_manager: 'LMS Manager',
     instructor: 'Instructor',
     finance: 'Finance Manager',
-    org_admin: 'Organization Admin',
     learner: 'Learner',
   };
   
