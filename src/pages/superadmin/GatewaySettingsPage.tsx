@@ -18,9 +18,9 @@ const GatewaySettingsPage: React.FC = () => {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {gateways.map((g) => (
           <Grid size={{ xs: 12, sm: 6, md: 3 }} key={g.name}>
-            <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', transition: 'all 0.3s', '&:hover': { boxShadow: 3, transform: 'translateY(-2px)' } }}>
+            <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)', '&:hover': { boxShadow: '0 8px 25px rgba(0,0,0,0.08)', transform: 'translateY(-3px) scale(1.01)' } }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Box sx={{ width: 48, height: 48, borderRadius: 2, background: g.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: g.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
                   <PaymentIcon />
                 </Box>
                 <Chip label={g.status} size="small" sx={{
@@ -28,7 +28,7 @@ const GatewaySettingsPage: React.FC = () => {
                   color: g.status === 'Active' ? '#10b981' : '#71717a', fontWeight: 500, fontSize: '0.75rem',
                 }} />
               </Box>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>{g.name}</Typography>
+              <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 1 }}>{g.name}</Typography>
               <Typography variant="body2" color="text.secondary">Last: {g.lastTx}</Typography>
               <Typography variant="body2" color="text.secondary">{g.txCount.toLocaleString()} transactions</Typography>
               <Button size="small" sx={{ mt: 2, textTransform: 'none', fontWeight: 500 }}>Configure</Button>
@@ -37,8 +37,8 @@ const GatewaySettingsPage: React.FC = () => {
         ))}
       </Grid>
 
-      <Paper elevation={0} sx={{ maxWidth: 700, p: 4, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>Flutterwave Configuration</Typography>
+      <Paper elevation={0} sx={{ maxWidth: 700, p: 4, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
+        <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 3 }}>Flutterwave Configuration</Typography>
         <TextField fullWidth label="API Key (Public)" defaultValue="FLWPUBK-••••••••••••••••••-X" sx={{ mb: 3 }} />
         <TextField fullWidth label="Secret Key" type="password" defaultValue="FLWSECK-••••••••••••••••••-X" sx={{ mb: 3 }} />
         <TextField fullWidth label="Webhook URL" defaultValue="https://api.tasclms.com/webhooks/flutterwave" sx={{ mb: 3 }} />

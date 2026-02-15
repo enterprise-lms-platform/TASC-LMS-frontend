@@ -7,6 +7,10 @@ import LoginPage from "./pages/LoginPage";
 import EmailVerificationPage from './pages/EmailVerificationPage';
 import LearnerDashboard from './pages/LearnerDashboard';
 import LearnerCourseCatalogPage from './pages/LearnerCourseCatalogPage';
+import MyCoursesPage from './pages/MyCoursesPage';
+import LearnerNotificationsPage from './pages/LearnerNotificationsPage';
+import MySchedulePage from './pages/MySchedulePage';
+import SavedCoursesPage from './pages/SavedCoursesPage';
 import LearnerCourseDetailPage from './pages/LearnerCourseDetailPage';
 import CheckoutPaymentPage from './pages/CheckoutPaymentPage';
 import InvoiceReceiptPage from './pages/InvoiceReceiptPage';
@@ -59,6 +63,10 @@ const App = () => {
           
           {/* Protected Learner Routes */}
           <Route path="/learner" element={<ProtectedRoute><LearnerDashboard /></ProtectedRoute>} />
+          <Route path="/learner/my-courses" element={<ProtectedRoute><MyCoursesPage /></ProtectedRoute>} />
+          <Route path="/learner/notifications" element={<ProtectedRoute><LearnerNotificationsPage /></ProtectedRoute>} />
+          <Route path="/learner/schedule" element={<ProtectedRoute><MySchedulePage /></ProtectedRoute>} />
+          <Route path="/learner/saved" element={<ProtectedRoute><SavedCoursesPage /></ProtectedRoute>} />
           <Route path="/learner/courses" element={<ProtectedRoute><LearnerCourseCatalogPage /></ProtectedRoute>} />
           <Route path="/learner/course/:courseId" element={<ProtectedRoute><LearnerCourseDetailPage /></ProtectedRoute>} />
           <Route path="/learner/subscription" element={<ProtectedRoute><SubscriptionManagementPage /></ProtectedRoute>} />

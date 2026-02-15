@@ -37,22 +37,32 @@ const QuickStats: React.FC = () => {
         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
           <Paper
             elevation={0}
-            className="stat-card"
+            className={`stat-card ld-fade-in ld-fade-in-${index}`}
             sx={{
               p: 3,
-              borderRadius: 3,
+              borderRadius: '1rem',
               textAlign: 'center',
-              border: 1,
-              borderColor: 'divider',
-              transition: 'all 0.3s ease',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
               cursor: 'pointer',
+              position: 'relative',
+              overflow: 'hidden',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 3,
+                background: stat.gradient,
+                borderRadius: '1rem 1rem 0 0',
+              },
             }}
           >
             <Box
               sx={{
-                width: 56,
-                height: 56,
-                borderRadius: 2,
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -60,7 +70,7 @@ const QuickStats: React.FC = () => {
                 background: stat.gradient,
                 mx: 'auto',
                 mb: 2,
-                '& svg': { fontSize: 28 },
+                '& svg': { fontSize: 24 },
               }}
             >
               {stat.icon}
@@ -70,8 +80,8 @@ const QuickStats: React.FC = () => {
             </Typography>
             <Typography
               variant="caption"
-              color="text.secondary"
-              sx={{ fontWeight: 600, letterSpacing: '0.05em' }}
+              color="text.disabled"
+              sx={{ fontWeight: 600, letterSpacing: '0.06em', fontSize: '0.65rem' }}
             >
               {stat.label}
             </Typography>

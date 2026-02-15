@@ -40,55 +40,52 @@ const RecentActivity: React.FC = () => {
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: 3,
+        borderRadius: '1rem',
         height: '100%',
-        border: 1,
-        borderColor: 'divider',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
       }}
     >
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6" fontWeight={700}>
+        <Typography sx={{ fontWeight: 700, fontSize: '0.95rem' }}>
           Recent Activity
         </Typography>
         <Button
           endIcon={<ChevronRight />}
-          sx={{ textTransform: 'none', fontWeight: 500, color: 'primary.dark' }}
+          sx={{ textTransform: 'none', fontWeight: 500, color: 'primary.dark', fontSize: '0.8rem' }}
         >
           See All
         </Button>
       </Box>
 
-      {/* Activity List */}
+      {/* Activity List with timeline */}
       <List disablePadding>
-        {activities.map((activity, index) => (
+        {activities.map((activity) => (
           <ListItem
             key={activity.id}
-            className="activity-item"
+            className="activity-item ld-timeline-item"
             sx={{
-              py: 2,
+              py: 1.5,
               px: 0,
-              borderBottom: index < activities.length - 1 ? 1 : 0,
-              borderColor: 'divider',
-              '&:last-child': { pb: 0 },
             }}
           >
-            <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
+            <Box sx={{ display: 'flex', gap: 1.5, width: '100%' }}>
               <Avatar
                 sx={{
                   bgcolor: activity.color,
-                  borderRadius: 2,
-                  width: 40,
-                  height: 40,
+                  borderRadius: '50%',
+                  width: 36,
+                  height: 36,
+                  '& svg': { fontSize: 18 },
                 }}
               >
                 {activity.icon}
               </Avatar>
               <Box sx={{ flex: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
+                <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.25, fontSize: '0.82rem', lineHeight: 1.4 }}>
                   {activity.text}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.72rem' }}>
                   {activity.time}
                 </Typography>
               </Box>

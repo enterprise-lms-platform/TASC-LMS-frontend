@@ -39,10 +39,10 @@ const SecurityPage: React.FC = () => (
     <Grid container spacing={3} sx={{ mb: 4 }}>
       {kpis.map((k) => (
         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', transition: 'all 0.3s', '&:hover': { boxShadow: 3, transform: 'translateY(-2px)' } }}>
+          <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)', '&:hover': { boxShadow: '0 8px 25px rgba(0,0,0,0.08)', transform: 'translateY(-3px) scale(1.01)' } }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
               <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>{k.label}</Typography>
-              <Box sx={{ width: 48, height: 48, borderRadius: 2, background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>{k.icon}</Box>
+              <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>{k.icon}</Box>
             </Box>
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>{k.value}</Typography>
             <Typography variant="body2" color="text.secondary">{k.trend}</Typography>
@@ -54,7 +54,7 @@ const SecurityPage: React.FC = () => (
     <Grid container spacing={3} sx={{ mb: 4 }}>
       {/* MFA Configuration */}
       <Grid size={{ xs: 12, lg: 4 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', height: '100%' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
             <Box sx={{ width: 40, height: 40, borderRadius: 2, background: 'linear-gradient(135deg, #3b82f6, #60a5fa)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
               <MFAIcon fontSize="small" />
@@ -88,7 +88,7 @@ const SecurityPage: React.FC = () => (
 
       {/* Password Policy */}
       <Grid size={{ xs: 12, lg: 4 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', height: '100%' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
             <Box sx={{ width: 40, height: 40, borderRadius: 2, background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
               <PasswordIcon fontSize="small" />
@@ -114,7 +114,7 @@ const SecurityPage: React.FC = () => (
 
       {/* Session Management */}
       <Grid size={{ xs: 12, lg: 4 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', height: '100%' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
             <Box sx={{ width: 40, height: 40, borderRadius: 2, background: 'linear-gradient(135deg, #10b981, #34d399)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
               <SessionIcon fontSize="small" />
@@ -139,7 +139,7 @@ const SecurityPage: React.FC = () => (
     </Grid>
 
     {/* Active Sessions Table */}
-    <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+    <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6" sx={{ fontWeight: 600 }}>Active Sessions</Typography>
         <Typography variant="body2" color="text.secondary">{activeSessions.length} active sessions</Typography>
@@ -149,13 +149,13 @@ const SecurityPage: React.FC = () => (
           <TableHead>
             <TableRow>
               {['User', 'Role', 'IP Address', 'Device', 'Location', 'Started', 'Status', 'Actions'].map((h) => (
-                <TableCell key={h} sx={{ fontWeight: 600, color: 'text.secondary' }}>{h}</TableCell>
+                <TableCell key={h} sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{h}</TableCell>
               ))}
             </TableRow>
           </TableHead>
           <TableBody>
             {activeSessions.map((s, i) => (
-              <TableRow key={i} sx={{ '&:hover': { bgcolor: 'grey.50' } }}>
+              <TableRow key={i} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' } }}>
                 <TableCell><Typography variant="body2" sx={{ fontWeight: 500 }}>{s.user}</Typography></TableCell>
                 <TableCell><Typography variant="body2">{s.role}</Typography></TableCell>
                 <TableCell><Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{s.ip}</Typography></TableCell>
@@ -164,7 +164,7 @@ const SecurityPage: React.FC = () => (
                 <TableCell><Typography variant="body2">{s.started}</Typography></TableCell>
                 <TableCell><Chip label={s.status} size="small" sx={{ bgcolor: sessionStatusColors[s.status]?.bg, color: sessionStatusColors[s.status]?.color, fontWeight: 500, fontSize: '0.75rem' }} /></TableCell>
                 <TableCell>
-                  <IconButton size="small" color="error" sx={{ border: '1px solid', borderColor: 'divider' }}><DeleteIcon fontSize="small" /></IconButton>
+                  <IconButton size="small" color="error" sx={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}><DeleteIcon fontSize="small" /></IconButton>
                 </TableCell>
               </TableRow>
             ))}

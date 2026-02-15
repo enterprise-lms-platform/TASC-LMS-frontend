@@ -45,10 +45,10 @@ const DataMigrationPage: React.FC = () => (
     <Grid container spacing={3} sx={{ mb: 4 }}>
       {kpis.map((k) => (
         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', transition: 'all 0.3s', '&:hover': { boxShadow: 3, transform: 'translateY(-2px)' } }}>
+          <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)', '&:hover': { boxShadow: '0 8px 25px rgba(0,0,0,0.08)', transform: 'translateY(-3px) scale(1.01)' } }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
               <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>{k.label}</Typography>
-              <Box sx={{ width: 48, height: 48, borderRadius: 2, background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>{k.icon}</Box>
+              <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>{k.icon}</Box>
             </Box>
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>{k.value}</Typography>
             <Typography variant="body2" color="text.secondary">{k.trend}</Typography>
@@ -59,7 +59,7 @@ const DataMigrationPage: React.FC = () => (
 
     <Grid container spacing={3}>
       <Grid size={{ xs: 12, lg: 8 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>Migration Modules</Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -72,13 +72,13 @@ const DataMigrationPage: React.FC = () => (
               <TableHead>
                 <TableRow>
                   {['Module', 'Total Records', 'Migrated', 'Failed', 'Progress', 'Status', 'Last Run'].map((h) => (
-                    <TableCell key={h} sx={{ fontWeight: 600, color: 'text.secondary' }}>{h}</TableCell>
+                    <TableCell key={h} sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{h}</TableCell>
                   ))}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {modules.map((m) => (
-                  <TableRow key={m.name} sx={{ '&:hover': { bgcolor: 'grey.50' } }}>
+                  <TableRow key={m.name} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' } }}>
                     <TableCell><Typography variant="body2" sx={{ fontWeight: 500 }}>{m.name}</Typography></TableCell>
                     <TableCell><Typography variant="body2">{m.records.toLocaleString()}</Typography></TableCell>
                     <TableCell><Typography variant="body2" sx={{ color: '#10b981', fontWeight: 500 }}>{m.migrated.toLocaleString()}</Typography></TableCell>
@@ -112,8 +112,8 @@ const DataMigrationPage: React.FC = () => (
       </Grid>
 
       <Grid size={{ xs: 12, lg: 4 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', mb: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Odoo Connection</Typography>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', mb: 3 }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 2 }}>Odoo Connection</Typography>
           <TextField fullWidth label="Odoo Server URL" defaultValue="https://odoo.tascgroup.com" sx={{ mb: 2 }} size="small" />
           <TextField fullWidth label="Database Name" defaultValue="tasc_production" sx={{ mb: 2 }} size="small" />
           <TextField fullWidth label="API Key" type="password" defaultValue="••••••••••••" sx={{ mb: 2 }} size="small" />
@@ -124,8 +124,8 @@ const DataMigrationPage: React.FC = () => (
           </Box>
         </Paper>
 
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Migration Log</Typography>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 2 }}>Migration Log</Typography>
           {[
             { time: '14:32', msg: 'Payment History: batch 45/56 processing...', type: 'info' },
             { time: '14:30', msg: 'Assessment Results: 45 records failed validation', type: 'error' },

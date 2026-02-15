@@ -41,8 +41,8 @@ const AuditLogsPage: React.FC = () => {
 
   return (
     <SuperadminLayout title="Audit Logs" subtitle="Track all system activities and changes">
-      <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>Activity Logs</Typography>
+      <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
+        <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 3 }}>Activity Logs</Typography>
         <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
           <TextField size="small" placeholder="Search by user..." sx={{ minWidth: 200 }} />
           <TextField size="small" type="date" label="From" slotProps={{ inputLabel: { shrink: true } }} />
@@ -59,13 +59,13 @@ const AuditLogsPage: React.FC = () => {
             <TableHead>
               <TableRow>
                 {['Timestamp', 'User', 'Action', 'Resource', 'Details', 'IP Address', ''].map((h) => (
-                  <TableCell key={h} sx={{ fontWeight: 600, color: 'text.secondary' }}>{h}</TableCell>
+                  <TableCell key={h} sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{h}</TableCell>
                 ))}
               </TableRow>
             </TableHead>
             <TableBody>
               {filtered.map((log) => (
-                <TableRow key={log.id} sx={{ '&:hover': { bgcolor: 'grey.50' } }}>
+                <TableRow key={log.id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' } }}>
                   <TableCell sx={{ whiteSpace: 'nowrap' }}>
                     <Typography variant="body2">{log.timestamp}</Typography>
                   </TableCell>
@@ -87,7 +87,7 @@ const AuditLogsPage: React.FC = () => {
                   <TableCell><Typography variant="body2" sx={{ maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{log.details}</Typography></TableCell>
                   <TableCell><Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{log.ip}</Typography></TableCell>
                   <TableCell>
-                    <IconButton size="small" sx={{ border: '1px solid', borderColor: 'divider' }}><ViewIcon fontSize="small" /></IconButton>
+                    <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><ViewIcon fontSize="small" /></IconButton>
                   </TableCell>
                 </TableRow>
               ))}

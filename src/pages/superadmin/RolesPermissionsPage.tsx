@@ -179,7 +179,7 @@ const RolesPermissionsPage: React.FC = () => {
                   {role.icon}
                 </Box>
                 <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 0.5 }}>
                     {role.name}
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.5 }}>
@@ -213,26 +213,24 @@ const RolesPermissionsPage: React.FC = () => {
         elevation={0}
         sx={{
           p: 3,
-          borderRadius: 3,
-          border: '1px solid',
-          borderColor: 'divider',
+          borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)'
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+        <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 3 }}>
           Permission Matrix
         </Typography>
         <TableContainer sx={{ width: '100%', overflowX: 'auto' }}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 200 }}>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em', minWidth: 200 }}>
                   Permission
                 </TableCell>
                 {roleNames.map((role) => (
                   <TableCell
                     key={role}
                     align="center"
-                    sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 120 }}
+                    sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em', minWidth: 120 }}
                   >
                     {role}
                   </TableCell>
@@ -243,7 +241,7 @@ const RolesPermissionsPage: React.FC = () => {
               {permissions.map((permission) => (
                 <TableRow
                   key={permission}
-                  sx={{ '&:hover': { bgcolor: 'grey.50' }, '&:last-child td': { borderBottom: 0 } }}
+                  sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' }, '&:last-child td': { borderBottom: 0 } }}
                 >
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>

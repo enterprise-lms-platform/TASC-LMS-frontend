@@ -41,10 +41,10 @@ const AnalyticsPage: React.FC = () => (
     <Grid container spacing={3} sx={{ mb: 4 }}>
       {kpis.map((k) => (
         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', transition: 'all 0.3s', '&:hover': { boxShadow: 3, transform: 'translateY(-2px)' } }}>
+          <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)', '&:hover': { boxShadow: '0 8px 25px rgba(0,0,0,0.08)', transform: 'translateY(-3px) scale(1.01)' } }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
               <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>{k.label}</Typography>
-              <Box sx={{ width: 48, height: 48, borderRadius: 2, background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>{k.icon}</Box>
+              <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>{k.icon}</Box>
             </Box>
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>{k.value}</Typography>
             <Typography variant="body2" color="text.secondary">{k.trend}</Typography>
@@ -55,22 +55,22 @@ const AnalyticsPage: React.FC = () => (
 
     <Grid container spacing={3} sx={{ mb: 4 }}>
       <Grid size={{ xs: 12, lg: 8 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>User Engagement Trends</Typography>
-          <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'grey.50', borderRadius: 2, border: '1px dashed', borderColor: 'grey.300' }}>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 2 }}>User Engagement Trends</Typography>
+          <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2, border: '1.5px dashed', borderColor: 'rgba(0,0,0,0.06)', position: 'relative', overflow: 'hidden' }}>
             <Box sx={{ textAlign: 'center' }}>
-              <ChartIcon sx={{ fontSize: 48, color: 'grey.400', mb: 1 }} />
+              <ChartIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
               <Typography color="text.secondary">User engagement chart — daily/weekly/monthly active users over time</Typography>
             </Box>
           </Box>
         </Paper>
       </Grid>
       <Grid size={{ xs: 12, lg: 4 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Content Distribution</Typography>
-          <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'grey.50', borderRadius: 2, border: '1px dashed', borderColor: 'grey.300' }}>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 2 }}>Content Distribution</Typography>
+          <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2, border: '1.5px dashed', borderColor: 'rgba(0,0,0,0.06)', position: 'relative', overflow: 'hidden' }}>
             <Box sx={{ textAlign: 'center' }}>
-              <PieIcon sx={{ fontSize: 48, color: 'grey.400', mb: 1 }} />
+              <PieIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
               <Typography color="text.secondary">Content type distribution — courses, workshops, certifications</Typography>
             </Box>
           </Box>
@@ -80,20 +80,20 @@ const AnalyticsPage: React.FC = () => (
 
     <Grid container spacing={3} sx={{ mb: 4 }}>
       <Grid size={{ xs: 12, lg: 8 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>Organization Comparison</Typography>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 3 }}>Organization Comparison</Typography>
           <TableContainer>
             <Table>
               <TableHead>
                 <TableRow>
                   {['Organization', 'Users', 'Active Rate', 'Completion Rate', 'Avg Score', 'Revenue', 'Trend'].map((h) => (
-                    <TableCell key={h} sx={{ fontWeight: 600, color: 'text.secondary' }}>{h}</TableCell>
+                    <TableCell key={h} sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{h}</TableCell>
                   ))}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {orgPerformance.map((o) => (
-                  <TableRow key={o.name} sx={{ '&:hover': { bgcolor: 'grey.50' } }}>
+                  <TableRow key={o.name} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' } }}>
                     <TableCell><Typography variant="body2" sx={{ fontWeight: 500 }}>{o.name}</Typography></TableCell>
                     <TableCell><Typography variant="body2">{o.users.toLocaleString()}</Typography></TableCell>
                     <TableCell>
@@ -129,8 +129,8 @@ const AnalyticsPage: React.FC = () => (
         </Paper>
       </Grid>
       <Grid size={{ xs: 12, lg: 4 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Top Performing Courses</Typography>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 2 }}>Top Performing Courses</Typography>
           {topCourses.map((c, i) => (
             <Box key={c.name} sx={{ py: 2, borderBottom: i < topCourses.length - 1 ? '1px solid' : 'none', borderColor: 'divider' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
@@ -150,22 +150,22 @@ const AnalyticsPage: React.FC = () => (
 
     <Grid container spacing={3}>
       <Grid size={{ xs: 12, md: 6 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Course Performance by Category</Typography>
-          <Box sx={{ height: 250, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'grey.50', borderRadius: 2, border: '1px dashed', borderColor: 'grey.300' }}>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 2 }}>Course Performance by Category</Typography>
+          <Box sx={{ height: 250, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2, border: '1.5px dashed', borderColor: 'rgba(0,0,0,0.06)', position: 'relative', overflow: 'hidden' }}>
             <Box sx={{ textAlign: 'center' }}>
-              <BarIcon sx={{ fontSize: 48, color: 'grey.400', mb: 1 }} />
+              <BarIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
               <Typography color="text.secondary">Bar chart — completion rates by course category</Typography>
             </Box>
           </Box>
         </Paper>
       </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Assessment Performance</Typography>
-          <Box sx={{ height: 250, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'grey.50', borderRadius: 2, border: '1px dashed', borderColor: 'grey.300' }}>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 2 }}>Assessment Performance</Typography>
+          <Box sx={{ height: 250, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2, border: '1.5px dashed', borderColor: 'rgba(0,0,0,0.06)', position: 'relative', overflow: 'hidden' }}>
             <Box sx={{ textAlign: 'center' }}>
-              <AssessmentIcon sx={{ fontSize: 48, color: 'grey.400', mb: 1 }} />
+              <AssessmentIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
               <Typography color="text.secondary">Assessment pass rates and score distribution</Typography>
             </Box>
           </Box>

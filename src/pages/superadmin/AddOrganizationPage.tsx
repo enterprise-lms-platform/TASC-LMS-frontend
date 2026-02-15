@@ -18,7 +18,7 @@ const AddOrganizationPage: React.FC = () => {
     <SuperadminLayout title="Add Organization" subtitle="Register a new organization">
       <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}>Add Organization</Typography>
       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 4 }}>Register a new organization on the platform</Typography>
-      <Paper elevation={0} sx={{ maxWidth: 600, p: 4, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+      <Paper elevation={0} sx={{ maxWidth: 600, p: 4, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
         <TextField fullWidth label="Organization Name" value={formData.name} onChange={handleChange('name')} sx={{ mb: 3 }} />
         <TextField fullWidth label="Contact Person" value={formData.contactPerson} onChange={handleChange('contactPerson')} sx={{ mb: 3 }} />
         <TextField fullWidth label="Contact Email" type="email" value={formData.email} onChange={handleChange('email')} sx={{ mb: 3 }} />

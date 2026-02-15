@@ -42,10 +42,10 @@ const PartnershipsPage: React.FC = () => (
     <Grid container spacing={3} sx={{ mb: 4 }}>
       {kpis.map((k) => (
         <Grid size={{ xs: 12, sm: 4 }} key={k.label}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', transition: 'all 0.3s', '&:hover': { boxShadow: 3, transform: 'translateY(-2px)' } }}>
+          <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)', '&:hover': { boxShadow: '0 8px 25px rgba(0,0,0,0.08)', transform: 'translateY(-3px) scale(1.01)' } }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
               <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>{k.label}</Typography>
-              <Box sx={{ width: 48, height: 48, borderRadius: 2, background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>{k.icon}</Box>
+              <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>{k.icon}</Box>
             </Box>
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>{k.value}</Typography>
             <Typography variant="body2" color="text.secondary">{k.trend}</Typography>
@@ -54,7 +54,7 @@ const PartnershipsPage: React.FC = () => (
       ))}
     </Grid>
 
-    <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+    <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6" sx={{ fontWeight: 600 }}>Partnerships</Typography>
         <Button variant="contained" startIcon={<AddIcon />} sx={{ textTransform: 'none', fontWeight: 600 }}>Add Partnership</Button>
@@ -64,13 +64,13 @@ const PartnershipsPage: React.FC = () => (
           <TableHead>
             <TableRow>
               {['Partner', 'Type', 'Status', 'Revenue Share', 'Start Date', 'Contact', 'Actions'].map((h) => (
-                <TableCell key={h} sx={{ fontWeight: 600, color: 'text.secondary' }}>{h}</TableCell>
+                <TableCell key={h} sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{h}</TableCell>
               ))}
             </TableRow>
           </TableHead>
           <TableBody>
             {partners.map((p) => (
-              <TableRow key={p.name} sx={{ '&:hover': { bgcolor: 'grey.50' } }}>
+              <TableRow key={p.name} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' } }}>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <Avatar sx={{ width: 36, height: 36, bgcolor: 'grey.200', color: 'text.secondary', fontSize: '0.8rem' }}>{p.name[0]}</Avatar>
@@ -84,8 +84,8 @@ const PartnershipsPage: React.FC = () => (
                 <TableCell><Typography variant="body2" color="text.secondary">{p.contact}</Typography></TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', gap: 0.5 }}>
-                    <IconButton size="small" sx={{ border: '1px solid', borderColor: 'divider', '&:hover': { color: 'info.main' } }}><EditIcon fontSize="small" /></IconButton>
-                    <IconButton size="small" sx={{ border: '1px solid', borderColor: 'divider', '&:hover': { color: 'error.main' } }}><DeleteIcon fontSize="small" /></IconButton>
+                    <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'info.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><EditIcon fontSize="small" /></IconButton>
+                    <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'error.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><DeleteIcon fontSize="small" /></IconButton>
                   </Box>
                 </TableCell>
               </TableRow>

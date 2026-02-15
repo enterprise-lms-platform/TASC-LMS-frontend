@@ -36,20 +36,19 @@ const UpcomingSessions: React.FC = () => {
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: 3,
+        borderRadius: '1rem',
         height: '100%',
-        border: 1,
-        borderColor: 'divider',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
       }}
     >
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6" fontWeight={700}>
+        <Typography sx={{ fontWeight: 700, fontSize: '0.95rem' }}>
           Upcoming Live Sessions
         </Typography>
         <Button
           endIcon={<ChevronRight />}
-          sx={{ textTransform: 'none', fontWeight: 500, color: 'primary.dark' }}
+          sx={{ textTransform: 'none', fontWeight: 500, color: 'primary.dark', fontSize: '0.8rem' }}
         >
           View Calendar
         </Button>
@@ -65,44 +64,45 @@ const UpcomingSessions: React.FC = () => {
               flexDirection: 'column',
               alignItems: 'flex-start',
               p: 2,
-              mb: 2,
-              border: 1,
-              borderColor: 'divider',
-              borderRadius: 2,
+              mb: 1.5,
+              bgcolor: 'rgba(0,0,0,0.01)',
+              borderRadius: '12px',
               cursor: 'pointer',
-              transition: 'all 0.2s ease',
+              border: '1px solid rgba(0,0,0,0.04)',
               '&:last-child': { mb: 0 },
             }}
           >
             {/* Time & Badge */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mb: 1 }}>
-              <Typography variant="body2" fontWeight={600} color="text.primary">
+              <Typography variant="body2" fontWeight={600} color="text.primary" sx={{ fontSize: '0.82rem' }}>
                 {session.time}
               </Typography>
               <Chip
                 label={session.badge}
                 size="small"
                 sx={{
-                  bgcolor: 'rgba(255, 164, 36, 0.1)',
+                  bgcolor: 'rgba(255, 164, 36, 0.08)',
                   color: 'primary.dark',
                   fontWeight: 600,
-                  fontSize: '0.7rem',
+                  fontSize: '0.65rem',
+                  height: 22,
+                  borderRadius: '50px',
                 }}
               />
             </Box>
 
             {/* Title */}
-            <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 0.75, fontSize: '0.88rem', lineHeight: 1.3 }}>
               {session.title}
             </Typography>
 
             {/* Meta */}
-            <Box sx={{ display: 'flex', gap: 2, color: 'text.secondary', fontSize: '0.875rem' }}>
+            <Box sx={{ display: 'flex', gap: 2, color: 'text.disabled', fontSize: '0.78rem' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Person sx={{ fontSize: 16 }} /> {session.instructor}
+                <Person sx={{ fontSize: 14 }} /> {session.instructor}
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <AccessTime sx={{ fontSize: 16 }} /> {session.duration}
+                <AccessTime sx={{ fontSize: 14 }} /> {session.duration}
               </Box>
             </Box>
           </ListItem>

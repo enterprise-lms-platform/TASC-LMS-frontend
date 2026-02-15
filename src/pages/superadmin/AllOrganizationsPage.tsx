@@ -271,9 +271,7 @@ const AllOrganizationsPage: React.FC = () => {
         elevation={0}
         sx={{
           p: 3,
-          borderRadius: 3,
-          border: '1px solid',
-          borderColor: 'divider',
+          borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)'
         }}
       >
         <Box
@@ -329,21 +327,21 @@ const AllOrganizationsPage: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Organization</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Plan</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Users</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Courses</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Revenue</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Created</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }} align="right">Actions</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Organization</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Plan</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Users</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Courses</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Revenue</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Created</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }} align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredOrganizations.map((org) => (
                 <TableRow
                   key={org.id}
-                  sx={{ '&:hover': { bgcolor: 'grey.50' }, '&:last-child td': { borderBottom: 0 } }}
+                  sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' }, '&:last-child td': { borderBottom: 0 } }}
                 >
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>

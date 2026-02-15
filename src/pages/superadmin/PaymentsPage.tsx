@@ -271,9 +271,7 @@ const PaymentsPage: React.FC = () => {
         elevation={0}
         sx={{
           p: 3,
-          borderRadius: 3,
-          border: '1px solid',
-          borderColor: 'divider',
+          borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)'
         }}
       >
         {/* Filter Row */}
@@ -353,20 +351,20 @@ const PaymentsPage: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Transaction ID</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>User</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Amount</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Method</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Date</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }} align="right">Actions</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Transaction ID</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>User</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Amount</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Method</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Date</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }} align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {mockTransactions.map((tx) => (
                 <TableRow
                   key={tx.id}
-                  sx={{ '&:hover': { bgcolor: 'grey.50' }, '&:last-child td': { borderBottom: 0 } }}
+                  sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' }, '&:last-child td': { borderBottom: 0 } }}
                 >
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 500, fontFamily: 'monospace' }}>

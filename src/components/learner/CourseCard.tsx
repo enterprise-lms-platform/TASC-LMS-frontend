@@ -26,12 +26,10 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        borderRadius: 3,
-        border: 1,
-        borderColor: 'divider',
-        boxShadow: 'none',
-        transition: 'all 0.3s ease',
+        borderRadius: '1rem',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
         cursor: 'pointer',
+        overflow: 'hidden',
       }}
     >
       {/* Course Image/Header */}
@@ -59,11 +57,14 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
           size="small"
           sx={{
             position: 'absolute',
-            top: 16,
-            left: 16,
-            bgcolor: 'rgba(255,255,255,0.9)',
+            top: 12,
+            left: 12,
+            bgcolor: 'rgba(255,255,255,0.92)',
+            backdropFilter: 'blur(4px)',
             fontWeight: 600,
-            fontSize: '0.7rem',
+            fontSize: '0.68rem',
+            height: 24,
+            borderRadius: '50px',
           }}
         />
         {/* Progress Bar */}
@@ -73,8 +74,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
             bottom: 0,
             left: 0,
             right: 0,
-            height: 6,
-            bgcolor: 'rgba(0,0,0,0.1)',
+            height: 4,
+            bgcolor: 'rgba(0,0,0,0.15)',
           }}
         >
           <Box
@@ -82,47 +83,49 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
               width: `${course.progress}%`,
               height: '100%',
               bgcolor: 'white',
+              borderRadius: '0 2px 2px 0',
+              transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
             }}
           />
         </Box>
       </Box>
 
       {/* Course Content */}
-      <CardContent sx={{ flexGrow: 1, p: 3, display: 'flex', flexDirection: 'column' }}>
-        <Typography variant="h6" fontWeight={700} gutterBottom lineHeight={1.3}>
+      <CardContent sx={{ flexGrow: 1, p: 2.5, display: 'flex', flexDirection: 'column' }}>
+        <Typography variant="h6" fontWeight={700} gutterBottom lineHeight={1.3} sx={{ fontSize: '0.95rem' }}>
           {course.title}
         </Typography>
         <Typography
           variant="body2"
-          color="text.secondary"
-          sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
+          color="text.disabled"
+          sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 2, fontSize: '0.8rem' }}
         >
-          <Person fontSize="small" /> {course.instructor}
+          <Person sx={{ fontSize: 16 }} /> {course.instructor}
         </Typography>
 
         {/* Stats Row */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="subtitle2" fontWeight={700}>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.85rem' }}>
               {course.progress}%
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase' }}>
+            <Typography variant="caption" color="text.disabled" sx={{ textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.05em' }}>
               Progress
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="subtitle2" fontWeight={700}>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.85rem' }}>
               {course.lessonsCompleted}/{course.totalLessons}
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase' }}>
+            <Typography variant="caption" color="text.disabled" sx={{ textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.05em' }}>
               Lessons
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="subtitle2" fontWeight={700}>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.85rem' }}>
               {course.rating}
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase' }}>
+            <Typography variant="caption" color="text.disabled" sx={{ textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.05em' }}>
               Rating
             </Typography>
           </Box>
@@ -134,7 +137,15 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
             variant="outlined"
             startIcon={<Info />}
             fullWidth
-            sx={{ textTransform: 'none', fontWeight: 500 }}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 500,
+              borderRadius: '10px',
+              borderColor: 'rgba(0,0,0,0.08)',
+              color: 'text.secondary',
+              fontSize: '0.8rem',
+              '&:hover': { borderColor: 'primary.main', color: 'primary.dark' },
+            }}
           >
             Details
           </Button>
@@ -142,7 +153,15 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
             variant="contained"
             startIcon={<PlayArrow />}
             fullWidth
-            sx={{ textTransform: 'none', fontWeight: 500, color: 'white' }}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              color: 'white',
+              borderRadius: '10px',
+              boxShadow: 'none',
+              fontSize: '0.8rem',
+              '&:hover': { boxShadow: '0 4px 12px rgba(249,115,22,0.3)' },
+            }}
           >
             Resume
           </Button>

@@ -10,7 +10,6 @@ import {
   ListItemText,
   Typography,
   Avatar,
-  Divider,
   Badge,
   LinearProgress,
 } from '@mui/material';
@@ -115,8 +114,6 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
-          borderBottom: 1,
-          borderColor: 'divider',
           minHeight: 80,
         }}
       >
@@ -126,15 +123,23 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
         </Typography>
       </Box>
 
+      {/* Gradient fade separator */}
+      <Box
+        sx={{
+          height: 16,
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.04), transparent)',
+          mx: 2,
+        }}
+      />
+
       {/* User Info */}
       <Box
         sx={{
-          p: 2,
+          px: 2.5,
+          py: 2,
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
-          borderBottom: 1,
-          borderColor: 'divider',
         }}
       >
         <Avatar
@@ -144,6 +149,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
             height: 40,
             background: 'linear-gradient(135deg, #ffb74d, #f97316)',
             fontWeight: 600,
+            border: '2px solid',
+            borderColor: 'primary.main',
           }}
         >
           {userData.initials}
@@ -159,7 +166,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
       </Box>
 
       {/* Navigation Sections */}
-      <Box sx={{ flex: 1, overflowY: 'auto' }}>
+      <Box className="ld-scrollbar" sx={{ flex: 1, overflowY: 'auto', py: 0.5 }}>
         {navSections.map((section) => (
           <Box key={section.title}>
             <List disablePadding>
@@ -169,9 +176,10 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
                     variant="caption"
                     sx={{
                       fontWeight: 600,
-                      color: 'text.secondary',
+                      color: 'text.disabled',
                       textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
+                      letterSpacing: '0.06em',
+                      fontSize: '0.65rem',
                     }}
                   >
                     {section.title}
@@ -186,28 +194,40 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
                     onClick={() => handleNavClick(item.path)}
                     className={`nav-item ${isActive ? 'active' : ''}`}
                     sx={{
-                      py: 1,
+                      py: 0.75,
                       px: 3,
-                      borderRadius: 0,
-                      '&.active': {
-                        bgcolor: 'rgba(255, 164, 36, 0.1)',
+                      mx: 1.5,
+                      borderRadius: '10px',
+                      position: 'relative',
+                      ...(isActive && {
+                        bgcolor: 'rgba(255, 164, 36, 0.08)',
                         color: 'primary.dark',
-                        borderRight: 3,
-                        borderColor: 'primary.dark',
-                      },
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          left: 0,
+                          top: '20%',
+                          bottom: '20%',
+                          width: 4,
+                          borderRadius: 4,
+                          bgcolor: 'primary.main',
+                          boxShadow: '0 0 8px rgba(255,164,36,0.4)',
+                        },
+                      }),
                     }}
                   >
                     <ListItemIcon
                       sx={{
-                        minWidth: 40,
-                        color: isActive ? 'primary.dark' : 'inherit',
+                        minWidth: 36,
+                        color: isActive ? 'primary.dark' : 'text.secondary',
+                        '& svg': { fontSize: 20 },
                       }}
                     >
                       {item.badge ? (
                         <Badge
                           badgeContent={item.badge}
                           color="primary"
-                          sx={{ '& .MuiBadge-badge': { fontSize: '0.65rem' } }}
+                          sx={{ '& .MuiBadge-badge': { fontSize: '0.6rem', minWidth: 16, height: 16 } }}
                         >
                           {item.icon}
                         </Badge>
@@ -218,8 +238,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
                     <ListItemText
                       primary={item.text}
                       primaryTypographyProps={{
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
+                        fontSize: '0.82rem',
+                        fontWeight: isActive ? 600 : 500,
                       }}
                     />
                   </ListItemButton>
@@ -227,7 +247,6 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
               );
               })}
             </List>
-            <Divider sx={{ my: 1 }} />
           </Box>
         ))}
       </Box>
@@ -235,19 +254,21 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
       {/* Overall Progress */}
       <Box
         sx={{
-          p: 2,
-          borderTop: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
+          p: 2.5,
+          mx: 1.5,
+          mb: 1.5,
+          borderRadius: '12px',
+          bgcolor: 'rgba(255,164,36,0.04)',
         }}
       >
         <Typography
           variant="caption"
           sx={{
             fontWeight: 600,
-            color: 'text.secondary',
+            color: 'text.disabled',
             textTransform: 'uppercase',
-            letterSpacing: '0.05em',
+            letterSpacing: '0.06em',
+            fontSize: '0.65rem',
             display: 'block',
             mb: 1,
           }}
@@ -260,7 +281,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
           sx={{
             height: 6,
             borderRadius: 3,
-            bgcolor: 'grey.200',
+            bgcolor: 'rgba(0,0,0,0.06)',
             '& .MuiLinearProgress-bar': {
               borderRadius: 3,
               background: 'linear-gradient(90deg, #ffb74d, #ffa424)',
@@ -269,7 +290,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
         />
         <Typography
           variant="body2"
-          sx={{ fontWeight: 700, color: 'primary.dark', textAlign: 'center', mt: 1 }}
+          sx={{ fontWeight: 700, color: 'primary.dark', textAlign: 'center', mt: 1, fontSize: '0.85rem' }}
         >
           {userData.overallProgress}%
         </Typography>
@@ -287,7 +308,12 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: DRAWER_WIDTH },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: DRAWER_WIDTH,
+            bgcolor: '#fefdfb',
+            borderRight: 'none',
+          },
         }}
       >
         {drawerContent}
@@ -301,8 +327,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: DRAWER_WIDTH,
-            borderRight: 1,
-            borderColor: 'divider',
+            bgcolor: '#fefdfb',
+            borderRight: 'none',
+            boxShadow: '1px 0 8px rgba(0,0,0,0.03)',
           },
         }}
         open

@@ -122,10 +122,10 @@ const IntegrationsPage: React.FC = () => (
     <Grid container spacing={3}>
       {integrations.map((intg) => (
         <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={intg.name}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%', transition: 'all 0.3s', '&:hover': { boxShadow: 3, transform: 'translateY(-2px)' } }}>
+          <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', height: '100%', transition: 'all 0.3s', '&:hover': { boxShadow: 3, transform: 'translateY(-2px)' } }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Box sx={{ width: 48, height: 48, borderRadius: 2, background: intg.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: intg.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
                   {intg.icon}
                 </Box>
                 <Box>

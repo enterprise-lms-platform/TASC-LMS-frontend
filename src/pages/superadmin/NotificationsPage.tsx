@@ -35,8 +35,8 @@ const NotificationsPage: React.FC = () => {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {statCards.map((s) => (
           <Grid size={{ xs: 12, sm: 4 }} key={s.label}>
-            <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ width: 48, height: 48, borderRadius: 2, background: s.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.25rem' }}>
+            <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: s.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.25rem' }}>
                 {s.value}
               </Box>
               <Box>
@@ -48,7 +48,7 @@ const NotificationsPage: React.FC = () => {
         ))}
       </Grid>
 
-      <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+      <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
         <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
           {filters.map((f) => (
             <Chip

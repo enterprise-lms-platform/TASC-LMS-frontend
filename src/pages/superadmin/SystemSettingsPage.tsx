@@ -25,7 +25,7 @@ const SystemSettingsPage: React.FC = () => (
     <Grid container spacing={3}>
       {/* General Settings */}
       <Grid size={{ xs: 12, lg: 6 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
             <Box sx={{ width: 40, height: 40, borderRadius: 2, background: 'linear-gradient(135deg, #3b82f6, #60a5fa)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
               <SettingsIcon fontSize="small" />
@@ -44,7 +44,7 @@ const SystemSettingsPage: React.FC = () => (
 
       {/* Email Settings */}
       <Grid size={{ xs: 12, lg: 6 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
             <Box sx={{ width: 40, height: 40, borderRadius: 2, background: 'linear-gradient(135deg, #10b981, #34d399)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
               <EmailIcon fontSize="small" />
@@ -73,7 +73,7 @@ const SystemSettingsPage: React.FC = () => (
 
       {/* Feature Toggles */}
       <Grid size={{ xs: 12, lg: 8 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
             <Box sx={{ width: 40, height: 40, borderRadius: 2, background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
               <ToggleIcon fontSize="small" />
@@ -97,7 +97,7 @@ const SystemSettingsPage: React.FC = () => (
 
       {/* Maintenance Mode */}
       <Grid size={{ xs: 12, lg: 4 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', mb: 3 }}>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
             <Box sx={{ width: 40, height: 40, borderRadius: 2, background: 'linear-gradient(135deg, #f59e0b, #fbbf24)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
               <MaintenanceIcon fontSize="small" />
@@ -112,8 +112,8 @@ const SystemSettingsPage: React.FC = () => (
           <Button variant="outlined" color="warning" fullWidth sx={{ textTransform: 'none' }}>Activate Maintenance</Button>
         </Paper>
 
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>System Info</Typography>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 2 }}>System Info</Typography>
           {[
             { label: 'Version', value: '2.1.0' },
             { label: 'Environment', value: 'Production' },

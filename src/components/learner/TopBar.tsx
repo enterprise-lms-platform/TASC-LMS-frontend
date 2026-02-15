@@ -84,9 +84,12 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
       sx={{
         width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
         ml: { md: `${DRAWER_WIDTH}px` },
-        bgcolor: 'background.paper',
+        bgcolor: 'rgba(255,255,255,0.72)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         color: 'text.primary',
-        boxShadow: 1,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        borderBottom: '1px solid rgba(0,0,0,0.04)',
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between' }}>
@@ -106,14 +109,14 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
             variant="h6" 
             fontWeight={700} 
             noWrap
-            sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}
+            sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }}
           >
             Learner Dashboard
           </Typography>
           <Typography 
             variant="body2" 
-            color="text.secondary"
-            sx={{ display: { xs: 'none', sm: 'block' } }}
+            color="text.disabled"
+            sx={{ display: { xs: 'none', sm: 'block' }, fontSize: '0.8rem' }}
             noWrap
           >
             Continue your learning journey and track your progress
@@ -122,7 +125,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
 
         <Box sx={{ flexGrow: 1 }} />
 
-        {/* Search Bar */}
+        {/* Search Bar — pill shaped */}
         <Box
           sx={{
             position: 'relative',
@@ -139,28 +142,29 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
               justifyContent: 'center',
               height: '100%',
               pl: 2,
-              color: 'text.secondary',
+              color: 'text.disabled',
             }}
           >
-            <SearchIcon />
+            <SearchIcon sx={{ fontSize: 20 }} />
           </Box>
           <InputBase
             placeholder="Search courses, topics..."
             sx={{
               color: 'inherit',
-              bgcolor: 'grey.100',
-              borderRadius: 1,
+              bgcolor: 'rgba(0,0,0,0.03)',
+              borderRadius: '50px',
               p: 1,
               pl: 6,
-              width: 240,
-              transition: 'all 0.3s',
-              border: 1,
-              borderColor: 'transparent',
+              width: 220,
+              fontSize: '0.85rem',
+              transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)',
+              border: '1px solid transparent',
               '&:focus-within': {
-                width: 300,
-                bgcolor: 'background.paper',
+                width: 280,
+                bgcolor: 'white',
+                border: '1px solid',
                 borderColor: 'primary.main',
-                boxShadow: '0 0 0 2px rgba(255, 183, 77, 0.2)',
+                boxShadow: '0 0 0 3px rgba(255,164,36,0.12)',
               },
             }}
           />
@@ -168,50 +172,56 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
 
         {/* Action Icons */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.5 } }}>
-          <IconButton color="inherit" size="small">
+          <IconButton color="inherit" size="small" sx={{ color: 'text.secondary' }}>
             <Badge badgeContent={0} color="error">
-              <NotificationsIcon />
+              <NotificationsIcon sx={{ fontSize: 22 }} />
             </Badge>
           </IconButton>
-          <IconButton color="inherit" size="small" sx={{ display: { xs: 'none', sm: 'flex' } }}>
-            <HelpIcon />
+          <IconButton color="inherit" size="small" sx={{ display: { xs: 'none', sm: 'flex' }, color: 'text.secondary' }}>
+            <HelpIcon sx={{ fontSize: 22 }} />
           </IconButton>
+
+          {/* Divider */}
+          <Divider orientation="vertical" flexItem sx={{ mx: 1.5, opacity: 0.3, display: { xs: 'none', md: 'block' } }} />
 
           {/* User Info (Desktop) */}
           <Box
             onClick={handleUserMenuOpen}
             sx={{
-              ml: 1.5,
+              ml: 0.5,
               display: { xs: 'none', md: 'flex' },
               alignItems: 'center',
               gap: 1.5,
               cursor: 'pointer',
-              p: 1,
-              borderRadius: 1,
-              '&:hover': { bgcolor: 'grey.100' },
+              p: 0.75,
+              borderRadius: '12px',
+              transition: 'background 0.2s',
+              '&:hover': { bgcolor: 'rgba(0,0,0,0.03)' },
             }}
           >
             <Avatar
               src={(user?.google_picture ?? undefined) as string | undefined}
               sx={{
-                width: 36,
-                height: 36,
+                width: 34,
+                height: 34,
                 background: 'linear-gradient(135deg, #ffb74d, #f97316)',
-                fontSize: '0.875rem',
+                fontSize: '0.8rem',
                 fontWeight: 600,
+                border: '2px solid',
+                borderColor: 'primary.main',
               }}
             >
               {userInitials}
             </Avatar>
             <Box>
-              <Typography variant="body2" fontWeight={600} lineHeight={1.2}>
+              <Typography variant="body2" fontWeight={600} lineHeight={1.2} sx={{ fontSize: '0.82rem' }}>
                 {userName}
               </Typography>
-              <Typography variant="caption" sx={{ color: 'primary.dark', fontWeight: 500, textTransform: 'capitalize' }}>
+              <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 500, textTransform: 'capitalize', fontSize: '0.7rem' }}>
                 {userRole.replace('_', ' ')}
               </Typography>
             </Box>
-            <ArrowDownIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+            <ArrowDownIcon sx={{ fontSize: 14, color: 'text.disabled' }} />
           </Box>
 
           {/* Mobile Avatar */}
@@ -227,6 +237,8 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
                 background: 'linear-gradient(135deg, #ffb74d, #f97316)',
                 fontSize: '0.75rem',
                 fontWeight: 600,
+                border: '2px solid',
+                borderColor: 'primary.main',
               }}
             >
               {userInitials}
@@ -240,7 +252,13 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
             PaperProps={{
-              sx: { minWidth: 200, mt: 1 }
+              sx: {
+                minWidth: 200,
+                mt: 1,
+                borderRadius: '12px',
+                boxShadow: '0 8px 25px rgba(0,0,0,0.08)',
+                border: '1px solid rgba(0,0,0,0.04)',
+              }
             }}
           >
             <Box sx={{ px: 2, py: 1.5 }}>

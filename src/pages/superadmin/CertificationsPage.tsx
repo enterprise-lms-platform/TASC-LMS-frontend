@@ -45,10 +45,10 @@ const CertificationsPage: React.FC = () => (
     <Grid container spacing={3} sx={{ mb: 4 }}>
       {kpis.map((k) => (
         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', transition: 'all 0.3s', '&:hover': { boxShadow: 3, transform: 'translateY(-2px)' } }}>
+          <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)', '&:hover': { boxShadow: '0 8px 25px rgba(0,0,0,0.08)', transform: 'translateY(-3px) scale(1.01)' } }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
               <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>{k.label}</Typography>
-              <Box sx={{ width: 48, height: 48, borderRadius: 2, background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>{k.icon}</Box>
+              <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>{k.icon}</Box>
             </Box>
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>{k.value}</Typography>
             <Typography variant="body2" color="text.secondary">{k.trend}</Typography>
@@ -59,18 +59,18 @@ const CertificationsPage: React.FC = () => (
 
     <Grid container spacing={3}>
       <Grid size={{ xs: 12, lg: 8 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>Certificates</Typography>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 3 }}>Certificates</Typography>
           <TableContainer>
             <Table>
               <TableHead><TableRow>
                 {['Certificate ID', 'Recipient', 'Course', 'Issued', 'Expiry', 'Status', 'Actions'].map((h) => (
-                  <TableCell key={h} sx={{ fontWeight: 600, color: 'text.secondary' }}>{h}</TableCell>
+                  <TableCell key={h} sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{h}</TableCell>
                 ))}
               </TableRow></TableHead>
               <TableBody>
                 {certs.map((c) => (
-                  <TableRow key={c.id} sx={{ '&:hover': { bgcolor: 'grey.50' } }}>
+                  <TableRow key={c.id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' } }}>
                     <TableCell><Typography variant="body2" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>{c.id}</Typography></TableCell>
                     <TableCell><Typography variant="body2" sx={{ fontWeight: 500 }}>{c.recipient}</Typography></TableCell>
                     <TableCell><Typography variant="body2">{c.course}</Typography></TableCell>
@@ -78,7 +78,7 @@ const CertificationsPage: React.FC = () => (
                     <TableCell><Typography variant="body2">{c.expiry}</Typography></TableCell>
                     <TableCell><Chip label={c.status} size="small" sx={{ bgcolor: statusColors[c.status]?.bg, color: statusColors[c.status]?.color, fontWeight: 500, fontSize: '0.75rem' }} /></TableCell>
                     <TableCell>
-                      <IconButton size="small" sx={{ border: '1px solid', borderColor: 'divider' }}><ViewIcon fontSize="small" /></IconButton>
+                      <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><ViewIcon fontSize="small" /></IconButton>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -88,8 +88,8 @@ const CertificationsPage: React.FC = () => (
         </Paper>
       </Grid>
       <Grid size={{ xs: 12, lg: 4 }}>
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Certificate Templates</Typography>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 2 }}>Certificate Templates</Typography>
           {templates.map((t, i) => (
             <Box key={t.name} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2, borderBottom: i < templates.length - 1 ? '1px solid' : 'none', borderColor: 'divider' }}>
               <Box>

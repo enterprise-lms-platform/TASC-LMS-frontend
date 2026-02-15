@@ -20,7 +20,7 @@ const LearnerDashboard: React.FC = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
+    <Box className="learner-page" sx={{ display: 'flex', minHeight: '100vh' }}>
       <CssBaseline />
 
       {/* Sidebar */}

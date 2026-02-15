@@ -341,19 +341,19 @@ const AllUsersPage: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Name</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Role</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Organization</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Last Login</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }} align="right">Actions</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Name</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Role</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Organization</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Last Login</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }} align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {mockUsers.map((user) => (
                 <TableRow
                   key={user.id}
-                  sx={{ '&:hover': { bgcolor: 'grey.50' }, '&:last-child td': { borderBottom: 0 } }}
+                  sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' }, '&:last-child td': { borderBottom: 0 } }}
                 >
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -444,9 +444,7 @@ const AllUsersPage: React.FC = () => {
         elevation={0}
         sx={{
           p: 3,
-          borderRadius: 3,
-          border: '1px solid',
-          borderColor: 'divider',
+          borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)'
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
@@ -466,7 +464,7 @@ const AllUsersPage: React.FC = () => {
             <CloudUploadIcon sx={{ fontSize: 28 }} />
           </Box>
           <Box sx={{ flex: 1, minWidth: 200 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+            <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 0.5 }}>
               Bulk Import Users
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
