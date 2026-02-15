@@ -73,7 +73,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
       : name.substring(0, 2).toUpperCase();
   };
 
-  const userName = user?.name || `${user?.first_name} ${user?.last_name}` || 'User';
+  const userName = user?.name || `${user?.first_name} ${user?.last_name}` || 'Emma Chen';
   const userInitials = user ? getInitials(userName) : 'U';
   const userRole = user?.role || 'learner';
 

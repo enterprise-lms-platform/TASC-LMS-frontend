@@ -14,6 +14,7 @@ import SavedCoursesPage from './pages/SavedCoursesPage';
 import ProgressPage from './pages/ProgressPage';
 import QuizzesPage from './pages/QuizzesPage';
 import LearnerAssignmentsPage from './pages/LearnerAssignmentsPage';
+import LearnerProfilePage from './pages/LearnerProfilePage';
 import LearnerCourseDetailPage from './pages/LearnerCourseDetailPage';
 import CheckoutPaymentPage from './pages/CheckoutPaymentPage';
 import InvoiceReceiptPage from './pages/InvoiceReceiptPage';
@@ -77,7 +78,7 @@ const App = () => {
           <Route path="/learner/course/:courseId" element={<ProtectedRoute><LearnerCourseDetailPage /></ProtectedRoute>} />
           <Route path="/learner/subscription" element={<ProtectedRoute><SubscriptionManagementPage /></ProtectedRoute>} />
           <Route path="/learner/payments" element={<ProtectedRoute><PaymentHistoryPage /></ProtectedRoute>} />
-          <Route path="/learner/profile" element={<ProtectedRoute><SubscriptionManagementPage /></ProtectedRoute>} />
+          <Route path="/learner/profile" element={<ProtectedRoute><LearnerProfilePage /></ProtectedRoute>} />
           <Route path="/learner/settings" element={<ProtectedRoute><SubscriptionManagementPage /></ProtectedRoute>} />
           
           {/* Protected Checkout & Invoice */}

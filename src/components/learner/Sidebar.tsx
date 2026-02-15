@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   Box,
   Drawer,
@@ -97,6 +98,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   const handleNavClick = (path: string) => {
     navigate(path);
@@ -104,6 +106,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
       onMobileClose();
     }
   };
+
+  const userName = user?.name || `${user?.first_name} ${user?.last_name}` || 'Emma Chen';
+  const userInitials = (user?.first_name && user?.last_name) ? `${user.first_name[0]}${user.last_name[0]}` : 'EC';
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -143,7 +148,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
         }}
       >
         <Avatar
-          src={userData.avatar}
+          src={(user?.google_picture ?? undefined) as string | undefined}
           sx={{
             width: 40,
             height: 40,
@@ -153,14 +158,14 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
             borderColor: 'primary.main',
           }}
         >
-          {userData.initials}
+          {userInitials}
         </Avatar>
         <Box>
           <Typography variant="body2" fontWeight={600}>
-            {userData.name}
+            {userName}
           </Typography>
           <Typography variant="caption" sx={{ color: 'primary.dark', fontWeight: 500 }}>
-            {userData.plan}
+             Pro Learner
           </Typography>
         </Box>
       </Box>
