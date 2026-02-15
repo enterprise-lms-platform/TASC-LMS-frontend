@@ -6,14 +6,15 @@ interface HealthItem {
   label: string;
   value: string;
   status: 'good' | 'warning' | 'critical';
+  percent?: number;
 }
 
 const healthItems: HealthItem[] = [
-  { label: 'Server Status', value: 'Healthy', status: 'good' },
-  { label: 'Database', value: 'Online', status: 'good' },
-  { label: 'Storage Usage', value: '78%', status: 'warning' },
-  { label: 'API Response Time', value: '142ms', status: 'good' },
-  { label: 'Uptime', value: '99.97%', status: 'good' },
+  { label: 'Server Status', value: 'Healthy', status: 'good', percent: 100 },
+  { label: 'Database', value: 'Online', status: 'good', percent: 100 },
+  { label: 'Storage Usage', value: '78%', status: 'warning', percent: 78 },
+  { label: 'API Response Time', value: '142ms', status: 'good', percent: 85 },
+  { label: 'Uptime', value: '99.97%', status: 'good', percent: 100 },
 ];
 
 const getStatusColor = (status: string) => {
@@ -34,57 +35,86 @@ const SystemHealth: React.FC = () => {
     <Paper
       elevation={0}
       sx={{
-        p: 3,
-        borderRadius: 3,
-        border: '1px solid',
-        borderColor: 'divider',
+        p: 2.5,
+        borderRadius: '1rem',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
+        transition: 'box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:hover': {
+          boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+        },
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+        <Typography sx={{ fontWeight: 700, color: 'text.primary', fontSize: '0.95rem' }}>
           System Health
         </Typography>
         <Button
           size="small"
           variant="outlined"
-          startIcon={<RefreshIcon />}
-          sx={{ textTransform: 'none' }}
+          startIcon={<RefreshIcon sx={{ fontSize: 14 }} />}
+          sx={{
+            textTransform: 'none',
+            fontSize: '0.72rem',
+            fontWeight: 500,
+            borderColor: 'rgba(0,0,0,0.08)',
+            color: 'text.secondary',
+            borderRadius: 2,
+            py: 0.25,
+            '&:hover': { borderColor: 'primary.main', color: 'primary.main' },
+          }}
         >
           Refresh
         </Button>
       </Box>
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {healthItems.map((item, index) => (
-          <Box
-            key={item.label}
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              pb: index < healthItems.length - 1 ? 2 : 0,
-              borderBottom: index < healthItems.length - 1 ? '1px solid' : 'none',
-              borderColor: 'divider',
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  bgcolor: getStatusColor(item.status),
-                }}
-              />
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {item.label}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.75 }}>
+        {healthItems.map((item) => {
+          const color = getStatusColor(item.status);
+          return (
+            <Box
+              key={item.label}
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
+                <Box
+                  className={item.status === 'good' ? 'sa-pulse' : undefined}
+                  sx={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: '50%',
+                    bgcolor: color,
+                    flexShrink: 0,
+                  }}
+                />
+                <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem', fontWeight: 400 }}>
+                  {item.label}
+                </Typography>
+              </Box>
+              {/* Inline progress bar */}
+              {item.percent !== undefined && (
+                <Box
+                  className="sa-progress-track"
+                  sx={{ mx: 1.5 }}
+                >
+                  <Box
+                    className="sa-progress-fill"
+                    sx={{
+                      width: `${item.percent}%`,
+                      bgcolor: color,
+                    }}
+                  />
+                </Box>
+              )}
+              <Typography sx={{ fontWeight: 600, fontSize: '0.8rem', flexShrink: 0 }}>
+                {item.value}
               </Typography>
             </Box>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              {item.value}
-            </Typography>
-          </Box>
-        ))}
+          );
+        })}
       </Box>
     </Paper>
   );

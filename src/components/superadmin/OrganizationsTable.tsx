@@ -94,13 +94,13 @@ const organizations: Organization[] = [
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'active':
-      return { bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
+      return { bgcolor: 'rgba(16, 185, 129, 0.08)', color: '#10b981', accent: '#10b981' };
     case 'pending':
-      return { bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
+      return { bgcolor: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b', accent: '#f59e0b' };
     case 'suspended':
-      return { bgcolor: 'rgba(156, 163, 175, 0.1)', color: '#71717a' };
+      return { bgcolor: 'rgba(156, 163, 175, 0.08)', color: '#71717a', accent: '#71717a' };
     default:
-      return { bgcolor: 'grey.100', color: 'text.secondary' };
+      return { bgcolor: 'grey.100', color: 'text.secondary', accent: '#71717a' };
   }
 };
 
@@ -110,36 +110,54 @@ const OrganizationsTable: React.FC = () => {
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: 3,
-        border: '1px solid',
-        borderColor: 'divider',
+        borderRadius: '1rem',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
+        transition: 'box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:hover': {
+          boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+        },
       }}
     >
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         mb: 3,
         flexWrap: 'wrap',
         gap: 2
       }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+        <Typography sx={{ fontWeight: 700, color: 'text.primary', fontSize: '0.95rem' }}>
           Top Organizations
         </Typography>
-        <Box sx={{ display: 'flex', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
             size="small"
             variant="outlined"
-            startIcon={<ViewIcon />}
-            sx={{ textTransform: 'none' }}
+            startIcon={<ViewIcon sx={{ fontSize: 14 }} />}
+            sx={{
+              textTransform: 'none',
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              borderColor: 'rgba(0,0,0,0.08)',
+              color: 'text.secondary',
+              borderRadius: 2,
+              '&:hover': { borderColor: 'primary.main', color: 'primary.main' },
+            }}
           >
             View All
           </Button>
           <Button
             size="small"
             variant="contained"
-            startIcon={<AddIcon />}
-            sx={{ textTransform: 'none' }}
+            startIcon={<AddIcon sx={{ fontSize: 14 }} />}
+            sx={{
+              textTransform: 'none',
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              borderRadius: 2,
+              boxShadow: 'none',
+              '&:hover': { boxShadow: '0 2px 8px rgba(255,164,36,0.3)' },
+            }}
           >
             Add New
           </Button>
@@ -150,83 +168,107 @@ const OrganizationsTable: React.FC = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Organization</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Users</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Courses</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Revenue</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>Status</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }} align="right">Actions</TableCell>
+              {['Organization', 'Users', 'Courses', 'Revenue', 'Status', ''].map((h, i) => (
+                <TableCell
+                  key={h || 'actions'}
+                  align={i === 5 ? 'right' : 'left'}
+                  sx={{
+                    fontWeight: 600,
+                    color: 'text.disabled',
+                    fontSize: '0.7rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    borderBottom: '1px solid rgba(0,0,0,0.04)',
+                    py: 1.5,
+                  }}
+                >
+                  {h}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
           <TableBody>
-            {organizations.map((org) => (
-              <TableRow
-                key={org.id}
-                sx={{ '&:hover': { bgcolor: 'grey.50' }, '&:last-child td': { borderBottom: 0 } }}
-              >
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <Avatar
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        background: org.bgColor,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {org.initials}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {org.name}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        {org.email}
-                      </Typography>
+            {organizations.map((org) => {
+              const statusStyle = getStatusColor(org.status);
+              return (
+                <TableRow
+                  key={org.id}
+                  className="sa-table-row"
+                  sx={{
+                    transition: 'background 0.2s cubic-bezier(0.4,0,0.2,1)',
+                    '& td': { borderBottom: 'none' },
+                    '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' },
+                    '&:hover td': { borderBottom: 'none' },
+                  }}
+                >
+                  <TableCell sx={{ py: 1.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Avatar
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          background: org.bgColor,
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {org.initials}
+                      </Avatar>
+                      <Box>
+                        <Typography sx={{ fontWeight: 500, fontSize: '0.82rem' }}>
+                          {org.name}
+                        </Typography>
+                        <Typography sx={{ color: 'text.disabled', fontSize: '0.72rem' }}>
+                          {org.email}
+                        </Typography>
+                      </Box>
                     </Box>
-                  </Box>
-                </TableCell>
-                <TableCell>{org.users}</TableCell>
-                <TableCell>{org.courses}</TableCell>
-                <TableCell>{org.revenue}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={org.status.charAt(0).toUpperCase() + org.status.slice(1)}
-                    size="small"
-                    sx={{
-                      ...getStatusColor(org.status),
-                      fontWeight: 500,
-                      fontSize: '0.75rem',
-                    }}
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                    <IconButton
+                  </TableCell>
+                  <TableCell sx={{ fontSize: '0.82rem', color: 'text.secondary', fontWeight: 400 }}>{org.users}</TableCell>
+                  <TableCell sx={{ fontSize: '0.82rem', color: 'text.secondary', fontWeight: 400 }}>{org.courses}</TableCell>
+                  <TableCell sx={{ fontSize: '0.82rem', fontWeight: 500 }}>{org.revenue}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={org.status.charAt(0).toUpperCase() + org.status.slice(1)}
                       size="small"
                       sx={{
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        '&:hover': { color: 'info.main', borderColor: 'info.main' },
+                        bgcolor: statusStyle.bgcolor,
+                        color: statusStyle.color,
+                        fontWeight: 500,
+                        fontSize: '0.7rem',
+                        height: 24,
+                        borderLeft: `3px solid ${statusStyle.accent}`,
+                        borderRadius: 1.5,
                       }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      sx={{
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        '&:hover': { color: 'error.main', borderColor: 'error.main' },
-                      }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <Box className="sa-row-actions" sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                      <IconButton
+                        size="small"
+                        sx={{
+                          color: 'text.disabled',
+                          transition: 'color 0.2s',
+                          '&:hover': { color: 'info.main' },
+                        }}
+                      >
+                        <EditIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        sx={{
+                          color: 'text.disabled',
+                          transition: 'color 0.2s',
+                          '&:hover': { color: 'error.main' },
+                        }}
+                      >
+                        <DeleteIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>

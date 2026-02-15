@@ -20,28 +20,28 @@ const activities: ActivityItem[] = [
     id: '1',
     text: 'New organization registered: Tech Innovators Ltd',
     time: '10 minutes ago',
-    icon: <UserAddIcon sx={{ fontSize: 16 }} />,
+    icon: <UserAddIcon sx={{ fontSize: 13 }} />,
     iconBg: 'linear-gradient(135deg, #ffb74d, #ffa424)',
   },
   {
     id: '2',
     text: 'Payment completed for Acme Corporation ($5,280)',
     time: '45 minutes ago',
-    icon: <PaymentIcon sx={{ fontSize: 16 }} />,
+    icon: <PaymentIcon sx={{ fontSize: 13 }} />,
     iconBg: 'linear-gradient(135deg, #10b981, #34d399)',
   },
   {
     id: '3',
     text: 'New course published: "Advanced Data Science"',
     time: '2 hours ago',
-    icon: <CourseIcon sx={{ fontSize: 16 }} />,
+    icon: <CourseIcon sx={{ fontSize: 13 }} />,
     iconBg: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
   },
   {
     id: '4',
     text: 'Security audit completed - All systems secure',
     time: '5 hours ago',
-    icon: <SecurityIcon sx={{ fontSize: 16 }} />,
+    icon: <SecurityIcon sx={{ fontSize: 13 }} />,
     iconBg: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
   },
 ];
@@ -51,33 +51,35 @@ const RecentActivity: React.FC = () => {
     <Paper
       elevation={0}
       sx={{
-        p: 3,
-        borderRadius: 3,
-        border: '1px solid',
-        borderColor: 'divider',
+        p: 2.5,
+        borderRadius: '1rem',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
+        transition: 'box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:hover': {
+          boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+        },
       }}
     >
-      <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary', mb: 3 }}>
+      <Typography sx={{ fontWeight: 700, color: 'text.primary', fontSize: '0.95rem', mb: 2.5 }}>
         Recent Activity
       </Typography>
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
         {activities.map((activity, index) => (
           <Box
             key={activity.id}
+            className="sa-timeline-item"
             sx={{
               display: 'flex',
               gap: 1.5,
-              pb: index < activities.length - 1 ? 2 : 0,
-              borderBottom: index < activities.length - 1 ? '1px solid' : 'none',
-              borderColor: 'divider',
+              pb: index < activities.length - 1 ? 2.5 : 0,
             }}
           >
             <Box
               sx={{
-                width: 36,
-                height: 36,
-                borderRadius: 2,
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -90,17 +92,19 @@ const RecentActivity: React.FC = () => {
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography
-                variant="body2"
                 sx={{
-                  mb: 0.5,
+                  mb: 0.25,
                   lineHeight: 1.4,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
+                  fontSize: '0.8rem',
+                  fontWeight: 400,
+                  color: 'text.primary',
                 }}
               >
                 {activity.text}
               </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              <Typography sx={{ color: 'text.disabled', fontSize: '0.7rem' }}>
                 {activity.time}
               </Typography>
             </Box>

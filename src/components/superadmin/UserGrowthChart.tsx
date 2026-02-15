@@ -11,36 +11,51 @@ const UserGrowthChart: React.FC = () => {
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: 3,
-        border: '1px solid',
-        borderColor: 'divider',
+        borderRadius: '1rem',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
         height: '100%',
+        transition: 'box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:hover': {
+          boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+        },
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+        <Typography sx={{ fontWeight: 700, color: 'text.primary', fontSize: '0.95rem' }}>
           User Acquisition
         </Typography>
-        <IconButton size="small">
-          <MoreIcon />
+        <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'text.secondary' } }}>
+          <MoreIcon sx={{ fontSize: 18 }} />
         </IconButton>
       </Box>
+      {/* Shimmer skeleton placeholder */}
       <Box
         sx={{
-          height: 320,
+          height: 300,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          bgcolor: 'grey.50',
           borderRadius: 2,
+          border: '1.5px dashed',
+          borderColor: 'rgba(0,0,0,0.06)',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        <UserAddIcon sx={{ fontSize: 48, color: 'grey.300', mb: 2 }} />
-        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+        <Box
+          className="sa-shimmer"
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            opacity: 0.5,
+          }}
+        />
+        <UserAddIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1.5, position: 'relative', zIndex: 1 }} />
+        <Typography variant="body2" sx={{ color: 'text.disabled', fontWeight: 500, fontSize: '0.82rem', position: 'relative', zIndex: 1 }}>
           User Growth Chart
         </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
+        <Typography variant="caption" sx={{ color: 'text.disabled', mt: 0.5, position: 'relative', zIndex: 1, fontSize: '0.75rem' }}>
           2,450 new users this month
         </Typography>
       </Box>

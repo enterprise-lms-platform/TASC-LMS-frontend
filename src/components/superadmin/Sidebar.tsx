@@ -37,10 +37,8 @@ import {
   School as LogoIcon,
 } from '@mui/icons-material';
 
-// Sidebar width constant
 const DRAWER_WIDTH = 280;
 
-// Type for navigation items
 interface NavItem {
   text: string;
   icon: React.ReactNode;
@@ -53,7 +51,6 @@ interface NavSection {
   items: NavItem[];
 }
 
-// Navigation sections data
 const navSections: NavSection[] = [
   {
     title: 'Dashboard',
@@ -141,9 +138,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          minHeight: 80,
+          minHeight: 72,
         }}
       >
         <Box
@@ -160,55 +155,71 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
         </Box>
         <Typography
           variant="h6"
-          sx={{ fontWeight: 700, color: 'text.primary', whiteSpace: 'nowrap' }}
+          sx={{ fontWeight: 700, color: 'text.primary', whiteSpace: 'nowrap', fontSize: '1.1rem' }}
         >
           TASC LMS
         </Typography>
       </Box>
 
+      {/* Gradient fade separator */}
+      <Box
+        sx={{
+          height: 16,
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.04), transparent)',
+          mx: 2,
+        }}
+      />
+
       {/* Navigation Sections */}
-      <Box sx={{ flex: 1, overflowY: 'auto', py: 1 }}>
-        {navSections.map((section) => (
-          <Box key={section.title}>
-            <Box sx={{ py: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-              <Typography
-                variant="caption"
-                sx={{
-                  px: 3,
-                  pb: 1,
-                  display: 'block',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  color: 'text.secondary',
-                  letterSpacing: '0.05em',
-                  fontSize: '0.75rem',
-                }}
-              >
-                {section.title}
-              </Typography>
-              <List disablePadding>
-                {section.items.map((item) => (
+      <Box className="sa-scrollbar" sx={{ flex: 1, overflowY: 'auto', py: 0.5 }}>
+        {navSections.map((section, sIdx) => (
+          <Box key={section.title} sx={{ mb: sIdx < navSections.length - 1 ? 0.5 : 0 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                px: 3,
+                pt: 2,
+                pb: 0.75,
+                display: 'block',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                color: 'text.disabled',
+                letterSpacing: '0.06em',
+                fontSize: '0.68rem',
+              }}
+            >
+              {section.title}
+            </Typography>
+            <List disablePadding>
+              {section.items.map((item) => {
+                const active = isActive(item.path);
+                return (
                   <ListItem key={item.text} disablePadding>
                     <ListItemButton
                       onClick={() => handleNavItemClick(item.path)}
                       sx={{
-                        py: 1,
-                        px: 3,
-                        color: isActive(item.path) ? 'primary.main' : 'text.secondary',
-                        bgcolor: isActive(item.path) ? 'rgba(255, 164, 36, 0.1)' : 'transparent',
-                        borderRight: isActive(item.path) ? '3px solid' : 'none',
-                        borderColor: 'primary.main',
+                        py: 0.75,
+                        px: 2,
+                        mx: 1,
+                        borderRadius: 2,
+                        color: active ? 'primary.dark' : 'text.secondary',
+                        bgcolor: active ? 'rgba(255, 164, 36, 0.08)' : 'transparent',
+                        borderLeft: active ? '3px solid' : '3px solid transparent',
+                        borderColor: active ? 'primary.main' : 'transparent',
+                        boxShadow: active ? '0 0 12px rgba(255,164,36,0.1)' : 'none',
                         cursor: 'pointer',
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                         '&:hover': {
-                          bgcolor: 'action.hover',
-                          color: 'primary.main',
+                          bgcolor: active ? 'rgba(255, 164, 36, 0.1)' : 'rgba(0,0,0,0.03)',
+                          color: 'primary.dark',
                         },
                       }}
                     >
                       <ListItemIcon
                         sx={{
-                          minWidth: 40,
+                          minWidth: 36,
                           color: 'inherit',
+                          '& .MuiSvgIcon-root': { fontSize: 20 },
                         }}
                       >
                         {item.icon}
@@ -216,8 +227,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
                       <ListItemText
                         primary={item.text}
                         primaryTypographyProps={{
-                          fontWeight: 500,
-                          fontSize: '0.875rem',
+                          fontWeight: active ? 600 : 500,
+                          fontSize: '0.82rem',
                         }}
                       />
                       {item.badge && (
@@ -225,24 +236,32 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
                           label={item.badge}
                           size="small"
                           sx={{
-                            height: 20,
-                            fontSize: '0.75rem',
+                            height: 18,
+                            fontSize: '0.68rem',
                             bgcolor: 'primary.main',
                             color: 'white',
-                            '& .MuiChip-label': { px: 1 },
+                            '& .MuiChip-label': { px: 0.75 },
                           }}
                         />
                       )}
                     </ListItemButton>
                   </ListItem>
-                ))}
-              </List>
-            </Box>
+                );
+              })}
+            </List>
           </Box>
         ))}
       </Box>
     </Box>
   );
+
+  const drawerPaperStyles = {
+    boxSizing: 'border-box' as const,
+    width: DRAWER_WIDTH,
+    bgcolor: '#fefdfb',
+    borderRight: 'none',
+    boxShadow: '1px 0 8px rgba(0,0,0,0.03)',
+  };
 
   return (
     <>
@@ -254,11 +273,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', lg: 'none' },
-          '& .MuiDrawer-paper': {
-            boxSizing: 'border-box',
-            width: DRAWER_WIDTH,
-            bgcolor: 'background.paper',
-          },
+          '& .MuiDrawer-paper': drawerPaperStyles,
         }}
       >
         {drawerContent}
@@ -269,13 +284,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
         variant="permanent"
         sx={{
           display: { xs: 'none', lg: 'block' },
-          '& .MuiDrawer-paper': {
-            boxSizing: 'border-box',
-            width: DRAWER_WIDTH,
-            bgcolor: 'background.paper',
-            borderRight: '1px solid',
-            borderColor: 'divider',
-          },
+          '& .MuiDrawer-paper': drawerPaperStyles,
         }}
         open
       >

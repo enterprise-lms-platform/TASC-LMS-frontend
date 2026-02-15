@@ -10,6 +10,7 @@ import {
   Avatar,
   Menu,
   MenuItem,
+  Divider,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -51,7 +52,6 @@ const TopBar: React.FC<TopBarProps> = ({
     handleLogout();
   };
 
-  // Get user display values
   const userName = getUserDisplayName(user?.first_name, user?.last_name, user?.email);
   const userInitials = getUserInitials(user?.first_name, user?.last_name);
   const userRole = user?.role ? getRoleDisplayName(user.role) : 'User';
@@ -61,12 +61,13 @@ const TopBar: React.FC<TopBarProps> = ({
       position="sticky"
       elevation={0}
       sx={{
-        bgcolor: 'background.paper',
-        borderBottom: '1px solid',
-        borderColor: 'divider',
+        bgcolor: 'rgba(255,255,255,0.75)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
       }}
     >
-      <Toolbar sx={{ justifyContent: 'space-between', gap: 2, minHeight: { xs: 64, lg: 80 }, py: 2 }}>
+      <Toolbar sx={{ justifyContent: 'space-between', gap: 2, minHeight: { xs: 60, lg: 72 }, py: 1.5 }}>
         {/* Page Title */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <IconButton
@@ -76,12 +77,13 @@ const TopBar: React.FC<TopBarProps> = ({
             <MenuIcon />
           </IconButton>
           <Box sx={{ minWidth: 0, flex: { xs: 1, md: 'none' } }}>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontWeight: 700, 
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
                 color: 'text.primary',
-                fontSize: { xs: '1rem', sm: '1.25rem' },
+                fontSize: { xs: '0.95rem', sm: '1.1rem' },
+                letterSpacing: '-0.01em',
               }}
               noWrap
             >
@@ -90,8 +92,10 @@ const TopBar: React.FC<TopBarProps> = ({
             <Typography
               variant="body2"
               sx={{
-                color: 'text.secondary',
-                display: { xs: 'none', sm: 'block' }
+                color: 'text.disabled',
+                display: { xs: 'none', sm: 'block' },
+                fontSize: '0.8rem',
+                fontWeight: 400,
               }}
               noWrap
             >
@@ -101,45 +105,76 @@ const TopBar: React.FC<TopBarProps> = ({
         </Box>
 
         {/* Controls */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           {/* Search Bar */}
           <Box
             sx={{
               display: { xs: 'none', md: 'flex' },
               alignItems: 'center',
-              bgcolor: 'grey.100',
-              borderRadius: 1,
-              border: '1px solid',
-              borderColor: 'grey.300',
+              bgcolor: 'rgba(0,0,0,0.03)',
+              borderRadius: 50,
               px: 2,
               py: 0.5,
-              width: 300,
+              width: 280,
+              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.04)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               '&:focus-within': {
-                borderColor: 'primary.main',
-                bgcolor: 'background.paper',
+                width: 340,
+                bgcolor: 'white',
+                boxShadow: '0 0 0 2px rgba(255,164,36,0.2), inset 0 1px 3px rgba(0,0,0,0.02)',
               },
             }}
           >
-            <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
+            <SearchIcon sx={{ color: 'text.disabled', mr: 1, fontSize: 20 }} />
             <InputBase
               placeholder="Search users, courses, reports..."
-              sx={{ flex: 1, fontSize: '0.875rem' }}
+              sx={{ flex: 1, fontSize: '0.82rem', fontWeight: 400 }}
             />
           </Box>
 
           {/* Action Icons */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 1 } }}>
-            <IconButton sx={{ color: 'text.secondary' }} size="small">
-              <Badge badgeContent={5} color="error">
-                <NotificationsIcon />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.5 } }}>
+            <IconButton
+              sx={{
+                color: 'text.secondary',
+                transition: 'color 0.2s',
+                '&:hover': { color: 'primary.main' },
+              }}
+              size="small"
+            >
+              <Badge
+                badgeContent={5}
+                color="error"
+                sx={{ '& .MuiBadge-badge': { fontSize: '0.65rem', height: 16, minWidth: 16 } }}
+              >
+                <NotificationsIcon sx={{ fontSize: 20 }} />
               </Badge>
             </IconButton>
-            <IconButton sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'flex' } }} size="small">
-              <HelpIcon />
+            <IconButton
+              sx={{
+                color: 'text.secondary',
+                display: { xs: 'none', sm: 'flex' },
+                transition: 'color 0.2s',
+                '&:hover': { color: 'primary.main' },
+              }}
+              size="small"
+            >
+              <HelpIcon sx={{ fontSize: 20 }} />
             </IconButton>
-            <IconButton sx={{ color: 'text.secondary', display: { xs: 'none', md: 'flex' } }} size="small">
-              <FullscreenIcon />
+            <IconButton
+              sx={{
+                color: 'text.secondary',
+                display: { xs: 'none', md: 'flex' },
+                transition: 'color 0.2s',
+                '&:hover': { color: 'primary.main' },
+              }}
+              size="small"
+            >
+              <FullscreenIcon sx={{ fontSize: 20 }} />
             </IconButton>
+
+            {/* Divider before profile */}
+            <Divider orientation="vertical" flexItem sx={{ mx: 1, height: 28, alignSelf: 'center', display: { xs: 'none', sm: 'block' } }} />
 
             {/* User Profile */}
             <Box
@@ -149,31 +184,35 @@ const TopBar: React.FC<TopBarProps> = ({
                 alignItems: 'center',
                 gap: 1.5,
                 cursor: 'pointer',
-                p: 1,
-                borderRadius: 1,
-                '&:hover': { bgcolor: 'action.hover' },
+                p: 0.75,
+                borderRadius: 2,
+                transition: 'background 0.2s cubic-bezier(0.4,0,0.2,1)',
+                '&:hover': { bgcolor: 'rgba(0,0,0,0.03)' },
               }}
             >
               <Avatar
                 src={user?.google_picture ?? undefined}
                 sx={{
-                  width: 40,
-                  height: 40,
+                  width: 36,
+                  height: 36,
                   background: 'linear-gradient(135deg, #ffb74d, #f97316)',
                   fontWeight: 700,
+                  fontSize: '0.85rem',
+                  border: '2px solid',
+                  borderColor: 'primary.main',
                 }}
               >
                 {userInitials}
               </Avatar>
               <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.82rem', lineHeight: 1.3 }}>
                   {userName}
                 </Typography>
-                <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 500 }}>
+                <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 500, fontSize: '0.7rem' }}>
                   {userRole}
                 </Typography>
               </Box>
-              <ArrowDownIcon sx={{ color: 'text.secondary', fontSize: 16 }} />
+              <ArrowDownIcon sx={{ color: 'text.disabled', fontSize: 16 }} />
             </Box>
 
             <Menu
@@ -182,10 +221,22 @@ const TopBar: React.FC<TopBarProps> = ({
               onClose={handleUserMenuClose}
               anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
               transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+              slotProps={{
+                paper: {
+                  sx: {
+                    mt: 1,
+                    borderRadius: 2,
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
+                    border: 'none',
+                    minWidth: 160,
+                  },
+                },
+              }}
             >
-              <MenuItem onClick={handleUserMenuClose}>Profile</MenuItem>
-              <MenuItem onClick={handleUserMenuClose}>Settings</MenuItem>
-              <MenuItem onClick={onLogoutClick}>Logout</MenuItem>
+              <MenuItem onClick={handleUserMenuClose} sx={{ fontSize: '0.85rem' }}>Profile</MenuItem>
+              <MenuItem onClick={handleUserMenuClose} sx={{ fontSize: '0.85rem' }}>Settings</MenuItem>
+              <Divider sx={{ my: 0.5 }} />
+              <MenuItem onClick={onLogoutClick} sx={{ fontSize: '0.85rem', color: 'error.main' }}>Logout</MenuItem>
             </Menu>
           </Box>
         </Box>

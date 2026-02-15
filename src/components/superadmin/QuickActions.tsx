@@ -34,13 +34,16 @@ const QuickActions: React.FC = () => {
     <Paper
       elevation={0}
       sx={{
-        p: 3,
-        borderRadius: 3,
-        border: '1px solid',
-        borderColor: 'divider',
+        p: 2.5,
+        borderRadius: '1rem',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
+        transition: 'box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:hover': {
+          boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+        },
       }}
     >
-      <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary', mb: 3 }}>
+      <Typography sx={{ fontWeight: 700, color: 'text.primary', fontSize: '0.95rem', mb: 2.5 }}>
         Quick Actions
       </Typography>
 
@@ -55,34 +58,35 @@ const QuickActions: React.FC = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 p: 2,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 2,
+                borderRadius: 3,
                 cursor: action.path ? 'pointer' : 'default',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  borderColor: action.path ? 'primary.main' : 'divider',
-                  bgcolor: action.path ? 'rgba(255, 164, 36, 0.05)' : 'transparent',
-                  transform: action.path ? 'translateY(-2px)' : 'none',
-                },
+                bgcolor: 'rgba(0,0,0,0.015)',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover': action.path ? {
+                  background: 'linear-gradient(135deg, rgba(255,164,36,0.08), rgba(249,115,22,0.04))',
+                  transform: 'translateY(-3px) scale(1.02)',
+                  boxShadow: '0 6px 20px rgba(0,0,0,0.06)',
+                } : {},
               }}
             >
               <Box
                 sx={{
-                  width: 40,
-                  height: 40,
+                  width: 38,
+                  height: 38,
                   background: 'linear-gradient(135deg, #ffb74d, #ffa424)',
                   color: 'white',
-                  borderRadius: 2,
+                  borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  mb: 1.5,
+                  mb: 1.25,
+                  '& .MuiSvgIcon-root': { fontSize: 18 },
                 }}
               >
                 {action.icon}
               </Box>
-              <Typography variant="caption" sx={{ fontWeight: 500, color: 'text.primary' }}>
+              <Typography sx={{ fontWeight: 500, color: 'text.primary', fontSize: '0.75rem' }}>
                 {action.label}
               </Typography>
             </Box>

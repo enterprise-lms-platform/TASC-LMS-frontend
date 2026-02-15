@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography, Link } from '@mui/material';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import '../../styles/superadmin.css';
 
 const DRAWER_WIDTH = 280;
 
@@ -23,7 +24,7 @@ const SuperadminLayout: React.FC<SuperadminLayoutProps> = ({
   };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'grey.50' }}>
+    <Box className="sa-page" sx={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar mobileOpen={mobileOpen} onMobileClose={handleMobileToggle} />
 
       <Box
@@ -47,10 +48,8 @@ const SuperadminLayout: React.FC<SuperadminLayoutProps> = ({
         <Box
           component="footer"
           sx={{
-            p: 3,
-            borderTop: '1px solid',
-            borderColor: 'divider',
-            bgcolor: 'background.paper',
+            px: 3,
+            py: 2.5,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -58,7 +57,7 @@ const SuperadminLayout: React.FC<SuperadminLayoutProps> = ({
             gap: 2,
           }}
         >
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{ color: 'text.disabled', fontWeight: 400, fontSize: '0.8rem' }}>
             © 2025 TASC Learning Management System. All rights reserved.
           </Typography>
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 3 }}>
@@ -68,8 +67,10 @@ const SuperadminLayout: React.FC<SuperadminLayoutProps> = ({
                 href="#"
                 underline="hover"
                 sx={{
-                  color: 'text.secondary',
-                  fontSize: '0.875rem',
+                  color: 'text.disabled',
+                  fontSize: '0.8rem',
+                  fontWeight: 400,
+                  transition: 'color 0.2s cubic-bezier(0.4,0,0.2,1)',
                   '&:hover': { color: 'primary.main' },
                 }}
               >
