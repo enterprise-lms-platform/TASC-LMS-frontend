@@ -11,6 +11,9 @@ import MyCoursesPage from './pages/MyCoursesPage';
 import LearnerNotificationsPage from './pages/LearnerNotificationsPage';
 import MySchedulePage from './pages/MySchedulePage';
 import SavedCoursesPage from './pages/SavedCoursesPage';
+import ProgressPage from './pages/ProgressPage';
+import QuizzesPage from './pages/QuizzesPage';
+import LearnerAssignmentsPage from './pages/LearnerAssignmentsPage';
 import LearnerCourseDetailPage from './pages/LearnerCourseDetailPage';
 import CheckoutPaymentPage from './pages/CheckoutPaymentPage';
 import InvoiceReceiptPage from './pages/InvoiceReceiptPage';
@@ -67,6 +70,9 @@ const App = () => {
           <Route path="/learner/notifications" element={<ProtectedRoute><LearnerNotificationsPage /></ProtectedRoute>} />
           <Route path="/learner/schedule" element={<ProtectedRoute><MySchedulePage /></ProtectedRoute>} />
           <Route path="/learner/saved" element={<ProtectedRoute><SavedCoursesPage /></ProtectedRoute>} />
+          <Route path="/learner/progress" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
+          <Route path="/learner/quizzes" element={<ProtectedRoute><QuizzesPage /></ProtectedRoute>} />
+          <Route path="/learner/assignments" element={<ProtectedRoute><LearnerAssignmentsPage /></ProtectedRoute>} />
           <Route path="/learner/courses" element={<ProtectedRoute><LearnerCourseCatalogPage /></ProtectedRoute>} />
           <Route path="/learner/course/:courseId" element={<ProtectedRoute><LearnerCourseDetailPage /></ProtectedRoute>} />
           <Route path="/learner/subscription" element={<ProtectedRoute><SubscriptionManagementPage /></ProtectedRoute>} />
