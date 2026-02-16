@@ -55,7 +55,7 @@ const paymentMethods: PaymentMethod[] = [
   { id: 'mpesa', name: 'M-Pesa', description: 'Pay via M-Pesa', icon: <PhoneIcon />, color: '#4caf50' },
   { id: 'mtn', name: 'MTN MoMo', description: 'MTN Mobile Money', icon: <SimCardIcon />, color: '#ffcc00' },
   { id: 'airtel', name: 'Airtel Money', description: 'Airtel Pay', icon: <WifiIcon />, color: '#ff0000' },
-  { id: 'pesapal', name: 'Pesa Pal', description: 'Card / Bank', icon: <CreditCardIcon />, color: '#00a0e3' },
+  { id: 'visa', name: 'Visa / Mastercard', description: 'Credit or Debit Card', icon: <CreditCardIcon />, color: '#1a1f71' },
 ];
 
 const countryCodes = [
@@ -93,6 +93,11 @@ const CheckoutPaymentPage: React.FC = () => {
   const [promoApplied, setPromoApplied] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  // Card fields
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+  const [cardHolder, setCardHolder] = useState('');
   const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
@@ -123,15 +128,47 @@ const CheckoutPaymentPage: React.FC = () => {
     setPromoCode('');
   };
 
+  // Format card number with spaces every 4 digits
+  const formatCardNumber = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 16);
+    return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+  };
+
+  // Format expiry as MM/YY
+  const formatExpiry = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    if (digits.length >= 3) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    return digits;
+  };
+
   const handlePayment = async () => {
     if (!termsAccepted) {
       showToast('Please accept the terms and conditions', 'error');
       return;
     }
 
-    if (selectedPayment !== 'pesapal' && !phoneNumber) {
+    if (isMobilePayment && !phoneNumber) {
       showToast('Please enter your phone number', 'error');
       return;
+    }
+
+    if (selectedPayment === 'visa') {
+      if (!cardNumber || cardNumber.replace(/\s/g, '').length < 16) {
+        showToast('Please enter a valid 16-digit card number', 'error');
+        return;
+      }
+      if (!cardExpiry || cardExpiry.length < 5) {
+        showToast('Please enter a valid expiry date (MM/YY)', 'error');
+        return;
+      }
+      if (!cardCvv || cardCvv.length < 3) {
+        showToast('Please enter a valid CVV', 'error');
+        return;
+      }
+      if (!cardHolder.trim()) {
+        showToast('Please enter the cardholder name', 'error');
+        return;
+      }
     }
 
     setIsProcessing(true);
@@ -153,7 +190,7 @@ const CheckoutPaymentPage: React.FC = () => {
             title: course.title,
             instructor: course.instructor,
             unitPrice: course.currentPrice,
-            originalPrice: course.currentPrice, // Using current price as unit price for consistency
+            originalPrice: course.currentPrice,
           },
           subtotal: subtotal,
           discount: discount,
@@ -166,6 +203,7 @@ const CheckoutPaymentPage: React.FC = () => {
   };
 
   const isMobilePayment = ['mpesa', 'mtn', 'airtel'].includes(selectedPayment);
+  const isCardPayment = selectedPayment === 'visa';
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f4f4f5' }}>
@@ -393,6 +431,116 @@ const CheckoutPaymentPage: React.FC = () => {
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
                       Enter the phone number registered with your mobile money account
                     </Typography>
+                  </Box>
+                )}
+
+                {/* Visa Card Form */}
+                {isCardPayment && (
+                  <Box
+                    sx={{
+                      bgcolor: 'rgba(26, 31, 113, 0.04)',
+                      border: '1px solid rgba(26, 31, 113, 0.15)',
+                      borderRadius: 2,
+                      p: 2.5,
+                      mb: 3,
+                    }}
+                  >
+                    <Typography variant="body1" fontWeight={500} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, color: '#27272a' }}>
+                      <CreditCardIcon sx={{ color: '#1a1f71' }} />
+                      Card Details
+                    </Typography>
+
+                    {/* Card Number */}
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                      Card Number <span style={{ color: '#ef4444' }}>*</span>
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="1234 5678 9012 3456"
+                      value={cardNumber}
+                      onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                      slotProps={{
+                        input: {
+                          startAdornment: <CreditCardIcon sx={{ color: '#a1a1aa', mr: 1, fontSize: 20 }} />,
+                        },
+                        htmlInput: { maxLength: 19 },
+                      }}
+                      sx={{ mb: 2 }}
+                    />
+
+                    {/* Expiry + CVV row */}
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                      <Grid size={{ xs: 6 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                          Expiry Date <span style={{ color: '#ef4444' }}>*</span>
+                        </Typography>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          placeholder="MM/YY"
+                          value={cardExpiry}
+                          onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
+                          slotProps={{ htmlInput: { maxLength: 5 } }}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 6 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                          CVV <span style={{ color: '#ef4444' }}>*</span>
+                        </Typography>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          placeholder="123"
+                          type="password"
+                          value={cardCvv}
+                          onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                          slotProps={{
+                            input: {
+                              startAdornment: <LockIcon sx={{ color: '#a1a1aa', mr: 1, fontSize: 18 }} />,
+                            },
+                            htmlInput: { maxLength: 4 },
+                          }}
+                        />
+                      </Grid>
+                    </Grid>
+
+                    {/* Cardholder Name */}
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                      Cardholder Name <span style={{ color: '#ef4444' }}>*</span>
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="EMMA CHEN"
+                      value={cardHolder}
+                      onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
+                      slotProps={{
+                        input: {
+                          startAdornment: <PersonIcon sx={{ color: '#a1a1aa', mr: 1, fontSize: 20 }} />,
+                        },
+                      }}
+                    />
+
+                    {/* Card brand badges */}
+                    <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                      {['Visa', 'Mastercard', 'Amex'].map((brand) => (
+                        <Box
+                          key={brand}
+                          sx={{
+                            px: 1.5, py: 0.5,
+                            bgcolor: '#f4f4f5',
+                            borderRadius: 1,
+                            fontSize: '0.7rem',
+                            fontWeight: 600,
+                            color: '#71717a',
+                            border: '1px solid #e4e4e7',
+                          }}
+                        >
+                          {brand}
+                        </Box>
+                      ))}
+                    </Stack>
                   </Box>
                 )}
 
@@ -693,7 +841,10 @@ const CheckoutPaymentPage: React.FC = () => {
             Processing your payment...
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Please check your phone for the {selectedPayment === 'mpesa' ? 'M-Pesa' : selectedPayment === 'mtn' ? 'MTN MoMo' : 'Airtel Money'} prompt
+            {isCardPayment
+              ? 'Verifying your card details and processing the transaction'
+              : `Please check your phone for the ${selectedPayment === 'mpesa' ? 'M-Pesa' : selectedPayment === 'mtn' ? 'MTN MoMo' : 'Airtel Money'} prompt`
+            }
           </Typography>
         </Box>
       )}

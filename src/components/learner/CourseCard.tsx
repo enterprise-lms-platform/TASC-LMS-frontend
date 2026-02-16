@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, Box, Typography, Button, Chip } from '@mui/material';
 import { PlayArrow, Info, Person } from '@mui/icons-material';
 
@@ -19,6 +20,8 @@ interface CourseCardProps {
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
+  const navigate = useNavigate();
+
   return (
     <Card
       className="course-card"
@@ -137,6 +140,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
             variant="outlined"
             startIcon={<Info />}
             fullWidth
+            onClick={(e) => { e.stopPropagation(); navigate(`/learner/course/${course.id}`); }}
             sx={{
               textTransform: 'none',
               fontWeight: 500,
@@ -153,6 +157,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
             variant="contained"
             startIcon={<PlayArrow />}
             fullWidth
+            onClick={(e) => { e.stopPropagation(); navigate(`/learner/course/${course.id}/learn`); }}
             sx={{
               textTransform: 'none',
               fontWeight: 600,

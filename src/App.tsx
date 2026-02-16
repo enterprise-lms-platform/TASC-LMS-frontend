@@ -15,6 +15,7 @@ import ProgressPage from './pages/ProgressPage';
 import QuizzesPage from './pages/QuizzesPage';
 import LearnerAssignmentsPage from './pages/LearnerAssignmentsPage';
 import LearnerProfilePage from './pages/LearnerProfilePage';
+import CoursePlayerPage from './pages/CoursePlayerPage';
 import LearnerCourseDetailPage from './pages/LearnerCourseDetailPage';
 import CheckoutPaymentPage from './pages/CheckoutPaymentPage';
 import InvoiceReceiptPage from './pages/InvoiceReceiptPage';
@@ -76,6 +77,7 @@ const App = () => {
           <Route path="/learner/assignments" element={<ProtectedRoute><LearnerAssignmentsPage /></ProtectedRoute>} />
           <Route path="/learner/courses" element={<ProtectedRoute><LearnerCourseCatalogPage /></ProtectedRoute>} />
           <Route path="/learner/course/:courseId" element={<ProtectedRoute><LearnerCourseDetailPage /></ProtectedRoute>} />
+          <Route path="/learner/course/:courseId/learn" element={<ProtectedRoute><CoursePlayerPage /></ProtectedRoute>} />
           <Route path="/learner/subscription" element={<ProtectedRoute><SubscriptionManagementPage /></ProtectedRoute>} />
           <Route path="/learner/payments" element={<ProtectedRoute><PaymentHistoryPage /></ProtectedRoute>} />
           <Route path="/learner/profile" element={<ProtectedRoute><LearnerProfilePage /></ProtectedRoute>} />

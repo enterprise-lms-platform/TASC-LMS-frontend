@@ -49,7 +49,6 @@ const navSections = [
   {
     title: 'Learning',
     items: [
-      { text: 'Continue Learning', icon: <SchoolIcon />, path: '/learner/continue' },
       { text: 'Browse Courses', icon: <SearchIcon />, path: '/learner/courses' },
       { text: 'My Schedule', icon: <DateRangeIcon />, path: '/learner/schedule' },
       { text: 'Saved Courses', icon: <BookmarkIcon />, path: '/learner/saved' },

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box, Toolbar, CssBaseline, Paper, Typography, Grid, Chip, Avatar,
   LinearProgress, IconButton, TextField, MenuItem, Button, Tabs, Tab,
@@ -42,6 +43,7 @@ const courses = [
 /* ── Component ── */
 
 const MyCoursesPage: React.FC = () => {
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [search, setSearch] = useState('');
@@ -258,6 +260,7 @@ const MyCoursesPage: React.FC = () => {
                             size="small"
                             variant="contained"
                             startIcon={<PlayIcon />}
+                            onClick={(e) => { e.stopPropagation(); navigate(`/learner/course/${course.id}/learn`); }}
                             sx={{
                               textTransform: 'none',
                               fontWeight: 600,
