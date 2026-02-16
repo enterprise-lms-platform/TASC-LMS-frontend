@@ -31,8 +31,7 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as ViewIcon,
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
+
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
@@ -162,34 +161,40 @@ const getStatusColor = (status: string) => {
   }
 };
 
+import KPICard from '../../components/superadmin/KPICard';
+
+// ... (Organization interface and mockOrganizations array remain unchanged)
+
+// ... (getStatusColor function remains unchanged)
+
 const kpiCards = [
   {
     title: 'Total Organizations',
     value: '142',
-    trend: { direction: 'up' as const, value: '+8.2%', period: 'from last month' },
     icon: <OrganizationsIcon />,
-    iconBgColor: 'linear-gradient(135deg, #ffb74d, #ffa424)',
+    // Mint Green Theme
+    bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
   },
   {
     title: 'Active',
     value: '128',
-    trend: { direction: 'up' as const, value: '+5.1%', period: 'from last month' },
     icon: <ActiveIcon />,
-    iconBgColor: 'linear-gradient(135deg, #10b981, #34d399)',
+    // Soft Blue Theme
+    bgColor: '#e3f2fd', badgeColor: '#64b5f6', valueColor: '#1565c0', labelColor: '#0d47a1'
   },
   {
     title: 'Pending Approval',
     value: '8',
-    trend: { direction: 'down' as const, value: '-2.3%', period: 'from last month' },
     icon: <PendingIcon />,
-    iconBgColor: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
+    // Warm Peach Theme
+    bgColor: '#fff3e0', badgeColor: '#ffb74d', valueColor: '#e65100', labelColor: '#bf360c'
   },
   {
     title: 'Suspended',
     value: '6',
-    trend: { direction: 'down' as const, value: '-1.5%', period: 'from last month' },
     icon: <SuspendedIcon />,
-    iconBgColor: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+    // Pastel Purple Theme
+    bgColor: '#f3e5f5', badgeColor: '#d1c4e9', valueColor: '#9575cd', labelColor: '#673ab7'
   },
 ];
 
@@ -207,62 +212,18 @@ const AllOrganizationsPage: React.FC = () => {
   return (
     <SuperadminLayout title="All Organizations" subtitle="Manage organizations on the platform">
       <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
-        {kpiCards.map((kpi) => (
+        {kpiCards.map((kpi, index) => (
           <Grid key={kpi.title} size={{ xs: 12, sm: 6, lg: 3 }}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 3,
-                borderRadius: 3,
-                border: '1px solid',
-                borderColor: 'divider',
-                transition: 'all 0.3s',
-                '&:hover': {
-                  boxShadow: 3,
-                  transform: 'translateY(-2px)',
-                },
-              }}
-            >
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-                  {kpi.title}
-                </Typography>
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    background: kpi.iconBgColor,
-                  }}
-                >
-                  {kpi.icon}
-                </Box>
-              </Box>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
-                {kpi.value}
-              </Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  color: kpi.trend.direction === 'up' ? 'success.main' : 'error.main',
-                }}
-              >
-                {kpi.trend.direction === 'up' ? (
-                  <TrendingUpIcon sx={{ fontSize: 18 }} />
-                ) : (
-                  <TrendingDownIcon sx={{ fontSize: 18 }} />
-                )}
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  {kpi.trend.value} {kpi.trend.period}
-                </Typography>
-              </Box>
-            </Paper>
+            <KPICard
+              title={kpi.title}
+              value={kpi.value}
+              icon={kpi.icon}
+              bgColor={kpi.bgColor}
+              badgeColor={kpi.badgeColor}
+              valueColor={kpi.valueColor}
+              labelColor={kpi.labelColor}
+              index={index}
+            />
           </Grid>
         ))}
       </Grid>

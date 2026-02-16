@@ -11,11 +11,37 @@ import {
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 
+import KPICard from '../../components/superadmin/KPICard';
+
 const kpis = [
-  { label: 'Security Score', value: '87/100', icon: <ShieldIcon />, gradient: 'linear-gradient(135deg, #10b981, #34d399)', trend: 'Good — 3 items to improve' },
-  { label: 'MFA Enabled', value: '72.4%', icon: <MFAIcon />, gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)', trend: '8,945 of 12,356 users' },
-  { label: 'Failed Logins (24h)', value: '156', icon: <BlockIcon />, gradient: 'linear-gradient(135deg, #ef4444, #f87171)', trend: '23 accounts locked' },
-  { label: 'Active Sessions', value: '3,456', icon: <SessionIcon />, gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', trend: 'Across all users' },
+  { 
+    label: 'Security Score', 
+    value: '87/100', 
+    icon: <ShieldIcon />, 
+    // Mint Green Theme
+    bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
+  },
+  { 
+    label: 'MFA Enabled', 
+    value: '72.4%', 
+    icon: <MFAIcon />, 
+    // Soft Blue Theme
+    bgColor: '#e3f2fd', badgeColor: '#64b5f6', valueColor: '#1565c0', labelColor: '#0d47a1'
+  },
+  { 
+    label: 'Failed Logins (24h)', 
+    value: '156', 
+    icon: <BlockIcon />, 
+    // Soft Rose Theme
+    bgColor: '#fce4ec', badgeColor: '#f06292', valueColor: '#ad1457', labelColor: '#880e4f'
+  },
+  { 
+    label: 'Active Sessions', 
+    value: '3,456', 
+    icon: <SessionIcon />, 
+    // Dusty Lavender Theme
+    bgColor: '#f3e5f5', badgeColor: '#ba68c8', valueColor: '#6a1b9a', labelColor: '#4a148c'
+  },
 ];
 
 const activeSessions = [
@@ -37,16 +63,18 @@ const sessionStatusColors: Record<string, { bg: string; color: string }> = {
 const SecurityPage: React.FC = () => (
   <SuperadminLayout title="Security" subtitle="Security settings, MFA configuration, and session management">
     <Grid container spacing={3} sx={{ mb: 4 }}>
-      {kpis.map((k) => (
+      {kpis.map((k, index) => (
         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)', '&:hover': { boxShadow: '0 8px 25px rgba(0,0,0,0.08)', transform: 'translateY(-3px) scale(1.01)' } }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>{k.label}</Typography>
-              <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>{k.icon}</Box>
-            </Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>{k.value}</Typography>
-            <Typography variant="body2" color="text.secondary">{k.trend}</Typography>
-          </Paper>
+          <KPICard
+            title={k.label}
+            value={k.value}
+            icon={k.icon}
+            bgColor={k.bgColor}
+            badgeColor={k.badgeColor}
+            valueColor={k.valueColor}
+            labelColor={k.labelColor}
+            index={index}
+          />
         </Grid>
       ))}
     </Grid>

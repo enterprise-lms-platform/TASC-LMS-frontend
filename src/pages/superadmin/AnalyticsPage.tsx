@@ -10,11 +10,37 @@ import {
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 
+import KPICard from '../../components/superadmin/KPICard';
+
 const kpis = [
-  { label: 'Monthly Active Users', value: '8,234', icon: <UsersIcon />, gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)', trend: '+12.5% vs last month' },
-  { label: 'Course Completion Rate', value: '67.8%', icon: <CourseIcon />, gradient: 'linear-gradient(135deg, #10b981, #34d399)', trend: '+3.2% improvement' },
-  { label: 'Avg. Session Duration', value: '42 min', icon: <TimeIcon />, gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', trend: '+8 min vs last month' },
-  { label: 'Platform Growth', value: '+23.4%', icon: <TrendIcon />, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', trend: 'Year-over-year' },
+  { 
+    label: 'Monthly Active Users', 
+    value: '8,234', 
+    icon: <UsersIcon />, 
+    // Soft Rose Theme
+    bgColor: '#fce4ec', badgeColor: '#f06292', valueColor: '#ad1457', labelColor: '#880e4f'
+  },
+  { 
+    label: 'Course Completion Rate', 
+    value: '67.8%', 
+    icon: <CourseIcon />, 
+    // Pale Teal Theme
+    bgColor: '#e0f2f1', badgeColor: '#4db6ac', valueColor: '#00695c', labelColor: '#004d40'
+  },
+  { 
+    label: 'Avg. Session Duration', 
+    value: '42 min', 
+    icon: <TimeIcon />, 
+    // Light Amber Theme
+    bgColor: '#fff8e1', badgeColor: '#ffd54f', valueColor: '#f57f17', labelColor: '#ff6f00'
+  },
+  { 
+    label: 'Platform Growth', 
+    value: '+23.4%', 
+    icon: <TrendIcon />, 
+    // Cool Gray-Blue Theme
+    bgColor: '#eceff1', badgeColor: '#90a4ae', valueColor: '#37474f', labelColor: '#263238'
+  },
 ];
 
 const orgPerformance = [
@@ -39,16 +65,18 @@ const topCourses = [
 const AnalyticsPage: React.FC = () => (
   <SuperadminLayout title="Analytics" subtitle="Platform-wide analytics and performance insights">
     <Grid container spacing={3} sx={{ mb: 4 }}>
-      {kpis.map((k) => (
+      {kpis.map((k, index) => (
         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)', '&:hover': { boxShadow: '0 8px 25px rgba(0,0,0,0.08)', transform: 'translateY(-3px) scale(1.01)' } }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>{k.label}</Typography>
-              <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>{k.icon}</Box>
-            </Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>{k.value}</Typography>
-            <Typography variant="body2" color="text.secondary">{k.trend}</Typography>
-          </Paper>
+          <KPICard
+            title={k.label}
+            value={k.value}
+            icon={k.icon}
+            bgColor={k.bgColor}
+            badgeColor={k.badgeColor}
+            valueColor={k.valueColor}
+            labelColor={k.labelColor}
+            index={index}
+          />
         </Grid>
       ))}
     </Grid>

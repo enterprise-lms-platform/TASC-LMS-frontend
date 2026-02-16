@@ -26,8 +26,7 @@ import {
   CheckCircle as CompletedIcon,
   HourglassEmpty as PendingIcon,
   ErrorOutline as FailedIcon,
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
+
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 
@@ -164,34 +163,40 @@ const getMethodColor = (method: string) => {
   }
 };
 
+import KPICard from '../../components/superadmin/KPICard';
+
+// ... (Transaction interface and mockTransactions array remain unchanged)
+
+// ... (getStatusColor and getMethodColor functions remain unchanged)
+
 const kpiCards = [
   {
     title: 'Total Transactions',
     value: '8,456',
-    trend: { direction: 'up' as const, value: '+12.3%', period: 'vs last month' },
     icon: <ReceiptIcon />,
-    iconBgColor: 'linear-gradient(135deg, #ffb74d, #ffa424)',
+    // Light Amber Theme
+    bgColor: '#fff8e1', badgeColor: '#ffd54f', valueColor: '#f57f17', labelColor: '#ff6f00'
   },
   {
     title: 'Completed',
     value: '$1.2M',
-    trend: { direction: 'up' as const, value: '+8.7%', period: 'vs last month' },
     icon: <CompletedIcon />,
-    iconBgColor: 'linear-gradient(135deg, #10b981, #34d399)',
+    // Mint Green Theme
+    bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
   },
   {
     title: 'Pending',
     value: '$45,200',
-    trend: { direction: 'down' as const, value: '-3.2%', period: 'vs last month' },
     icon: <PendingIcon />,
-    iconBgColor: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
+    // Soft Blue Theme
+    bgColor: '#e3f2fd', badgeColor: '#64b5f6', valueColor: '#1565c0', labelColor: '#0d47a1'
   },
   {
     title: 'Failed',
     value: '23',
-    trend: { direction: 'down' as const, value: '-15.4%', period: 'vs last month' },
     icon: <FailedIcon />,
-    iconBgColor: 'linear-gradient(135deg, #ef4444, #f87171)',
+    // Soft Rose Theme
+    bgColor: '#fce4ec', badgeColor: '#f06292', valueColor: '#ad1457', labelColor: '#880e4f'
   },
 ];
 
@@ -206,62 +211,18 @@ const PaymentsPage: React.FC = () => {
     <SuperadminLayout title="Payments" subtitle="Payment transactions and processing">
       {/* KPI Cards */}
       <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
-        {kpiCards.map((card) => (
+        {kpiCards.map((card, index) => (
           <Grid size={{ xs: 12, sm: 6, md: 3 }} key={card.title}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 3,
-                borderRadius: 3,
-                border: '1px solid',
-                borderColor: 'divider',
-                transition: 'all 0.3s',
-                '&:hover': {
-                  boxShadow: 3,
-                  transform: 'translateY(-2px)',
-                },
-              }}
-            >
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-                  {card.title}
-                </Typography>
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    background: card.iconBgColor,
-                  }}
-                >
-                  {card.icon}
-                </Box>
-              </Box>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
-                {card.value}
-              </Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  color: card.trend.direction === 'up' ? 'success.main' : 'error.main',
-                }}
-              >
-                {card.trend.direction === 'up' ? (
-                  <TrendingUpIcon sx={{ fontSize: 18 }} />
-                ) : (
-                  <TrendingDownIcon sx={{ fontSize: 18 }} />
-                )}
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  {card.trend.value} {card.trend.period}
-                </Typography>
-              </Box>
-            </Paper>
+            <KPICard
+              title={card.title}
+              value={card.value}
+              icon={card.icon}
+              bgColor={card.bgColor}
+              badgeColor={card.badgeColor}
+              valueColor={card.valueColor}
+              labelColor={card.labelColor}
+              index={index}
+            />
           </Grid>
         ))}
       </Grid>

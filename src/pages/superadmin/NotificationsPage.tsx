@@ -6,10 +6,30 @@ import {
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 
+import KPICard from '../../components/superadmin/KPICard';
+
 const statCards = [
-  { label: 'Unread', value: 3, gradient: 'linear-gradient(135deg, #ef4444, #f87171)' },
-  { label: 'Today', value: 12, gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)' },
-  { label: 'This Week', value: 47, gradient: 'linear-gradient(135deg, #10b981, #34d399)' },
+  { 
+    label: 'Unread', 
+    value: '3', 
+    icon: <AlertIcon />, 
+    // Soft Rose Theme
+    bgColor: '#fce4ec', badgeColor: '#f06292', valueColor: '#ad1457', labelColor: '#880e4f'
+  },
+  { 
+    label: 'Today', 
+    value: '12', 
+    icon: <SystemIcon />, 
+    // Soft Blue Theme
+    bgColor: '#e3f2fd', badgeColor: '#64b5f6', valueColor: '#1565c0', labelColor: '#0d47a1'
+  },
+  { 
+    label: 'This Week', 
+    value: '47', 
+    icon: <CourseIcon />, 
+    // Mint Green Theme
+    bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
+  },
 ];
 
 const filters = ['All', 'Unread', 'System', 'User Activity', 'Security'];
@@ -33,17 +53,18 @@ const NotificationsPage: React.FC = () => {
   return (
     <SuperadminLayout title="Notifications" subtitle="System notifications and alerts">
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        {statCards.map((s) => (
+        {statCards.map((s, index) => (
           <Grid size={{ xs: 12, sm: 4 }} key={s.label}>
-            <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: s.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.25rem' }}>
-                {s.value}
-              </Box>
-              <Box>
-                <Typography variant="h5" sx={{ fontWeight: 700 }}>{s.value}</Typography>
-                <Typography variant="body2" color="text.secondary">{s.label}</Typography>
-              </Box>
-            </Paper>
+            <KPICard
+              title={s.label}
+              value={s.value}
+              icon={s.icon}
+              bgColor={s.bgColor}
+              badgeColor={s.badgeColor}
+              valueColor={s.valueColor}
+              labelColor={s.labelColor}
+              index={index}
+            />
           </Grid>
         ))}
       </Grid>

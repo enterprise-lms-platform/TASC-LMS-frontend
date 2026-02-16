@@ -12,30 +12,42 @@ const kpiData = [
   {
     title: 'Total Users',
     value: '24,587',
-    trend: { direction: 'up' as const, value: '+12.5%', period: 'from last month' },
     icon: <UsersIcon />,
-    iconBgColor: 'linear-gradient(135deg, #ffb74d, #ffa424)',
+    // Mint Green Theme
+    bgColor: '#e8f5e9',
+    badgeColor: '#81c784',
+    valueColor: '#2e7d32',
+    labelColor: '#388e3c',
   },
   {
     title: 'Active Organizations',
     value: '142',
-    trend: { direction: 'up' as const, value: '+8.2%', period: 'from last month' },
     icon: <OrganizationsIcon />,
-    iconBgColor: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
+    // Soft Blue Theme
+    bgColor: '#e3f2fd',
+    badgeColor: '#64b5f6',
+    valueColor: '#1565c0',
+    labelColor: '#1976d2',
   },
   {
     title: 'Monthly Revenue',
     value: '$186,450',
-    trend: { direction: 'up' as const, value: '+15.3%', period: 'from last month' },
     icon: <RevenueIcon />,
-    iconBgColor: 'linear-gradient(135deg, #10b981, #34d399)',
+    // Warm Peach Theme
+    bgColor: '#fff3e0',
+    badgeColor: '#ffb74d',
+    valueColor: '#e65100',
+    labelColor: '#f57c00',
   },
   {
     title: 'Active Courses',
     value: '876',
-    trend: { direction: 'up' as const, value: '+5.7%', period: 'from last month' },
     icon: <CoursesIcon />,
-    iconBgColor: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
+    // Dusty Lavender Theme
+    bgColor: '#f3e5f5',
+    badgeColor: '#ba68c8',
+    valueColor: '#6a1b9a',
+    labelColor: '#7b1fa2',
   },
 ];
 

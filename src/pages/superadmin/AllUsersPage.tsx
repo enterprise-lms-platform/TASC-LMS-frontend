@@ -21,8 +21,7 @@ import {
   People as UsersIcon,
   PersonAdd as PersonAddIcon,
   Block as BlockIcon,
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
+
   Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -31,35 +30,36 @@ import {
   Upload as UploadIcon,
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
+import KPICard from '../../components/superadmin/KPICard';
 
 const kpiStats = [
   {
     title: 'Total Users',
     value: '24,587',
-    trend: { direction: 'up' as const, value: '+12.5%', period: 'from last month' },
     icon: <UsersIcon />,
-    iconBg: 'linear-gradient(135deg, #ffb74d, #ffa424)',
+    // Soft Coral Theme
+    bgColor: '#fbe9e7', badgeColor: '#ff8a65', valueColor: '#bf360c', labelColor: '#d84315'
   },
   {
     title: 'Active Users',
     value: '21,340',
-    trend: { direction: 'up' as const, value: '+8.3%', period: 'from last month' },
     icon: <UsersIcon />,
-    iconBg: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
+    // Pale Indigo Theme
+    bgColor: '#e8eaf6', badgeColor: '#7986cb', valueColor: '#283593', labelColor: '#303f9f'
   },
   {
     title: 'New This Month',
     value: '1,247',
-    trend: { direction: 'up' as const, value: '+15.7%', period: 'from last month' },
     icon: <PersonAddIcon />,
-    iconBg: 'linear-gradient(135deg, #10b981, #34d399)',
+    // Light Cyan Theme
+    bgColor: '#e0f7fa', badgeColor: '#4dd0e1', valueColor: '#00838f', labelColor: '#006064'
   },
   {
     title: 'Suspended',
     value: '89',
-    trend: { direction: 'down' as const, value: '-3.2%', period: 'from last month' },
     icon: <BlockIcon />,
-    iconBg: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+    // Soft Lime Theme
+    bgColor: '#f1f8e9', badgeColor: '#aed581', valueColor: '#558b2f', labelColor: '#33691e'
   },
 ];
 
@@ -196,62 +196,18 @@ const AllUsersPage: React.FC = () => {
     <SuperadminLayout title="All Users" subtitle="Manage users across all organizations">
       {/* KPI Stat Cards */}
       <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
-        {kpiStats.map((stat) => (
+        {kpiStats.map((stat, index) => (
           <Grid key={stat.title} size={{ xs: 12, sm: 6, lg: 3 }}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 3,
-                borderRadius: 3,
-                border: '1px solid',
-                borderColor: 'divider',
-                transition: 'all 0.3s',
-                '&:hover': {
-                  boxShadow: 3,
-                  transform: 'translateY(-2px)',
-                },
-              }}
-            >
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-                  {stat.title}
-                </Typography>
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    background: stat.iconBg,
-                  }}
-                >
-                  {stat.icon}
-                </Box>
-              </Box>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
-                {stat.value}
-              </Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  color: stat.trend.direction === 'up' ? 'success.main' : 'error.main',
-                }}
-              >
-                {stat.trend.direction === 'up' ? (
-                  <TrendingUpIcon sx={{ fontSize: 18 }} />
-                ) : (
-                  <TrendingDownIcon sx={{ fontSize: 18 }} />
-                )}
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  {stat.trend.value} {stat.trend.period}
-                </Typography>
-              </Box>
-            </Paper>
+            <KPICard
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              bgColor={stat.bgColor}
+              badgeColor={stat.badgeColor}
+              valueColor={stat.valueColor}
+              labelColor={stat.labelColor}
+              index={index}
+            />
           </Grid>
         ))}
       </Grid>

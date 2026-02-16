@@ -6,15 +6,41 @@ import {
 import {
   School as InstructorIcon, Star as StarIcon, MenuBook as CourseIcon,
   Edit as EditIcon, Visibility as ViewIcon,
-  TrendingUp as TrendIcon, PersonAdd as InviteIcon,
+  PersonAdd as InviteIcon,
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 
+import KPICard from '../../components/superadmin/KPICard';
+
 const kpis = [
-  { label: 'Total Instructors', value: '156', icon: <InstructorIcon />, gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)', trend: '+8 this month' },
-  { label: 'Active', value: '142', icon: <InstructorIcon />, gradient: 'linear-gradient(135deg, #10b981, #34d399)', trend: '91% active' },
-  { label: 'Avg Rating', value: '4.6', icon: <StarIcon />, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', trend: '+0.2 vs last quarter' },
-  { label: 'Total Courses Created', value: '876', icon: <CourseIcon />, gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', trend: '5.6 per instructor' },
+  { 
+    label: 'Total Instructors', 
+    value: '156', 
+    icon: <InstructorIcon />, 
+    // Soft Blue Theme
+    bgColor: '#e3f2fd', badgeColor: '#64b5f6', valueColor: '#1565c0', labelColor: '#0d47a1'
+  },
+  { 
+    label: 'Active', 
+    value: '142', 
+    icon: <InstructorIcon />, 
+    // Mint Green Theme
+    bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
+  },
+  { 
+    label: 'Avg Rating', 
+    value: '4.6', 
+    icon: <StarIcon />, 
+    // Light Amber Theme
+    bgColor: '#fff8e1', badgeColor: '#ffd54f', valueColor: '#f57f17', labelColor: '#ff6f00'
+  },
+  { 
+    label: 'Total Courses Created', 
+    value: '876', 
+    icon: <CourseIcon />, 
+    // Dusty Lavender Theme
+    bgColor: '#f3e5f5', badgeColor: '#ba68c8', valueColor: '#6a1b9a', labelColor: '#4a148c'
+  },
 ];
 
 const statusColors: Record<string, { bg: string; color: string }> = {
@@ -37,19 +63,18 @@ const instructors = [
 const InstructorsPage: React.FC = () => (
   <SuperadminLayout title="Instructors" subtitle="Instructor management and performance overview">
     <Grid container spacing={3} sx={{ mb: 4 }}>
-      {kpis.map((k) => (
+      {kpis.map((k, index) => (
         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)', '&:hover': { boxShadow: '0 8px 25px rgba(0,0,0,0.08)', transform: 'translateY(-3px) scale(1.01)' } }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>{k.label}</Typography>
-              <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>{k.icon}</Box>
-            </Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>{k.value}</Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <TrendIcon sx={{ fontSize: 18, color: 'success.main' }} />
-              <Typography variant="body2" color="success.main" sx={{ fontWeight: 500 }}>{k.trend}</Typography>
-            </Box>
-          </Paper>
+          <KPICard
+            title={k.label}
+            value={k.value}
+            icon={k.icon}
+            bgColor={k.bgColor}
+            badgeColor={k.badgeColor}
+            valueColor={k.valueColor}
+            labelColor={k.labelColor}
+            index={index}
+          />
         </Grid>
       ))}
     </Grid>

@@ -9,11 +9,37 @@ import {
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 
+import KPICard from '../../components/superadmin/KPICard';
+
 const kpis = [
-  { label: 'Total Invoices', value: '3,245', icon: <InvoiceIcon />, gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)', trend: '+156 this month' },
-  { label: 'Paid', value: '$1.8M', icon: <PaidIcon />, gradient: 'linear-gradient(135deg, #10b981, #34d399)', trend: '92% collection' },
-  { label: 'Pending', value: '$234K', icon: <PendingIcon />, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', trend: '127 invoices' },
-  { label: 'Overdue', value: '$45K', icon: <OverdueIcon />, gradient: 'linear-gradient(135deg, #ef4444, #f87171)', trend: '18 invoices' },
+  { 
+    label: 'Total Invoices', 
+    value: '3,245', 
+    icon: <InvoiceIcon />, 
+    // Light Cyan Theme
+    bgColor: '#e0f7fa', badgeColor: '#4dd0e1', valueColor: '#00838f', labelColor: '#006064'
+  },
+  { 
+    label: 'Paid', 
+    value: '$1.8M', 
+    icon: <PaidIcon />, 
+    // Mint Green Theme
+    bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
+  },
+  { 
+    label: 'Pending', 
+    value: '$234K', 
+    icon: <PendingIcon />, 
+    // Light Amber Theme
+    bgColor: '#fff8e1', badgeColor: '#ffd54f', valueColor: '#f57f17', labelColor: '#ff6f00'
+  },
+  { 
+    label: 'Overdue', 
+    value: '$45K', 
+    icon: <OverdueIcon />, 
+    // Soft Rose Theme
+    bgColor: '#fce4ec', badgeColor: '#f06292', valueColor: '#ad1457', labelColor: '#880e4f'
+  },
 ];
 
 const statusColors: Record<string, { bg: string; color: string }> = {
@@ -41,16 +67,18 @@ const InvoicesPage: React.FC = () => {
   return (
     <SuperadminLayout title="Invoices" subtitle="Invoice management and tracking">
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        {kpis.map((k) => (
+        {kpis.map((k, index) => (
           <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
-            <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)', '&:hover': { boxShadow: '0 8px 25px rgba(0,0,0,0.08)', transform: 'translateY(-3px) scale(1.01)' } }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>{k.label}</Typography>
-                <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>{k.icon}</Box>
-              </Box>
-              <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>{k.value}</Typography>
-              <Typography variant="body2" color="text.secondary">{k.trend}</Typography>
-            </Paper>
+            <KPICard
+              title={k.label}
+              value={k.value}
+              icon={k.icon}
+              bgColor={k.bgColor}
+              badgeColor={k.badgeColor}
+              valueColor={k.valueColor}
+              labelColor={k.labelColor}
+              index={index}
+            />
           </Grid>
         ))}
       </Grid>

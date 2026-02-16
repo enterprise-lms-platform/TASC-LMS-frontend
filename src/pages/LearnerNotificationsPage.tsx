@@ -22,41 +22,41 @@ const kpis = [
     label: 'Unread', 
     value: '5', 
     icon: <NotifIcon />, 
-    // Light Blue Theme
-    bgcolor: '#dbeafe',
-    iconBg: '#93c5fd',
-    color: '#1e3a8a',
-    subColor: '#1e40af',
+    // Soft Rose Theme
+    bgcolor: '#fce4ec',
+    iconBg: '#f06292',
+    color: '#ad1457',
+    subColor: '#880e4f',
   },
   { 
     label: 'Course Updates', 
     value: '12', 
     icon: <CourseIcon />, 
     // Mint Green Theme
-    bgcolor: '#dcfce7',
-    iconBg: '#86efac',
-    color: '#14532d',
-    subColor: '#166534',
+    bgcolor: '#e8f5e9',
+    iconBg: '#81c784',
+    color: '#2e7d32',
+    subColor: '#1b5e20',
   },
   { 
     label: 'Achievements', 
     value: '3', 
     icon: <AwardIcon />, 
-    // Warm Peach Theme
-    bgcolor: '#ffedd5',
-    iconBg: '#fdba74',
-    color: '#7c2d12',
-    subColor: '#9a3412',
+    // Light Amber Theme
+    bgcolor: '#fff8e1',
+    iconBg: '#ffd54f',
+    color: '#f57f17',
+    subColor: '#ff6f00',
   },
   { 
     label: 'Announcements', 
     value: '2', 
     icon: <AnnouncementIcon />, 
-    // Dusty Lavender Theme
-    bgcolor: '#f3e8ff',
-    iconBg: '#d8b4fe',
-    color: '#581c87',
-    subColor: '#6b21a8',
+    // Soft Blue Theme
+    bgcolor: '#e3f2fd',
+    iconBg: '#64b5f6',
+    color: '#1565c0',
+    subColor: '#0d47a1',
   },
 ];
 

@@ -9,11 +9,37 @@ import {
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 
+import KPICard from '../../components/superadmin/KPICard';
+
 const kpis = [
-  { label: 'Total Records', value: '156,789', icon: <StorageIcon />, gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)', trend: 'From Odoo ERP' },
-  { label: 'Migrated', value: '142,345', icon: <DoneIcon />, gradient: 'linear-gradient(135deg, #10b981, #34d399)', trend: '90.8% complete' },
-  { label: 'In Progress', value: '8,234', icon: <SyncIcon />, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', trend: 'Currently migrating' },
-  { label: 'Failed', value: '6,210', icon: <ErrorIcon />, gradient: 'linear-gradient(135deg, #ef4444, #f87171)', trend: '4.0% error rate' },
+  { 
+    label: 'Total Records', 
+    value: '156,789', 
+    icon: <StorageIcon />, 
+    // Pale Indigo Theme
+    bgColor: '#e8eaf6', badgeColor: '#7986cb', valueColor: '#283593', labelColor: '#303f9f'
+  },
+  { 
+    label: 'Migrated', 
+    value: '142,345', 
+    icon: <DoneIcon />, 
+    // Mint Green Theme
+    bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
+  },
+  { 
+    label: 'In Progress', 
+    value: '8,234', 
+    icon: <SyncIcon />, 
+    // Warm Peach Theme
+    bgColor: '#fff3e0', badgeColor: '#ffb74d', valueColor: '#e65100', labelColor: '#bf360c'
+  },
+  { 
+    label: 'Failed', 
+    value: '6,210', 
+    icon: <ErrorIcon />, 
+    // Soft Rose Theme
+    bgColor: '#fce4ec', badgeColor: '#f06292', valueColor: '#ad1457', labelColor: '#880e4f'
+  },
 ];
 
 const statusColors: Record<string, { bg: string; color: string }> = {
@@ -43,16 +69,18 @@ const DataMigrationPage: React.FC = () => (
     </Alert>
 
     <Grid container spacing={3} sx={{ mb: 4 }}>
-      {kpis.map((k) => (
+      {kpis.map((k, index) => (
         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)', '&:hover': { boxShadow: '0 8px 25px rgba(0,0,0,0.08)', transform: 'translateY(-3px) scale(1.01)' } }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>{k.label}</Typography>
-              <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>{k.icon}</Box>
-            </Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>{k.value}</Typography>
-            <Typography variant="body2" color="text.secondary">{k.trend}</Typography>
-          </Paper>
+          <KPICard
+            title={k.label}
+            value={k.value}
+            icon={k.icon}
+            bgColor={k.bgColor}
+            badgeColor={k.badgeColor}
+            valueColor={k.valueColor}
+            labelColor={k.labelColor}
+            index={index}
+          />
         </Grid>
       ))}
     </Grid>
