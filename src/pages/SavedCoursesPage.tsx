@@ -25,7 +25,6 @@ interface SavedCourse {
   reviews: number;
   lessons: number;
   duration: string;
-  price: string;
   image: string;
   savedDate: string;
   enrolled: boolean;
@@ -33,12 +32,12 @@ interface SavedCourse {
 }
 
 const initialSaved: SavedCourse[] = [
-  { id: '1', title: 'Advanced React Patterns', instructor: 'Michael Rodriguez', category: 'Web Development', rating: 4.8, reviews: 1245, lessons: 12, duration: '18h 30m', price: '$49.99', image: 'https://images.unsplash.com/photo-1616400619175-5beda3a17896?q=80&w=300', savedDate: '2 days ago', enrolled: true, progress: 65 },
-  { id: '2', title: 'Machine Learning A-Z', instructor: 'Dr. Sarah Kim', category: 'Data Science', rating: 4.9, reviews: 3256, lessons: 24, duration: '42h', price: '$79.99', image: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?q=80&w=300', savedDate: '1 week ago', enrolled: false },
-  { id: '3', title: 'Cloud Architecture with AWS', instructor: 'James Otieno', category: 'Cloud', rating: 4.7, reviews: 876, lessons: 14, duration: '22h', price: '$69.99', image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=300', savedDate: '2 weeks ago', enrolled: false },
-  { id: '4', title: 'UX/UI Design Principles', instructor: 'Faith Muthoni', category: 'Design', rating: 4.6, reviews: 1102, lessons: 16, duration: '28h', price: '$54.99', image: '', savedDate: '3 weeks ago', enrolled: false },
-  { id: '5', title: 'Python for Data Analysis', instructor: 'Emily Chen', category: 'Data Science', rating: 4.8, reviews: 2341, lessons: 20, duration: '35h', price: '$59.99', image: '', savedDate: '1 month ago', enrolled: true, progress: 25 },
-  { id: '6', title: 'Digital Marketing Strategy', instructor: 'Grace Akinyi', category: 'Marketing', rating: 4.5, reviews: 789, lessons: 10, duration: '15h', price: '$29.99', image: '', savedDate: '1 month ago', enrolled: false },
+  { id: '1', title: 'Advanced React Patterns', instructor: 'Michael Rodriguez', category: 'Web Development', rating: 4.8, reviews: 1245, lessons: 12, duration: '18h 30m', image: 'https://images.unsplash.com/photo-1616400619175-5beda3a17896?q=80&w=300', savedDate: '2 days ago', enrolled: true, progress: 65 },
+  { id: '2', title: 'Machine Learning A-Z', instructor: 'Dr. Sarah Kim', category: 'Data Science', rating: 4.9, reviews: 3256, lessons: 24, duration: '42h', image: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?q=80&w=300', savedDate: '1 week ago', enrolled: false },
+  { id: '3', title: 'Cloud Architecture with AWS', instructor: 'James Otieno', category: 'Cloud', rating: 4.7, reviews: 876, lessons: 14, duration: '22h', image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=300', savedDate: '2 weeks ago', enrolled: false },
+  { id: '4', title: 'UX/UI Design Principles', instructor: 'Faith Muthoni', category: 'Design', rating: 4.6, reviews: 1102, lessons: 16, duration: '28h', image: '', savedDate: '3 weeks ago', enrolled: false },
+  { id: '5', title: 'Python for Data Analysis', instructor: 'Emily Chen', category: 'Data Science', rating: 4.8, reviews: 2341, lessons: 20, duration: '35h', image: '', savedDate: '1 month ago', enrolled: true, progress: 25 },
+  { id: '6', title: 'Digital Marketing Strategy', instructor: 'Grace Akinyi', category: 'Marketing', rating: 4.5, reviews: 789, lessons: 10, duration: '15h', image: '', savedDate: '1 month ago', enrolled: false },
 ];
 
 const catColors: Record<string, { bg: string; color: string }> = {
@@ -90,29 +89,116 @@ const SavedCoursesPage: React.FC = () => {
         {/* KPI summary bar */}
         <Grid container spacing={2} sx={{ mb: 4 }}>
           {[
-            { label: 'TOTAL SAVED', value: String(saved.length), gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)', icon: <SavedIcon /> },
-            { label: 'ENROLLED', value: String(enrolledCount), gradient: 'linear-gradient(135deg, #10b981, #34d399)', icon: <PlayIcon /> },
-            { label: 'WISHLIST', value: String(saved.length - enrolledCount), gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', icon: <UnsaveIcon /> },
-            { label: 'TOTAL VALUE', value: `$${saved.reduce((s, c) => s + parseFloat(c.price.replace('$', '')), 0).toFixed(0)}`, gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', icon: <StarIcon /> },
+            { 
+              label: 'Total Saved', 
+              value: String(saved.length), 
+              icon: <SavedIcon />,
+              // Light Blue Theme
+              bgcolor: '#dbeafe',
+              iconBg: '#93c5fd',
+              color: '#1e3a8a',
+              subColor: '#1e40af',
+            },
+            { 
+              label: 'Enrolled', 
+              value: String(enrolledCount), 
+              icon: <PlayIcon />,
+              // Mint Green Theme
+              bgcolor: '#dcfce7',
+              iconBg: '#86efac',
+              color: '#14532d',
+              subColor: '#166534',
+            },
+            { 
+              label: 'Wishlist', 
+              value: String(saved.length - enrolledCount), 
+              icon: <UnsaveIcon />,
+              // Warm Peach Theme
+              bgcolor: '#ffedd5',
+              iconBg: '#fdba74',
+              color: '#7c2d12',
+              subColor: '#9a3412',
+            },
+            { 
+              label: 'Total Hours', 
+              value: `${saved.reduce((s, c) => s + parseFloat(c.duration), 0).toFixed(0)}h`, 
+              icon: <TimeIcon />,
+              // Dusty Lavender Theme
+              bgcolor: '#f3e8ff',
+              iconBg: '#d8b4fe',
+              color: '#581c87',
+              subColor: '#6b21a8',
+            },
           ].map((k, index) => (
-            <Grid size={{ xs: 6, sm: 3 }} key={k.label}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
               <Paper
                 elevation={0}
                 className={`stat-card ld-fade-in ld-fade-in-${index}`}
                 sx={{
-                  p: { xs: 2, md: 3 },
-                  borderRadius: '1rem',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
+                  bgcolor: k.bgcolor,
+                  borderRadius: '20px',
+                  p: 3,
                   position: 'relative',
-                  overflow: 'hidden',
-                  '&::before': { content: '""', position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: k.gradient },
+                  height: '100%',
+                  minHeight: 160,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  transition: 'transform 0.2s',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                  },
                 }}
               >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
-                  <Typography color="text.disabled" sx={{ fontWeight: 600, fontSize: '0.6rem', letterSpacing: '0.06em' }}>{k.label}</Typography>
-                  <Box sx={{ width: 36, height: 36, borderRadius: '50%', background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', '& svg': { fontSize: 18 } }}>{k.icon}</Box>
+                {/* Icon Badge */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 16,
+                    right: 16,
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    bgcolor: k.iconBg,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    '& svg': { fontSize: 20 },
+                  }}
+                >
+                  {k.icon}
                 </Box>
-                <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', md: '2rem' } }}>{k.value}</Typography>
+
+                {/* Main Stat */}
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: 700,
+                    color: k.color,
+                    fontSize: { xs: '2rem', md: '2.5rem' },
+                    lineHeight: 1,
+                    mb: 1,
+                  }}
+                >
+                  {k.value}
+                </Typography>
+
+                {/* Label */}
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: k.subColor,
+                    fontWeight: 500,
+                    fontSize: '0.875rem',
+                    opacity: 0.8,
+                  }}
+                >
+                  {k.label}
+                </Typography>
               </Paper>
             </Grid>
           ))}
@@ -221,8 +307,7 @@ const SavedCoursesPage: React.FC = () => {
                     )}
 
                     {/* Footer */}
-                    <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: 'primary.dark' }}>{course.price}</Typography>
+                    <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                       <Button
                         size="small"
                         variant="contained"

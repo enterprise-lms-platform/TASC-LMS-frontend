@@ -80,7 +80,7 @@ const generateInvoiceData = (state: any): InvoiceData => {
     course: {
       title: state?.course?.title || 'Advanced React Patterns',
       instructor: state?.course?.instructor || 'Michael Rodriguez',
-      unitPrice: state?.course?.originalPrice || 149.99,
+      unitPrice: state?.course?.unitPrice || 149.99,
     },
     subtotal: state?.subtotal || 149.99,
     discount: state?.discount || 30.00,
@@ -344,12 +344,12 @@ const InvoiceReceiptPage: React.FC = () => {
                           </Box>
                           <Box>
                             <Typography variant="body2" fontWeight={600} color="text.primary">{invoice.course.title}</Typography>
-                            <Typography variant="caption" color="text.secondary">Course by {invoice.course.instructor}</Typography>
+                            <Typography variant="caption" color="text.secondary">{invoice.course.instructor === 'TASC LMS' ? 'Subscription' : `Course by ${invoice.course.instructor}`}</Typography>
                           </Box>
                         </Stack>
                       </TableCell>
                       <TableCell sx={{ borderBottom: 'none' }}>
-                        <Typography variant="body2" color="text.secondary">Course</Typography>
+                        <Typography variant="body2" color="text.secondary">{invoice.course.instructor === 'TASC LMS' ? 'Plan' : 'Course'}</Typography>
                       </TableCell>
                       <TableCell align="right" sx={{ borderBottom: 'none' }}>
                         <Typography variant="body2" color="text.secondary">1</Typography>
@@ -465,7 +465,7 @@ const InvoiceReceiptPage: React.FC = () => {
                 Important Information
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                This invoice serves as proof of payment for your course enrollment. Your access to the course is now active and will not expire. If you have any questions about this transaction, please contact our support team.
+                This invoice serves as proof of payment. Your access is now active and will not expire during your subscription period. If you have any questions about this transaction, please contact our support team.
               </Typography>
             </Box>
           </Box>

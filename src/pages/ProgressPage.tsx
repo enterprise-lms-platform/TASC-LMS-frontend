@@ -17,10 +17,46 @@ import TopBar from '../components/learner/TopBar';
 /* ── Static data ── */
 
 const kpis = [
-  { label: 'OVERALL PROGRESS', value: '65%', icon: <TrendIcon />, gradient: 'linear-gradient(135deg, #ffa424, #f97316)' },
-  { label: 'COURSES COMPLETED', value: '8', icon: <CourseIcon />, gradient: 'linear-gradient(135deg, #10b981, #34d399)' },
-  { label: 'TOTAL HOURS', value: '127', icon: <TimeIcon />, gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)' },
-  { label: 'ACHIEVEMENTS', value: '14', icon: <TrophyIcon />, gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)' },
+  { 
+    label: 'Overall Progress', 
+    value: '65%', 
+    icon: <TrendIcon />, 
+    // Mint Green Theme
+    bgcolor: '#dcfce7',
+    iconBg: '#86efac',
+    color: '#14532d',
+    subColor: '#166534',
+  },
+  { 
+    label: 'Courses Completed', 
+    value: '8', 
+    icon: <CourseIcon />, 
+    // Light Blue Theme
+    bgcolor: '#dbeafe',
+    iconBg: '#93c5fd',
+    color: '#1e3a8a',
+    subColor: '#1e40af',
+  },
+  { 
+    label: 'Total Hours', 
+    value: '127', 
+    icon: <TimeIcon />, 
+    // Warm Peach Theme
+    bgcolor: '#ffedd5',
+    iconBg: '#fdba74',
+    color: '#7c2d12',
+    subColor: '#9a3412',
+  },
+  { 
+    label: 'Achievements', 
+    value: '14', 
+    icon: <TrophyIcon />, 
+    // Dusty Lavender Theme
+    bgcolor: '#f3e8ff',
+    iconBg: '#d8b4fe',
+    color: '#581c87',
+    subColor: '#6b21a8',
+  },
 ];
 
 interface CourseProgress {
@@ -87,14 +123,76 @@ const ProgressPage: React.FC = () => {
 
         {/* KPIs */}
         <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
-          {kpis.map((k, i) => (
-            <Grid size={{ xs: 6, sm: 3 }} key={k.label}>
-              <Paper elevation={0} className={`stat-card ld-fade-in ld-fade-in-${i}`} sx={{ p: { xs: 2, md: 3 }, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', position: 'relative', overflow: 'hidden', '&::before': { content: '""', position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: k.gradient } }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
-                  <Typography color="text.disabled" sx={{ fontWeight: 600, fontSize: '0.6rem', letterSpacing: '0.06em' }}>{k.label}</Typography>
-                  <Box sx={{ width: 36, height: 36, borderRadius: '50%', background: k.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', '& svg': { fontSize: 18 } }}>{k.icon}</Box>
+          {kpis.map((k, index) => (
+            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
+              <Paper
+                elevation={0}
+                className={`stat-card ld-fade-in ld-fade-in-${index}`}
+                sx={{
+                  bgcolor: k.bgcolor,
+                  borderRadius: '20px',
+                  p: 3,
+                  position: 'relative',
+                  height: '100%',
+                  minHeight: 160,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  transition: 'transform 0.2s',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                  },
+                }}
+              >
+                {/* Icon Badge */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 16,
+                    right: 16,
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    bgcolor: k.iconBg,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    '& svg': { fontSize: 20 },
+                  }}
+                >
+                  {k.icon}
                 </Box>
-                <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', md: '2rem' } }}>{k.value}</Typography>
+
+                {/* Main Stat */}
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: 700,
+                    color: k.color,
+                    fontSize: { xs: '2rem', md: '2.5rem' },
+                    lineHeight: 1,
+                    mb: 1,
+                  }}
+                >
+                  {k.value}
+                </Typography>
+
+                {/* Label */}
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: k.subColor,
+                    fontWeight: 500,
+                    fontSize: '0.875rem',
+                    opacity: 0.8,
+                  }}
+                >
+                  {k.label}
+                </Typography>
               </Paper>
             </Grid>
           ))}

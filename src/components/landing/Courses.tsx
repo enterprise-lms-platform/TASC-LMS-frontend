@@ -9,9 +9,9 @@ interface CoursesProps {
 const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
   const navigate = useNavigate();
   const [enrollModalOpen, setEnrollModalOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<{ title: string; price: string } | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<{ title: string } | null>(null);
 
-  const handleEnroll = (course: { title: string; price: string }) => {
+  const handleEnroll = (course: { title: string }) => {
     setSelectedCourse(course);
     setEnrollModalOpen(true);
   };
@@ -25,8 +25,6 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
       level: 'Advanced',
       rating: 4.8,
       reviews: '1.2k',
-      price: '$129.99',
-      original: '$199.99',
       badge: 'Bestseller',
       image: 'https://images.unsplash.com/photo-1616400619175-5beda3a17896?q=80&w=1074',
     },
@@ -38,7 +36,6 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
       level: 'Beginner',
       rating: 4.9,
       reviews: '856',
-      price: 'Free',
       badge: 'New',
       image: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?q=80&w=1170',
     },
@@ -50,7 +47,6 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
       level: 'Intermediate',
       rating: 4.7,
       reviews: '642',
-      price: '$89.99',
       image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=1171',
     },
   ];
@@ -281,26 +277,14 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
                   <div>
                     <p
                       style={{
-                        fontSize: '1.5rem',
-                        fontWeight: 700,
-                        color: course.price === 'Free' ? '#10b981' : '#27272a',
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        color: '#10b981',
                         margin: 0,
                       }}
                     >
-                      {course.price}
+                      Included in Plan
                     </p>
-                    {course.original && (
-                      <p
-                        style={{
-                          fontSize: '0.75rem',
-                          color: '#a1a1aa',
-                          textDecoration: 'line-through',
-                          margin: 0,
-                        }}
-                      >
-                        {course.original}
-                      </p>
-                    )}
                   </div>
                   <button
                     onClick={() => handleEnroll(course)}
@@ -315,7 +299,7 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
                       fontWeight: 600,
                     }}
                   >
-                    Enroll Now
+                    Get Access
                   </button>
                 </div>
               </div>
@@ -328,7 +312,6 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
         open={enrollModalOpen} 
         onClose={() => setEnrollModalOpen(false)} 
         courseTitle={selectedCourse?.title || ''} 
-        coursePrice={selectedCourse?.price || ''} 
       />
     </section>
   );

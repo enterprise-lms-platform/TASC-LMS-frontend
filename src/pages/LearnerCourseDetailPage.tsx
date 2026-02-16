@@ -32,9 +32,6 @@ const sampleCourse: CourseHeroData = {
   videoHours: 12,
   projects: 7,
   hasCertificate: true,
-  price: 129.99,
-  originalPrice: 199.99,
-  discountPercent: 35,
 };
 
 const LearnerCourseDetailPage: React.FC = () => {
@@ -52,14 +49,13 @@ const LearnerCourseDetailPage: React.FC = () => {
     // Navigate to checkout with course data
     navigate('/checkout', {
       state: {
-        course: {
-          id: courseId,
-          title: sampleCourse.title,
-          instructor: 'Michael Rodriguez',
-          duration: `${sampleCourse.lessons} hours`,
-          level: sampleCourse.level,
-          originalPrice: sampleCourse.originalPrice || sampleCourse.price + 20,
-          currentPrice: sampleCourse.price,
+        subscription: {
+          id: 'biannual-plan',
+          title: 'Biannual Access Pass',
+          description: 'Unlimited access to all courses for 6 months',
+          price: 99.00,
+          billingPeriod: '6 months',
+          features: ['Unlimited Course Access', 'Certificates Included', 'Downloadable Resources']
         },
       },
     });

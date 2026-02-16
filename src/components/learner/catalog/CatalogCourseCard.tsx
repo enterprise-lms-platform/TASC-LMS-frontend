@@ -31,7 +31,6 @@ export interface Course {
   level: 'Beginner' | 'Intermediate' | 'Advanced';
   rating: number;
   reviewCount: number;
-  price: number | 'Free';
 }
 
 interface CatalogCourseCardProps {
@@ -56,7 +55,6 @@ export const sampleCourses: Course[] = [
     level: 'Advanced',
     rating: 4.8,
     reviewCount: 1200,
-    price: 129.99,
   },
   {
     id: '2',
@@ -70,7 +68,6 @@ export const sampleCourses: Course[] = [
     level: 'Beginner',
     rating: 4.9,
     reviewCount: 856,
-    price: 'Free',
   },
   {
     id: '3',
@@ -83,7 +80,6 @@ export const sampleCourses: Course[] = [
     level: 'Intermediate',
     rating: 4.7,
     reviewCount: 642,
-    price: 89.99,
   },
   {
     id: '4',
@@ -97,7 +93,6 @@ export const sampleCourses: Course[] = [
     level: 'Intermediate',
     rating: 4.6,
     reviewCount: 521,
-    price: 79.99,
   },
 ];
 
@@ -246,16 +241,7 @@ const CatalogCourseCard: React.FC<CatalogCourseCardProps> = ({
         </Stack>
 
         {/* Footer */}
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 700,
-              color: course.price === 'Free' ? '#10b981' : '#27272a',
-            }}
-          >
-            {course.price === 'Free' ? 'Free' : `$${course.price}`}
-          </Typography>
+        <Stack direction="row" justifyContent="flex-end" alignItems="center">
           <Stack direction="row" spacing={1}>
             <IconButton
               size="small"

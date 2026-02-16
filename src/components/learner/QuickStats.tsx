@@ -2,86 +2,120 @@ import React from 'react';
 import { Grid, Paper, Box, Typography } from '@mui/material';
 import { MenuBook, AccessTime, School, Star } from '@mui/icons-material';
 
-// Stats data (will come from backend later)
+// Stats data
 const stats = [
   {
-    label: 'ACTIVE COURSES',
+    label: 'Active Courses',
     value: '6',
     icon: <MenuBook />,
-    gradient: 'linear-gradient(135deg, #ffb74d, #ffa424)',
+    // Mint Green Theme
+    bgcolor: '#dcfce7',
+    iconBg: '#86efac',
+    color: '#14532d',
+    subColor: '#166534',
   },
   {
-    label: 'LEARNING HOURS',
+    label: 'Learning Hours',
     value: '42',
     icon: <AccessTime />,
-    gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
+    // Light Blue Theme
+    bgcolor: '#dbeafe',
+    iconBg: '#93c5fd',
+    color: '#1e3a8a',
+    subColor: '#1e40af',
   },
   {
-    label: 'CERTIFICATES',
+    label: 'Certificates',
     value: '3',
     icon: <School />,
-    gradient: 'linear-gradient(135deg, #10b981, #34d399)',
+    // Warm Peach Theme
+    bgcolor: '#ffedd5',
+    iconBg: '#fdba74',
+    color: '#7c2d12',
+    subColor: '#9a3412',
   },
   {
-    label: 'AVG. SCORE',
+    label: 'Avg. Score',
     value: '4.8',
     icon: <Star />,
-    gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
+    // Dusty Lavender Theme
+    bgcolor: '#f3e8ff',
+    iconBg: '#d8b4fe',
+    color: '#581c87',
+    subColor: '#6b21a8',
   },
 ];
 
 const QuickStats: React.FC = () => {
   return (
-    <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
+    <Grid container spacing={2} sx={{ mb: 4 }}>
       {stats.map((stat, index) => (
         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
           <Paper
             elevation={0}
             className={`stat-card ld-fade-in ld-fade-in-${index}`}
             sx={{
+              bgcolor: stat.bgcolor,
+              borderRadius: '20px',
               p: 3,
-              borderRadius: '1rem',
-              textAlign: 'center',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
-              cursor: 'pointer',
               position: 'relative',
-              overflow: 'hidden',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 3,
-                background: stat.gradient,
-                borderRadius: '1rem 1rem 0 0',
+              height: '100%',
+              minHeight: 160,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              textAlign: 'center',
+              transition: 'transform 0.2s',
+              cursor: 'pointer',
+              '&:hover': {
+                transform: 'translateY(-4px)',
               },
             }}
           >
+            {/* Icon Badge */}
             <Box
               sx={{
-                width: 48,
-                height: 48,
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                width: 40,
+                height: 40,
                 borderRadius: '50%',
+                bgcolor: stat.iconBg,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white',
-                background: stat.gradient,
-                mx: 'auto',
-                mb: 2,
-                '& svg': { fontSize: 24 },
+                '& svg': { fontSize: 20 },
               }}
             >
               {stat.icon}
             </Box>
-            <Typography variant="h4" fontWeight={700} color="text.primary">
+
+            {/* Main Stat */}
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 700,
+                color: stat.color,
+                fontSize: { xs: '2rem', md: '2.5rem' },
+                lineHeight: 1,
+                mb: 1,
+              }}
+            >
               {stat.value}
             </Typography>
+
+            {/* Label */}
             <Typography
-              variant="caption"
-              color="text.disabled"
-              sx={{ fontWeight: 600, letterSpacing: '0.06em', fontSize: '0.65rem' }}
+              variant="body2"
+              sx={{
+                color: stat.subColor,
+                fontWeight: 500,
+                fontSize: '0.875rem',
+                opacity: 0.8,
+              }}
             >
               {stat.label}
             </Typography>

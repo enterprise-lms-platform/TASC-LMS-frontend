@@ -25,9 +25,6 @@ export interface CourseHeroData {
   videoHours: number;
   projects: number;
   hasCertificate: boolean;
-  price: number;
-  originalPrice?: number;
-  discountPercent?: number;
 }
 
 interface CourseDetailHeroProps {
@@ -205,29 +202,24 @@ const CourseDetailHero: React.FC<CourseDetailHeroProps> = ({
               p: 4,
             }}
           >
-            {/* Price */}
+            {/* Subscription Info */}
             <Box sx={{ mb: 3 }}>
+              <Chip 
+                label="Biannual Plan" 
+                sx={{ 
+                  bgcolor: 'rgba(255, 164, 36, 0.15)', 
+                  color: '#ffa424', 
+                  fontWeight: 700,
+                  mb: 1.5,
+                  border: '1px solid rgba(255, 164, 36, 0.3)'
+                }} 
+              />
               <Typography variant="h4" fontWeight={700} sx={{ mb: 0.5 }}>
-                ${course.price.toFixed(2)}
+                $99.00 <Typography component="span" variant="h6" sx={{ opacity: 0.8, fontWeight: 500 }}>/ 6 months</Typography>
               </Typography>
-              {course.originalPrice && (
-                <Typography
-                  sx={{ fontSize: '1.125rem', textDecoration: 'line-through', opacity: 0.7, mb: 1 }}
-                >
-                  ${course.originalPrice.toFixed(2)}
-                </Typography>
-              )}
-              {course.discountPercent && (
-                <Chip
-                  label={`${course.discountPercent}% OFF`}
-                  size="small"
-                  sx={{
-                    bgcolor: '#10b981',
-                    color: 'white',
-                    fontWeight: 500,
-                  }}
-                />
-              )}
+              <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                Unlimited access to this and all other courses
+              </Typography>
             </Box>
 
             {/* Buttons */}
@@ -246,7 +238,7 @@ const CourseDetailHero: React.FC<CourseDetailHeroProps> = ({
                   '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' },
                 }}
               >
-                Enroll Now
+                Get Full Access
               </Button>
               <Button
                 variant="outlined"

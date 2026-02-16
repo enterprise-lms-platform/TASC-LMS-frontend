@@ -1,60 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-interface PricingProps {
-  isMobile: boolean;
-}
 
-const Pricing: React.FC<PricingProps> = ({ isMobile }) => {
-  const [annual, setAnnual] = useState(false);
 
-  const plans = [
-    {
-      name: 'Basic',
-      desc: 'Perfect for getting started',
-      monthly: 9,
-      annual: 7,
-      features: [
-        'Access to 50+ courses',
-        '5 certificates per month',
-        '5 live sessions per month',
-        'Email support',
-      ],
-      disabled: ['Offline downloads', 'Priority support'],
-    },
-    {
-      name: 'Pro',
-      desc: 'Best for serious learners',
-      monthly: 29,
-      annual: 23,
-      features: [
-        'Unlimited course access',
-        '10 certificates per month',
-        '20 live sessions per month',
-        '50 offline downloads',
-        'Priority email support',
-      ],
-      disabled: ['1-on-1 mentoring'],
-      popular: true,
-    },
-    {
-      name: 'Enterprise',
-      desc: 'For teams and organizations',
-      monthly: 79,
-      annual: 63,
-      features: [
-        'Everything in Pro',
-        'Unlimited certificates',
-        'Unlimited live sessions',
-        'Unlimited downloads',
-        '24/7 priority support',
-        'Monthly 1-on-1 mentoring',
-      ],
-      disabled: [],
-    },
-  ];
-
-  const getPrice = (monthly: number, ann: number) => (annual ? ann : monthly);
-
+const Pricing: React.FC = () => {
   return (
     <section
       id="pricing"
@@ -82,10 +30,10 @@ const Pricing: React.FC<PricingProps> = ({ isMobile }) => {
             }}
           >
             <i className="fas fa-tags" />
-            Pricing Plans
+            Simple Pricing
           </div>
           <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '16px', margin: '0 0 16px 0' }}>
-            Choose Your Learning Plan
+            One Plan, Unlimited Access
           </h2>
           <p
             style={{
@@ -93,216 +41,159 @@ const Pricing: React.FC<PricingProps> = ({ isMobile }) => {
               color: '#52525b',
               marginBottom: '32px',
               margin: '0 0 32px 0',
+              maxWidth: '600px',
+              marginLeft: 'auto',
+              marginRight: 'auto',
             }}
           >
-            Flexible pricing options to fit your learning needs. Start free and upgrade anytime.
+            Get full access to all courses, certifications, and live sessions with our simple biannual subscription.
           </p>
-
-          {/* Toggle */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '16px',
-              marginBottom: '48px',
-            }}
-          >
-            <span style={{ fontWeight: !annual ? 600 : 400 }}>Monthly</span>
-            <button
-              onClick={() => setAnnual(!annual)}
-              style={{
-                width: '80px',
-                height: '40px',
-                backgroundColor: annual ? '#ffa424' : '#e4e4e7',
-                border: 'none',
-                borderRadius: '20px',
-                cursor: 'pointer',
-                position: 'relative',
-                transition: 'all 0.3s',
-              }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  width: '32px',
-                  height: '32px',
-                  backgroundColor: 'white',
-                  borderRadius: '50%',
-                  top: '4px',
-                  left: annual ? '44px' : '4px',
-                  transition: 'left 0.3s',
-                }}
-              />
-            </button>
-            <span style={{ fontWeight: annual ? 600 : 400 }}>Annual</span>
-            {annual && (
-              <div
-                className="chip-badge"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  backgroundColor: '#10b981',
-                  color: 'white',
-                  padding: '4px 12px',
-                  borderRadius: '20px',
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                }}
-              >
-                Save 20%
-              </div>
-            )}
-          </div>
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-            gap: '32px',
-            alignItems: 'flex-start',
-          }}
-        >
-          {plans.map((plan) => (
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div
+            className="pricing-card"
+            style={{
+              padding: '48px',
+              position: 'relative',
+              border: '2px solid #ffa424',
+              borderRadius: '24px',
+              backgroundColor: 'white',
+              maxWidth: '480px',
+              width: '100%',
+              boxShadow: '0 24px 48px rgba(0, 0, 0, 0.12)',
+            }}
+          >
             <div
-              key={plan.name}
-              className="pricing-card"
+              className="pricing-badge"
               style={{
-                padding: '32px',
-                position: 'relative',
-                border: plan.popular ? '2px solid #ffa424' : '2px solid #e4e4e7',
+                position: 'absolute',
+                top: '-16px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'linear-gradient(135deg, #ffa424, #f97316)',
+                color: 'white',
+                padding: '8px 16px',
                 borderRadius: '20px',
-                backgroundColor: 'white',
-                transform: plan.popular && !isMobile ? 'scale(1.05)' : 'none',
-                boxShadow: plan.popular ? '0 24px 24px rgba(0, 0, 0, 0.15)' : '0 8px 8px rgba(0, 0, 0, 0.08)',
+                fontWeight: 600,
+                fontSize: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 6px rgba(249, 115, 22, 0.3)',
               }}
             >
-              {plan.popular && (
+              <i className="fas fa-star" />
+              All-Access Pass
+            </div>
+
+            <h3 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '8px', textAlign: 'center', margin: '0 0 8px 0' }}>
+              Biannual Plan
+            </h3>
+            <p
+              style={{
+                fontSize: '1rem',
+                color: '#71717a',
+                marginBottom: '32px',
+                textAlign: 'center',
+                margin: '0 0 32px 0',
+              }}
+            >
+              Everything you need to master new skills.
+            </p>
+
+            {/* Price */}
+            <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+              <div
+                className="pricing-price"
+                style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  fontSize: 0,
+                }}
+              >
+                <span className="pricing-price-currency" style={{ fontSize: '2rem', fontWeight: 600, color: '#27272a' }}>
+                  $
+                </span>
+                <span className="pricing-price-amount" style={{ fontSize: '4rem', fontWeight: 800, color: '#27272a' }}>
+                  99
+                </span>
+                <span className="pricing-price-period" style={{ fontSize: '1.25rem', color: '#71717a', marginLeft: '8px', fontWeight: 500 }}>
+                  / 6 months
+                </span>
+              </div>
+            </div>
+            
+            <p style={{ textAlign: 'center', color: '#10b981', fontWeight: 600, fontSize: '0.875rem', marginBottom: '32px' }}>
+              Just $16.50/month
+            </p>
+
+            <hr style={{ border: 'none', borderTop: '1px solid #e4e4e7', marginBottom: '32px' }} />
+
+            {/* Features */}
+            <div style={{ marginBottom: '40px' }}>
+              {[
+                'Unlimited access to all courses',
+                'Earn professional certificates',
+                'Join live interactive sessions',
+                'Download resources for offline learning',
+                'Priority email support',
+                'Access to community forums',
+              ].map((feature) => (
                 <div
-                  className="pricing-badge"
+                  key={feature}
                   style={{
-                    position: 'absolute',
-                    top: '-14px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    backgroundColor: 'linear-gradient(135deg, #ffa424, #f97316)',
-                    background: 'linear-gradient(135deg, #ffa424, #f97316)',
-                    color: 'white',
-                    padding: '6px 12px',
-                    borderRadius: '20px',
-                    fontWeight: 600,
-                    fontSize: '0.875rem',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px',
+                    gap: '16px',
+                    padding: '10px 0',
+                    fontSize: '1rem',
+                    color: '#27272a',
                   }}
                 >
-                  <i className="fas fa-star" />
-                  Most Popular
-                </div>
-              )}
-
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px', textAlign: 'center', margin: '0 0 8px 0' }}>
-                {plan.name}
-              </h3>
-              <p
-                style={{
-                  fontSize: '0.875rem',
-                  color: '#71717a',
-                  marginBottom: '24px',
-                  textAlign: 'center',
-                  margin: '0 0 24px 0',
-                }}
-              >
-                {plan.desc}
-              </p>
-
-              {/* Price */}
-              <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                <div
-                  className="pricing-price"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'baseline',
+                  <div style={{ 
+                    width: '24px', 
+                    height: '24px', 
+                    borderRadius: '50%', 
+                    backgroundColor: '#ecfdf5', 
+                    display: 'flex', 
+                    alignItems: 'center', 
                     justifyContent: 'center',
-                    gap: '4px',
-                    fontSize: 0,
-                  }}
-                >
-                  <span className="pricing-price-currency" style={{ fontSize: '1.5rem', fontWeight: 600 }}>
-                    $
-                  </span>
-                  <span className="pricing-price-amount" style={{ fontSize: '3rem', fontWeight: 800 }}>
-                    {getPrice(plan.monthly, plan.annual)}
-                  </span>
-                  <span className="pricing-price-period" style={{ fontSize: '1rem', color: '#71717a', marginLeft: '8px' }}>
-                    /month
-                  </span>
+                    flexShrink: 0
+                  }}>
+                    <i className="fas fa-check" style={{ color: '#10b981', fontSize: '14px' }} />
+                  </div>
+                  {feature}
                 </div>
-              </div>
-
-              <hr style={{ border: 'none', borderTop: '1px solid #e4e4e7', marginBottom: '24px' }} />
-
-              {/* Features */}
-              <div style={{ marginBottom: '32px' }}>
-                {plan.features.map((feature) => (
-                  <div
-                    key={feature}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '8px 0',
-                      fontSize: '0.875rem',
-                    }}
-                  >
-                    <i className="fas fa-check" style={{ color: '#10b981', fontSize: '16px' }} />
-                    {feature}
-                  </div>
-                ))}
-                {plan.disabled.map((feature) => (
-                  <div
-                    key={feature}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '8px 0',
-                      fontSize: '0.875rem',
-                      opacity: 0.4,
-                    }}
-                  >
-                    <i className="fas fa-times" style={{ color: '#d4d4d8', fontSize: '16px' }} />
-                    {feature}
-                  </div>
-                ))}
-              </div>
-
-              <button
-                className="pricing-button"
-                style={{
-                  width: '100%',
-                  padding: '12px 20px',
-                  backgroundColor: plan.popular ? '#ffa424' : 'white',
-                  color: plan.popular ? 'white' : '#ffa424',
-                  border: `2px solid #ffa424`,
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: '1rem',
-                  transition: 'all 0.3s',
-                }}
-              >
-                {plan.name === 'Pro'
-                  ? 'Start Free Trial'
-                  : plan.name === 'Enterprise'
-                    ? 'Contact Sales'
-                    : 'Get Started'}
-              </button>
+              ))}
             </div>
-          ))}
+
+            <button
+              onClick={() => window.location.href = '/register'}
+              className="pricing-button"
+              style={{
+                width: '100%',
+                padding: '16px 24px',
+                backgroundColor: '#ffa424',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                fontWeight: 700,
+                fontSize: '1.125rem',
+                transition: 'all 0.3s',
+                boxShadow: '0 4px 12px rgba(255, 164, 36, 0.25)',
+              }}
+            >
+              Get Full Access Now
+            </button>
+            
+            <p style={{ textAlign: 'center', fontSize: '0.875rem', color: '#71717a', marginTop: '16px' }}>
+              30-day money-back guarantee. Cancel anytime.
+            </p>
+          </div>
         </div>
       </div>
     </section>

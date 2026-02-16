@@ -73,22 +73,38 @@ const CoursePricingCard: React.FC = () => {
       {/* Content */}
       <Box sx={{ p: 3 }}>
         <Stack direction="row" alignItems="baseline" spacing={1} sx={{ mb: 1 }}>
-          <Typography variant="h4" sx={{ fontWeight: 800, color: '#18181b' }}>$129.99</Typography>
-          <Typography sx={{ textDecoration: 'line-through', color: '#71717a' }}>$199.99</Typography>
-          <Chip label="35% OFF" size="small" sx={{ bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', fontWeight: 700, height: 24 }} />
+          <Typography variant="h4" sx={{ fontWeight: 800, color: '#18181b' }}>$99.00</Typography>
+          <Typography sx={{ color: '#71717a', fontSize: '1rem', fontWeight: 500 }}>/ 6 months</Typography>
         </Stack>
+        
+        <Box sx={{ mb: 3 }}>
+          <Chip 
+            label="Biannual Access Pass" 
+            size="small" 
+            sx={{ 
+              bgcolor: 'rgba(255, 164, 36, 0.15)', 
+              color: '#ffa424', 
+              fontWeight: 700, 
+              height: 24 
+            }} 
+          />
+        </Box>
 
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ color: '#ef4444', mb: 3 }}>
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ color: '#10b981', mb: 3 }}>
           <AccessTimeIcon sx={{ fontSize: 18 }} />
-          <Typography sx={{ fontWeight: 600, fontSize: '0.875rem' }}>2 days left at this price!</Typography>
+          <Typography sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Full access to all courses!</Typography>
         </Stack>
 
         <Stack spacing={2} sx={{ mb: 3 }}>
-          <Button variant="contained" size="large" fullWidth startIcon={<ShoppingCartIcon />} sx={{ bgcolor: '#ffa424', fontWeight: 700, '&:hover': { bgcolor: '#f97316' } }}>
-            Enroll Now
-          </Button>
-          <Button variant="outlined" size="large" fullWidth sx={{ borderColor: '#ffa424', color: '#ffa424', fontWeight: 700, '&:hover': { bgcolor: '#fff3e0', borderColor: '#ffa424' } }}>
-            Add to Cart
+          <Button 
+            variant="contained" 
+            size="large" 
+            fullWidth 
+            startIcon={<ShoppingCartIcon />} 
+            href="/checkout"
+            sx={{ bgcolor: '#ffa424', fontWeight: 700, '&:hover': { bgcolor: '#f97316' } }}
+          >
+            Get Full Access
           </Button>
         </Stack>
 

@@ -18,8 +18,6 @@ export interface Course {
   level: string;
   rating: number;
   ratingCount: string;
-  price: string;
-  originalPrice?: string;
   image: string;
   badge?: 'bestseller' | 'new' | 'sale';
   badgeText?: string;
@@ -136,14 +134,9 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEnroll }) => {
         {/* Footer */}
         <Box sx={{ mt: 'auto', pt: 2, borderTop: '1px solid #f4f4f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Stack direction="row" alignItems="baseline" spacing={1}>
-            <Typography sx={{ fontSize: '1.25rem', fontWeight: 700, color: course.isFree ? '#10b981' : '#27272a' }}>
-              {course.price}
+            <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#10b981' }}>
+              Included in Plan
             </Typography>
-            {course.originalPrice && (
-              <Typography sx={{ fontSize: '0.875rem', color: '#a1a1aa', textDecoration: 'line-through' }}>
-                {course.originalPrice}
-              </Typography>
-            )}
           </Stack>
           <Stack direction="row" spacing={1}>
             <IconButton
@@ -159,7 +152,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEnroll }) => {
               onClick={() => onEnroll(course)}
               sx={{ bgcolor: '#ffa424', fontWeight: 600, px: 2, py: 0.75, fontSize: '0.875rem', textTransform: 'none', boxShadow: 'none', '&:hover': { bgcolor: '#f97316', boxShadow: 'none' } }}
             >
-              Enroll
+              Get Access
             </Button>
           </Stack>
         </Box>

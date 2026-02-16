@@ -67,7 +67,7 @@ const LandingPage: React.FC = () => {
 
       <StatsBanner isMobile={isMobile} />
 
-      <Pricing isMobile={isMobile} />
+      <Pricing />
 
       <CTA isMobile={isMobile} />
 

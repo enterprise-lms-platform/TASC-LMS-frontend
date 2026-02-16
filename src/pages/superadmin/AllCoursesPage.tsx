@@ -32,16 +32,16 @@ const catColors: Record<string, { bg: string; color: string }> = {
 };
 
 const courses = [
-  { title: 'Advanced React Patterns', instructor: 'John Kamau', category: 'Technology', enrollments: 452, rating: 4.8, status: 'Published', price: '$49.99' },
-  { title: 'Data Science Fundamentals', instructor: 'Mary Wambui', category: 'Data Science', enrollments: 389, rating: 4.9, status: 'Published', price: '$59.99' },
-  { title: 'Cybersecurity Essentials', instructor: 'Peter Ochieng', category: 'Technology', enrollments: 312, rating: 4.7, status: 'Published', price: '$39.99' },
-  { title: 'Digital Marketing Strategy', instructor: 'Grace Akinyi', category: 'Marketing', enrollments: 278, rating: 4.5, status: 'Published', price: '$29.99' },
-  { title: 'Cloud Architecture with AWS', instructor: 'David Mwangi', category: 'Technology', enrollments: 245, rating: 4.6, status: 'Published', price: '$69.99' },
-  { title: 'UX/UI Design Principles', instructor: 'Sarah Nakamura', category: 'Design', enrollments: 198, rating: 4.8, status: 'Draft', price: '$44.99' },
-  { title: 'Business Analytics', instructor: 'James Otieno', category: 'Business', enrollments: 167, rating: 4.4, status: 'Published', price: '$54.99' },
-  { title: 'Python for Beginners', instructor: 'Faith Muthoni', category: 'Technology', enrollments: 534, rating: 4.9, status: 'Published', price: '$19.99' },
-  { title: 'Project Management Pro', instructor: 'John Kamau', category: 'Business', enrollments: 0, rating: 0, status: 'Draft', price: '$49.99' },
-  { title: 'Machine Learning Basics', instructor: 'Mary Wambui', category: 'Data Science', enrollments: 45, rating: 4.2, status: 'Archived', price: '$59.99' },
+  { title: 'Advanced React Patterns', instructor: 'John Kamau', category: 'Technology', enrollments: 452, rating: 4.8, status: 'Published' },
+  { title: 'Data Science Fundamentals', instructor: 'Mary Wambui', category: 'Data Science', enrollments: 389, rating: 4.9, status: 'Published' },
+  { title: 'Cybersecurity Essentials', instructor: 'Peter Ochieng', category: 'Technology', enrollments: 312, rating: 4.7, status: 'Published' },
+  { title: 'Digital Marketing Strategy', instructor: 'Grace Akinyi', category: 'Marketing', enrollments: 278, rating: 4.5, status: 'Published' },
+  { title: 'Cloud Architecture with AWS', instructor: 'David Mwangi', category: 'Technology', enrollments: 245, rating: 4.6, status: 'Published' },
+  { title: 'UX/UI Design Principles', instructor: 'Sarah Nakamura', category: 'Design', enrollments: 198, rating: 4.8, status: 'Draft' },
+  { title: 'Business Analytics', instructor: 'James Otieno', category: 'Business', enrollments: 167, rating: 4.4, status: 'Published' },
+  { title: 'Python for Beginners', instructor: 'Faith Muthoni', category: 'Technology', enrollments: 534, rating: 4.9, status: 'Published' },
+  { title: 'Project Management Pro', instructor: 'John Kamau', category: 'Business', enrollments: 0, rating: 0, status: 'Draft' },
+  { title: 'Machine Learning Basics', instructor: 'Mary Wambui', category: 'Data Science', enrollments: 45, rating: 4.2, status: 'Archived' },
 ];
 
 const AllCoursesPage: React.FC = () => {
@@ -88,7 +88,7 @@ const AllCoursesPage: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                {['Course', 'Instructor', 'Category', 'Enrollments', 'Rating', 'Status', 'Price', 'Actions'].map((h) => (
+                {['Course', 'Instructor', 'Category', 'Enrollments', 'Rating', 'Status', 'Actions'].map((h) => (
                   <TableCell key={h} sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{h}</TableCell>
                 ))}
               </TableRow>
@@ -112,7 +112,6 @@ const AllCoursesPage: React.FC = () => {
                     </Box>
                   </TableCell>
                   <TableCell><Chip label={c.status} size="small" sx={{ bgcolor: statusColors[c.status]?.bg, color: statusColors[c.status]?.color, fontWeight: 500, fontSize: '0.75rem' }} /></TableCell>
-                  <TableCell><Typography variant="body2" sx={{ fontWeight: 500 }}>{c.price}</Typography></TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
                       <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><ViewIcon fontSize="small" /></IconButton>

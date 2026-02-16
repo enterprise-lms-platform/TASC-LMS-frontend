@@ -43,6 +43,15 @@ interface Course {
   currentPrice: number;
 }
 
+interface Subscription {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  billingPeriod: string;
+  features: string[];
+}
+
 interface PaymentMethod {
   id: string;
   name: string;
@@ -79,8 +88,10 @@ const CheckoutPaymentPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Get course from navigation state or use sample
-  const course = (location.state as { course?: Course })?.course || sampleCourse;
+  // Get item from navigation state or use sample
+  const { course, subscription } = (location.state as { course?: Course; subscription?: Subscription }) || {};
+  const orderItem = subscription || course || sampleCourse;
+  const isSubscription = !!subscription;
 
   // State
   const [selectedPayment, setSelectedPayment] = useState('mpesa');
@@ -105,7 +116,7 @@ const CheckoutPaymentPage: React.FC = () => {
   });
 
   // Calculate prices
-  const subtotal = course.currentPrice;
+  const subtotal = isSubscription ? (orderItem as Subscription).price : (orderItem as Course).currentPrice;
   const discount = promoApplied ? subtotal * 0.2 : 0;
   const processingFee = 0;
   const total = subtotal - discount + processingFee;
@@ -186,11 +197,16 @@ const CheckoutPaymentPage: React.FC = () => {
           customerName: `${firstName} ${lastName}`,
           customerEmail: email,
           customerPhone: phoneNumber ? `${countryCode} ${phoneNumber}` : undefined,
-          course: {
-            title: course.title,
-            instructor: course.instructor,
-            unitPrice: course.currentPrice,
-            originalPrice: course.currentPrice,
+          course: isSubscription ? {
+            title: (orderItem as Subscription).title,
+            instructor: 'TASC LMS',
+            unitPrice: (orderItem as Subscription).price,
+            originalPrice: (orderItem as Subscription).price,
+          } : {
+            title: (orderItem as Course).title,
+            instructor: (orderItem as Course).instructor,
+            unitPrice: (orderItem as Course).currentPrice,
+            originalPrice: (orderItem as Course).currentPrice,
           },
           subtotal: subtotal,
           discount: discount,
@@ -670,14 +686,14 @@ const CheckoutPaymentPage: React.FC = () => {
               </Box>
 
               <Box sx={{ p: 3 }}>
-                {/* Course Item */}
+                {/* Item Details */}
                 <Stack direction="row" spacing={2} sx={{ pb: 2.5, mb: 2.5, borderBottom: '1px solid #e4e4e7' }}>
                   <Box
                     sx={{
                       width: 80,
                       height: 60,
                       borderRadius: 2,
-                      background: 'linear-gradient(135deg, #ffb74d, #f97316)',
+                      background: isSubscription ? 'linear-gradient(135deg, #10b981, #34d399)' : 'linear-gradient(135deg, #ffb74d, #f97316)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -686,30 +702,39 @@ const CheckoutPaymentPage: React.FC = () => {
                       flexShrink: 0,
                     }}
                   >
-                    <SchoolIcon />
+                    {isSubscription ? <CreditCardIcon /> : <SchoolIcon />}
                   </Box>
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="body2" fontWeight={600} color="text.primary" sx={{ mb: 0.5 }}>
-                      {course.title}
+                      {orderItem.title}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                      by {course.instructor}
+                      {isSubscription ? (orderItem as Subscription).description : `by ${(orderItem as Course).instructor}`}
                     </Typography>
-                    <Stack direction="row" spacing={1.5}>
+                    {!isSubscription && (
+                      <Stack direction="row" spacing={1.5}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <TimeIcon sx={{ fontSize: 14 }} /> {(orderItem as Course).duration}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <LevelIcon sx={{ fontSize: 14 }} /> {(orderItem as Course).level}
+                        </Typography>
+                      </Stack>
+                    )}
+                    {isSubscription && (
                       <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <TimeIcon sx={{ fontSize: 14 }} /> {course.duration}
+                        <TimeIcon sx={{ fontSize: 14 }} /> {(orderItem as Subscription).billingPeriod}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <LevelIcon sx={{ fontSize: 14 }} /> {course.level}
-                      </Typography>
-                    </Stack>
+                    )}
                   </Box>
                   <Box sx={{ textAlign: 'right' }}>
-                    <Typography variant="caption" sx={{ color: '#a1a1aa', textDecoration: 'line-through' }}>
-                      ${course.originalPrice.toFixed(2)}
-                    </Typography>
+                    {!isSubscription && (
+                      <Typography variant="caption" sx={{ color: '#a1a1aa', textDecoration: 'line-through' }}>
+                        ${(orderItem as Course).originalPrice.toFixed(2)}
+                      </Typography>
+                    )}
                     <Typography variant="body1" fontWeight={700} color="text.primary">
-                      ${course.currentPrice.toFixed(2)}
+                      ${subtotal.toFixed(2)}
                     </Typography>
                   </Box>
                 </Stack>

@@ -17,10 +17,9 @@ interface EnrollmentModalProps {
   open: boolean;
   onClose: () => void;
   courseTitle: string;
-  coursePrice: string;
 }
 
-const EnrollmentModal: React.FC<EnrollmentModalProps> = ({ open, onClose, courseTitle, coursePrice }) => {
+const EnrollmentModal: React.FC<EnrollmentModalProps> = ({ open, onClose, courseTitle }) => {
   return (
     <Dialog
       open={open}
@@ -68,11 +67,11 @@ const EnrollmentModal: React.FC<EnrollmentModalProps> = ({ open, onClose, course
           sx={{
             fontSize: '1.25rem',
             fontWeight: 700,
-            color: coursePrice === 'Free' ? '#10b981' : '#ffa424',
+            color: '#ffa424',
             mb: 2,
           }}
         >
-          {coursePrice === 'Free' ? 'Free Course' : coursePrice}
+          Included in Biannual Plan
         </Typography>
 
         {/* Description */}
@@ -89,7 +88,7 @@ const EnrollmentModal: React.FC<EnrollmentModalProps> = ({ open, onClose, course
             href={`/register?course=${encodeURIComponent(courseTitle)}`}
             sx={{ bgcolor: '#ffa424', py: 1.5, fontWeight: 600, textTransform: 'none', '&:hover': { bgcolor: '#f97316' } }}
           >
-            Sign Up Free
+            Get Full Access
           </Button>
           <Button
             variant="outlined"
