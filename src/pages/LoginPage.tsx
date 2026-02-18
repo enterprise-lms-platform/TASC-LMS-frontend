@@ -267,8 +267,8 @@ const LoginPage = () => {
                       label={<Typography sx={{ fontSize: '0.875rem', color: '#52525b' }}>Remember me</Typography>}
                     />
                     <Button
-                      href="#"
-                      onClick={(e) => e.preventDefault()}
+                      component={Link}
+                      to="/passwordreset"
                       sx={{
                         fontSize: '0.875rem',
                         fontWeight: 500,

@@ -21,12 +21,13 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCertificate, faChartLine, faEye, faEyeSlash, faGraduationCap, faSpinner, faCheckCircle, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../contexts/AuthContext';
-
+import { useResendVerification } from '../hooks/useAuthQueries';
 
 
 const RegistrationPage: React.FC = () => {
     const navigate = useNavigate();
     const { register: registerUser, isAuthenticated, user } = useAuth();
+    const resendVerificationMutation = useResendVerification();
     const [currentStep, setCurrentStep] = useState(0); // 0-indexed for MUI Stepper
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -223,9 +224,7 @@ const RegistrationPage: React.FC = () => {
         if (canResend) {
             setIsLoading(true);
             try {
-                // TODO: Implement resend verification email endpoint when backend supports it
-                // For now, just reset the timer
-                console.log('Resending verification email to:', formData.email);
+                await resendVerificationMutation.mutateAsync(formData.email);
                 setResendTimer(30);
                 setCanResend(false);
             } catch (err) {

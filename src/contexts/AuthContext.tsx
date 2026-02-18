@@ -1,110 +1,106 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import { authApi, getAccessToken, getRefreshToken, clearTokens, getErrorMessage } from '../services/main.api';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  useCurrentUser,
+  useLogin,
+  useRegister,
+  useLogout,
+  authKeys,
+} from '../hooks/useAuthQueries';
+import { getRefreshToken, clearTokens, getErrorMessage } from '../services/main.api';
 import { AuthContext, type AuthContextType } from './AuthContextDefinition';
-import type { UserMe, LoginRequest, RegisterRequest } from '../types/types';
+import type { LoginRequest, RegisterRequest } from '../types/types';
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<UserMe | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const qc = useQueryClient();
 
-  // Bootstrap: Check if user is authenticated on app load
-  useEffect(() => {
-    const initAuth = async () => {
-      const accessToken = getAccessToken();
-      const refreshToken = getRefreshToken();
+  // TanStack query: fetch current user (runs when an access token exists)
+  const {
+    data: user = null,
+    isLoading: isUserLoading,
+    isFetching,
+  } = useCurrentUser();
 
-      if (!accessToken && !refreshToken) {
-        setIsLoading(false);
-        return;
-      }
+  // Mutations
+  const loginMutation = useLogin();
+  const registerMutation = useRegister();
+  const logoutMutation = useLogout();
 
+  const login = useCallback(
+    async (credentials: LoginRequest) => {
+      setError(null);
       try {
-        // Try to fetch current user
-        const response = await authApi.getCurrentUser();
-        setUser(response.data);
+        await loginMutation.mutateAsync(credentials);
+        // Token is stored & user cache primed by the mutation's onSuccess
       } catch (err) {
-        console.error('Failed to authenticate user on startup:', err);
-        // If getCurrentUser fails and refresh also fails, tokens will be cleared by interceptor
-        clearTokens();
-        setUser(null);
-      } finally {
-        setIsLoading(false);
+        const message = getErrorMessage(err);
+        setError(message);
+        throw err;
       }
-    };
+    },
+    [loginMutation],
+  );
 
-    initAuth();
-  }, []);
+  const register = useCallback(
+    async (data: RegisterRequest) => {
+      setError(null);
+      try {
+        await registerMutation.mutateAsync(data);
+        // User must verify email before login — don't set user here.
+      } catch (err) {
+        const message = getErrorMessage(err);
+        setError(message);
+        throw err;
+      }
+    },
+    [registerMutation],
+  );
 
-  const login = async (credentials: LoginRequest) => {
-    setError(null);
-    setIsLoading(true);
-    try {
-      await authApi.login(credentials);
-      // After successful login, fetch user data
-      const response = await authApi.getCurrentUser();
-      setUser(response.data);
-    } catch (err) {
-      const message = getErrorMessage(err);
-      setError(message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const register = async (data: RegisterRequest) => {
-    setError(null);
-    setIsLoading(true);
-    try {
-      await authApi.register(data);
-      // Registration successful, but user needs to verify email before login
-      // Don't set user here, they need to verify email first
-    } catch (err) {
-      const message = getErrorMessage(err);
-      setError(message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = async () => {
+  const logout = useCallback(async () => {
     setError(null);
     try {
       const refreshToken = getRefreshToken();
       if (refreshToken) {
-        await authApi.logout(refreshToken);
+        await logoutMutation.mutateAsync(refreshToken);
+      } else {
+        // No refresh token — just clear local state
+        clearTokens();
+        qc.setQueryData(authKeys.me(), null);
+        qc.removeQueries({ queryKey: authKeys.all });
       }
-    } catch (err) {
-      console.error('Logout error:', err);
-      // Continue with logout even if API call fails
-    } finally {
+    } catch {
+      // Always clear local state even if the API call fails
       clearTokens();
-      setUser(null);
+      qc.setQueryData(authKeys.me(), null);
+      qc.removeQueries({ queryKey: authKeys.all });
     }
-  };
+  }, [logoutMutation, qc]);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     setError(null);
     try {
-      const response = await authApi.getCurrentUser();
-      setUser(response.data);
+      await qc.invalidateQueries({ queryKey: authKeys.me() });
     } catch (err) {
       const message = getErrorMessage(err);
       setError(message);
       throw err;
     }
-  };
+  }, [qc]);
 
-  const clearError = () => {
-    setError(null);
-  };
+  const clearError = useCallback(() => setError(null), []);
+
+  // Consider loading while the initial user fetch is in flight
+  const isLoading =
+    isUserLoading ||
+    isFetching ||
+    loginMutation.isPending ||
+    registerMutation.isPending;
 
   const value: AuthContextType = {
     user,
@@ -129,6 +125,3 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-
-// Helper hook for role-based access (not used in current implementation)
-// Use ProtectedRoute component instead for route protection

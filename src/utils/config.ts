@@ -7,8 +7,10 @@ import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axio
 import type { ApiError } from '../types/types';
 
 // API Configuration
+// In development the Vite proxy forwards /api/* to Django at 127.0.0.1:8000.
+// In production set VITE_API_BASE_URL to your production API origin.
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api-staging.tasclms.com/api/schema.json',
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || '',
   TIMEOUT: 30000, // 30 seconds
   HEADERS: {
     'Content-Type': 'application/json',
@@ -148,9 +150,9 @@ export const createApiClient = (): AxiosInstance => {
             return Promise.reject(error);
           }
 
-          // Attempt to refresh the token
+          // Attempt to refresh the token (use raw axios, not the intercepted client)
           const response = await axios.post(
-            `${API_CONFIG.BASE_URL}/api/v1/auth/refresh/`,
+            '/api/v1/auth/refresh/',
             { refresh: refreshToken }
           );
 
