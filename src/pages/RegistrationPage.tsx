@@ -208,7 +208,7 @@ const RegistrationPage: React.FC = () => {
         let timer: ReturnType<typeof setInterval> | null = null;
         if (isSuccess && resendTimer > 0) {
             timer = setInterval(() => {
-                setResendTimer((prev) => prev - 1);
+                setResendTimer((prev:number) => prev - 1);
             }, 1000);
         } else if (resendTimer === 0) {
             setCanResend(true);
@@ -271,6 +271,7 @@ const RegistrationPage: React.FC = () => {
 
     if (isSuccess) {
         return (
+            <>
             <Box sx={loginStyles.loginContainer}>
                 {/* Left Panel */}
                 <Box sx={loginStyles.leftPanel}>
@@ -319,6 +320,7 @@ const RegistrationPage: React.FC = () => {
                     </Box>
                 </Box>
             </Box>
+            </>
         );
     }
 
