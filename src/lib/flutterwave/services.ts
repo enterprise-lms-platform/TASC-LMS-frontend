@@ -217,5 +217,3 @@ export async function verifyTransaction(transactionId: string, accessToken: stri
 // TO be used in the payment form component to handle the entire flow. this only
 // charging the card
 
-
-// TRANSFER SERVICE
