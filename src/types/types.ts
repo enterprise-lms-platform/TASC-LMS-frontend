@@ -714,6 +714,28 @@ export interface ApiError {
   [key: string]: unknown;
 }
 
+// Superadmin – Audit Logs
+export interface AuditLogEntry {
+  id: number;
+  timestamp: string;
+  user: string;
+  email: string;
+  action: 'Login' | 'Created' | 'Updated' | 'Deleted' | 'Logout';
+  resource: 'User' | 'Course' | 'Organization' | 'Payment';
+  details: string;
+  ip: string;
+}
+
+export interface AuditLogFilters {
+  search?: string;
+  from?: string;
+  to?: string;
+  action?: string;
+  resource?: string;
+  page?: number;
+  page_size?: number;
+}
+
 export interface HealthCheckResponse {
   status: string;
   service: string;
