@@ -10,16 +10,16 @@ import {
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 
 const kpis = [
-  { label: 'Total Issued', value: '4,567', icon: <CertIcon />, gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)', trend: '+234 this month' },
+  { label: 'Total Issued', value: '4,567', icon: <CertIcon />, gradient: 'linear-gradient(135deg, #71717a, #a1a1aa)', trend: '+234 this month' },
   { label: 'Active/Valid', value: '4,123', icon: <ValidIcon />, gradient: 'linear-gradient(135deg, #10b981, #34d399)', trend: '90.3% valid' },
   { label: 'Expired', value: '356', icon: <ExpiredIcon />, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', trend: '7.8% of total' },
-  { label: 'Revoked', value: '88', icon: <RevokedIcon />, gradient: 'linear-gradient(135deg, #ef4444, #f87171)', trend: '1.9% of total' },
+  { label: 'Revoked', value: '88', icon: <RevokedIcon />, gradient: 'linear-gradient(135deg, #ffa424, #ffb74d)', trend: '1.9% of total' },
 ];
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   Valid: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
   Expired: { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' },
-  Revoked: { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' },
+  Revoked: { bg: 'rgba(255, 164, 36, 0.1)', color: '#ffa424' },
 };
 
 const certs = [

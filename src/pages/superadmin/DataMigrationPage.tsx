@@ -16,8 +16,8 @@ const kpis = [
     label: 'Total Records', 
     value: '156,789', 
     icon: <StorageIcon />, 
-    // Pale Indigo Theme
-    bgColor: '#e8eaf6', badgeColor: '#7986cb', valueColor: '#283593', labelColor: '#303f9f'
+    // Soft Grey Theme
+    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#3f3f46', labelColor: '#27272a'
   },
   { 
     label: 'Migrated', 
@@ -37,16 +37,16 @@ const kpis = [
     label: 'Failed', 
     value: '6,210', 
     icon: <ErrorIcon />, 
-    // Soft Rose Theme
-    bgColor: '#fce4ec', badgeColor: '#f06292', valueColor: '#ad1457', labelColor: '#880e4f'
+    // Warm Orange Theme
+    bgColor: '#fff3e0', badgeColor: '#ffb74d', valueColor: '#e65100', labelColor: '#bf360c'
   },
 ];
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   Completed: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
-  'In Progress': { bg: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' },
+  'In Progress': { bg: 'rgba(255, 164, 36, 0.1)', color: '#ffa424' },
   Pending: { bg: 'rgba(113, 113, 122, 0.1)', color: '#71717a' },
-  Failed: { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' },
+  Failed: { bg: 'rgba(113, 113, 122, 0.15)', color: '#71717a' },
 };
 
 const modules = [
@@ -110,7 +110,7 @@ const DataMigrationPage: React.FC = () => (
                     <TableCell><Typography variant="body2" sx={{ fontWeight: 500 }}>{m.name}</Typography></TableCell>
                     <TableCell><Typography variant="body2">{m.records.toLocaleString()}</Typography></TableCell>
                     <TableCell><Typography variant="body2" sx={{ color: '#10b981', fontWeight: 500 }}>{m.migrated.toLocaleString()}</Typography></TableCell>
-                    <TableCell><Typography variant="body2" sx={{ color: m.failed > 0 ? '#ef4444' : 'text.secondary', fontWeight: m.failed > 0 ? 500 : 400 }}>{m.failed.toLocaleString()}</Typography></TableCell>
+                    <TableCell><Typography variant="body2" sx={{ color: m.failed > 0 ? '#ffa424' : 'text.secondary', fontWeight: m.failed > 0 ? 500 : 400 }}>{m.failed.toLocaleString()}</Typography></TableCell>
                     <TableCell sx={{ minWidth: 140 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <LinearProgress
@@ -120,7 +120,7 @@ const DataMigrationPage: React.FC = () => (
                             flex: 1, height: 6, borderRadius: 3, bgcolor: 'grey.200',
                             '& .MuiLinearProgress-bar': {
                               borderRadius: 3,
-                              bgcolor: m.progress === 100 ? '#10b981' : m.status === 'Failed' ? '#ef4444' : '#3b82f6',
+                              bgcolor: m.progress === 100 ? '#10b981' : m.status === 'Failed' ? '#71717a' : '#ffa424',
                             },
                           }}
                         />
@@ -168,7 +168,7 @@ const DataMigrationPage: React.FC = () => (
                 <Typography
                   variant="caption"
                   sx={{
-                    color: log.type === 'error' ? '#ef4444' : log.type === 'success' ? '#10b981' : log.type === 'warning' ? '#f59e0b' : 'text.secondary',
+                    color: log.type === 'error' ? '#ffa424' : log.type === 'success' ? '#10b981' : log.type === 'warning' ? '#f59e0b' : 'text.secondary',
                   }}
                 >
                   {log.msg}

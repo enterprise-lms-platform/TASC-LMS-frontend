@@ -11,9 +11,9 @@ import {
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 
 const kpis = [
-  { label: 'Total Assessments', value: '892', icon: <QuizIcon />, gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)', trend: '+45 this month' },
+  { label: 'Total Assessments', value: '892', icon: <QuizIcon />, gradient: 'linear-gradient(135deg, #71717a, #a1a1aa)', trend: '+45 this month' },
   { label: 'Avg Pass Rate', value: '78.5%', icon: <PassIcon />, gradient: 'linear-gradient(135deg, #10b981, #34d399)', trend: '+2.3% vs last month' },
-  { label: 'Active Exams', value: '34', icon: <TimerIcon />, gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', trend: '12 scheduled today' },
+  { label: 'Active Exams', value: '34', icon: <TimerIcon />, gradient: 'linear-gradient(135deg, #3f3f46, #71717a)', trend: '12 scheduled today' },
   { label: 'Total Attempts', value: '24,567', icon: <AssignmentIcon />, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', trend: '+1,234 this week' },
 ];
 
@@ -37,12 +37,12 @@ const assessments = [
 ];
 
 const typeColors: Record<string, string> = {
-  'Final Exam': '#3b82f6',
-  Midterm: '#8b5cf6',
-  Certification: '#ef4444',
+  'Final Exam': '#ffa424',
+  Midterm: '#71717a',
+  Certification: '#f59e0b',
   Quiz: '#10b981',
-  Capstone: '#f59e0b',
-  Project: '#ec4899',
+  Capstone: '#3f3f46',
+  Project: '#a1a1aa',
 };
 
 const AssessmentsPage: React.FC = () => (
@@ -88,7 +88,7 @@ const AssessmentsPage: React.FC = () => (
                 <TableCell><Typography variant="body2">{a.questions}</Typography></TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <LinearProgress variant="determinate" value={a.passRate} sx={{ flex: 1, height: 6, borderRadius: 3, bgcolor: 'grey.200', '& .MuiLinearProgress-bar': { borderRadius: 3, bgcolor: a.passRate >= 80 ? '#10b981' : a.passRate >= 60 ? '#f59e0b' : '#ef4444' } }} />
+                    <LinearProgress variant="determinate" value={a.passRate} sx={{ flex: 1, height: 6, borderRadius: 3, bgcolor: 'grey.200', '& .MuiLinearProgress-bar': { borderRadius: 3, bgcolor: a.passRate >= 80 ? '#10b981' : a.passRate >= 60 ? '#f59e0b' : '#ffa424' } }} />
                     <Typography variant="body2" sx={{ fontWeight: 500, minWidth: 36 }}>{a.passRate}%</Typography>
                   </Box>
                 </TableCell>

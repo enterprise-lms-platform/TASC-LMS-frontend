@@ -8,9 +8,9 @@ import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 
 const actionColors: Record<string, { bg: string; color: string }> = {
   Created: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
-  Updated: { bg: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' },
-  Deleted: { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' },
-  Login: { bg: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' },
+  Updated: { bg: 'rgba(255, 164, 36, 0.1)', color: '#ffa424' },
+  Deleted: { bg: 'rgba(113, 113, 122, 0.1)', color: '#71717a' },
+  Login: { bg: 'rgba(16, 185, 129, 0.15)', color: '#10b981' },
   Logout: { bg: 'rgba(156, 163, 175, 0.1)', color: '#71717a' },
 };
 
@@ -71,7 +71,7 @@ const AuditLogsPage: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <Avatar sx={{ width: 32, height: 32, fontSize: '0.75rem', background: 'linear-gradient(135deg, #3b82f6, #60a5fa)' }}>
+                      <Avatar sx={{ width: 32, height: 32, fontSize: '0.75rem', background: 'linear-gradient(135deg, #ffa424, #ffb74d)' }}>
                         {log.user.split(' ').map((n) => n[0]).join('')}
                       </Avatar>
                       <Box>

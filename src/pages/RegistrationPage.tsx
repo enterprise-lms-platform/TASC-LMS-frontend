@@ -22,14 +22,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCertificate, faChartLine, faEye, faEyeSlash, faGraduationCap, faSpinner, faCheckCircle, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
-import { useResendVerification } from '../hooks/useAuthQueries';
+import { useResendVerification, authKeys } from '../hooks/useAuthQueries';
 import { authApi } from '../services/auth.services';
 import { setTokens } from '../utils/config';
+import { useQueryClient } from '@tanstack/react-query';
 
 
 const RegistrationPage: React.FC = () => {
     const navigate = useNavigate();
-    const { register: registerUser, isAuthenticated, user, refreshUser } = useAuth();
+    const { register: registerUser, isAuthenticated, user } = useAuth();
+    const queryClient = useQueryClient();
     const resendVerificationMutation = useResendVerification();
     const [googleLoading, setGoogleLoading] = useState(false);
     const [currentStep, setCurrentStep] = useState(0); // 0-indexed for MUI Stepper
@@ -258,12 +260,13 @@ const RegistrationPage: React.FC = () => {
         try {
             const { data } = await authApi.googleLogin({ id_token: credential });
             setTokens(data.access, data.refresh);
-            await refreshUser();
+            // Set user data directly in cache to trigger auth state update & redirect
+            queryClient.setQueryData(authKeys.me(), data.user);
         } catch (err: unknown) {
             let errorMessage = 'Google sign-up failed';
             if (err && typeof err === 'object' && 'response' in err) {
-                const error = err as { response?: { data?: { error?: string } }; message?: string };
-                errorMessage = error.response?.data?.error || error.message || errorMessage;
+                const error = err as { response?: { data?: { detail?: string; error?: string } }; message?: string };
+                errorMessage = error.response?.data?.detail || error.response?.data?.error || error.message || errorMessage;
             }
             setApiError(errorMessage);
         } finally {
@@ -654,12 +657,14 @@ const RegistrationPage: React.FC = () => {
                                         onSuccess={(credentialResponse) => {
                                             if (credentialResponse.credential) {
                                                 handleGoogleSuccess(credentialResponse.credential);
+                                            } else {
+                                                setApiError('Google sign-up failed: no credential received. Please try again.');
                                             }
                                         }}
                                         onError={() => setApiError('Google sign-up failed. Please try again.')}
                                         theme="outline"
                                         size="large"
-                                        text="continue_with"
+                                        text="signin_with"
                                         shape="rectangular"
                                         width={400}
                                     />

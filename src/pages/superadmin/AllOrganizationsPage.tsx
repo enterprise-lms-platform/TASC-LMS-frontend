@@ -66,7 +66,7 @@ const mockOrganizations: Organization[] = [
     id: '2',
     name: 'Global Tech Inc',
     initials: 'GT',
-    bgColor: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
+    bgColor: 'linear-gradient(135deg, #71717a, #a1a1aa)',
     plan: 'Enterprise',
     users: '1,890',
     courses: 42,
@@ -102,7 +102,7 @@ const mockOrganizations: Organization[] = [
     id: '5',
     name: 'NextGen Partners',
     initials: 'NP',
-    bgColor: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+    bgColor: 'linear-gradient(135deg, #3f3f46, #71717a)',
     plan: 'Enterprise',
     users: '1,234',
     courses: 34,
@@ -114,7 +114,7 @@ const mockOrganizations: Organization[] = [
     id: '6',
     name: 'Apex Learning Co',
     initials: 'AL',
-    bgColor: 'linear-gradient(135deg, #ef4444, #f87171)',
+    bgColor: 'linear-gradient(135deg, #ffa424, #ffb74d)',
     plan: 'Starter',
     users: '312',
     courses: 9,
@@ -126,7 +126,7 @@ const mockOrganizations: Organization[] = [
     id: '7',
     name: 'Stellar Education',
     initials: 'SE',
-    bgColor: 'linear-gradient(135deg, #06b6d4, #22d3ee)',
+    bgColor: 'linear-gradient(135deg, #a1a1aa, #d4d4d8)',
     plan: 'Professional',
     users: '728',
     courses: 21,
@@ -138,7 +138,7 @@ const mockOrganizations: Organization[] = [
     id: '8',
     name: 'Bright Horizons Ltd',
     initials: 'BH',
-    bgColor: 'linear-gradient(135deg, #ec4899, #f472b6)',
+    bgColor: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
     plan: 'Starter',
     users: '195',
     courses: 7,
@@ -179,8 +179,8 @@ const kpiCards = [
     title: 'Active',
     value: '128',
     icon: <ActiveIcon />,
-    // Soft Blue Theme
-    bgColor: '#e3f2fd', badgeColor: '#64b5f6', valueColor: '#1565c0', labelColor: '#0d47a1'
+    // Soft Grey Theme
+    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#3f3f46', labelColor: '#27272a'
   },
   {
     title: 'Pending Approval',
@@ -193,8 +193,8 @@ const kpiCards = [
     title: 'Suspended',
     value: '6',
     icon: <SuspendedIcon />,
-    // Pastel Purple Theme
-    bgColor: '#f3e5f5', badgeColor: '#d1c4e9', valueColor: '#9575cd', labelColor: '#673ab7'
+    // Warm Orange Theme
+    bgColor: '#fff3e0', badgeColor: '#ffb74d', valueColor: '#e65100', labelColor: '#bf360c'
   },
 ];
 

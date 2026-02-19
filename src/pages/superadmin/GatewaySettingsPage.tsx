@@ -7,7 +7,7 @@ const gateways = [
   { name: 'Flutterwave', status: 'Active', lastTx: 'Feb 15, 2026', txCount: 6234, gradient: 'linear-gradient(135deg, #ffb74d, #ffa424)' },
   { name: 'M-Pesa Direct', status: 'Active', lastTx: 'Feb 15, 2026', txCount: 1456, gradient: 'linear-gradient(135deg, #10b981, #34d399)' },
   { name: 'MTN MoMo', status: 'Active', lastTx: 'Feb 14, 2026', txCount: 534, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)' },
-  { name: 'Bank Transfer', status: 'Inactive', lastTx: 'Jan 28, 2026', txCount: 232, gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)' },
+  { name: 'Bank Transfer', status: 'Inactive', lastTx: 'Jan 28, 2026', txCount: 232, gradient: 'linear-gradient(135deg, #71717a, #a1a1aa)' },
 ];
 
 const GatewaySettingsPage: React.FC = () => {

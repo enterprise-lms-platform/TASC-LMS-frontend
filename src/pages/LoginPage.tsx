@@ -9,6 +9,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
 import { authApi } from '../services/auth.services';
 import { setTokens } from '../utils/config';
+import { useQueryClient } from '@tanstack/react-query';
+import { authKeys } from '../hooks/useAuthQueries';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 interface FeatureItemProps {
@@ -35,7 +37,8 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) =
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated, user, refreshUser } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
+  const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [email, setEmail] = useState('');
@@ -60,12 +63,13 @@ const LoginPage = () => {
     try {
       const { data } = await authApi.googleLogin({ id_token: credential });
       setTokens(data.access, data.refresh);
-      await refreshUser();
+      // Set user data directly in cache to trigger auth state update & redirect
+      queryClient.setQueryData(authKeys.me(), data.user);
     } catch (err: unknown) {
       let errorMessage = 'Google sign-in failed';
       if (err && typeof err === 'object' && 'response' in err) {
-        const error = err as { response?: { data?: { error?: string } }; message?: string };
-        errorMessage = error.response?.data?.error || error.message || errorMessage;
+        const error = err as { response?: { data?: { detail?: string; error?: string } }; message?: string };
+        errorMessage = error.response?.data?.detail || error.response?.data?.error || error.message || errorMessage;
       }
       setApiError(errorMessage);
     } finally {
@@ -175,7 +179,8 @@ const LoginPage = () => {
     try {
       const { data } = await authApi.verifyOtp({ challenge_id: challengeId, otp });
       setTokens(data.access, data.refresh);
-      await refreshUser();
+      // Set user data directly in cache to trigger auth state update & redirect
+      queryClient.setQueryData(authKeys.me(), data.user);
     } catch (err: unknown) {
       let errorMessage = 'Verification failed';
       if (err && typeof err === 'object' && 'response' in err) {
@@ -190,7 +195,7 @@ const LoginPage = () => {
     } finally {
       setOtpLoading(false);
     }
-  }, [challengeId, refreshUser]);
+  }, [challengeId, queryClient]);
 
   const handleResendOtp = async () => {
     if (resendTimer > 0 || resendCount >= 3) return;
@@ -416,12 +421,14 @@ const LoginPage = () => {
                           onSuccess={(credentialResponse) => {
                             if (credentialResponse.credential) {
                               handleGoogleSuccess(credentialResponse.credential);
+                            } else {
+                              setApiError('Google sign-in failed: no credential received. Please try again.');
                             }
                           }}
                           onError={() => setApiError('Google sign-in failed. Please try again.')}
                           theme="outline"
                           size="large"
-                          text="continue_with"
+                          text="signin_with"
                           shape="rectangular"
                           width={400}
                         />

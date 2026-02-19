@@ -17,15 +17,15 @@ const kpis = [
     label: 'Total Courses', 
     value: '876', 
     icon: <CoursesIcon />, 
-    // Soft Rose Theme
-    bgColor: '#fce4ec', badgeColor: '#f06292', valueColor: '#ad1457', labelColor: '#880e4f'
+    // Warm Orange Theme
+    bgColor: '#fff3e0', badgeColor: '#ffb74d', valueColor: '#e65100', labelColor: '#bf360c'
   },
   { 
     label: 'Published', 
     value: '654', 
     icon: <PublishIcon />, 
-    // Pale Teal Theme
-    bgColor: '#e0f2f1', badgeColor: '#4db6ac', valueColor: '#00695c', labelColor: '#004d40'
+    // Mint Green Theme
+    bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
   },
   { 
     label: 'Draft', 
@@ -52,11 +52,11 @@ const statusColors: Record<string, { bg: string; color: string }> = {
 };
 
 const catColors: Record<string, { bg: string; color: string }> = {
-  Technology: { bg: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' },
+  Technology: { bg: 'rgba(255, 164, 36, 0.1)', color: '#ffa424' },
   Business: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
-  Design: { bg: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' },
+  Design: { bg: 'rgba(113, 113, 122, 0.1)', color: '#71717a' },
   'Data Science': { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' },
-  Marketing: { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' },
+  Marketing: { bg: 'rgba(16, 185, 129, 0.15)', color: '#10b981' },
 };
 
 const courses = [
