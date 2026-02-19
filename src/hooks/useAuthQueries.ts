@@ -9,6 +9,7 @@ import { authApi, adminApi } from '../services/auth.services';
 import { setTokens, clearTokens, getAccessToken } from '../utils/config';
 import type {
   LoginRequest,
+  VerifyOtpRequest,
   RegisterRequest,
   ChangePasswordRequest,
   PasswordResetRequest,
@@ -52,24 +53,40 @@ export const useGoogleStatus = () =>
 
 // ─── Mutations ───────────────────────────────────────────────
 
-/** Login — stores tokens and primes the user cache. */
-export const useLogin = () => {
-  const qc = useQueryClient();
-  return useMutation({
+/** Login step 1 — returns MFA challenge (no tokens yet). */
+export const useLogin = () =>
+  useMutation({
     mutationFn: async (credentials: LoginRequest) => {
       const { data } = await authApi.login(credentials);
       return data;
     },
+  });
+
+/** Login step 2 — verify OTP, stores tokens and primes the user cache. */
+export const useVerifyOtp = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: VerifyOtpRequest) => {
+      const { data } = await authApi.verifyOtp(payload);
+      return data;
+    },
     onSuccess: (data) => {
-      // Store JWT tokens
       setTokens(data.access, data.refresh);
-      // Prime the user cache so we don't need an extra /me call
       if (data.user) {
         qc.setQueryData(authKeys.me(), data.user);
       }
     },
   });
 };
+
+/** Resend login OTP. */
+export const useResendLoginOtp = () =>
+  useMutation({
+    mutationFn: async (challengeId: string) => {
+      const { data } = await authApi.resendOtp(challengeId);
+      return data;
+    },
+  });
 
 /** Register — does NOT log the user in (email verification required). */
 export const useRegister = () =>

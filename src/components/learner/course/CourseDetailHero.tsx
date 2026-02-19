@@ -41,26 +41,23 @@ const CourseDetailHero: React.FC<CourseDetailHeroProps> = ({
   return (
     <Box
       sx={{
-        background: 'linear-gradient(135deg, #ffa424, #f97316)',
+        backgroundImage: 'url("https://images.unsplash.com/photo-1616400619175-5beda3a17896?q=80&w=1074")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         color: 'white',
         py: { xs: 6, md: 8 },
         px: { xs: 2, md: 4 },
         position: 'relative',
         overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(90deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 70%, transparent 100%)',
+          pointerEvents: 'none',
+        },
       }}
     >
-      {/* Background Pattern */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 200" opacity="0.1"><path d="M0,100 C250,0 500,200 750,100 T1000,100 V200 H0 Z" fill="white"/></svg>') bottom center no-repeat`,
-          backgroundSize: 'cover',
-        }}
-      />
 
       <Box
         sx={{

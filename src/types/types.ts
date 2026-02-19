@@ -138,6 +138,27 @@ export interface AuthTokens {
   user: UserMe;
 }
 
+export interface MfaChallengeResponse {
+  mfa_required: boolean;
+  method: string;
+  challenge_id: string;
+  expires_in: number;
+}
+
+export interface VerifyOtpRequest {
+  challenge_id: string;
+  otp: string;
+}
+
+export interface ResendOtpRequest {
+  challenge_id: string;
+}
+
+export interface ResendOtpResponse {
+  detail: string;
+  expires_in: number;
+}
+
 export interface RegisterRequest {
   email: string;
   password: string;

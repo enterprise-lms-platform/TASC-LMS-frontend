@@ -23,11 +23,11 @@ const kpiData = [
     title: 'Active Organizations',
     value: '142',
     icon: <OrganizationsIcon />,
-    // Soft Blue Theme
-    bgColor: '#e3f2fd',
-    badgeColor: '#64b5f6',
-    valueColor: '#1565c0',
-    labelColor: '#1976d2',
+    // Grey Theme
+    bgColor: '#f4f4f5',
+    badgeColor: '#a1a1aa',
+    valueColor: '#27272a',
+    labelColor: '#3f3f46',
   },
   {
     title: 'Monthly Revenue',
@@ -43,11 +43,11 @@ const kpiData = [
     title: 'Active Courses',
     value: '876',
     icon: <CoursesIcon />,
-    // Dusty Lavender Theme
-    bgColor: '#f3e5f5',
-    badgeColor: '#ba68c8',
-    valueColor: '#6a1b9a',
-    labelColor: '#7b1fa2',
+    // Green Theme
+    bgColor: '#f0fdf4',
+    badgeColor: '#86efac',
+    valueColor: '#14532d',
+    labelColor: '#166534',
   },
 ];
 

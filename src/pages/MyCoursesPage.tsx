@@ -16,46 +16,47 @@ import TopBar from '../components/learner/TopBar';
 
 /* ── Static data (will come from backend later) ── */
 
+/* Same color scheme as Learner Dashboard QuickStats */
 const kpis = [
-  { 
-    label: 'In Progress', 
-    value: '4', 
-    icon: <CourseIcon />, 
-    // Light Blue Theme
-    bgcolor: '#dbeafe',
-    iconBg: '#93c5fd',
-    color: '#1e3a8a',
-    subColor: '#1e40af',
-  },
-  { 
-    label: 'Completed', 
-    value: '8', 
-    icon: <CompletedIcon />, 
-    // Mint Green Theme
+  {
+    label: 'In Progress',
+    value: '4',
+    icon: <CourseIcon />,
+    // Green Theme (matches Active Courses)
     bgcolor: '#dcfce7',
-    iconBg: '#86efac',
+    iconBg: '#4ade80',
     color: '#14532d',
     subColor: '#166534',
   },
-  { 
-    label: 'Total Hours', 
-    value: '127', 
-    icon: <TimeIcon />, 
-    // Warm Peach Theme
-    bgcolor: '#ffedd5',
-    iconBg: '#fdba74',
+  {
+    label: 'Completed',
+    value: '8',
+    icon: <CompletedIcon />,
+    // Grey Theme (matches Learning Hours)
+    bgcolor: '#f4f4f5',
+    iconBg: '#a1a1aa',
+    color: '#27272a',
+    subColor: '#3f3f46',
+  },
+  {
+    label: 'Total Hours',
+    value: '127',
+    icon: <TimeIcon />,
+    // Orange Theme (matches Certificates)
+    bgcolor: '#fff3e0',
+    iconBg: '#ffa424',
     color: '#7c2d12',
     subColor: '#9a3412',
   },
-  { 
-    label: 'Avg. Rating', 
-    value: '4.7', 
-    icon: <StarIcon />, 
-    // Dusty Lavender Theme
-    bgcolor: '#f3e8ff',
-    iconBg: '#d8b4fe',
-    color: '#581c87',
-    subColor: '#6b21a8',
+  {
+    label: 'Avg. Rating',
+    value: '4.7',
+    icon: <StarIcon />,
+    // Green Theme alt (matches Avg. Score)
+    bgcolor: '#f0fdf4',
+    iconBg: '#86efac',
+    color: '#14532d',
+    subColor: '#166534',
   },
 ];
 

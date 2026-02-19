@@ -1,20 +1,23 @@
 import React from 'react';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import { Add as AddIcon, Videocam as VideoIcon } from '@mui/icons-material';
+import { useAuth } from '../../contexts/AuthContext';
 
-// Instructor data (will come from backend later)
 const instructorData = {
-  name: 'Michael',
   assignmentsToGrade: 12,
   sessionsThisWeek: 2,
 };
 
 const WelcomeBanner: React.FC = () => {
+  const { user } = useAuth();
+  const firstName = user?.first_name || 'there';
   return (
     <Paper
       elevation={0}
       sx={{
-        background: 'linear-gradient(135deg, #ffa424 0%, #f97316 100%)',
+        backgroundImage: 'url("/dashboard banner images/instructor.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         color: 'white',
         p: { xs: 2.5, md: 3 },
         borderRadius: 2,
@@ -29,12 +32,9 @@ const WelcomeBanner: React.FC = () => {
         '&::before': {
           content: '""',
           position: 'absolute',
-          top: '-50%',
-          right: '-10%',
-          width: 300,
-          height: 300,
-          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%)',
-          borderRadius: '50%',
+          inset: 0,
+          background: 'linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 70%, transparent 100%)',
+          pointerEvents: 'none',
         },
       }}
     >
@@ -45,7 +45,7 @@ const WelcomeBanner: React.FC = () => {
           gutterBottom
           sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}
         >
-          Welcome back, {instructorData.name}!
+          Welcome back, {firstName}!
         </Typography>
         <Typography
           variant="body2"

@@ -10,7 +10,7 @@ import {
 } from '../hooks/useAuthQueries';
 import { getRefreshToken, clearTokens, getErrorMessage } from '../services/main.api';
 import { AuthContext, type AuthContextType } from './AuthContextDefinition';
-import type { LoginRequest, RegisterRequest } from '../types/types';
+import type { LoginRequest, RegisterRequest, MfaChallengeResponse } from '../types/types';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -33,11 +33,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logoutMutation = useLogout();
 
   const login = useCallback(
-    async (credentials: LoginRequest) => {
+    async (credentials: LoginRequest): Promise<MfaChallengeResponse> => {
       setError(null);
       try {
-        await loginMutation.mutateAsync(credentials);
-        // Token is stored & user cache primed by the mutation's onSuccess
+        const result = await loginMutation.mutateAsync(credentials);
+        return result;
       } catch (err) {
         const message = getErrorMessage(err);
         setError(message);

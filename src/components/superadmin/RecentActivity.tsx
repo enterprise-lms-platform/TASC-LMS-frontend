@@ -35,7 +35,7 @@ const activities: ActivityItem[] = [
     text: 'New course published: "Advanced Data Science"',
     time: '2 hours ago',
     icon: <CourseIcon sx={{ fontSize: 13 }} />,
-    iconBg: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
+    iconBg: 'linear-gradient(135deg, #a1a1aa, #71717a)',
   },
   {
     id: '4',

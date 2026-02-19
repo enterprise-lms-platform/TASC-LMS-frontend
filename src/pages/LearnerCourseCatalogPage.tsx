@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Toolbar, CssBaseline, Typography, Grid, Stack, Link } from '@mui/material';
-import { ChevronRight } from '@mui/icons-material';
+import { Box, Toolbar, CssBaseline, Typography, Grid, Stack, Link, Paper } from '@mui/material';
+import { ChevronRight, MenuBook, People, School, Star } from '@mui/icons-material';
+import '../styles/LearnerDashboard.css';
 
 // Import learner components
 import Sidebar, { DRAWER_WIDTH } from '../components/learner/Sidebar';
@@ -14,6 +15,14 @@ import CatalogCategoryCard, { defaultCategories } from '../components/learner/ca
 import CatalogCourseCard, { sampleCourses } from '../components/learner/catalog/CatalogCourseCard';
 import CatalogInstructorCard, { sampleInstructors } from '../components/learner/catalog/CatalogInstructorCard';
 import CatalogPagination from '../components/learner/catalog/CatalogPagination';
+
+/* Same color scheme as Learner Dashboard QuickStats */
+const catalogKpis = [
+  { label: 'Courses', value: '1000+', icon: <MenuBook />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+  { label: 'Instructors', value: '200+', icon: <School />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+  { label: 'Learners', value: '50K+', icon: <People />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+  { label: 'Avg Rating', value: '4.8', icon: <Star />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+];
 
 const LearnerCourseCatalogPage: React.FC = () => {
   const navigate = useNavigate();
@@ -132,6 +141,59 @@ const LearnerCourseCatalogPage: React.FC = () => {
 
         {/* Hero Section */}
         <CatalogHero />
+
+        {/* Stat Cards */}
+        <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
+          {catalogKpis.map((k, index) => (
+            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
+              <Paper
+                elevation={0}
+                className={`stat-card ld-fade-in ld-fade-in-${index}`}
+                sx={{
+                  bgcolor: k.bgcolor,
+                  borderRadius: '20px',
+                  p: 3,
+                  position: 'relative',
+                  height: '100%',
+                  minHeight: 160,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  transition: 'transform 0.2s',
+                  cursor: 'pointer',
+                  '&:hover': { transform: 'translateY(-4px)' },
+                }}
+              >
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 16,
+                    right: 16,
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    bgcolor: k.iconBg,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    '& svg': { fontSize: 20 },
+                  }}
+                >
+                  {k.icon}
+                </Box>
+                <Typography variant="h3" sx={{ fontWeight: 700, color: k.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
+                  {k.value}
+                </Typography>
+                <Typography variant="body2" sx={{ color: k.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>
+                  {k.label}
+                </Typography>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
 
         {/* Filter Bar */}
         <CatalogFilterBar />

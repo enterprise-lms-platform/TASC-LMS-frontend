@@ -10,14 +10,14 @@ import {
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 
 const kpis = [
-  { label: 'Total Partners', value: '12', icon: <PartnerIcon />, gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)', trend: '+2 this quarter' },
+  { label: 'Total Partners', value: '12', icon: <PartnerIcon />, gradient: 'linear-gradient(135deg, #71717a, #a1a1aa)', trend: '+2 this quarter' },
   { label: 'Active Partnerships', value: '9', icon: <PartnerIcon />, gradient: 'linear-gradient(135deg, #10b981, #34d399)', trend: '75% active' },
   { label: 'Revenue from Partners', value: '$45,200', icon: <TrendIcon />, gradient: 'linear-gradient(135deg, #ffb74d, #ffa424)', trend: '+18% vs last quarter' },
 ];
 
 const typeColors: Record<string, { bg: string; color: string }> = {
-  'Content Provider': { bg: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' },
-  Technology: { bg: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' },
+  'Content Provider': { bg: 'rgba(255, 164, 36, 0.1)', color: '#e65100' },
+  Technology: { bg: 'rgba(113, 113, 122, 0.1)', color: '#71717a' },
   'Certification Body': { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' },
   Reseller: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
 };

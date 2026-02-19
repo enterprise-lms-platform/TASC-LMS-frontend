@@ -37,22 +37,22 @@ const kpiStats = [
     title: 'Total Users',
     value: '24,587',
     icon: <UsersIcon />,
-    // Soft Coral Theme
-    bgColor: '#fbe9e7', badgeColor: '#ff8a65', valueColor: '#bf360c', labelColor: '#d84315'
+    // Orange Theme
+    bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412'
   },
   {
     title: 'Active Users',
     value: '21,340',
     icon: <UsersIcon />,
-    // Pale Indigo Theme
-    bgColor: '#e8eaf6', badgeColor: '#7986cb', valueColor: '#283593', labelColor: '#303f9f'
+    // Green Theme
+    bgColor: '#dcfce7', badgeColor: '#4ade80', valueColor: '#14532d', labelColor: '#166534'
   },
   {
     title: 'New This Month',
     value: '1,247',
     icon: <PersonAddIcon />,
-    // Light Cyan Theme
-    bgColor: '#e0f7fa', badgeColor: '#4dd0e1', valueColor: '#00838f', labelColor: '#006064'
+    // Grey Theme
+    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
   },
   {
     title: 'Suspended',
@@ -83,7 +83,7 @@ const mockUsers: MockUser[] = [
     organization: 'Acme Corporation',
     status: 'active',
     lastLogin: '2026-02-15 09:32',
-    avatarColor: '#3b82f6',
+    avatarColor: '#ffa424',
   },
   {
     id: '2',
@@ -113,7 +113,7 @@ const mockUsers: MockUser[] = [
     organization: 'Future Dynamics',
     status: 'pending',
     lastLogin: 'Never',
-    avatarColor: '#8b5cf6',
+    avatarColor: '#71717a',
   },
   {
     id: '5',
@@ -123,7 +123,7 @@ const mockUsers: MockUser[] = [
     organization: 'Acme Corporation',
     status: 'active',
     lastLogin: '2026-02-14 14:22',
-    avatarColor: '#ef4444',
+    avatarColor: '#a1a1aa',
   },
   {
     id: '6',
@@ -133,7 +133,7 @@ const mockUsers: MockUser[] = [
     organization: 'Global Tech Inc',
     status: 'active',
     lastLogin: '2026-02-15 10:05',
-    avatarColor: '#ec4899',
+    avatarColor: '#166534',
   },
   {
     id: '7',
@@ -143,7 +143,7 @@ const mockUsers: MockUser[] = [
     organization: 'NextGen Partners',
     status: 'suspended',
     lastLogin: '2026-01-28 11:30',
-    avatarColor: '#6366f1',
+    avatarColor: '#3f3f46',
   },
   {
     id: '8',
@@ -153,7 +153,7 @@ const mockUsers: MockUser[] = [
     organization: 'Innovate Solutions',
     status: 'active',
     lastLogin: '2026-02-15 07:50',
-    avatarColor: '#14b8a6',
+    avatarColor: '#4ade80',
   },
 ];
 
@@ -173,15 +173,15 @@ const getStatusColor = (status: string) => {
 const getRoleColor = (role: string) => {
   switch (role) {
     case 'Admin':
-      return { bgcolor: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' };
+      return { bgcolor: 'rgba(255, 164, 36, 0.1)', color: '#e65100' };
     case 'Instructor':
-      return { bgcolor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' };
-    case 'Learner':
       return { bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
+    case 'Learner':
+      return { bgcolor: 'rgba(113, 113, 122, 0.1)', color: '#71717a' };
     case 'Manager':
       return { bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
     case 'Finance':
-      return { bgcolor: 'rgba(236, 72, 153, 0.1)', color: '#ec4899' };
+      return { bgcolor: 'rgba(16, 185, 129, 0.15)', color: '#166534' };
     default:
       return { bgcolor: 'grey.100', color: 'text.secondary' };
   }
@@ -413,7 +413,7 @@ const AllUsersPage: React.FC = () => {
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
-              background: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
+              background: 'linear-gradient(135deg, #ffa424, #ffb74d)',
               flexShrink: 0,
             }}
           >

@@ -8,9 +8,9 @@ const stats = [
     label: 'Active Courses',
     value: '6',
     icon: <MenuBook />,
-    // Mint Green Theme
+    // Green Theme
     bgcolor: '#dcfce7',
-    iconBg: '#86efac',
+    iconBg: '#4ade80',
     color: '#14532d',
     subColor: '#166534',
   },
@@ -18,19 +18,19 @@ const stats = [
     label: 'Learning Hours',
     value: '42',
     icon: <AccessTime />,
-    // Light Blue Theme
-    bgcolor: '#dbeafe',
-    iconBg: '#93c5fd',
-    color: '#1e3a8a',
-    subColor: '#1e40af',
+    // Grey Theme
+    bgcolor: '#f4f4f5',
+    iconBg: '#a1a1aa',
+    color: '#27272a',
+    subColor: '#3f3f46',
   },
   {
     label: 'Certificates',
     value: '3',
     icon: <School />,
-    // Warm Peach Theme
-    bgcolor: '#ffedd5',
-    iconBg: '#fdba74',
+    // Orange Theme
+    bgcolor: '#fff3e0',
+    iconBg: '#ffa424',
     color: '#7c2d12',
     subColor: '#9a3412',
   },
@@ -38,11 +38,11 @@ const stats = [
     label: 'Avg. Score',
     value: '4.8',
     icon: <Star />,
-    // Dusty Lavender Theme
-    bgcolor: '#f3e8ff',
-    iconBg: '#d8b4fe',
-    color: '#581c87',
-    subColor: '#6b21a8',
+    // Green Theme (alt)
+    bgcolor: '#f0fdf4',
+    iconBg: '#86efac',
+    color: '#14532d',
+    subColor: '#166534',
   },
 ];
 

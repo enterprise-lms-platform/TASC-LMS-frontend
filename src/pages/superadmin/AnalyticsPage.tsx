@@ -17,29 +17,29 @@ const kpis = [
     label: 'Monthly Active Users', 
     value: '8,234', 
     icon: <UsersIcon />, 
-    // Soft Rose Theme
-    bgColor: '#fce4ec', badgeColor: '#f06292', valueColor: '#ad1457', labelColor: '#880e4f'
+    // Orange Theme
+    bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412'
   },
   { 
     label: 'Course Completion Rate', 
     value: '67.8%', 
     icon: <CourseIcon />, 
-    // Pale Teal Theme
-    bgColor: '#e0f2f1', badgeColor: '#4db6ac', valueColor: '#00695c', labelColor: '#004d40'
+    // Green Theme
+    bgColor: '#dcfce7', badgeColor: '#4ade80', valueColor: '#14532d', labelColor: '#166534'
   },
   { 
     label: 'Avg. Session Duration', 
     value: '42 min', 
     icon: <TimeIcon />, 
-    // Light Amber Theme
-    bgColor: '#fff8e1', badgeColor: '#ffd54f', valueColor: '#f57f17', labelColor: '#ff6f00'
+    // Grey Theme
+    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
   },
   { 
     label: 'Platform Growth', 
     value: '+23.4%', 
     icon: <TrendIcon />, 
-    // Cool Gray-Blue Theme
-    bgColor: '#eceff1', badgeColor: '#90a4ae', valueColor: '#37474f', labelColor: '#263238'
+    // Green Alt Theme
+    bgColor: '#f0fdf4', badgeColor: '#86efac', valueColor: '#14532d', labelColor: '#166534'
   },
 ];
 
@@ -169,7 +169,7 @@ const AnalyticsPage: React.FC = () => (
                 <Typography variant="caption" color="text.secondary">{c.enrollments.toLocaleString()} enrolled</Typography>
                 <Typography variant="caption" color="text.secondary">{c.completion}% completion</Typography>
               </Box>
-              <LinearProgress variant="determinate" value={c.completion} sx={{ height: 4, borderRadius: 2, bgcolor: 'grey.200', '& .MuiLinearProgress-bar': { borderRadius: 2, bgcolor: '#3b82f6' } }} />
+              <LinearProgress variant="determinate" value={c.completion} sx={{ height: 4, borderRadius: 2, bgcolor: 'grey.200', '& .MuiLinearProgress-bar': { borderRadius: 2, bgcolor: '#ffa424' } }} />
             </Box>
           ))}
         </Paper>

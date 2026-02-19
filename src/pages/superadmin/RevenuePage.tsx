@@ -16,29 +16,29 @@ const kpis = [
     label: 'Total Revenue', 
     value: '$2.4M', 
     icon: <MoneyIcon />, 
-    // Blush Pink Theme
-    bgColor: '#ffeef2', badgeColor: '#f48fb1', valueColor: '#c2185b', labelColor: '#880e4f'
+    // Orange Theme
+    bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412'
   },
   { 
     label: 'Monthly Revenue', 
     value: '$186K', 
     icon: <TrendIcon />, 
-    // Pale Sand Theme
-    bgColor: '#efebe9', badgeColor: '#a1887f', valueColor: '#4e342e', labelColor: '#3e2723'
+    // Green Theme
+    bgColor: '#dcfce7', badgeColor: '#4ade80', valueColor: '#14532d', labelColor: '#166534'
   },
   { 
     label: 'Avg Revenue Per Org', 
     value: '$16,900', 
     icon: <ChartIcon />, 
-    // Soft Sky Theme
-    bgColor: '#e1f5fe', badgeColor: '#4fc3f7', valueColor: '#0277bd', labelColor: '#01579b'
+    // Grey Theme
+    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
   },
   { 
     label: 'Growth Rate', 
     value: '+12.5%', 
     icon: <TrendIcon />, 
-    // Muted Mauve Theme
-    bgColor: '#ede7f6', badgeColor: '#9575cd', valueColor: '#4527a0', labelColor: '#311b92'
+    // Green Alt Theme
+    bgColor: '#f0fdf4', badgeColor: '#86efac', valueColor: '#14532d', labelColor: '#166534'
   },
 ];
 

@@ -17,8 +17,8 @@ const kpis = [
     label: 'Total Instructors', 
     value: '156', 
     icon: <InstructorIcon />, 
-    // Soft Blue Theme
-    bgColor: '#e3f2fd', badgeColor: '#64b5f6', valueColor: '#1565c0', labelColor: '#0d47a1'
+    // Orange Theme
+    bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412'
   },
   { 
     label: 'Active', 
@@ -38,8 +38,8 @@ const kpis = [
     label: 'Total Courses Created', 
     value: '876', 
     icon: <CourseIcon />, 
-    // Dusty Lavender Theme
-    bgColor: '#f3e5f5', badgeColor: '#ba68c8', valueColor: '#6a1b9a', labelColor: '#4a148c'
+    // Grey Theme
+    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
   },
 ];
 

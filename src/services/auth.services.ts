@@ -7,6 +7,9 @@ import { apiClient, getErrorMessage } from '../utils/config';
 import type {
   LoginRequest,
   AuthTokens,
+  MfaChallengeResponse,
+  VerifyOtpRequest,
+  ResendOtpResponse,
   RegisterRequest,
   RegisterResponse,
   ChangePasswordRequest,
@@ -26,9 +29,19 @@ const ADMIN_PATH = '/api/v1/admin';
 
 export const authApi = {
   
-  //  Login with email and password
+  //  Login with email and password (returns MFA challenge)
   login: (data: LoginRequest) =>
-    apiClient.post<AuthTokens>(`${BASE_PATH}/login/`, data),
+    apiClient.post<MfaChallengeResponse>(`${BASE_PATH}/login/`, data),
+
+  // Verify OTP to complete login
+  verifyOtp: (data: VerifyOtpRequest) =>
+    apiClient.post<AuthTokens>(`${BASE_PATH}/login/verify-otp/`, data),
+
+  // Resend login OTP
+  resendOtp: (challengeId: string) =>
+    apiClient.post<ResendOtpResponse>(`${BASE_PATH}/login/resend-otp/`, {
+      challenge_id: challengeId,
+    }),
 
   
   //  Register a new user account

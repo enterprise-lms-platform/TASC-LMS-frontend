@@ -16,8 +16,8 @@ const kpis = [
     label: 'Total Invoices', 
     value: '3,245', 
     icon: <InvoiceIcon />, 
-    // Light Cyan Theme
-    bgColor: '#e0f7fa', badgeColor: '#4dd0e1', valueColor: '#00838f', labelColor: '#006064'
+    // Grey Theme
+    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
   },
   { 
     label: 'Paid', 
@@ -37,15 +37,15 @@ const kpis = [
     label: 'Overdue', 
     value: '$45K', 
     icon: <OverdueIcon />, 
-    // Soft Rose Theme
-    bgColor: '#fce4ec', badgeColor: '#f06292', valueColor: '#ad1457', labelColor: '#880e4f'
+    // Orange Theme
+    bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412'
   },
 ];
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   Paid: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
   Pending: { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' },
-  Overdue: { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' },
+  Overdue: { bg: 'rgba(255, 164, 36, 0.1)', color: '#e65100' },
   Cancelled: { bg: 'rgba(156, 163, 175, 0.1)', color: '#71717a' },
 };
 

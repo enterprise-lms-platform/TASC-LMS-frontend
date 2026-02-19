@@ -36,7 +36,7 @@ const roles: RoleCard[] = [
     description: 'Full platform control with access to all system settings, organizations, and configurations',
     userCount: 2,
     icon: <SuperAdminIcon sx={{ fontSize: 28 }} />,
-    iconBg: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+    iconBg: 'linear-gradient(135deg, #ffa424, #ffb74d)',
   },
   {
     name: 'LMS Manager',
@@ -64,7 +64,7 @@ const roles: RoleCard[] = [
     description: 'Financial oversight including payment tracking, invoices, subscriptions, and revenue reports',
     userCount: 5,
     icon: <FinanceIcon sx={{ fontSize: 28 }} />,
-    iconBg: 'linear-gradient(135deg, #ec4899, #f472b6)',
+    iconBg: 'linear-gradient(135deg, #71717a, #a1a1aa)',
   },
 ];
 
@@ -253,7 +253,7 @@ const RolesPermissionsPage: React.FC = () => {
                       {permissionMatrix[permission][role] ? (
                         <CheckIcon sx={{ color: '#10b981', fontSize: 22 }} />
                       ) : (
-                        <CloseIcon sx={{ color: '#ef4444', fontSize: 22 }} />
+                        <CloseIcon sx={{ color: '#a1a1aa', fontSize: 22 }} />
                       )}
                     </TableCell>
                   ))}

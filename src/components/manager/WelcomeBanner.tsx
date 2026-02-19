@@ -16,7 +16,9 @@ const WelcomeBanner: React.FC = () => {
     <Paper
       elevation={0}
       sx={{
-        background: 'linear-gradient(135deg, #ffa424 0%, #f97316 100%)',
+        backgroundImage: 'url("/dashboard banner images/LMS manager.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         color: 'white',
         p: { xs: 3, md: 4 },
         borderRadius: 3,
@@ -32,12 +34,9 @@ const WelcomeBanner: React.FC = () => {
         '&::before': {
           content: '""',
           position: 'absolute',
-          top: '-50%',
-          right: '-20%',
-          width: 400,
-          height: 400,
-          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%)',
-          borderRadius: '50%',
+          inset: 0,
+          background: 'linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 70%, transparent 100%)',
+          pointerEvents: 'none',
         },
       }}
     >

@@ -17,46 +17,47 @@ import TopBar from '../components/learner/TopBar';
 
 /* ── Static data ── */
 
+/* Same color scheme as Learner Dashboard QuickStats */
 const kpis = [
-  { 
-    label: 'Unread', 
-    value: '5', 
-    icon: <NotifIcon />, 
-    // Soft Rose Theme
-    bgcolor: '#fce4ec',
-    iconBg: '#f06292',
-    color: '#ad1457',
-    subColor: '#880e4f',
+  {
+    label: 'Unread',
+    value: '5',
+    icon: <NotifIcon />,
+    // Green Theme
+    bgcolor: '#dcfce7',
+    iconBg: '#4ade80',
+    color: '#14532d',
+    subColor: '#166534',
   },
-  { 
-    label: 'Course Updates', 
-    value: '12', 
-    icon: <CourseIcon />, 
-    // Mint Green Theme
-    bgcolor: '#e8f5e9',
-    iconBg: '#81c784',
-    color: '#2e7d32',
-    subColor: '#1b5e20',
+  {
+    label: 'Course Updates',
+    value: '12',
+    icon: <CourseIcon />,
+    // Grey Theme
+    bgcolor: '#f4f4f5',
+    iconBg: '#a1a1aa',
+    color: '#27272a',
+    subColor: '#3f3f46',
   },
-  { 
-    label: 'Achievements', 
-    value: '3', 
-    icon: <AwardIcon />, 
-    // Light Amber Theme
-    bgcolor: '#fff8e1',
-    iconBg: '#ffd54f',
-    color: '#f57f17',
-    subColor: '#ff6f00',
+  {
+    label: 'Achievements',
+    value: '3',
+    icon: <AwardIcon />,
+    // Orange Theme
+    bgcolor: '#fff3e0',
+    iconBg: '#ffa424',
+    color: '#7c2d12',
+    subColor: '#9a3412',
   },
-  { 
-    label: 'Announcements', 
-    value: '2', 
-    icon: <AnnouncementIcon />, 
-    // Soft Blue Theme
-    bgcolor: '#e3f2fd',
-    iconBg: '#64b5f6',
-    color: '#1565c0',
-    subColor: '#0d47a1',
+  {
+    label: 'Announcements',
+    value: '2',
+    icon: <AnnouncementIcon />,
+    // Green Theme alt
+    bgcolor: '#f0fdf4',
+    iconBg: '#86efac',
+    color: '#14532d',
+    subColor: '#166534',
   },
 ];
 

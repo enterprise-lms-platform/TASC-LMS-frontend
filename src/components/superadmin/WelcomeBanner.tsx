@@ -7,7 +7,9 @@ const WelcomeBanner: React.FC = () => {
     <Paper
       elevation={0}
       sx={{
-        background: 'linear-gradient(135deg, #ffa424 0%, #f97316 50%, #ea580c 100%)',
+        backgroundImage: 'url("/dashboard banner images/super admin1.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         color: 'white',
         p: { xs: 3, md: 4 },
         borderRadius: '1.25rem',
@@ -19,16 +21,12 @@ const WelcomeBanner: React.FC = () => {
         gap: 2,
         position: 'relative',
         overflow: 'hidden',
-        /* Radial highlight top-right */
+        /* Dark overlay for text readability */
         '&::before': {
           content: '""',
           position: 'absolute',
-          top: -40,
-          right: -40,
-          width: 200,
-          height: 200,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 70%)',
+          inset: 0,
+          background: 'linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 70%, transparent 100%)',
           pointerEvents: 'none',
         },
         /* Subtle geometric pattern */

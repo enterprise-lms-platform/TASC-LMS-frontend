@@ -25,22 +25,22 @@ const kpis = [
     label: 'MFA Enabled', 
     value: '72.4%', 
     icon: <MFAIcon />, 
-    // Soft Blue Theme
-    bgColor: '#e3f2fd', badgeColor: '#64b5f6', valueColor: '#1565c0', labelColor: '#0d47a1'
+    // Grey Theme
+    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
   },
   { 
     label: 'Failed Logins (24h)', 
     value: '156', 
     icon: <BlockIcon />, 
-    // Soft Rose Theme
-    bgColor: '#fce4ec', badgeColor: '#f06292', valueColor: '#ad1457', labelColor: '#880e4f'
+    // Orange Theme
+    bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412'
   },
   { 
     label: 'Active Sessions', 
     value: '3,456', 
     icon: <SessionIcon />, 
-    // Dusty Lavender Theme
-    bgColor: '#f3e5f5', badgeColor: '#ba68c8', valueColor: '#6a1b9a', labelColor: '#4a148c'
+    // Green Alt Theme
+    bgColor: '#f0fdf4', badgeColor: '#86efac', valueColor: '#14532d', labelColor: '#166534'
   },
 ];
 
@@ -84,7 +84,7 @@ const SecurityPage: React.FC = () => (
       <Grid size={{ xs: 12, lg: 4 }}>
         <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', height: '100%' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-            <Box sx={{ width: 40, height: 40, borderRadius: 2, background: 'linear-gradient(135deg, #3b82f6, #60a5fa)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+            <Box sx={{ width: 40, height: 40, borderRadius: 2, background: 'linear-gradient(135deg, #ffa424, #ffb74d)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
               <MFAIcon fontSize="small" />
             </Box>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>MFA Configuration</Typography>
@@ -118,7 +118,7 @@ const SecurityPage: React.FC = () => (
       <Grid size={{ xs: 12, lg: 4 }}>
         <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', height: '100%' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-            <Box sx={{ width: 40, height: 40, borderRadius: 2, background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+            <Box sx={{ width: 40, height: 40, borderRadius: 2, background: 'linear-gradient(135deg, #71717a, #a1a1aa)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
               <PasswordIcon fontSize="small" />
             </Box>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>Password Policy</Typography>

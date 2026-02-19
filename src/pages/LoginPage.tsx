@@ -4,8 +4,12 @@ import { faBookOpen, faCertificate, faChalkboardTeacher, faEye, faEyeSlash, faGr
 import {  loginStyles } from '../styles/loginTheme'
 
 import { Box, Button, Divider, Stack, Typography, TextField, FormControlLabel, Checkbox, Alert } from "@mui/material"
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
+import { authApi } from '../services/auth.services';
+import { setTokens } from '../utils/config';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -31,7 +35,7 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) =
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated, user } = useAuth();
+  const { login, isAuthenticated, user, refreshUser } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [email, setEmail] = useState('');
@@ -41,8 +45,33 @@ const LoginPage = () => {
   const [passwordError, setPasswordError] = useState('');
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  // MFA feature not yet implemented
-  const showMFA = false;
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  // MFA state
+  const [showMFA, setShowMFA] = useState(false);
+  const [challengeId, setChallengeId] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [resendCount, setResendCount] = useState(0);
+
+  const handleGoogleSuccess = async (credential: string) => {
+    setGoogleLoading(true);
+    setApiError('');
+    try {
+      const { data } = await authApi.googleLogin({ id_token: credential });
+      setTokens(data.access, data.refresh);
+      await refreshUser();
+    } catch (err: unknown) {
+      let errorMessage = 'Google sign-in failed';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const error = err as { response?: { data?: { error?: string } }; message?: string };
+        errorMessage = error.response?.data?.error || error.message || errorMessage;
+      }
+      setApiError(errorMessage);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -59,6 +88,15 @@ const LoginPage = () => {
     }
   }, [isAuthenticated, user, navigate]);
 
+  // Resend OTP countdown timer
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const interval = setInterval(() => {
+      setResendTimer((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
   const handlePasswordToggle = () => {
     setShowPassword(!showPassword);
   };
@@ -70,14 +108,14 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     // Reset errors
     setEmailError('');
     setPasswordError('');
     setApiError('');
-    
+
     let isValid = true;
-    
+
     // Validate email
     if (!email.trim()) {
       setEmailError('Email is required');
@@ -86,7 +124,7 @@ const LoginPage = () => {
       setEmailError('Please enter a valid email address');
       isValid = false;
     }
-    
+
     // Validate password
     if (!password.trim()) {
       setPasswordError('Password is required');
@@ -95,22 +133,26 @@ const LoginPage = () => {
       setPasswordError('Password must be at least 8 characters');
       isValid = false;
     }
-    
+
     if (isValid) {
       setIsLoading(true);
       try {
-        await login({ email, password });
-        // Login successful, user will be redirected by the useEffect above
+        const mfaResponse = await login({ email, password });
+        if (mfaResponse.mfa_required) {
+          setChallengeId(mfaResponse.challenge_id);
+          setShowMFA(true);
+          setResendTimer(30);
+          setResendCount(1);
+          setApiError('');
+        }
       } catch (err: unknown) {
-        // Handle specific error cases
         let errorMessage = 'Login failed';
         if (err && typeof err === 'object' && 'response' in err) {
           const error = err as { response?: { data?: { detail?: string } }; message?: string };
           errorMessage = error.response?.data?.detail || error.message || 'Login failed';
         }
-        
-        // Check for email verification error
-        if (errorMessage.toLowerCase().includes('email') && 
+
+        if (errorMessage.toLowerCase().includes('email') &&
             (errorMessage.toLowerCase().includes('verify') || errorMessage.toLowerCase().includes('not verified'))) {
           setApiError('Please verify your email address before logging in. Check your inbox for the verification link.');
         } else if (errorMessage.toLowerCase().includes('credential')) {
@@ -124,17 +166,81 @@ const LoginPage = () => {
     }
   };
 
+  const handleVerifyOtp = useCallback(async (codes: string[]) => {
+    const otp = codes.join('');
+    if (otp.length !== 6) return;
+
+    setOtpLoading(true);
+    setApiError('');
+    try {
+      const { data } = await authApi.verifyOtp({ challenge_id: challengeId, otp });
+      setTokens(data.access, data.refresh);
+      await refreshUser();
+    } catch (err: unknown) {
+      let errorMessage = 'Verification failed';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const error = err as { response?: { data?: { detail?: string } }; message?: string };
+        errorMessage = error.response?.data?.detail || error.message || errorMessage;
+      }
+      setApiError(errorMessage);
+      // Clear codes on error so user can re-enter
+      setMfaCodes(['', '', '', '', '', '']);
+      const firstInput = document.getElementById('mfa-input-0') as HTMLInputElement;
+      firstInput?.focus();
+    } finally {
+      setOtpLoading(false);
+    }
+  }, [challengeId, refreshUser]);
+
+  const handleResendOtp = async () => {
+    if (resendTimer > 0 || resendCount >= 3) return;
+    setApiError('');
+    try {
+      await authApi.resendOtp(challengeId);
+      setResendCount((prev) => prev + 1);
+      setResendTimer(30);
+    } catch (err: unknown) {
+      let errorMessage = 'Failed to resend code';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const error = err as { response?: { data?: { detail?: string } }; message?: string };
+        errorMessage = error.response?.data?.detail || error.message || errorMessage;
+      }
+      setApiError(errorMessage);
+    }
+  };
+
+  const handleBackToLogin = () => {
+    setShowMFA(false);
+    setChallengeId('');
+    setMfaCodes(['', '', '', '', '', '']);
+    setApiError('');
+    setResendCount(0);
+    setResendTimer(0);
+  };
+
   const handleMFAInputChange = (index: number, value: string) => {
     if (/^[0-9]?$/.test(value)) {
       const newCodes = [...mfaCodes];
       newCodes[index] = value;
       setMfaCodes(newCodes);
-      
+
       // Auto-focus to next input
       if (value && index < 5) {
         const nextInput = document.getElementById(`mfa-input-${index + 1}`) as HTMLInputElement;
         nextInput?.focus();
       }
+
+      // Auto-submit when all 6 digits entered
+      if (value && index === 5) {
+        handleVerifyOtp(newCodes);
+      }
+    }
+  };
+
+  const handleMFAKeyDown = (index: number, e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Backspace' && !mfaCodes[index] && index > 0) {
+      const prevInput = document.getElementById(`mfa-input-${index - 1}`) as HTMLInputElement;
+      prevInput?.focus();
     }
   };
 
@@ -299,17 +405,28 @@ const LoginPage = () => {
 
                   {/* Social Login Buttons */}
                   <Stack sx={loginStyles.socialBtnContainer}>
-                    {/* Google OAuth handled by backend team */}
-                    {/* <Button
-                      startIcon={<GoogleIcon />}
-                      variant="outlined"
-                      sx={[loginStyles.socialButton, loginStyles.googleButton]}
-                      onClick={() => {
-                        // window.location.href = authApi.initiateGoogleOAuth();
-                      }}
-                    >
-                      Continue with Google
-                    </Button> */}
+                    {googleLoading ? (
+                      <Button variant="outlined" disabled sx={[loginStyles.socialButton, loginStyles.googleButton]}>
+                        <FontAwesomeIcon icon={faSpinner} spin style={{ marginRight: 8 }} />
+                        Signing in with Google...
+                      </Button>
+                    ) : (
+                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <GoogleLogin
+                          onSuccess={(credentialResponse) => {
+                            if (credentialResponse.credential) {
+                              handleGoogleSuccess(credentialResponse.credential);
+                            }
+                          }}
+                          onError={() => setApiError('Google sign-in failed. Please try again.')}
+                          theme="outline"
+                          size="large"
+                          text="continue_with"
+                          shape="rectangular"
+                          width={400}
+                        />
+                      </Box>
+                    )}
                   </Stack>
                 </Box>
 
@@ -335,6 +452,19 @@ const LoginPage = () => {
             ) : (
               <>
                 {/* MFA Section */}
+                <Stack sx={loginStyles.formHeader}>
+                  <Typography sx={loginStyles.formTitle}>Verify Your Identity</Typography>
+                  <Typography sx={loginStyles.formSubtitle}>
+                    We've sent a 6-digit code to <b>{email}</b>
+                  </Typography>
+                </Stack>
+
+                {apiError && (
+                  <Alert severity="error" onClose={() => setApiError('')} sx={{ mb: 2 }}>
+                    {apiError}
+                  </Alert>
+                )}
+
                 <Box sx={loginStyles.mfaSection}>
                   <Box sx={loginStyles.mfaHeader}>
                     <FontAwesomeIcon icon={faShieldAlt} style={{ color: '#ffa424', fontSize: '1.25rem' }} />
@@ -356,30 +486,66 @@ const LoginPage = () => {
                         inputProps={{ maxLength: 1, pattern: '[0-9]', inputMode: 'numeric' }}
                         value={code}
                         onChange={(e) => handleMFAInputChange(index, e.target.value)}
+                        onKeyDown={(e) => handleMFAKeyDown(index, e)}
+                        disabled={otpLoading}
                         sx={loginStyles.mfaInput}
                       />
                     ))}
                   </Box>
 
                   <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 1.5, sm: 0 }, mt: 2 }}>
+                    {resendCount >= 3 ? (
+                      <Typography sx={{ fontSize: '0.875rem', color: '#71717a' }}>
+                        Maximum resends reached
+                      </Typography>
+                    ) : resendTimer > 0 ? (
+                      <Typography sx={{ fontSize: '0.875rem', color: '#71717a' }}>
+                        Resend code in <b>{resendTimer}s</b>
+                      </Typography>
+                    ) : (
+                      <Button
+                        onClick={handleResendOtp}
+                        sx={{
+                          color: '#ffa424',
+                          textDecoration: 'none',
+                          fontSize: '0.875rem',
+                          textTransform: 'none',
+                          p: 0,
+                          minWidth: 'auto',
+                          '&:hover': { textDecoration: 'underline', background: 'transparent' },
+                        }}
+                      >
+                        Resend code
+                      </Button>
+                    )}
                     <Button
-                      href="#"
-                      onClick={(e) => e.preventDefault()}
-                      sx={{
-                        color: '#ffa424',
-                        textDecoration: 'none',
-                        fontSize: '0.875rem',
-                        textTransform: 'none',
-                        '&:hover': { textDecoration: 'underline' },
-                      }}
+                      variant="contained"
+                      disabled={otpLoading || mfaCodes.join('').length !== 6}
+                      onClick={() => handleVerifyOtp(mfaCodes)}
+                      sx={loginStyles.primaryButton}
                     >
-                      Resend code
-                    </Button>
-                    <Button variant="contained" sx={loginStyles.primaryButton}>
-                      Verify
+                      {otpLoading ? (
+                        <><FontAwesomeIcon icon={faSpinner} spin style={{ marginRight: 8 }} /> Verifying...</>
+                      ) : (
+                        'Verify'
+                      )}
                     </Button>
                   </Box>
                 </Box>
+
+                <Button
+                  onClick={handleBackToLogin}
+                  sx={{
+                    mt: 3,
+                    color: '#71717a',
+                    textTransform: 'none',
+                    fontSize: '0.875rem',
+                    '&:hover': { color: '#3f3f46', background: 'transparent' },
+                  }}
+                >
+                  <FontAwesomeIcon icon={faArrowLeft} style={{ marginRight: 8 }} />
+                  Back to login
+                </Button>
               </>
             )}
           </Box>

@@ -7,7 +7,9 @@ const WelcomeBanner: React.FC = () => {
     <Paper
       elevation={0}
       sx={{
-        background: 'linear-gradient(135deg, #ffa424, #f97316)',
+        backgroundImage: 'url("/dashboard banner images/finance3.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         color: 'white',
         p: 4,
         borderRadius: 3,
@@ -17,9 +19,18 @@ const WelcomeBanner: React.FC = () => {
         alignItems: 'center',
         flexWrap: 'wrap',
         gap: 2,
+        position: 'relative',
+        overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 70%, transparent 100%)',
+          pointerEvents: 'none',
+        },
       }}
     >
-      <Box>
+      <Box sx={{ position: 'relative', zIndex: 1 }}>
         <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
           Finance Overview
         </Typography>
@@ -31,7 +42,9 @@ const WelcomeBanner: React.FC = () => {
         display: 'flex', 
         flexDirection: { xs: 'column', sm: 'row' },
         gap: 1.5,
-        width: { xs: '100%', sm: 'auto' }
+        width: { xs: '100%', sm: 'auto' },
+        position: 'relative',
+        zIndex: 1,
       }}>
         <Button
           variant="contained"

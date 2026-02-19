@@ -63,7 +63,9 @@ const LearnerProfilePage: React.FC = () => {
         <Box
           sx={{
             height: 200,
-            background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+            backgroundImage: 'url("/dashboard banner images/learner2.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
             position: 'relative',
           }}
         >

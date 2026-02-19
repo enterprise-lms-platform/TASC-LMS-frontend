@@ -13,15 +13,15 @@ const statCards = [
     label: 'Unread', 
     value: '3', 
     icon: <AlertIcon />, 
-    // Soft Rose Theme
-    bgColor: '#fce4ec', badgeColor: '#f06292', valueColor: '#ad1457', labelColor: '#880e4f'
+    // Orange Theme
+    bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412'
   },
   { 
     label: 'Today', 
     value: '12', 
     icon: <SystemIcon />, 
-    // Soft Blue Theme
-    bgColor: '#e3f2fd', badgeColor: '#64b5f6', valueColor: '#1565c0', labelColor: '#0d47a1'
+    // Grey Theme
+    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
   },
   { 
     label: 'This Week', 
@@ -35,16 +35,16 @@ const statCards = [
 const filters = ['All', 'Unread', 'System', 'User Activity', 'Security'];
 
 const notifications = [
-  { id: 1, icon: <UserIcon />, bg: 'linear-gradient(135deg, #3b82f6, #60a5fa)', title: 'New user registration', desc: 'John Kamau registered via email at Acme Corporation', time: '5 minutes ago', unread: true },
+  { id: 1, icon: <UserIcon />, bg: 'linear-gradient(135deg, #71717a, #a1a1aa)', title: 'New user registration', desc: 'John Kamau registered via email at Acme Corporation', time: '5 minutes ago', unread: true },
   { id: 2, icon: <PaymentIcon />, bg: 'linear-gradient(135deg, #10b981, #34d399)', title: 'Payment completed', desc: 'Mary Wambui completed payment of $49.99 for Advanced React course', time: '15 minutes ago', unread: true },
-  { id: 3, icon: <SecurityIcon />, bg: 'linear-gradient(135deg, #ef4444, #f87171)', title: 'Failed login attempts detected', desc: '5 failed login attempts from IP 192.168.1.45 in the last hour', time: '32 minutes ago', unread: true },
+  { id: 3, icon: <SecurityIcon />, bg: 'linear-gradient(135deg, #ffa424, #ffb74d)', title: 'Failed login attempts detected', desc: '5 failed login attempts from IP 192.168.1.45 in the last hour', time: '32 minutes ago', unread: true },
   { id: 4, icon: <CourseIcon />, bg: 'linear-gradient(135deg, #ffb74d, #ffa424)', title: 'Course published', desc: 'Peter Ochieng published "Data Science Fundamentals" course', time: '1 hour ago', unread: false },
-  { id: 5, icon: <SystemIcon />, bg: 'linear-gradient(135deg, #8b5cf6, #a78bfa)', title: 'System update completed', desc: 'Platform version 2.4.1 deployed successfully', time: '2 hours ago', unread: false },
-  { id: 6, icon: <UserIcon />, bg: 'linear-gradient(135deg, #3b82f6, #60a5fa)', title: 'Bulk user import', desc: 'Grace Akinyi imported 45 users via CSV to Global Tech Inc', time: '3 hours ago', unread: false },
+  { id: 5, icon: <SystemIcon />, bg: 'linear-gradient(135deg, #3f3f46, #71717a)', title: 'System update completed', desc: 'Platform version 2.4.1 deployed successfully', time: '2 hours ago', unread: false },
+  { id: 6, icon: <UserIcon />, bg: 'linear-gradient(135deg, #71717a, #a1a1aa)', title: 'Bulk user import', desc: 'Grace Akinyi imported 45 users via CSV to Global Tech Inc', time: '3 hours ago', unread: false },
   { id: 7, icon: <PaymentIcon />, bg: 'linear-gradient(135deg, #10b981, #34d399)', title: 'Subscription renewed', desc: 'Acme Corporation renewed Enterprise plan ($2,499/month)', time: '4 hours ago', unread: false },
   { id: 8, icon: <AlertIcon />, bg: 'linear-gradient(135deg, #f59e0b, #fbbf24)', title: 'Storage usage warning', desc: 'Organization "Future Dynamics" at 85% storage capacity', time: '5 hours ago', unread: false },
   { id: 9, icon: <CourseIcon />, bg: 'linear-gradient(135deg, #ffb74d, #ffa424)', title: 'New course enrollment spike', desc: '"Cybersecurity Essentials" received 120 enrollments today', time: '6 hours ago', unread: false },
-  { id: 10, icon: <SecurityIcon />, bg: 'linear-gradient(135deg, #ef4444, #f87171)', title: 'Certificate revoked', desc: 'Admin revoked certificate CERT-4521 for compliance reasons', time: '8 hours ago', unread: false },
+  { id: 10, icon: <SecurityIcon />, bg: 'linear-gradient(135deg, #ffa424, #ffb74d)', title: 'Certificate revoked', desc: 'Admin revoked certificate CERT-4521 for compliance reasons', time: '8 hours ago', unread: false },
 ];
 
 const NotificationsPage: React.FC = () => {

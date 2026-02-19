@@ -2,32 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { loginStyles, loginColors } from '../styles/loginTheme';
-import { 
-    Box, 
-    Button, 
-    Typography, 
-    TextField, 
-    Stack, 
-    Stepper, 
-    Step, 
-    StepLabel, 
-    Divider, 
-    Checkbox, 
-    FormControlLabel, 
+import {
+    Box,
+    Button,
+    Typography,
+    TextField,
+    Stack,
+    Stepper,
+    Step,
+    StepLabel,
+    Divider,
+    Checkbox,
+    FormControlLabel,
     MenuItem,
     LinearProgress,
     Alert
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCertificate, faChartLine, faEye, faEyeSlash, faGraduationCap, faSpinner, faCheckCircle, faGlobe } from '@fortawesome/free-solid-svg-icons';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
 import { useResendVerification } from '../hooks/useAuthQueries';
+import { authApi } from '../services/auth.services';
+import { setTokens } from '../utils/config';
 
 
 const RegistrationPage: React.FC = () => {
     const navigate = useNavigate();
-    const { register: registerUser, isAuthenticated, user } = useAuth();
+    const { register: registerUser, isAuthenticated, user, refreshUser } = useAuth();
     const resendVerificationMutation = useResendVerification();
+    const [googleLoading, setGoogleLoading] = useState(false);
     const [currentStep, setCurrentStep] = useState(0); // 0-indexed for MUI Stepper
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -132,8 +136,11 @@ const RegistrationPage: React.FC = () => {
             isValid = false;
         }
 
+        if (!formData.phone.trim()) {
+            newErrors.phone = 'Phone number is required';
+            isValid = false;
         // eslint-disable-next-line no-useless-escape
-        if (formData.phone && !/^[\+]?[1-9][\d\-\(\)\.\s]*$/.test(formData.phone)) {
+        } else if (!/^[\+]?[1-9][\d\-\(\)\.\s]*$/.test(formData.phone)) {
             newErrors.phone = 'Please enter a valid phone number';
             isValid = false;
         }
@@ -181,7 +188,7 @@ const RegistrationPage: React.FC = () => {
                     confirm_password: formData.confirmPassword,
                     first_name: formData.firstName,
                     last_name: formData.lastName,
-                    phone_number: formData.phone || undefined,
+                    phone_number: formData.phone,
                     country: formData.country || undefined,
                     timezone: formData.timezone || undefined,
                     accept_terms: formData.terms,
@@ -243,6 +250,25 @@ const RegistrationPage: React.FC = () => {
         if (/[0-9]/.test(pass)) strength++;
         if (/[^A-Za-z0-9]/.test(pass)) strength++;
         return strength;
+    };
+
+    const handleGoogleSuccess = async (credential: string) => {
+        setGoogleLoading(true);
+        setApiError('');
+        try {
+            const { data } = await authApi.googleLogin({ id_token: credential });
+            setTokens(data.access, data.refresh);
+            await refreshUser();
+        } catch (err: unknown) {
+            let errorMessage = 'Google sign-up failed';
+            if (err && typeof err === 'object' && 'response' in err) {
+                const error = err as { response?: { data?: { error?: string } }; message?: string };
+                errorMessage = error.response?.data?.error || error.message || errorMessage;
+            }
+            setApiError(errorMessage);
+        } finally {
+            setGoogleLoading(false);
+        }
     };
 
     const strength = getPasswordStrength();
@@ -479,12 +505,12 @@ const RegistrationPage: React.FC = () => {
                                 </Stack>
 
                                 <Box>
-                                    <Typography sx={{ fontSize: '0.875rem', fontWeight: 500, color: '#3f3f46', mb: 0.5 }}>Phone Number</Typography>
+                                    <Typography sx={{ fontSize: '0.875rem', fontWeight: 500, color: '#3f3f46', mb: 0.5 }}>Phone Number *</Typography>
                                     <TextField
                                         fullWidth
                                         size="small"
                                         name="phone"
-                                        placeholder="+1 (555) 123-4567"
+                                        placeholder="+256 700 123456"
                                         value={formData.phone}
                                         onChange={handleChange}
                                         error={!!errors.phone}
@@ -617,17 +643,28 @@ const RegistrationPage: React.FC = () => {
                         <Divider sx={loginStyles.divider}>Or register with</Divider>
 
                         <Stack sx={loginStyles.socialBtnContainer}>
-                            {/* Google OAuth handled by backend team */}
-                            {/* <Button
-                                startIcon={<GoogleIcon />} 
-                                variant="outlined" 
-                                sx={[loginStyles.socialButton, loginStyles.googleButton]}
-                                onClick={() => {
-                                    // window.location.href = authApi.initiateGoogleOAuth();
-                                }}
-                            >
-                                Continue with Google
-                            </Button> */}
+                            {googleLoading ? (
+                                <Button variant="outlined" disabled sx={[loginStyles.socialButton, loginStyles.googleButton]}>
+                                    <FontAwesomeIcon icon={faSpinner} spin style={{ marginRight: 8 }} />
+                                    Signing up with Google...
+                                </Button>
+                            ) : (
+                                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                    <GoogleLogin
+                                        onSuccess={(credentialResponse) => {
+                                            if (credentialResponse.credential) {
+                                                handleGoogleSuccess(credentialResponse.credential);
+                                            }
+                                        }}
+                                        onError={() => setApiError('Google sign-up failed. Please try again.')}
+                                        theme="outline"
+                                        size="large"
+                                        text="continue_with"
+                                        shape="rectangular"
+                                        width={400}
+                                    />
+                                </Box>
+                            )}
                         </Stack>
 
                         <Box sx={loginStyles.signupSection}>

@@ -2,20 +2,20 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import { PlayArrow, Search } from '@mui/icons-material';
-
-// User data (will come from backend later)
-const userData = {
-  name: 'Emma',
-};
+import { useAuth } from '../../contexts/AuthContext';
 
 const WelcomeBanner: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const firstName = user?.first_name || 'there';
 
   return (
     <Paper
       elevation={0}
       sx={{
-        background: 'linear-gradient(135deg, #ffa424 0%, #f97316 50%, #ea580c 100%)',
+        backgroundImage: 'url("/dashboard banner images/learner1.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         color: 'white',
         p: { xs: 3, md: 4 },
         borderRadius: '1rem',
@@ -25,24 +25,18 @@ const WelcomeBanner: React.FC = () => {
         alignItems: { xs: 'flex-start', md: 'center' },
         flexDirection: { xs: 'column', md: 'row' },
         gap: 2,
-        boxShadow: '0 10px 30px rgba(249,115,22,0.2)',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
         position: 'relative',
         overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 70%, transparent 100%)',
+          pointerEvents: 'none',
+        },
       }}
     >
-      {/* Radial highlight */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '-40%',
-          right: '-10%',
-          width: 280,
-          height: 280,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }}
-      />
       {/* Geometric pattern */}
       <Box
         component="svg"
@@ -69,7 +63,7 @@ const WelcomeBanner: React.FC = () => {
           gutterBottom
           sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem', md: '2rem' } }}
         >
-          Welcome back, {userData.name}!
+          Welcome back, {firstName}!
         </Typography>
         <Typography 
           variant="body1" 

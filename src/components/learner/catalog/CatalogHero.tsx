@@ -12,7 +12,9 @@ const CatalogHero: React.FC = () => {
   return (
     <Box
       sx={{
-        background: 'linear-gradient(135deg, #ffa424, #f97316)',
+        backgroundImage: 'url("/dashboard banner images/browse courses.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         color: 'white',
         p: { xs: 4, md: 6 },
         borderRadius: 4,
@@ -20,20 +22,15 @@ const CatalogHero: React.FC = () => {
         position: 'relative',
         overflow: 'hidden',
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 70%, transparent 100%)',
+          pointerEvents: 'none',
+        },
       }}
     >
-      {/* Background pattern */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" opacity="0.1"><path d="M0,50 Q250,0 500,50 T1000,50 V100 H0 Z" fill="white"/></svg>') bottom center no-repeat`,
-          backgroundSize: 'cover',
-        }}
-      />
       
       {/* Content */}
       <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 800 }}>

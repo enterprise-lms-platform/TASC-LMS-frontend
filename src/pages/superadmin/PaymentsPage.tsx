@@ -140,7 +140,7 @@ const getStatusColor = (status: string) => {
     case 'Pending':
       return { bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
     case 'Failed':
-      return { bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' };
+      return { bgcolor: 'rgba(113, 113, 122, 0.1)', color: '#71717a' };
     case 'Cancelled':
       return { bgcolor: 'rgba(156, 163, 175, 0.1)', color: '#71717a' };
     default:
@@ -151,13 +151,13 @@ const getStatusColor = (status: string) => {
 const getMethodColor = (method: string) => {
   switch (method) {
     case 'Card':
-      return { bgcolor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' };
+      return { bgcolor: 'rgba(113, 113, 122, 0.1)', color: '#71717a' };
     case 'M-Pesa':
       return { bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
     case 'MTN MoMo':
       return { bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
     case 'Bank Transfer':
-      return { bgcolor: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' };
+      return { bgcolor: 'rgba(255, 164, 36, 0.1)', color: '#e65100' };
     default:
       return { bgcolor: 'grey.100', color: 'text.secondary' };
   }
@@ -188,15 +188,15 @@ const kpiCards = [
     title: 'Pending',
     value: '$45,200',
     icon: <PendingIcon />,
-    // Soft Blue Theme
-    bgColor: '#e3f2fd', badgeColor: '#64b5f6', valueColor: '#1565c0', labelColor: '#0d47a1'
+    // Grey Theme
+    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
   },
   {
     title: 'Failed',
     value: '23',
     icon: <FailedIcon />,
-    // Soft Rose Theme
-    bgColor: '#fce4ec', badgeColor: '#f06292', valueColor: '#ad1457', labelColor: '#880e4f'
+    // Orange Theme
+    bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412'
   },
 ];
 
