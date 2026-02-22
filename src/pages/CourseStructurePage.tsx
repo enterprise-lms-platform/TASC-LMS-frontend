@@ -12,6 +12,8 @@ import CourseStatsWidget from '../components/instructor/course-structure/CourseS
 import PublishChecklistWidget from '../components/instructor/course-structure/PublishChecklistWidget';
 import AddModuleModal from '../components/instructor/course-structure/AddModuleModal';
 import type { ModuleFormData } from '../components/instructor/course-structure/AddModuleModal';
+import AddLessonModal from '../components/instructor/course-structure/AddLessonModal';
+import type { LessonFormData } from '../components/instructor/course-structure/AddLessonModal';
 import type { ModuleData } from '../components/instructor/course-structure/ModuleCard';
 import type { LessonData } from '../components/instructor/course-structure/LessonItem';
 import type { SaveStatus } from '../components/instructor/course-structure/StructureFooter';
@@ -94,6 +96,8 @@ const CourseStructurePage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
   const [moduleModalOpen, setModuleModalOpen] = useState(false);
+  const [lessonModalOpen, setLessonModalOpen] = useState(false);
+  const [activeModuleId, setActiveModuleId] = useState<string>('');
   const [modules, setModules] = useState(initialModules);
 
   const handleMobileMenuToggle = () => {
@@ -125,13 +129,80 @@ const CourseStructurePage: React.FC = () => {
   };
 
   const handleAddLesson = (moduleId: string) => {
-    console.log('Add lesson to module:', moduleId);
-    // Would open lesson modal
+    setActiveModuleId(moduleId);
+    setLessonModalOpen(true);
   };
 
+  const handleSaveLesson = (data: LessonFormData) => {
+    const courseId = '1'; // Will come from route params in production
+
+    setModules((prev) =>
+      prev.map((mod) => {
+        if (mod.id !== activeModuleId) return mod;
+        const newLesson: LessonData = {
+          id: `${mod.id}-${mod.lessons.length + 1}`,
+          title: data.title,
+          type: data.type,
+          isComplete: false,
+          isFreePreview: data.isFreePreview,
+        };
+        return {
+          ...mod,
+          lessons: [...mod.lessons, newLesson],
+          lessonCount: mod.lessonCount + 1,
+        };
+      })
+    );
+    setLessonModalOpen(false);
+    setSaveStatus('saving');
+    setTimeout(() => setSaveStatus('saved'), 1500);
+
+    // Navigate to the content page based on lesson type
+    const lessonParam = encodeURIComponent(data.title);
+    switch (data.type) {
+      case 'video':
+      case 'document':
+      case 'scorm':
+        navigate(`/instructor/course/${courseId}/upload?type=${data.type}&lesson=${lessonParam}`);
+        break;
+      case 'quiz':
+        navigate(`/instructor/course/${courseId}/quiz/builder?lesson=${lessonParam}&course=${encodeURIComponent(initialCourseData.title)}`);
+        break;
+      case 'assignment':
+        navigate(`/instructor/assignment/create?lesson=${lessonParam}&course=${encodeURIComponent(initialCourseData.title)}`);
+        break;
+      case 'livestream':
+        navigate(`/instructor/sessions/schedule?lesson=${lessonParam}&course=${encodeURIComponent(initialCourseData.title)}`);
+        break;
+      // 'html' stays on the structure page
+      default:
+        break;
+    }
+  };
+
+  const activeModuleTitle = modules.find((m) => m.id === activeModuleId)?.title || '';
+
   const handleQuickAdd = (type: string) => {
-    console.log('Quick add:', type);
-    // Would open appropriate modal
+    // Navigate to the appropriate page based on content type
+    const courseId = '1'; // Will come from route params in production
+    switch (type) {
+      case 'video':
+      case 'document':
+      case 'scorm':
+        navigate(`/instructor/course/${courseId}/upload?type=${type}`);
+        break;
+      case 'quiz':
+        navigate(`/instructor/course/${courseId}/quiz/builder?course=${encodeURIComponent(initialCourseData.title)}`);
+        break;
+      case 'assignment':
+        navigate(`/instructor/assignment/create?course=${encodeURIComponent(initialCourseData.title)}`);
+        break;
+      case 'livestream':
+        navigate(`/instructor/sessions/schedule?course=${encodeURIComponent(initialCourseData.title)}`);
+        break;
+      default:
+        break;
+    }
   };
 
   const handleSaveDraft = () => {
@@ -148,7 +219,7 @@ const CourseStructurePage: React.FC = () => {
   };
 
   const handleSettings = () => {
-    console.log('Course settings');
+    navigate('/instructor/course/create');
   };
 
   return (
@@ -235,6 +306,14 @@ const CourseStructurePage: React.FC = () => {
         open={moduleModalOpen}
         onClose={() => setModuleModalOpen(false)}
         onSave={handleSaveModule}
+      />
+
+      {/* Add Lesson Modal */}
+      <AddLessonModal
+        open={lessonModalOpen}
+        moduleTitle={activeModuleTitle}
+        onClose={() => setLessonModalOpen(false)}
+        onSave={handleSaveLesson}
       />
     </Box>
   );

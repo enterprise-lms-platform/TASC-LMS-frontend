@@ -5,53 +5,43 @@ import {
   Folder as CategoryIcon,
   CheckCircle as UsedIcon,
   Star as SuccessIcon,
-  TrendingUp as TrendUpIcon,
-  TrendingDown as TrendDownIcon,
 } from '@mui/icons-material';
 
 interface StatCard {
   icon: React.ReactNode;
-  iconBgColor: string;
-  iconColor: string;
   value: string | number;
   label: string;
-  change?: {
-    value: string;
-    trend: 'up' | 'down';
-  };
+  bgcolor: string;
+  iconBg: string;
+  color: string;
+  subColor: string;
 }
 
+// Matches learner QuickStats color themes
 const statsData: StatCard[] = [
   {
     icon: <TotalIcon />,
-    iconBgColor: '#ccfbf1',
-    iconColor: '#14b8a6',
     value: 248,
     label: 'Total Questions',
-    change: { value: '12 this week', trend: 'up' },
+    bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534',
   },
   {
     icon: <CategoryIcon />,
-    iconBgColor: '#dbeafe',
-    iconColor: '#3b82f6',
     value: 8,
     label: 'Categories',
+    bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46',
   },
   {
     icon: <UsedIcon />,
-    iconBgColor: '#d1fae5',
-    iconColor: '#10b981',
     value: 156,
     label: 'Used in Quizzes',
-    change: { value: '63% usage rate', trend: 'up' },
+    bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412',
   },
   {
     icon: <SuccessIcon />,
-    iconBgColor: '#ede9fe',
-    iconColor: '#8b5cf6',
     value: '78%',
     label: 'Avg. Success Rate',
-    change: { value: '2% from last month', trend: 'down' },
+    bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534',
   },
 ];
 
@@ -63,61 +53,46 @@ const QuestionBankStats: React.FC = () => {
           <Paper
             elevation={0}
             sx={{
-              p: 2.5,
-              border: 1,
-              borderColor: 'divider',
-              borderRadius: 2,
+              bgcolor: stat.bgcolor,
+              borderRadius: '20px',
+              p: 3,
+              position: 'relative',
+              height: '100%',
+              minHeight: 160,
               display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
               alignItems: 'center',
-              gap: 2,
-              transition: 'all 0.2s',
-              '&:hover': {
-                boxShadow: 2,
-                transform: 'translateY(-2px)',
-              },
+              textAlign: 'center',
+              transition: 'transform 0.2s',
+              cursor: 'pointer',
+              '&:hover': { transform: 'translateY(-4px)' },
             }}
           >
             <Box
               sx={{
-                width: 56,
-                height: 56,
-                borderRadius: 2,
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                bgcolor: stat.iconBg,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                bgcolor: stat.iconBgColor,
-                color: stat.iconColor,
-                fontSize: 24,
+                color: 'white',
+                '& svg': { fontSize: 20 },
               }}
             >
               {stat.icon}
             </Box>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="h5" fontWeight={700} color="text.primary">
-                {stat.value}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {stat.label}
-              </Typography>
-              {stat.change && (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    mt: 0.5,
-                    color: stat.change.trend === 'up' ? 'success.main' : 'error.main',
-                  }}
-                >
-                  {stat.change.trend === 'up' ? (
-                    <TrendUpIcon sx={{ fontSize: 14 }} />
-                  ) : (
-                    <TrendDownIcon sx={{ fontSize: 14 }} />
-                  )}
-                  <Typography variant="caption">{stat.change.value}</Typography>
-                </Box>
-              )}
-            </Box>
+            <Typography variant="h3" sx={{ fontWeight: 700, color: stat.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
+              {stat.value}
+            </Typography>
+            <Typography variant="body2" sx={{ color: stat.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>
+              {stat.label}
+            </Typography>
           </Paper>
         </Grid>
       ))}

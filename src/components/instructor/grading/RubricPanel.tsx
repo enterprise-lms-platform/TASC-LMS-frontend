@@ -3,29 +3,30 @@ import { Box, Typography, IconButton } from '@mui/material';
 import { TableChart as RubricIcon, Fullscreen as ExpandIcon } from '@mui/icons-material';
 import RubricCriterionGrading from './RubricCriterionGrading';
 import type { GradingCriterion } from './RubricCriterionGrading';
+import { formatGrade, getGradeColor, createDefaultGradingConfig } from '../../../utils/gradingUtils';
+import type { GradingConfig } from '../../../utils/gradingUtils';
 
 interface RubricPanelProps {
   criteria: GradingCriterion[];
   onSelectLevel: (criterionId: string, levelKey: string) => void;
   onScoreChange: (criterionId: string, score: number) => void;
+  gradingConfig?: GradingConfig;
 }
 
 const RubricPanel: React.FC<RubricPanelProps> = ({
   criteria,
   onSelectLevel,
   onScoreChange,
+  gradingConfig,
 }) => {
+  const config = gradingConfig ?? createDefaultGradingConfig();
   const totalScore = criteria.reduce((sum, c) => sum + c.score, 0);
   const maxScore = criteria.reduce((sum, c) => sum + c.maxPoints, 0);
   const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
 
-  const getLetterGrade = (pct: number) => {
-    if (pct >= 90) return 'A';
-    if (pct >= 80) return 'B';
-    if (pct >= 70) return 'C';
-    if (pct >= 60) return 'D';
-    return 'F';
-  };
+  const gradeDisplay = formatGrade(percentage, config);
+  const _gradeColor = getGradeColor(percentage, config);
+  void _gradeColor;
 
   return (
     <Box
@@ -92,10 +93,10 @@ const RubricPanel: React.FC<RubricPanelProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 700,
-              fontSize: '1.25rem',
+              fontSize: config.gradingScale === 'pass_fail' ? '0.75rem' : '1.25rem',
             }}
           >
-            {getLetterGrade(percentage)}
+            {gradeDisplay}
           </Box>
         </Box>
       </Box>

@@ -28,21 +28,22 @@ const QuickActions: React.FC = () => {
     <Paper
       elevation={0}
       sx={{
-        border: 1,
-        borderColor: 'divider',
-        borderRadius: 1,
+        borderRadius: '1rem',
         overflow: 'hidden',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
+        transition: 'box-shadow 0.3s',
+        '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' },
       }}
     >
       {/* Widget Header */}
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+      <Box sx={{ p: 2.5, pb: 1.5 }}>
         <Typography variant="h6" fontWeight={600} color="text.primary">
           Quick Actions
         </Typography>
       </Box>
 
       {/* Actions Grid */}
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ px: 2.5, pb: 2.5 }}>
         <Grid container spacing={1.5}>
           {actionsData.map((action) => (
             <Grid size={6} key={action.label}>
@@ -50,15 +51,13 @@ const QuickActions: React.FC = () => {
                 onClick={() => navigate(action.path)}
                 sx={{
                   p: 1.5,
-                  border: 1,
-                  borderColor: 'divider',
-                  borderRadius: 1,
+                  borderRadius: '0.75rem',
+                  bgcolor: 'grey.50',
                   textAlign: 'center',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   '&:hover': {
-                    borderColor: 'primary.main',
-                    bgcolor: 'rgba(255, 164, 36, 0.05)',
+                    bgcolor: 'rgba(255, 164, 36, 0.06)',
                   },
                 }}
               >
@@ -78,4 +77,3 @@ const QuickActions: React.FC = () => {
 };
 
 export default QuickActions;
-

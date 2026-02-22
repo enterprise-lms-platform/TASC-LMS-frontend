@@ -8,35 +8,35 @@ import {
 } from '@mui/icons-material';
 import KPICard from '../superadmin/KPICard';
 
-// KPI data with pastel themes
+// KPI data — matches learner QuickStats color themes
 const kpiData = [
   {
     icon: <CoursesIcon />,
     value: '4',
     title: 'Active Courses',
-    // Soft Blue Theme
-    bgColor: '#e3f2fd', badgeColor: '#64b5f6', valueColor: '#1565c0', labelColor: '#0d47a1'
+    // Green Theme
+    bgColor: '#dcfce7', badgeColor: '#4ade80', valueColor: '#14532d', labelColor: '#166534'
   },
   {
     icon: <LearnersIcon />,
     value: '842',
     title: 'Total Learners',
-    // Mint Green Theme
-    bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
+    // Grey Theme
+    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
   },
   {
     icon: <CompletionIcon />,
     value: '78%',
     title: 'Avg. Completion',
-    // Light Amber Theme
-    bgColor: '#fff8e1', badgeColor: '#ffd54f', valueColor: '#f57f17', labelColor: '#ff6f00'
+    // Orange Theme
+    bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#7c2d12', labelColor: '#9a3412'
   },
   {
     icon: <GradingIcon />,
     value: '12',
     title: 'Pending Grading',
-    // Soft Rose Theme
-    bgColor: '#fce4ec', badgeColor: '#f06292', valueColor: '#ad1457', labelColor: '#880e4f'
+    // Alt Green Theme
+    bgColor: '#f0fdf4', badgeColor: '#86efac', valueColor: '#14532d', labelColor: '#166534'
   },
 ];
 

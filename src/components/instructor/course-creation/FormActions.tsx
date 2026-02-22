@@ -5,7 +5,6 @@ import {
   Delete as DiscardIcon,
   ArrowBack as PrevIcon,
   ArrowForward as NextIcon,
-  Rocket as PublishIcon,
 } from '@mui/icons-material';
 
 interface FormActionsProps {
@@ -103,14 +102,14 @@ const FormActions: React.FC<FormActionsProps> = ({
         {isLastStep ? (
           <Button
             variant="contained"
-            startIcon={<PublishIcon />}
+            endIcon={<NextIcon />}
             onClick={onPublish}
             sx={{
-              bgcolor: 'success.main',
-              '&:hover': { bgcolor: 'success.dark' },
+              bgcolor: 'primary.main',
+              '&:hover': { bgcolor: 'primary.dark' },
             }}
           >
-            Publish Course
+            Save & Build Curriculum
           </Button>
         ) : (
           <Button

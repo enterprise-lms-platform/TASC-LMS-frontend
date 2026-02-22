@@ -5,9 +5,8 @@ import { Check as CheckIcon } from '@mui/icons-material';
 const steps = [
   { label: 'Basic Info', step: 1 },
   { label: 'Details', step: 2 },
-  { label: 'Curriculum', step: 3 },
-  { label: 'Pricing', step: 4 },
-  { label: 'Settings', step: 5 },
+  { label: 'Pricing', step: 3 },
+  { label: 'Settings', step: 4 },
 ];
 
 interface ProgressStepperProps {

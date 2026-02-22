@@ -9,8 +9,7 @@ import {
   ListItemText,
   Typography,
   Avatar,
-  Divider,
-  Chip,
+  Badge,
 } from '@mui/material';
 import {
   School as SchoolIcon,
@@ -28,28 +27,23 @@ import {
   CalendarMonth as CalendarIcon,
   History as RecordingsIcon,
   People as LearnersIcon,
-  Chat as MessagesIcon,
   TrendingUp as ProgressIcon,
+  Groups as WorkshopsIcon,
+  Person as ProfileIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { getUserDisplayName, getUserInitials } from '../../utils/userHelpers';
 
-// Sidebar width constant
-export const DRAWER_WIDTH = 240;
-
-// Instructor data (will come from backend later)
-const instructorData = {
-  name: 'Michael Rodriguez',
-  role: 'Senior Instructor',
-  initials: 'MR',
-  avatar: '',
-};
+// Sidebar width constant — matches learner sidebar
+export const DRAWER_WIDTH = 260;
 
 // Type for navigation items
 interface NavItem {
   text: string;
   icon: React.ReactNode;
   path?: string;
-  badge?: string;
+  badge?: number;
   badgeColor?: 'warning' | 'error' | 'primary';
 }
 
@@ -65,7 +59,7 @@ const navSections: NavSection[] = [
     items: [
       { text: 'Overview', icon: <DashboardIcon />, path: '/instructor' },
       { text: 'Analytics', icon: <AnalyticsIcon />, path: '/instructor/analytics' },
-      { text: 'Notifications', icon: <NotificationsIcon />, path: '/instructor/notifications', badge: '5', badgeColor: 'primary' },
+      { text: 'Notifications', icon: <NotificationsIcon />, path: '/instructor/notifications', badge: 5, badgeColor: 'primary' },
     ],
   },
   {
@@ -82,8 +76,8 @@ const navSections: NavSection[] = [
     items: [
       { text: 'Quiz Builder', icon: <QuizzesIcon />, path: '/instructor/course/1/quiz/builder' },
       { text: 'Question Bank', icon: <StructureIcon />, path: '/instructor/question-bank' },
-      { text: 'Assignments', icon: <AssignmentsIcon />, path: '/instructor/assignment/create', badge: '12', badgeColor: 'error' },
-      { text: 'Grading', icon: <GradebookIcon />, path: '/instructor/grading', badge: '18', badgeColor: 'error' },
+      { text: 'Assignments', icon: <AssignmentsIcon />, path: '/instructor/assignment/create', badge: 12, badgeColor: 'error' },
+      { text: 'Grading', icon: <GradebookIcon />, path: '/instructor/grading', badge: 18, badgeColor: 'error' },
       { text: 'Gradebook', icon: <GradebookIcon />, path: '/instructor/gradebook' },
     ],
   },
@@ -96,11 +90,22 @@ const navSections: NavSection[] = [
     ],
   },
   {
+    title: 'Workshops',
+    items: [
+      { text: 'Workshops', icon: <WorkshopsIcon />, path: '/instructor/workshops' },
+    ],
+  },
+  {
     title: 'Learners',
     items: [
       { text: 'My Learners', icon: <LearnersIcon />, path: '/instructor/learners' },
-      { text: 'Messages', icon: <MessagesIcon />, path: '/instructor/messages' },
       { text: 'Progress Tracking', icon: <ProgressIcon />, path: '/instructor/progress' },
+    ],
+  },
+  {
+    title: 'Account',
+    items: [
+      { text: 'Profile', icon: <ProfileIcon />, path: '/instructor/profile' },
     ],
   },
 ];
@@ -113,6 +118,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   const handleNavClick = (path?: string) => {
     if (path) {
@@ -128,50 +134,65 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
     return location.pathname === path;
   };
 
+  const userName = getUserDisplayName(user?.first_name, user?.last_name, user?.email);
+  const userInitials = getUserInitials(user?.first_name, user?.last_name);
+
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo */}
       <Box
         sx={{
           p: 3,
-          pb: 2,
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
-          borderBottom: 1,
-          borderColor: 'divider',
+          minHeight: 80,
           cursor: 'pointer',
         }}
         onClick={() => navigate('/instructor')}
       >
-        <SchoolIcon sx={{ fontSize: 28, color: 'primary.dark' }} />
+        <SchoolIcon sx={{ fontSize: 32, color: 'primary.dark' }} />
         <Typography variant="h6" fontWeight={700} color="text.primary">
           TASC LMS
         </Typography>
       </Box>
 
+      {/* Gradient fade separator */}
+      <Box
+        sx={{
+          height: 16,
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.04), transparent)',
+          mx: 2,
+        }}
+      />
+
       {/* Instructor Info */}
       <Box
         sx={{
-          p: 2,
-          borderBottom: 1,
-          borderColor: 'divider',
+          px: 2.5,
+          py: 2,
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
+          cursor: 'pointer',
+          '&:hover': { bgcolor: 'rgba(255, 164, 36, 0.05)' },
+          transition: 'background 0.15s',
         }}
+        onClick={() => navigate('/instructor/profile')}
       >
         <Avatar
-          src={instructorData.avatar}
+          src={(user?.google_picture ?? undefined) as string | undefined}
           sx={{
             width: 40,
             height: 40,
             background: 'linear-gradient(135deg, #ffb74d, #f97316)',
             fontWeight: 600,
             fontSize: '0.875rem',
+            border: '2px solid',
+            borderColor: 'primary.main',
           }}
         >
-          {instructorData.initials}
+          {userInitials}
         </Avatar>
         <Box sx={{ minWidth: 0 }}>
           <Typography
@@ -179,35 +200,32 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
             fontWeight={600}
             sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
           >
-            {instructorData.name}
+            {userName}
           </Typography>
           <Typography
             variant="caption"
-            sx={{
-              color: 'primary.dark',
-              fontWeight: 500,
-            }}
+            sx={{ color: 'primary.dark', fontWeight: 500 }}
           >
-            {instructorData.role}
+            Instructor
           </Typography>
         </Box>
       </Box>
 
       {/* Navigation Sections */}
-      <Box sx={{ flex: 1, overflowY: 'auto', py: 1 }}>
-        {navSections.map((section, sectionIndex) => (
+      <Box className="ld-scrollbar" sx={{ flex: 1, overflowY: 'auto', py: 0.5 }}>
+        {navSections.map((section) => (
           <Box key={section.title}>
             <List disablePadding>
               <ListItem disablePadding>
-                <Box sx={{ px: 3, pt: 2, pb: 0.5 }}>
+                <Box sx={{ px: 3, pt: 2, pb: 1 }}>
                   <Typography
                     variant="caption"
                     sx={{
                       fontWeight: 600,
-                      color: 'text.secondary',
+                      color: 'text.disabled',
                       textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      fontSize: '0.7rem',
+                      letterSpacing: '0.06em',
+                      fontSize: '0.65rem',
                     }}
                   >
                     {section.title}
@@ -223,12 +241,23 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
                       sx={{
                         py: 0.75,
                         px: 3,
-                        borderRadius: 0,
+                        mx: 1.5,
+                        borderRadius: '10px',
+                        position: 'relative',
                         ...(active && {
-                          bgcolor: 'rgba(255, 164, 36, 0.1)',
+                          bgcolor: 'rgba(255, 164, 36, 0.08)',
                           color: 'primary.dark',
-                          borderRight: 3,
-                          borderColor: 'primary.dark',
+                          '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            left: 0,
+                            top: '20%',
+                            bottom: '20%',
+                            width: 4,
+                            borderRadius: 4,
+                            bgcolor: 'primary.main',
+                            boxShadow: '0 0 8px rgba(255,164,36,0.4)',
+                          },
                         }),
                       }}
                     >
@@ -236,46 +265,46 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
                         sx={{
                           minWidth: 36,
                           color: active ? 'primary.dark' : 'text.secondary',
+                          '& svg': { fontSize: 20 },
                         }}
                       >
-                        {item.icon}
+                        {item.badge ? (
+                          <Badge
+                            badgeContent={item.badge}
+                            color={item.badgeColor === 'error' ? 'error' : 'primary'}
+                            sx={{ '& .MuiBadge-badge': { fontSize: '0.6rem', minWidth: 16, height: 16 } }}
+                          >
+                            {item.icon}
+                          </Badge>
+                        ) : (
+                          item.icon
+                        )}
                       </ListItemIcon>
                       <ListItemText
                         primary={item.text}
                         primaryTypographyProps={{
-                          fontSize: '0.875rem',
+                          fontSize: '0.82rem',
                           fontWeight: active ? 600 : 500,
                         }}
                       />
-                      {item.badge && (
-                        <Chip
-                          label={item.badge}
-                          size="small"
-                          sx={{
-                            height: 20,
-                            fontSize: '0.7rem',
-                            fontWeight: 600,
-                            bgcolor:
-                              item.badgeColor === 'error'
-                                ? 'error.main'
-                                : item.badgeColor === 'warning'
-                                ? 'warning.main'
-                                : 'primary.dark',
-                            color: 'white',
-                          }}
-                        />
-                      )}
                     </ListItemButton>
                   </ListItem>
                 );
               })}
             </List>
-            {sectionIndex < navSections.length - 1 && <Divider sx={{ my: 1 }} />}
           </Box>
         ))}
       </Box>
     </Box>
   );
+
+  const drawerPaperStyles = {
+    boxSizing: 'border-box' as const,
+    width: DRAWER_WIDTH,
+    bgcolor: '#fefdfb',
+    borderRight: 'none',
+    boxShadow: '1px 0 8px rgba(0,0,0,0.03)',
+  };
 
   return (
     <Box component="nav" sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}>
@@ -287,7 +316,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: DRAWER_WIDTH },
+          '& .MuiDrawer-paper': drawerPaperStyles,
         }}
       >
         {drawerContent}
@@ -298,12 +327,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
         variant="permanent"
         sx={{
           display: { xs: 'none', md: 'block' },
-          '& .MuiDrawer-paper': {
-            boxSizing: 'border-box',
-            width: DRAWER_WIDTH,
-            borderRight: 1,
-            borderColor: 'divider',
-          },
+          '& .MuiDrawer-paper': drawerPaperStyles,
         }}
         open
       >
@@ -314,4 +338,3 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
 };
 
 export default Sidebar;
-

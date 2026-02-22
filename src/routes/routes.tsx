@@ -37,7 +37,18 @@ import QuizBuilderPage from '../pages/QuizBuilderPage';
 import QuestionBankPage from '../pages/QuestionBankPage';
 import AssignmentCreationPage from '../pages/AssignmentCreationPage';
 import GradingPage from '../pages/GradingPage';
+import GradebookPage from '../pages/GradebookPage';
 import SessionSchedulingPage from '../pages/SessionSchedulingPage';
+import InstructorAnalyticsPage from '../pages/InstructorAnalyticsPage';
+import InstructorNotificationsPage from '../pages/InstructorNotificationsPage';
+import InstructorCoursesPage from '../pages/InstructorCoursesPage';
+import UpcomingSessionsPage from '../pages/UpcomingSessionsPage';
+import RecordingsPage from '../pages/RecordingsPage';
+import InstructorLearnersPage from '../pages/InstructorLearnersPage';
+import ProgressTrackingPage from '../pages/ProgressTrackingPage';
+import InstructorProfilePage from '../pages/InstructorProfilePage';
+import WorkshopsPage from '../pages/WorkshopsPage';
+import WorkshopDetailsPage from '../pages/WorkshopDetailsPage';
 import InviteUserPage from '../pages/InviteUserPage';
 import SetPasswordPage from '../pages/SetPasswordPage';
 import {
@@ -95,7 +106,18 @@ export default function AppRoutes() {
           <Route path="/instructor/question-bank" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><QuestionBankPage /></ProtectedRoute>} />
           <Route path="/instructor/assignment/create" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><AssignmentCreationPage /></ProtectedRoute>} />
           <Route path="/instructor/grading" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><GradingPage /></ProtectedRoute>} />
+          <Route path="/instructor/gradebook" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><GradebookPage /></ProtectedRoute>} />
           <Route path="/instructor/sessions/schedule" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><SessionSchedulingPage /></ProtectedRoute>} />
+          <Route path="/instructor/analytics" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><InstructorAnalyticsPage /></ProtectedRoute>} />
+          <Route path="/instructor/notifications" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><InstructorNotificationsPage /></ProtectedRoute>} />
+          <Route path="/instructor/courses" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><InstructorCoursesPage /></ProtectedRoute>} />
+          <Route path="/instructor/sessions/upcoming" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><UpcomingSessionsPage /></ProtectedRoute>} />
+          <Route path="/instructor/sessions/recordings" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><RecordingsPage /></ProtectedRoute>} />
+          <Route path="/instructor/learners" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><InstructorLearnersPage /></ProtectedRoute>} />
+          <Route path="/instructor/progress" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><ProgressTrackingPage /></ProtectedRoute>} />
+          <Route path="/instructor/profile" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><InstructorProfilePage /></ProtectedRoute>} />
+          <Route path="/instructor/workshops" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><WorkshopsPage /></ProtectedRoute>} />
+          <Route path="/instructor/workshops/:workshopId" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><WorkshopDetailsPage /></ProtectedRoute>} />
           
           {/* Protected Manager Routes */}
           <Route path="/manager" element={<ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerDashboard /></ProtectedRoute>} />

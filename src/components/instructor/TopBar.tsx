@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -10,17 +11,21 @@ import {
   Avatar,
   Menu,
   MenuItem,
+  Divider,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   Search as SearchIcon,
   Notifications as NotificationsIcon,
-  Add as AddIcon,
+  HelpOutline as HelpIcon,
+  Logout as LogoutIcon,
+  Person as PersonIcon,
+  Settings as SettingsIcon,
   KeyboardArrowDown as ArrowDownIcon,
 } from '@mui/icons-material';
 import { DRAWER_WIDTH } from './Sidebar';
-import { useLogout } from '../../hooks/useLogout';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLogout } from '../../hooks/useLogout';
 import { getUserDisplayName, getUserInitials, getRoleDisplayName } from '../../utils/userHelpers';
 
 interface TopBarProps {
@@ -28,9 +33,10 @@ interface TopBarProps {
 }
 
 const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const handleLogout = useLogout();
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const handleLogout = useLogout();
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -45,10 +51,19 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
     handleLogout();
   };
 
-  // Get user display values
+  const handleProfile = () => {
+    handleUserMenuClose();
+    navigate('/instructor/profile');
+  };
+
+  const handleSettings = () => {
+    handleUserMenuClose();
+    navigate('/instructor/profile');
+  };
+
   const userName = getUserDisplayName(user?.first_name, user?.last_name, user?.email);
   const userInitials = getUserInitials(user?.first_name, user?.last_name);
-  const userRole = user?.role ? getRoleDisplayName(user.role) : 'User';
+  const userRole = user?.role ? getRoleDisplayName(user.role) : 'Instructor';
 
   return (
     <AppBar
@@ -56,9 +71,12 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
       sx={{
         width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
         ml: { md: `${DRAWER_WIDTH}px` },
-        bgcolor: 'background.paper',
+        bgcolor: 'rgba(255,255,255,0.72)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         color: 'text.primary',
-        boxShadow: 1,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        borderBottom: '1px solid rgba(0,0,0,0.04)',
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between' }}>
@@ -78,14 +96,14 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
             variant="h6"
             fontWeight={700}
             noWrap
-            sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}
+            sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }}
           >
             Instructor Dashboard
           </Typography>
           <Typography
             variant="body2"
-            color="text.secondary"
-            sx={{ display: { xs: 'none', sm: 'block' } }}
+            color="text.disabled"
+            sx={{ display: { xs: 'none', sm: 'block' }, fontSize: '0.8rem' }}
             noWrap
           >
             Manage your courses, track learner progress, and create content
@@ -94,7 +112,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
 
         <Box sx={{ flexGrow: 1 }} />
 
-        {/* Search Bar */}
+        {/* Search Bar — pill shaped */}
         <Box
           sx={{
             position: 'relative',
@@ -110,8 +128,8 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
               alignItems: 'center',
               justifyContent: 'center',
               height: '100%',
-              pl: 1.5,
-              color: 'text.secondary',
+              pl: 2,
+              color: 'text.disabled',
             }}
           >
             <SearchIcon sx={{ fontSize: 20 }} />
@@ -120,73 +138,104 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
             placeholder="Search courses, learners..."
             sx={{
               color: 'inherit',
-              bgcolor: 'grey.100',
-              borderRadius: 1,
-              py: 0.75,
-              px: 1.5,
-              pl: 5,
-              fontSize: '0.875rem',
+              bgcolor: 'rgba(0,0,0,0.03)',
+              borderRadius: '50px',
+              p: 1,
+              pl: 6,
               width: 220,
-              transition: 'all 0.3s',
-              border: 1,
-              borderColor: 'transparent',
+              fontSize: '0.85rem',
+              transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)',
+              border: '1px solid transparent',
               '&:focus-within': {
                 width: 280,
-                bgcolor: 'background.paper',
+                bgcolor: 'white',
+                border: '1px solid',
                 borderColor: 'primary.main',
-                boxShadow: '0 0 0 2px rgba(255, 183, 77, 0.2)',
+                boxShadow: '0 0 0 3px rgba(255,164,36,0.12)',
               },
             }}
           />
         </Box>
 
         {/* Action Icons */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <IconButton color="inherit" size="small">
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.5 } }}>
+          <IconButton
+            color="inherit"
+            size="small"
+            sx={{ color: 'text.secondary' }}
+            onClick={() => navigate('/instructor/notifications')}
+          >
             <Badge badgeContent={5} color="error">
-              <NotificationsIcon />
+              <NotificationsIcon sx={{ fontSize: 22 }} />
             </Badge>
           </IconButton>
-          <IconButton color="inherit" size="small">
-            <AddIcon />
+          <IconButton color="inherit" size="small" sx={{ display: { xs: 'none', sm: 'flex' }, color: 'text.secondary' }}>
+            <HelpIcon sx={{ fontSize: 22 }} />
           </IconButton>
 
-          {/* User Profile */}
+          {/* Divider */}
+          <Divider orientation="vertical" flexItem sx={{ mx: 1.5, opacity: 0.3, display: { xs: 'none', md: 'block' } }} />
+
+          {/* User Info (Desktop) */}
           <Box
             onClick={handleUserMenuOpen}
             sx={{
-              ml: 1,
-              display: 'flex',
+              ml: 0.5,
+              display: { xs: 'none', md: 'flex' },
               alignItems: 'center',
-              gap: 1,
+              gap: 1.5,
               cursor: 'pointer',
-              p: 0.5,
-              borderRadius: 1,
-              '&:hover': { bgcolor: 'grey.100' },
+              p: 0.75,
+              borderRadius: '12px',
+              transition: 'background 0.2s',
+              '&:hover': { bgcolor: 'rgba(0,0,0,0.03)' },
             }}
           >
             <Avatar
-              src={user?.google_picture ?? undefined}
+              src={(user?.google_picture ?? undefined) as string | undefined}
               sx={{
-                width: 36,
-                height: 36,
+                width: 34,
+                height: 34,
                 background: 'linear-gradient(135deg, #ffb74d, #f97316)',
-                fontSize: '0.875rem',
+                fontSize: '0.8rem',
                 fontWeight: 600,
+                border: '2px solid',
+                borderColor: 'primary.main',
               }}
             >
               {userInitials}
             </Avatar>
-            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-              <Typography variant="body2" fontWeight={600} lineHeight={1.2} noWrap sx={{ maxWidth: 120 }}>
+            <Box>
+              <Typography variant="body2" fontWeight={600} lineHeight={1.2} sx={{ fontSize: '0.82rem' }}>
                 {userName}
               </Typography>
-              <Typography variant="caption" sx={{ color: 'primary.dark', fontWeight: 500 }} noWrap>
+              <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 500, textTransform: 'capitalize', fontSize: '0.7rem' }}>
                 {userRole}
               </Typography>
             </Box>
-            <ArrowDownIcon sx={{ fontSize: 16, color: 'text.secondary', display: { xs: 'none', sm: 'block' } }} />
+            <ArrowDownIcon sx={{ fontSize: 14, color: 'text.disabled' }} />
           </Box>
+
+          {/* Mobile Avatar */}
+          <IconButton
+            onClick={handleUserMenuOpen}
+            sx={{ display: { xs: 'flex', md: 'none' }, ml: 1 }}
+          >
+            <Avatar
+              src={(user?.google_picture ?? undefined) as string | undefined}
+              sx={{
+                width: 32,
+                height: 32,
+                background: 'linear-gradient(135deg, #ffb74d, #f97316)',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                border: '2px solid',
+                borderColor: 'primary.main',
+              }}
+            >
+              {userInitials}
+            </Avatar>
+          </IconButton>
 
           <Menu
             anchorEl={anchorEl}
@@ -194,10 +243,38 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
             onClose={handleUserMenuClose}
             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            PaperProps={{
+              sx: {
+                minWidth: 200,
+                mt: 1,
+                borderRadius: '12px',
+                boxShadow: '0 8px 25px rgba(0,0,0,0.08)',
+                border: '1px solid rgba(0,0,0,0.04)',
+              },
+            }}
           >
-            <MenuItem onClick={handleUserMenuClose}>Profile</MenuItem>
-            <MenuItem onClick={handleUserMenuClose}>Settings</MenuItem>
-            <MenuItem onClick={onLogoutClick}>Logout</MenuItem>
+            <Box sx={{ px: 2, py: 1.5 }}>
+              <Typography variant="body2" fontWeight={600}>
+                {userName}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {user?.email}
+              </Typography>
+            </Box>
+            <Divider />
+            <MenuItem onClick={handleProfile} sx={{ gap: 1.5, py: 1 }}>
+              <PersonIcon fontSize="small" />
+              Profile
+            </MenuItem>
+            <MenuItem onClick={handleSettings} sx={{ gap: 1.5, py: 1 }}>
+              <SettingsIcon fontSize="small" />
+              Settings
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={onLogoutClick} sx={{ gap: 1.5, py: 1, color: 'error.main' }}>
+              <LogoutIcon fontSize="small" />
+              Logout
+            </MenuItem>
           </Menu>
         </Box>
       </Toolbar>

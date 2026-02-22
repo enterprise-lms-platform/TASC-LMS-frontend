@@ -19,10 +19,12 @@ import PricingSection from '../components/instructor/course-creation/PricingSect
 import type { PricingData } from '../components/instructor/course-creation/PricingSection';
 import SettingsSection from '../components/instructor/course-creation/SettingsSection';
 import type { SettingsData } from '../components/instructor/course-creation/SettingsSection';
+import GradingConfigSection from '../components/instructor/course-creation/GradingConfigSection';
+import { createDefaultGradingConfig } from '../utils/gradingUtils';
+import type { GradingConfig } from '../utils/gradingUtils';
 import CoursePreview from '../components/instructor/course-creation/CoursePreview';
 import CompletionStatus from '../components/instructor/course-creation/CompletionStatus';
 import type { StatusItem } from '../components/instructor/course-creation/CompletionStatus';
-import QuickActionsCard from '../components/instructor/course-creation/QuickActionsCard';
 import FormActions from '../components/instructor/course-creation/FormActions';
 
 // Initial form data
@@ -78,6 +80,8 @@ const initialSettings: SettingsData = {
   endDate: '',
 };
 
+const TOTAL_STEPS = 4;
+
 const CourseCreationPage: React.FC = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -91,6 +95,7 @@ const CourseCreationPage: React.FC = () => {
   const [details, setDetails] = useState<DetailsData>(initialDetails);
   const [pricing, setPricing] = useState<PricingData>(initialPricing);
   const [settings, setSettings] = useState<SettingsData>(initialSettings);
+  const [gradingConfig, setGradingConfig] = useState<GradingConfig>(createDefaultGradingConfig());
 
   // Autosave effect
   const triggerAutosave = useCallback(() => {
@@ -127,13 +132,18 @@ const CourseCreationPage: React.FC = () => {
     triggerAutosave();
   };
 
+  const handleGradingConfigChange = (data: GradingConfig) => {
+    setGradingConfig(data);
+    triggerAutosave();
+  };
+
   // Navigation
   const handleStepClick = (step: number) => {
     setActiveStep(step);
   };
 
   const handleNext = () => {
-    if (activeStep < 5) {
+    if (activeStep < TOTAL_STEPS) {
       if (!completedSteps.includes(activeStep)) {
         setCompletedSteps([...completedSteps, activeStep]);
       }
@@ -172,13 +182,13 @@ const CourseCreationPage: React.FC = () => {
   };
 
   const handlePublish = () => {
-    // Direct navigation for smoother flow
-    // In production, you would validate and save first
-    console.log('Publishing course and redirecting...');
-    navigate('/instructor/course/1/preview');
+    // Save course metadata, then navigate to structure page to build curriculum
+    // In production, this would POST to the API and use the returned courseId
+    console.log('Saving course and redirecting to curriculum builder...');
+    navigate('/instructor/course/1/structure');
   };
 
-  // Completion status items. to be replaced
+  // Completion status items — only metadata-related checks
   const statusItems: StatusItem[] = [
     { id: 'basic', label: 'Basic information', status: basicInfo.title ? 'complete' : 'incomplete' },
     { id: 'thumbnail', label: 'Course thumbnail', status: media.thumbnail ? 'complete' : 'warning' },
@@ -187,12 +197,12 @@ const CourseCreationPage: React.FC = () => {
       label: `Learning objectives (${details.objectives.filter((o) => o).length}/4)`,
       status: details.objectives.filter((o) => o).length >= 4 ? 'complete' : 'warning',
     },
-    { id: 'curriculum', label: 'Course curriculum', status: 'warning' },
-    { id: 'lesson', label: 'At least 1 lesson', status: 'incomplete' },
     { id: 'pricing', label: 'Pricing configured', status: pricing.pricingType ? 'complete' : 'incomplete' },
+    { id: 'settings', label: 'Settings reviewed', status: completedSteps.includes(4) ? 'complete' : 'incomplete' },
+    { id: 'grading', label: 'Grading configured', status: gradingConfig.gradingScale ? 'complete' : 'incomplete' },
   ];
 
-  // Render current section
+  // Render current section (4 steps, no curriculum placeholder)
   const renderSection = () => {
     switch (activeStep) {
       case 1:
@@ -207,15 +217,16 @@ const CourseCreationPage: React.FC = () => {
       case 2:
         return <DetailsSection data={details} onChange={handleDetailsChange} />;
       case 3:
-        return (
-          <Box sx={{ p: 3, bgcolor: 'grey.100', borderRadius: 2, textAlign: 'center' }}>
-            Curriculum builder will be implemented here
-          </Box>
-        );
-      case 4:
         return <PricingSection data={pricing} onChange={handlePricingChange} />;
-      case 5:
-        return <SettingsSection data={settings} onChange={handleSettingsChange} />;
+      case 4:
+        return (
+          <>
+            <SettingsSection data={settings} onChange={handleSettingsChange} />
+            <Box sx={{ mt: 3 }}>
+              <GradingConfigSection data={gradingConfig} onChange={handleGradingConfigChange} />
+            </Box>
+          </>
+        );
       default:
         return null;
     }
@@ -295,15 +306,6 @@ const CourseCreationPage: React.FC = () => {
               />
 
               <CompletionStatus status="draft" items={statusItems} />
-
-              <QuickActionsCard
-                onAddModule={() => alert('Opening Add Module dialog...')}
-                onAddLesson={() => alert('Opening Add Lesson dialog...')}
-                onAddQuiz={() => alert('Opening Quiz Builder...')}
-                onAddAssignment={() => alert('Opening Assignment Creator...')}
-                onUploadVideo={() => alert('Opening Video Upload dialog...')}
-                onImportScorm={() => alert('Opening SCORM Import dialog...')}
-              />
             </Box>
           </Box>
         </Box>
@@ -311,7 +313,7 @@ const CourseCreationPage: React.FC = () => {
         {/* Bottom Actions */}
         <FormActions
           currentStep={activeStep}
-          totalSteps={5}
+          totalSteps={TOTAL_STEPS}
           onSaveDraft={handleSaveDraft}
           onDiscard={handleDiscard}
           onPrevious={handlePrevious}

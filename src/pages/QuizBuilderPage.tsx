@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, CssBaseline, Paper, Typography, Toolbar } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 // Layout components
 import Sidebar, { DRAWER_WIDTH } from '../components/instructor/Sidebar';
@@ -57,10 +57,13 @@ const sampleBanks: QuestionBank[] = [
 
 const QuizBuilderPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const lessonTitle = searchParams.get('lesson') || '';
+  const courseTitle = searchParams.get('course') || 'Course';
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Quiz info state
-  const [quizTitle, setQuizTitle] = useState('');
+  const [quizTitle, setQuizTitle] = useState(lessonTitle ? `${lessonTitle} Quiz` : '');
   const [quizDescription, setQuizDescription] = useState('');
   const [timeLimit, setTimeLimit] = useState(30);
   const [passingScore, setPassingScore] = useState(70);
@@ -228,7 +231,7 @@ const QuizBuilderPage: React.FC = () => {
       {/* Top Bar */}
       <QuizBuilderTopBar
         quizTitle={quizTitle}
-        courseTitle="Advanced React Patterns"
+        courseTitle={courseTitle}
         onPreview={() => console.log('Preview')}
         onSettings={() => console.log('Settings')}
         onMobileMenuToggle={() => setMobileOpen(!mobileOpen)}

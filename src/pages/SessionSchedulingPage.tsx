@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box, CssBaseline, Toolbar, Paper, Typography, TextField } from '@mui/material';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 // Layout
 import Sidebar, { DRAWER_WIDTH } from '../components/instructor/Sidebar';
@@ -47,11 +48,15 @@ const defaultNotificationSettings: NotificationSetting[] = [
 ];
 
 const SessionSchedulingPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const lessonTitle = searchParams.get('lesson') || '';
+  const courseName = searchParams.get('course') || 'Advanced React Development';
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Session Details state
-  const [title, setTitle] = useState('Live Coding: Building Custom Hooks');
-  const [description, setDescription] = useState('In this live coding session, we\'ll build a complete custom hooks library from scratch.');
+  const [title, setTitle] = useState(lessonTitle || 'Live Coding: Building Custom Hooks');
+  const [description, setDescription] = useState(lessonTitle ? '' : 'In this live coding session, we\'ll build a complete custom hooks library from scratch.');
   const [course, setCourse] = useState('react-advanced');
   const [module, setModule] = useState('module-4');
 
@@ -149,6 +154,8 @@ const SessionSchedulingPage: React.FC = () => {
       <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
 
       <SessionTopBar
+        courseName={courseName}
+        onCancel={() => navigate(-1)}
         onMobileMenuToggle={() => setMobileOpen(!mobileOpen)}
         onSchedule={handleSchedule}
       />
@@ -187,14 +194,14 @@ const SessionSchedulingPage: React.FC = () => {
                 <SessionInfoForm
                   title={title}
                   description={description}
-                  date=""
-                  time=""
+                  date={date}
+                  time={time}
                   course={course}
                   module={module}
                   onTitleChange={setTitle}
                   onDescriptionChange={setDescription}
-                  onDateChange={() => {}}
-                  onTimeChange={() => {}}
+                  onDateChange={setDate}
+                  onTimeChange={setTime}
                   onCourseChange={setCourse}
                   onModuleChange={setModule}
                 />

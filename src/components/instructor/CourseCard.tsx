@@ -8,6 +8,7 @@ interface CourseCardProps {
   learners: number;
   rating: number;
   progress: number;
+  image?: string;
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({
@@ -16,24 +17,39 @@ const CourseCard: React.FC<CourseCardProps> = ({
   learners,
   rating,
   progress,
+  image,
 }) => {
   return (
     <Paper
       elevation={0}
       sx={{
-        border: 1,
-        borderColor: 'divider',
-        borderRadius: 1,
+        borderRadius: '0.75rem',
         overflow: 'hidden',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.03)',
         transition: 'all 0.3s',
         '&:hover': {
-          boxShadow: 3,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1), 0 8px 24px rgba(0,0,0,0.06)',
           transform: 'translateY(-2px)',
         },
       }}
     >
+      {/* Course image */}
+      {image && (
+        <Box sx={{ height: 120, overflow: 'hidden', bgcolor: 'grey.200' }}>
+          <img
+            src={image}
+            alt={title}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+            }}
+          />
+        </Box>
+      )}
       {/* Course Header */}
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
+      <Box sx={{ p: 2, bgcolor: 'grey.50' }}>
         <Typography variant="subtitle1" fontWeight={600} color="text.primary" gutterBottom>
           {title}
         </Typography>
@@ -100,9 +116,10 @@ const CourseCard: React.FC<CourseCardProps> = ({
               textTransform: 'none',
               fontWeight: 500,
               fontSize: '0.75rem',
-              borderColor: 'divider',
+              borderRadius: '50px',
+              borderColor: 'grey.300',
               color: 'text.secondary',
-              '&:hover': { borderColor: 'primary.main', bgcolor: 'grey.50' },
+              '&:hover': { borderColor: 'primary.main', bgcolor: 'rgba(255,164,36,0.04)' },
             }}
           >
             Edit
@@ -116,8 +133,10 @@ const CourseCard: React.FC<CourseCardProps> = ({
               textTransform: 'none',
               fontWeight: 500,
               fontSize: '0.75rem',
+              borderRadius: '50px',
               bgcolor: 'primary.dark',
-              '&:hover': { bgcolor: 'primary.main' },
+              boxShadow: 'none',
+              '&:hover': { bgcolor: 'primary.main', boxShadow: 'none' },
             }}
           >
             Analytics

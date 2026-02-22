@@ -13,7 +13,7 @@ import {
   CheckCircle as SavedIcon,
   Autorenew as SavingIcon,
   Visibility as PreviewIcon,
-  Rocket as PublishIcon,
+  Save as SaveCourseIcon,
 } from '@mui/icons-material';
 import { DRAWER_WIDTH } from '../Sidebar';
 
@@ -154,17 +154,17 @@ const CourseTopBar: React.FC<CourseTopBarProps> = ({
             Preview
           </Button>
 
-          {/* Publish Button - icon only on xs */}
+          {/* Save Button - icon only on xs */}
           <IconButton
             onClick={onPublish}
             color="primary"
             sx={{ display: { xs: 'flex', sm: 'none' } }}
           >
-            <PublishIcon />
+            <SaveCourseIcon />
           </IconButton>
           <Button
             variant="contained"
-            startIcon={<PublishIcon />}
+            startIcon={<SaveCourseIcon />}
             onClick={onPublish}
             sx={{
               display: { xs: 'none', sm: 'flex' },
@@ -172,7 +172,7 @@ const CourseTopBar: React.FC<CourseTopBarProps> = ({
               '&:hover': { bgcolor: 'primary.dark' },
             }}
           >
-            Publish
+            Save
           </Button>
         </Box>
       </Toolbar>
