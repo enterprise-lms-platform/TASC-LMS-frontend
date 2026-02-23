@@ -9,16 +9,20 @@ import {
   FormControl,
   InputLabel,
   FormHelperText,
+  Autocomplete,
+  Chip,
+  CircularProgress,
 } from '@mui/material';
-import TagsInput from './TagsInput';
+import { Close as CloseIcon } from '@mui/icons-material';
+import { useCategories, useTags } from '../../../hooks/useCatalogue';
 
-interface BasicInfoData {
+export interface BasicInfoData {
   title: string;
   shortDescription: string;
   fullDescription: string;
-  category: string;
+  category: number | '';
   subcategory: string;
-  tags: string[];
+  tags: number[];
 }
 
 interface BasicInfoSectionProps {
@@ -26,43 +30,26 @@ interface BasicInfoSectionProps {
   onChange: (data: BasicInfoData) => void;
 }
 
-const categories = [
-  { value: 'web-dev', label: 'Web Development' },
-  { value: 'data-science', label: 'Data Science' },
-  { value: 'mobile-dev', label: 'Mobile Development' },
-  { value: 'cloud', label: 'Cloud Computing' },
-  { value: 'cybersecurity', label: 'Cybersecurity' },
-  { value: 'design', label: 'Design' },
-  { value: 'business', label: 'Business' },
-  { value: 'marketing', label: 'Marketing' },
-];
-
-const subcategories: Record<string, { value: string; label: string }[]> = {
-  'web-dev': [
-    { value: 'react', label: 'React' },
-    { value: 'vue', label: 'Vue.js' },
-    { value: 'angular', label: 'Angular' },
-    { value: 'node', label: 'Node.js' },
-  ],
-  'data-science': [
-    { value: 'python', label: 'Python' },
-    { value: 'machine-learning', label: 'Machine Learning' },
-    { value: 'data-analysis', label: 'Data Analysis' },
-  ],
-  'mobile-dev': [
-    { value: 'react-native', label: 'React Native' },
-    { value: 'flutter', label: 'Flutter' },
-    { value: 'ios', label: 'iOS Development' },
-    { value: 'android', label: 'Android Development' },
-  ],
-};
-
 const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ data, onChange }) => {
-  const handleChange = (field: keyof BasicInfoData, value: string | string[]) => {
+  // Fetch categories from API
+  const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
+  // Fetch all tags from API
+  const { data: tagsData, isLoading: tagsLoading } = useTags();
+
+  const categories = Array.isArray(categoriesData)
+    ? categoriesData
+    : (categoriesData as any)?.results ?? [];
+
+  const tags = Array.isArray(tagsData)
+    ? tagsData
+    : (tagsData as any)?.results ?? [];
+
+  const handleChange = (field: keyof BasicInfoData, value: string | number | number[]) => {
     onChange({ ...data, [field]: value });
   };
 
-  const availableSubcategories = data.category ? subcategories[data.category] || [] : [];
+  // Find selected tag objects for Autocomplete value
+  const selectedTags = tags.filter((t: any) => data.tags.includes(t.id));
 
   return (
     <Paper elevation={0} sx={{ p: 3, borderRadius: 2, border: 1, borderColor: 'grey.200' }}>
@@ -139,49 +126,92 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ data, onChange }) =
             value={data.category}
             label="Category"
             onChange={(e) => {
-              handleChange('category', e.target.value);
-              handleChange('subcategory', ''); // Reset subcategory when category changes
+              handleChange('category', e.target.value as number);
+              handleChange('subcategory', '');
             }}
+            disabled={categoriesLoading}
           >
             <MenuItem value="">Select a category</MenuItem>
-            {categories.map((cat) => (
-              <MenuItem key={cat.value} value={cat.value}>
-                {cat.label}
+            {categories.map((cat: any) => (
+              <MenuItem key={cat.id} value={cat.id}>
+                {cat.name}
               </MenuItem>
             ))}
           </Select>
+          {categoriesLoading && <FormHelperText>Loading categories...</FormHelperText>}
         </FormControl>
 
-        <FormControl fullWidth disabled={!data.category}>
-          <InputLabel>Subcategory</InputLabel>
-          <Select
-            value={data.subcategory}
-            label="Subcategory"
-            onChange={(e) => handleChange('subcategory', e.target.value)}
-          >
-            <MenuItem value="">Select a subcategory</MenuItem>
-            {availableSubcategories.map((sub) => (
-              <MenuItem key={sub.value} value={sub.value}>
-                {sub.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <TextField
+          fullWidth
+          label="Subcategory (Optional)"
+          placeholder="e.g., React, Machine Learning"
+          value={data.subcategory}
+          onChange={(e) => handleChange('subcategory', e.target.value)}
+        />
       </Box>
 
-      {/* Tags */}
+      {/* Tags - Autocomplete from API */}
       <Box>
         <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
           Tags
         </Typography>
-        <TagsInput
-          tags={data.tags}
-          onAdd={(tag) => handleChange('tags', [...data.tags, tag])}
-          onRemove={(tag) => handleChange('tags', data.tags.filter((t) => t !== tag))}
-          placeholder="Add a tag..."
+        <Autocomplete
+          multiple
+          options={tags}
+          getOptionLabel={(option: any) => option.name}
+          value={selectedTags}
+          loading={tagsLoading}
+          onChange={(_e, newValue) => {
+            handleChange('tags', newValue.map((t: any) => t.id));
+          }}
+          isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              placeholder={data.tags.length < 10 ? 'Search and add tags...' : ''}
+              InputProps={{
+                ...params.InputProps,
+                endAdornment: (
+                  <>
+                    {tagsLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                    {params.InputProps.endAdornment}
+                  </>
+                ),
+              }}
+            />
+          )}
+          renderTags={(value, getTagProps) =>
+            value.map((option: any, index: number) => {
+              const { key, ...rest } = getTagProps({ index });
+              return (
+                <Chip
+                  key={key}
+                  label={option.name}
+                  size="small"
+                  deleteIcon={<CloseIcon fontSize="small" />}
+                  sx={{
+                    bgcolor: 'rgba(255, 164, 36, 0.1)',
+                    color: 'primary.main',
+                    fontWeight: 500,
+                    '& .MuiChip-deleteIcon': {
+                      color: 'primary.main',
+                      '&:hover': { color: 'primary.dark' },
+                    },
+                  }}
+                  {...rest}
+                />
+              );
+            })
+          }
+          limitTags={10}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              minHeight: 48,
+            },
+          }}
         />
         <FormHelperText>
-          Press Enter to add a tag. Tags help learners discover your course.
+          Select tags to help learners discover your course.
         </FormHelperText>
       </Box>
     </Paper>
@@ -189,4 +219,3 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ data, onChange }) =
 };
 
 export default BasicInfoSection;
-export type { BasicInfoData };

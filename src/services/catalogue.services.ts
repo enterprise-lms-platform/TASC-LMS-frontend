@@ -95,7 +95,7 @@ export const courseApi = {
 
 export interface SessionListParams {
   course?: number;
-  type?: 'video' | 'text' | 'live';
+  type?: 'video' | 'text' | 'live' | 'document' | 'html' | 'quiz' | 'assignment' | 'scorm';
 }
 
 export const sessionApi = {

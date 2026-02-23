@@ -34,6 +34,11 @@ export const SessionType = {
   VIDEO: 'video',
   TEXT: 'text',
   LIVE: 'live',
+  DOCUMENT: 'document',
+  HTML: 'html',
+  QUIZ: 'quiz',
+  ASSIGNMENT: 'assignment',
+  SCORM: 'scorm',
 } as const;
 export type SessionType = typeof SessionType[keyof typeof SessionType];
 
@@ -319,7 +324,9 @@ export interface CourseDetail {
   slug: string;
   subtitle?: string;
   short_description?: string;
+  subcategory?: string;
   thumbnail?: string | null;
+  banner?: string | null;
   category: Category;
   tags: Tag[];
   level: CourseLevel;
@@ -327,6 +334,7 @@ export interface CourseDetail {
   discounted_price: string;
   discount_percentage?: number;
   duration_hours?: number;
+  duration_minutes?: number;
   duration_weeks?: number;
   total_sessions?: number;
   instructor: number;
@@ -338,8 +346,19 @@ export interface CourseDetail {
   description: string;
   prerequisites?: string;
   learning_objectives?: string;
+  learning_objectives_list?: string[];
   target_audience?: string;
   trailer_video_url?: string | null;
+  is_public?: boolean;
+  allow_self_enrollment?: boolean;
+  certificate_on_completion?: boolean;
+  enable_discussions?: boolean;
+  sequential_learning?: boolean;
+  enrollment_limit?: number | null;
+  access_duration?: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  grading_config?: Record<string, unknown>;
   meta_title?: string;
   meta_description?: string;
   meta_keywords?: string;
@@ -355,10 +374,11 @@ export interface PublicCourseDetail extends Omit<CourseDetail, 'sessions'> {
 
 export interface CourseCreateRequest {
   title: string;
-  slug: string;
+  slug?: string;
   subtitle?: string;
   description: string;
   short_description?: string;
+  subcategory?: string;
   category?: number | null;
   level?: CourseLevel;
   tags?: number[];
@@ -366,16 +386,29 @@ export interface CourseCreateRequest {
   currency?: string;
   discount_percentage?: number;
   duration_hours?: number;
+  duration_minutes?: number;
   duration_weeks?: number;
   total_sessions?: number;
   instructor?: number | null;
   thumbnail?: string | null;
+  banner?: string | null;
   trailer_video_url?: string | null;
   prerequisites?: string;
   learning_objectives?: string;
+  learning_objectives_list?: string[];
   target_audience?: string;
   status?: CourseStatus;
   featured?: boolean;
+  is_public?: boolean;
+  allow_self_enrollment?: boolean;
+  certificate_on_completion?: boolean;
+  enable_discussions?: boolean;
+  sequential_learning?: boolean;
+  enrollment_limit?: number | null;
+  access_duration?: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  grading_config?: Record<string, unknown>;
   meta_title?: string;
   meta_description?: string;
   meta_keywords?: string;

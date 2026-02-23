@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { Box, Toolbar, CssBaseline } from '@mui/material';
+import React, { useState, useCallback, useRef } from 'react';
+import { Box, Toolbar, CssBaseline, Snackbar, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 // Layout components
@@ -27,6 +27,12 @@ import CompletionStatus from '../components/instructor/course-creation/Completio
 import type { StatusItem } from '../components/instructor/course-creation/CompletionStatus';
 import FormActions from '../components/instructor/course-creation/FormActions';
 
+// API hooks
+import { useCreateCourse, usePartialUpdateCourse } from '../hooks/useCatalogue';
+import { uploadThumbnail, uploadBanner } from '../services/upload.services';
+import { getErrorMessage } from '../utils/config';
+import type { CourseCreateRequest } from '../types/types';
+
 // Initial form data
 const initialBasicInfo: BasicInfoData = {
   title: '',
@@ -34,7 +40,7 @@ const initialBasicInfo: BasicInfoData = {
   fullDescription: '',
   category: '',
   subcategory: '',
-  tags: ['React', 'JavaScript', 'Web Development'],
+  tags: [],
 };
 
 const initialMedia: MediaData = {
@@ -46,33 +52,26 @@ const initialMedia: MediaData = {
 };
 
 const initialDetails: DetailsData = {
-  objectives: [
-    'Build production-ready React applications using advanced patterns',
-    'Implement render props and higher-order components',
-    'Create custom hooks for reusable logic',
-    'Optimize React applications for performance',
-  ],
+  objectives: ['', '', '', ''],
   difficulty: 'intermediate',
-  durationHours: 24,
-  durationMinutes: 30,
-  requirements:
-    '• Basic understanding of JavaScript ES6+ features\n• Familiarity with React fundamentals (components, props, state)\n• Node.js and npm installed on your computer\n• A code editor (VS Code recommended)',
-  targetAudience:
-    'This course is designed for React developers who want to level up their skills and learn professional-grade patterns used in production applications.',
+  durationHours: 0,
+  durationMinutes: 0,
+  requirements: '',
+  targetAudience: '',
 };
 
 const initialPricing: PricingData = {
-  pricingType: 'paid',
-  price: 129.99,
-  originalPrice: 199.99,
+  pricingType: 'free',
+  price: 0,
+  originalPrice: 0,
   currency: 'USD',
 };
 
 const initialSettings: SettingsData = {
-  isPublic: true,
+  isPublic: false,
   selfEnrollment: true,
-  certificate: true,
-  discussions: true,
+  certificate: false,
+  discussions: false,
   sequential: false,
   enrollmentLimit: null,
   accessDuration: 'lifetime',
@@ -86,8 +85,18 @@ const CourseCreationPage: React.FC = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
-  const [completedSteps, setCompletedSteps] = useState<number[]>([1]);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+
+  // Course ID — null until first save (POST), then stores returned ID for subsequent PATCHes
+  const [courseId, setCourseId] = useState<number | null>(null);
+
+  // Snackbar for feedback
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
   // Form data state
   const [basicInfo, setBasicInfo] = useState<BasicInfoData>(initialBasicInfo);
@@ -97,14 +106,155 @@ const CourseCreationPage: React.FC = () => {
   const [settings, setSettings] = useState<SettingsData>(initialSettings);
   const [gradingConfig, setGradingConfig] = useState<GradingConfig>(createDefaultGradingConfig());
 
-  // Autosave effect
-  const triggerAutosave = useCallback(() => {
+  // API mutations
+  const createCourse = useCreateCourse();
+  const updateCourse = usePartialUpdateCourse();
+
+  // Autosave timer ref
+  const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /**
+   * Build the API payload from form state.
+   * Maps frontend field names → backend field names.
+   */
+  const buildPayload = (statusOverride?: string): Partial<CourseCreateRequest> => {
+    const payload: Partial<CourseCreateRequest> = {
+      // Basic info
+      title: basicInfo.title,
+      description: basicInfo.fullDescription,
+      short_description: basicInfo.shortDescription,
+      subcategory: basicInfo.subcategory,
+      ...(basicInfo.category !== '' && { category: basicInfo.category }),
+      tags: basicInfo.tags,
+
+      // Media — URLs only (files are uploaded separately)
+      trailer_video_url: media.promoVideoUrl || null,
+
+      // Details
+      learning_objectives_list: details.objectives.filter((o) => o.trim()),
+      level: details.difficulty as CourseCreateRequest['level'],
+      duration_hours: details.durationHours,
+      duration_minutes: details.durationMinutes,
+      prerequisites: details.requirements,
+      target_audience: details.targetAudience,
+
+      // Pricing
+      price: pricing.pricingType === 'free' ? '0.00' : String(pricing.price),
+      currency: pricing.currency,
+      discount_percentage:
+        pricing.originalPrice > pricing.price && pricing.originalPrice > 0
+          ? Math.round(((pricing.originalPrice - pricing.price) / pricing.originalPrice) * 100)
+          : 0,
+
+      // Settings
+      is_public: settings.isPublic,
+      allow_self_enrollment: settings.selfEnrollment,
+      certificate_on_completion: settings.certificate,
+      enable_discussions: settings.discussions,
+      sequential_learning: settings.sequential,
+      enrollment_limit: settings.enrollmentLimit,
+      access_duration: settings.accessDuration,
+      start_date: settings.startDate || null,
+      end_date: settings.endDate || null,
+
+      // Grading
+      grading_config: gradingConfig as unknown as Record<string, unknown>,
+    };
+
+    if (statusOverride) {
+      payload.status = statusOverride as CourseCreateRequest['status'];
+    }
+
+    return payload;
+  };
+
+  /**
+   * Upload media files to DO Spaces and return their CDN URLs.
+   */
+  const uploadMediaFiles = async (): Promise<{ thumbnail?: string; banner?: string }> => {
+    const urls: { thumbnail?: string; banner?: string } = {};
+
+    if (media.thumbnailFile) {
+      urls.thumbnail = await uploadThumbnail(media.thumbnailFile);
+    }
+    if (media.bannerFile) {
+      urls.banner = await uploadBanner(media.bannerFile);
+    }
+
+    return urls;
+  };
+
+  /**
+   * Save course to API. Creates draft on first call, patches on subsequent calls.
+   */
+  const saveCourse = async (statusOverride?: string) => {
+    if (!basicInfo.title.trim()) {
+      setSnackbar({ open: true, message: 'Course title is required to save.', severity: 'error' });
+      return null;
+    }
+
     setSaveStatus('saving');
-    setTimeout(() => {
+
+    try {
+      const payload = buildPayload(statusOverride);
+
+      // Try uploading media files to DO Spaces (skip gracefully if not configured)
+      try {
+        const mediaUrls = await uploadMediaFiles();
+        if (mediaUrls.thumbnail) {
+          payload.thumbnail = mediaUrls.thumbnail;
+          setMedia((prev) => ({ ...prev, thumbnailFile: null, thumbnail: mediaUrls.thumbnail! }));
+        }
+        if (mediaUrls.banner) {
+          payload.banner = mediaUrls.banner;
+          setMedia((prev) => ({ ...prev, bannerFile: null, banner: mediaUrls.banner! }));
+        }
+      } catch (uploadErr) {
+        // DO Spaces upload not configured yet — skip media upload, save course without it
+        console.warn('Media upload skipped (DO Spaces not configured):', uploadErr);
+      }
+
+      // Keep existing media URLs if no new upload
+      if (!payload.thumbnail && media.thumbnail && !media.thumbnailFile) {
+        payload.thumbnail = media.thumbnail;
+      }
+      if (!payload.banner && media.banner && !media.bannerFile) {
+        payload.banner = media.banner;
+      }
+
+      let result;
+      if (courseId === null) {
+        // First save — POST to create draft
+        result = await createCourse.mutateAsync(payload as CourseCreateRequest);
+        setCourseId(result.id);
+      } else {
+        // Subsequent saves — PATCH to update
+        result = await updateCourse.mutateAsync({ id: courseId, data: payload });
+      }
+
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
-    }, 1500);
-  }, []);
+      return result;
+    } catch (error: any) {
+      console.error('Course save failed:', error?.response?.data || error);
+      setSaveStatus('idle');
+      const message = getErrorMessage(error);
+      setSnackbar({ open: true, message, severity: 'error' });
+      return null;
+    }
+  };
+
+  // Autosave with debounce (3s after last change)
+  const triggerAutosave = useCallback(() => {
+    if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(() => {
+      // Only autosave if we have a title (minimum for draft)
+      if (basicInfo.title.trim()) {
+        saveCourse();
+      }
+    }, 3000);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [basicInfo.title, courseId]);
 
   // Handle form changes with autosave
   const handleBasicInfoChange = (data: BasicInfoData) => {
@@ -165,8 +315,11 @@ const CourseCreationPage: React.FC = () => {
     }
   };
 
-  const handleSaveDraft = () => {
-    alert('Course saved as draft!');
+  const handleSaveDraft = async () => {
+    const result = await saveCourse('draft');
+    if (result) {
+      setSnackbar({ open: true, message: 'Course saved as draft!', severity: 'success' });
+    }
   };
 
   const handleDiscard = () => {
@@ -181,28 +334,30 @@ const CourseCreationPage: React.FC = () => {
     alert('Opening course preview in new tab...');
   };
 
-  const handlePublish = () => {
-    // Save course metadata, then navigate to structure page to build curriculum
-    // In production, this would POST to the API and use the returned courseId
-    console.log('Saving course and redirecting to curriculum builder...');
-    navigate('/instructor/course/1/structure');
+  const handlePublish = async () => {
+    // Save course metadata and navigate to curriculum builder
+    const result = await saveCourse('draft');
+    if (result) {
+      setSnackbar({ open: true, message: 'Course saved! Redirecting to curriculum builder...', severity: 'success' });
+      navigate(`/instructor/course/${result.id}/structure`);
+    }
   };
 
-  // Completion status items — only metadata-related checks
+  // Completion status items
   const statusItems: StatusItem[] = [
     { id: 'basic', label: 'Basic information', status: basicInfo.title ? 'complete' : 'incomplete' },
     { id: 'thumbnail', label: 'Course thumbnail', status: media.thumbnail ? 'complete' : 'warning' },
     {
       id: 'objectives',
-      label: `Learning objectives (${details.objectives.filter((o) => o).length}/4)`,
-      status: details.objectives.filter((o) => o).length >= 4 ? 'complete' : 'warning',
+      label: `Learning objectives (${details.objectives.filter((o) => o.trim()).length}/4)`,
+      status: details.objectives.filter((o) => o.trim()).length >= 4 ? 'complete' : 'warning',
     },
     { id: 'pricing', label: 'Pricing configured', status: pricing.pricingType ? 'complete' : 'incomplete' },
     { id: 'settings', label: 'Settings reviewed', status: completedSteps.includes(4) ? 'complete' : 'incomplete' },
     { id: 'grading', label: 'Grading configured', status: gradingConfig.gradingScale ? 'complete' : 'incomplete' },
   ];
 
-  // Render current section (4 steps, no curriculum placeholder)
+  // Render current section
   const renderSection = () => {
     switch (activeStep) {
       case 1:
@@ -321,6 +476,23 @@ const CourseCreationPage: React.FC = () => {
           onPublish={handlePublish}
         />
       </Box>
+
+      {/* Snackbar Feedback */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
