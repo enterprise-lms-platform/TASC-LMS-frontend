@@ -28,79 +28,83 @@ const RecentInvoices: React.FC = () => {
     <Paper
       elevation={0}
       sx={{
-        p: 3,
-        borderRadius: 3,
-        border: '1px solid',
-        borderColor: 'divider',
+        borderRadius: '1rem',
+        overflow: 'hidden',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
+        transition: 'box-shadow 0.3s',
+        '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' },
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-          Recent Invoices
-        </Typography>
-        <Button size="small" sx={{ color: '#8b5cf6' }}>
+      {/* Header */}
+      <Box
+        sx={{
+          p: 2,
+          px: 3,
+          bgcolor: 'grey.50',
+          borderBottom: 1,
+          borderColor: 'divider',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <Typography fontWeight={700}>Recent Invoices</Typography>
+        <Button size="small" sx={{ color: 'primary.main', textTransform: 'none', fontWeight: 600, fontSize: '0.75rem' }}>
           View All
         </Button>
       </Box>
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {invoices.map((invoice) => (
+      {/* Invoice rows */}
+      {invoices.map((invoice, i) => (
+        <Box
+          key={invoice.id}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            p: 2,
+            px: 3,
+            borderBottom: i < invoices.length - 1 ? 1 : 0,
+            borderColor: 'divider',
+            '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' },
+          }}
+        >
           <Box
-            key={invoice.id}
             sx={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              bgcolor: 'rgba(255,164,36,0.1)',
+              color: 'primary.main',
               display: 'flex',
               alignItems: 'center',
-              gap: 2,
-              p: 1.5,
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              '&:hover': { bgcolor: 'grey.50' },
+              justifyContent: 'center',
             }}
           >
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 1.5,
-                bgcolor: 'rgba(139, 92, 246, 0.1)',
-                color: '#8b5cf6',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <InvoiceIcon fontSize="small" />
+            <InvoiceIcon sx={{ fontSize: 18 }} />
+          </Box>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="body2" fontWeight={600}>{invoice.id}</Typography>
+              <Typography variant="body2" fontWeight={700}>{invoice.amount}</Typography>
             </Box>
-            <Box sx={{ flex: 1 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  {invoice.id}
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  {invoice.amount}
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
-                <Typography variant="caption" color="text.secondary">
-                  {invoice.customer}
-                </Typography>
-                <Chip
-                  label={invoice.status}
-                  size="small"
-                  sx={{
-                    height: 20,
-                    fontSize: '0.7rem',
-                    bgcolor: statusColors[invoice.status].bg,
-                    color: statusColors[invoice.status].color,
-                    fontWeight: 500,
-                  }}
-                />
-              </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
+              <Typography variant="caption" color="text.secondary">{invoice.customer} · Due {invoice.dueDate}</Typography>
+              <Chip
+                label={invoice.status}
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  bgcolor: statusColors[invoice.status].bg,
+                  color: statusColors[invoice.status].color,
+                }}
+              />
             </Box>
           </Box>
-        ))}
-      </Box>
+        </Box>
+      ))}
     </Paper>
   );
 };
