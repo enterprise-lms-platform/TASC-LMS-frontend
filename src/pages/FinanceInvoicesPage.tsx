@@ -67,12 +67,8 @@ const FinanceInvoicesPage: React.FC = () => {
   const totalOutstanding = invoices.filter((i) => i.status === 'pending' || i.status === 'overdue')
     .reduce((sum, i) => sum + parseFloat(i.amount.replace(/[$,]/g, '')), 0);
 
-  const summaryCards = [
-    { label: 'Total Invoices', value: invoices.length.toString(), color: '#6366f1' },
-    { label: 'Paid', value: invoices.filter((i) => i.status === 'paid').length.toString(), color: '#10b981' },
-    { label: 'Outstanding', value: `$${totalOutstanding.toLocaleString()}`, color: '#f59e0b' },
-    { label: 'Overdue', value: invoices.filter((i) => i.status === 'overdue').length.toString(), color: '#ef4444' },
-  ];
+
+
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -101,20 +97,39 @@ const FinanceInvoicesPage: React.FC = () => {
             </Box>
           </Box>
 
-          {/* Summary */}
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            {summaryCards.map((s) => (
-              <Grid size={{ xs: 6, md: 3 }} key={s.label}>
-                <Paper elevation={0} sx={{ ...cardSx, p: 2, px: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                  <Box sx={{ width: 8, height: 32, borderRadius: 4, bgcolor: s.color }} />
-                  <Box>
-                    <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1 }}>{s.value}</Typography>
-                    <Typography variant="caption" color="text.secondary">{s.label}</Typography>
-                  </Box>
-                </Paper>
+          {/* Summary — matches Overview stat cards */}
+          {(() => {
+            const invStatCards = [
+              { label: 'Total Invoices', value: invoices.length.toString(), icon: <InvoiceIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
+              { label: 'Paid', value: invoices.filter((i) => i.status === 'paid').length.toString(), icon: <ViewIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+              { label: 'Outstanding', value: `$${totalOutstanding.toLocaleString()}`, icon: <ExportIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+              { label: 'Overdue', value: invoices.filter((i) => i.status === 'overdue').length.toString(), icon: <SendIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
+            ];
+            return (
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                {invStatCards.map((s) => (
+                  <Grid size={{ xs: 6, md: 3 }} key={s.label}>
+                    <Paper elevation={0} sx={{
+                      bgcolor: s.bgcolor, borderRadius: '20px', p: 3,
+                      position: 'relative', minHeight: 160, display: 'flex',
+                      flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                      textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer',
+                      '&:hover': { transform: 'translateY(-4px)' },
+                    }}>
+                      <Box sx={{
+                        position: 'absolute', top: 16, right: 16, width: 40, height: 40,
+                        borderRadius: '50%', bgcolor: s.iconBg, display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', color: 'white',
+                        '& svg': { fontSize: 20 },
+                      }}>{s.icon}</Box>
+                      <Typography variant="h3" sx={{ fontWeight: 700, color: s.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{s.value}</Typography>
+                      <Typography variant="body2" sx={{ color: s.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>{s.label}</Typography>
+                    </Paper>
+                  </Grid>
+                ))}
               </Grid>
-            ))}
-          </Grid>
+            );
+          })()}
 
           {/* Filters */}
           <Paper elevation={0} sx={{ ...cardSx, mb: 3 }}>

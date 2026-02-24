@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Box, CssBaseline, Toolbar, Typography, Paper, Chip, Avatar, IconButton,
-  Button, TextField, InputAdornment, Select, MenuItem, FormControl, InputLabel,
+  Button, TextField, InputAdornment, Select, MenuItem, FormControl, InputLabel, Grid,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -70,12 +70,7 @@ const FinancePaymentsPage: React.FC = () => {
     return true;
   });
 
-  const stats = [
-    { label: 'Total Payments', value: payments.length.toString(), color: '#6366f1' },
-    { label: 'Completed', value: payments.filter((p) => p.status === 'completed').length.toString(), color: '#10b981' },
-    { label: 'Pending', value: payments.filter((p) => p.status === 'pending').length.toString(), color: '#f59e0b' },
-    { label: 'Failed', value: payments.filter((p) => p.status === 'failed').length.toString(), color: '#ef4444' },
-  ];
+
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -98,18 +93,39 @@ const FinancePaymentsPage: React.FC = () => {
             </Button>
           </Box>
 
-          {/* Status Summary */}
-          <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-            {stats.map((s) => (
-              <Paper key={s.label} elevation={0} sx={{ ...cardSx, p: 2, px: 2.5, flex: '1 1 auto', minWidth: 120, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Box sx={{ width: 8, height: 32, borderRadius: 4, bgcolor: s.color }} />
-                <Box>
-                  <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1 }}>{s.value}</Typography>
-                  <Typography variant="caption" color="text.secondary">{s.label}</Typography>
-                </Box>
-              </Paper>
-            ))}
-          </Box>
+          {/* Status Summary — matches Overview stat cards */}
+          {(() => {
+            const statCards = [
+              { label: 'Total Payments', value: payments.length.toString(), icon: <CardIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
+              { label: 'Completed', value: payments.filter((p) => p.status === 'completed').length.toString(), icon: <ViewIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+              { label: 'Pending', value: payments.filter((p) => p.status === 'pending').length.toString(), icon: <MpesaIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+              { label: 'Failed', value: payments.filter((p) => p.status === 'failed').length.toString(), icon: <AirtelIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
+            ];
+            return (
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                {statCards.map((s) => (
+                  <Grid size={{ xs: 6, md: 3 }} key={s.label}>
+                    <Paper elevation={0} sx={{
+                      bgcolor: s.bgcolor, borderRadius: '20px', p: 3,
+                      position: 'relative', minHeight: 160, display: 'flex',
+                      flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                      textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer',
+                      '&:hover': { transform: 'translateY(-4px)' },
+                    }}>
+                      <Box sx={{
+                        position: 'absolute', top: 16, right: 16, width: 40, height: 40,
+                        borderRadius: '50%', bgcolor: s.iconBg, display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', color: 'white',
+                        '& svg': { fontSize: 20 },
+                      }}>{s.icon}</Box>
+                      <Typography variant="h3" sx={{ fontWeight: 700, color: s.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{s.value}</Typography>
+                      <Typography variant="body2" sx={{ color: s.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>{s.label}</Typography>
+                    </Paper>
+                  </Grid>
+                ))}
+              </Grid>
+            );
+          })()}
 
           {/* Filters */}
           <Paper elevation={0} sx={{ ...cardSx, mb: 3 }}>

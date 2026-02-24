@@ -29,6 +29,13 @@ import FinanceAlertsPage from '../pages/FinanceAlertsPage';
 import FinancePaymentsPage from '../pages/FinancePaymentsPage';
 import FinanceInvoicesPage from '../pages/FinanceInvoicesPage';
 import FinanceRevenueReportsPage from '../pages/FinanceRevenueReportsPage';
+import FinanceSubscriptionsPage from '../pages/FinanceSubscriptionsPage';
+import FinanceSubscriptionHistoryPage from '../pages/FinanceSubscriptionHistoryPage';
+import FinanceChurnPage from '../pages/FinanceChurnPage';
+import FinancePricingPage from '../pages/FinancePricingPage';
+import FinanceExportPage from '../pages/FinanceExportPage';
+import FinanceStatementsPage from '../pages/FinanceStatementsPage';
+import FinanceCustomReportsPage from '../pages/FinanceCustomReportsPage';
 import CourseCataloguePage from '../pages/CourseCataloguePage';
 import ForBusinessPage from '../pages/ForBusinessPage';
 import CourseLandingPage from '../pages/CourseLandingPage';
@@ -159,6 +166,13 @@ export default function AppRoutes() {
           <Route path="/finance/payments" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinancePaymentsPage /></ProtectedRoute>} />
           <Route path="/finance/invoices" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceInvoicesPage /></ProtectedRoute>} />
           <Route path="/finance/revenue-reports" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceRevenueReportsPage /></ProtectedRoute>} />
+          <Route path="/finance/subscriptions" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceSubscriptionsPage /></ProtectedRoute>} />
+          <Route path="/finance/subscription-history" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceSubscriptionHistoryPage /></ProtectedRoute>} />
+          <Route path="/finance/churn" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceChurnPage /></ProtectedRoute>} />
+          <Route path="/finance/pricing" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinancePricingPage /></ProtectedRoute>} />
+          <Route path="/finance/export" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceExportPage /></ProtectedRoute>} />
+          <Route path="/finance/statements" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceStatementsPage /></ProtectedRoute>} />
+          <Route path="/finance/custom-reports" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceCustomReportsPage /></ProtectedRoute>} />
         </Routes>
   );
 }

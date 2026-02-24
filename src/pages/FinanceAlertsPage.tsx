@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Box, CssBaseline, Toolbar, Typography, Paper, Chip, IconButton, Button, Switch, FormControlLabel,
+  Box, CssBaseline, Toolbar, Typography, Paper, Chip, IconButton, Button, Switch, FormControlLabel, Grid,
 } from '@mui/material';
 import {
   Warning as WarningIcon,
@@ -89,26 +89,43 @@ const FinanceAlertsPage: React.FC = () => {
             </Box>
           </Box>
 
-          {/* Severity Summary */}
-          <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-            {(['critical', 'warning', 'info', 'success'] as AlertSeverity[]).map((sev) => {
-              const count = alertsData.filter((a) => a.severity === sev).length;
-              const cfg = severityConfig[sev];
-              return (
-                <Paper key={sev} elevation={0} sx={{
-                  ...cardSx, display: 'flex', alignItems: 'center', gap: 1.5, p: 2, px: 2.5, flex: '1 1 auto', minWidth: 160,
-                }}>
-                  <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: cfg.bg, color: cfg.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {cfg.icon}
-                  </Box>
-                  <Box>
-                    <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1 }}>{count}</Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'capitalize' }}>{sev}</Typography>
-                  </Box>
-                </Paper>
-              );
-            })}
-          </Box>
+          {/* Severity Summary — matches Overview stat cards */}
+          {(() => {
+            const sevCards: { sev: AlertSeverity; bgcolor: string; iconBg: string; color: string; subColor: string }[] = [
+              { sev: 'critical', bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
+              { sev: 'warning', bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+              { sev: 'info', bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
+              { sev: 'success', bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+            ];
+            return (
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                {sevCards.map((card) => {
+                  const count = alertsData.filter((a) => a.severity === card.sev).length;
+                  const cfg = severityConfig[card.sev];
+                  return (
+                    <Grid size={{ xs: 6, md: 3 }} key={card.sev}>
+                      <Paper elevation={0} sx={{
+                        bgcolor: card.bgcolor, borderRadius: '20px', p: 3,
+                        position: 'relative', minHeight: 160, display: 'flex',
+                        flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                        textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer',
+                        '&:hover': { transform: 'translateY(-4px)' },
+                      }}>
+                        <Box sx={{
+                          position: 'absolute', top: 16, right: 16, width: 40, height: 40,
+                          borderRadius: '50%', bgcolor: card.iconBg, display: 'flex',
+                          alignItems: 'center', justifyContent: 'center', color: 'white',
+                          '& svg': { fontSize: 20 },
+                        }}>{cfg.icon}</Box>
+                        <Typography variant="h3" sx={{ fontWeight: 700, color: card.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{count}</Typography>
+                        <Typography variant="body2" sx={{ color: card.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8, textTransform: 'capitalize' }}>{card.sev}</Typography>
+                      </Paper>
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            );
+          })()}
 
           {/* Alerts List */}
           <Paper elevation={0} sx={cardSx}>
