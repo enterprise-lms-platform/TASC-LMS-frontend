@@ -31,6 +31,7 @@ import {
   Assessment as CustomReportsIcon,
   School as LogoIcon,
 } from '@mui/icons-material';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { getUserDisplayName, getUserInitials } from '../../utils/userHelpers';
 
@@ -41,7 +42,7 @@ const DRAWER_WIDTH = 260;
 interface NavItem {
   text: string;
   icon: React.ReactNode;
-  active?: boolean;
+  path?: string;
   badge?: number;
 }
 
@@ -50,48 +51,48 @@ interface NavSection {
   items: NavItem[];
 }
 
-// Navigation sections data
+// Navigation sections data with routes
 const navSections: NavSection[] = [
   {
     title: 'Dashboard',
     items: [
-      { text: 'Overview', icon: <DashboardIcon />, active: true },
-      { text: 'Analytics', icon: <AnalyticsIcon /> },
-      { text: 'Alerts', icon: <AlertsIcon />, badge: 2 },
+      { text: 'Overview', icon: <DashboardIcon />, path: '/finance' },
+      { text: 'Analytics', icon: <AnalyticsIcon />, path: '/finance/analytics' },
+      { text: 'Alerts', icon: <AlertsIcon />, path: '/finance/alerts', badge: 2 },
     ],
   },
   {
     title: 'Revenue',
     items: [
-      { text: 'All Payments', icon: <PaymentsIcon /> },
-      { text: 'Invoices', icon: <InvoicesIcon /> },
-      { text: 'Revenue Reports', icon: <RevenueReportsIcon /> },
+      { text: 'All Payments', icon: <PaymentsIcon />, path: '/finance/payments' },
+      { text: 'Invoices', icon: <InvoicesIcon />, path: '/finance/invoices' },
+      { text: 'Revenue Reports', icon: <RevenueReportsIcon />, path: '/finance/revenue-reports' },
     ],
   },
   {
     title: 'Subscriptions',
     items: [
-      { text: 'Active Subscriptions', icon: <SubscriptionsIcon /> },
-      { text: 'Subscription History', icon: <HistoryIcon /> },
-      { text: 'Churn Analysis', icon: <ChurnIcon /> },
-      { text: 'Plans & Pricing', icon: <PricingIcon /> },
+      { text: 'Active Subscriptions', icon: <SubscriptionsIcon />, path: '/finance/subscriptions' },
+      { text: 'Subscription History', icon: <HistoryIcon />, path: '/finance/subscription-history' },
+      { text: 'Churn Analysis', icon: <ChurnIcon />, path: '/finance/churn' },
+      { text: 'Plans & Pricing', icon: <PricingIcon />, path: '/finance/pricing' },
     ],
   },
   {
     title: 'Payment Gateways',
     items: [
-      { text: 'M-Pesa', icon: <MpesaIcon /> },
-      { text: 'MTN MoMo', icon: <MtnIcon /> },
-      { text: 'Airtel Money', icon: <AirtelIcon /> },
-      { text: 'Pesa Pal', icon: <PesaPalIcon /> },
+      { text: 'M-Pesa', icon: <MpesaIcon />, path: '/finance/gateway/mpesa' },
+      { text: 'MTN MoMo', icon: <MtnIcon />, path: '/finance/gateway/mtn' },
+      { text: 'Airtel Money', icon: <AirtelIcon />, path: '/finance/gateway/airtel' },
+      { text: 'Pesa Pal', icon: <PesaPalIcon />, path: '/finance/gateway/pesapal' },
     ],
   },
   {
     title: 'Reports',
     items: [
-      { text: 'Export Data', icon: <ExportIcon /> },
-      { text: 'Financial Statements', icon: <StatementsIcon /> },
-      { text: 'Custom Reports', icon: <CustomReportsIcon /> },
+      { text: 'Export Data', icon: <ExportIcon />, path: '/finance/export' },
+      { text: 'Financial Statements', icon: <StatementsIcon />, path: '/finance/statements' },
+      { text: 'Custom Reports', icon: <CustomReportsIcon />, path: '/finance/custom-reports' },
     ],
   },
 ];
@@ -102,9 +103,25 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const userName = getUserDisplayName(user?.first_name, user?.last_name, user?.email);
   const userInitials = getUserInitials(user?.first_name, user?.last_name);
+
+  const handleNavClick = (path?: string) => {
+    if (path) {
+      navigate(path);
+      onMobileClose();
+    }
+  };
+
+  const isActive = (path?: string) => {
+    if (!path) return false;
+    // Exact match for /finance (overview), startsWith for sub-routes
+    if (path === '/finance') return location.pathname === '/finance';
+    return location.pathname.startsWith(path);
+  };
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -116,7 +133,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
           alignItems: 'center',
           gap: 1.5,
           minHeight: 80,
+          cursor: 'pointer',
         }}
+        onClick={() => navigate('/finance')}
       >
         <LogoIcon sx={{ fontSize: 32, color: 'primary.dark' }} />
         <Typography variant="h6" fontWeight={700} color="text.primary">
@@ -141,7 +160,11 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
+          cursor: 'pointer',
+          '&:hover': { bgcolor: 'rgba(255, 164, 36, 0.05)' },
+          transition: 'background 0.15s',
         }}
+        onClick={() => navigate('/finance/profile')}
       >
         <Avatar
           src={(user?.google_picture ?? undefined) as string | undefined}
@@ -156,8 +179,12 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
         >
           {userInitials}
         </Avatar>
-        <Box>
-          <Typography variant="body2" fontWeight={600}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography
+            variant="body2"
+            fontWeight={600}
+            sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          >
             {userName}
           </Typography>
           <Typography variant="caption" sx={{ color: 'primary.dark', fontWeight: 500 }}>
@@ -188,18 +215,18 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
                 </Box>
               </ListItem>
               {section.items.map((item) => {
-                const isActive = item.active || false;
+                const active = isActive(item.path);
                 return (
                   <ListItem key={item.text} disablePadding>
                     <ListItemButton
-                      className={`nav-item ${isActive ? 'active' : ''}`}
+                      onClick={() => handleNavClick(item.path)}
                       sx={{
                         py: 0.75,
                         px: 3,
                         mx: 1.5,
                         borderRadius: '10px',
                         position: 'relative',
-                        ...(isActive && {
+                        ...(active && {
                           bgcolor: 'rgba(255, 164, 36, 0.08)',
                           color: 'primary.dark',
                           '&::before': {
@@ -219,7 +246,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
                       <ListItemIcon
                         sx={{
                           minWidth: 36,
-                          color: isActive ? 'primary.dark' : 'text.secondary',
+                          color: active ? 'primary.dark' : 'text.secondary',
                           '& svg': { fontSize: 20 },
                         }}
                       >
@@ -239,7 +266,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
                         primary={item.text}
                         primaryTypographyProps={{
                           fontSize: '0.82rem',
-                          fontWeight: isActive ? 600 : 500,
+                          fontWeight: active ? 600 : 500,
                         }}
                       />
                     </ListItemButton>
@@ -285,6 +312,14 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
     </Box>
   );
 
+  const drawerPaperStyles = {
+    boxSizing: 'border-box' as const,
+    width: DRAWER_WIDTH,
+    bgcolor: '#fefdfb',
+    borderRight: 'none',
+    boxShadow: '1px 0 8px rgba(0,0,0,0.03)',
+  };
+
   return (
     <Box component="nav" sx={{ width: { lg: DRAWER_WIDTH }, flexShrink: { lg: 0 } }}>
       {/* Mobile Drawer */}
@@ -295,12 +330,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', lg: 'none' },
-          '& .MuiDrawer-paper': {
-            boxSizing: 'border-box',
-            width: DRAWER_WIDTH,
-            bgcolor: '#fefdfb',
-            borderRight: 'none',
-          },
+          '& .MuiDrawer-paper': drawerPaperStyles,
         }}
       >
         {drawerContent}
@@ -311,13 +341,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
         variant="permanent"
         sx={{
           display: { xs: 'none', lg: 'block' },
-          '& .MuiDrawer-paper': {
-            boxSizing: 'border-box',
-            width: DRAWER_WIDTH,
-            bgcolor: '#fefdfb',
-            borderRight: 'none',
-            boxShadow: '1px 0 8px rgba(0,0,0,0.03)',
-          },
+          '& .MuiDrawer-paper': drawerPaperStyles,
         }}
         open
       >

@@ -24,6 +24,7 @@ import PaymentHistoryPage from '../pages/PaymentHistoryPage';
 import ManagerDashboard from '../pages/ManagerDashboard';
 import SuperadminDashboard from '../pages/SuperadminDashboard';
 import FinanceDashboard from '../pages/FinanceDashboard';
+import FinanceAnalyticsPage from '../pages/FinanceAnalyticsPage';
 import CourseCataloguePage from '../pages/CourseCataloguePage';
 import ForBusinessPage from '../pages/ForBusinessPage';
 import CourseLandingPage from '../pages/CourseLandingPage';
@@ -149,6 +150,7 @@ export default function AppRoutes() {
           
           {/* Protected Finance Routes */}
           <Route path="/finance" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceDashboard /></ProtectedRoute>} />
+          <Route path="/finance/analytics" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceAnalyticsPage /></ProtectedRoute>} />
         </Routes>
   );
 }
