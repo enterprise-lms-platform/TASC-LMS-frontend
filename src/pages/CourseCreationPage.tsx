@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { Box, Toolbar, CssBaseline, Snackbar, Alert } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Box, Toolbar, CssBaseline, Snackbar, Alert, LinearProgress, Typography } from '@mui/material';
+import { useNavigate, useParams } from 'react-router-dom';
 
 // Layout components
 import Sidebar, { DRAWER_WIDTH } from '../components/instructor/Sidebar';
@@ -28,7 +28,7 @@ import type { StatusItem } from '../components/instructor/course-creation/Comple
 import FormActions from '../components/instructor/course-creation/FormActions';
 
 // API hooks
-import { useCreateCourse, usePartialUpdateCourse } from '../hooks/useCatalogue';
+import { useCreateCourse, usePartialUpdateCourse, useCourse } from '../hooks/useCatalogue';
 import { uploadThumbnail, uploadBanner } from '../services/upload.services';
 import { getErrorMessage } from '../utils/config';
 import type { CourseCreateRequest } from '../types/types';
@@ -83,13 +83,17 @@ const TOTAL_STEPS = 4;
 
 const CourseCreationPage: React.FC = () => {
   const navigate = useNavigate();
+  const { courseId: routeCourseId } = useParams<{ courseId?: string }>();
+  const editId = routeCourseId ? Number(routeCourseId) : null;
+  const isEditMode = !!editId;
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
-  // Course ID — null until first save (POST), then stores returned ID for subsequent PATCHes
-  const [courseId, setCourseId] = useState<number | null>(null);
+  // Course ID — editId when editing, null until first save (POST) when creating
+  const [courseId, setCourseId] = useState<number | null>(editId);
 
   // Snackbar for feedback
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
@@ -109,6 +113,84 @@ const CourseCreationPage: React.FC = () => {
   // API mutations
   const createCourse = useCreateCourse();
   const updateCourse = usePartialUpdateCourse();
+
+  // Load existing course data for edit mode
+  const {
+    data: courseData,
+    isLoading: courseLoading,
+    isError: courseIsError,
+  } = useCourse(editId ?? 0, { enabled: isEditMode });
+
+  // Prefill form once when editing
+  const didPrefill = useRef(false);
+  useEffect(() => {
+    if (!isEditMode || !courseData || didPrefill.current) return;
+    didPrefill.current = true;
+
+    const c = courseData;
+
+    // Basic info
+    setBasicInfo({
+      title: c.title || '',
+      shortDescription: c.short_description || '',
+      fullDescription: c.description || '',
+      category: (typeof c.category === 'object' && c.category?.id != null) ? c.category.id : '',
+      subcategory: c.subcategory || '',
+      tags: Array.isArray(c.tags) ? c.tags.map((t: any) => t.id) : [],
+    });
+
+    // Media
+    setMedia({
+      thumbnail: c.thumbnail || null,
+      thumbnailFile: null,
+      banner: c.banner || null,
+      bannerFile: null,
+      promoVideoUrl: c.trailer_video_url || '',
+    });
+
+    // Pricing
+    const priceNum = parseFloat(c.price) || 0;
+    setPricing({
+      pricingType: priceNum === 0 ? 'free' : 'paid',
+      price: priceNum,
+      originalPrice: priceNum,
+      currency: (c as any).currency || 'USD',
+    });
+
+    // Details
+    const objectivesList = c.learning_objectives_list && c.learning_objectives_list.length > 0
+      ? c.learning_objectives_list
+      : (c.learning_objectives || '').split('\n').map((s: string) => s.trim()).filter(Boolean);
+    // Pad to at least 4 items
+    while (objectivesList.length < 4) objectivesList.push('');
+
+    setDetails({
+      objectives: objectivesList,
+      difficulty: (c.level as DetailsData['difficulty']) || 'intermediate',
+      durationHours: c.duration_hours || 0,
+      durationMinutes: (c as any).duration_minutes || 0,
+      requirements: c.prerequisites || '',
+      targetAudience: c.target_audience || '',
+    });
+
+    // Settings
+    setSettings({
+      isPublic: c.is_public ?? false,
+      selfEnrollment: c.allow_self_enrollment ?? true,
+      certificate: c.certificate_on_completion ?? false,
+      discussions: c.enable_discussions ?? false,
+      sequential: c.sequential_learning ?? false,
+      enrollmentLimit: c.enrollment_limit ?? null,
+      accessDuration: c.access_duration || 'lifetime',
+      startDate: c.start_date || '',
+      endDate: c.end_date || '',
+    });
+
+    // Grading
+    if (c.grading_config) {
+      setGradingConfig(c.grading_config as unknown as GradingConfig);
+    }
+  }, [isEditMode, courseData]);
 
   // Autosave timer ref
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -331,7 +413,11 @@ const CourseCreationPage: React.FC = () => {
   };
 
   const handlePreview = () => {
-    alert('Opening course preview in new tab...');
+    if (courseId) {
+      navigate(`/instructor/course/${courseId}/preview`);
+    } else {
+      alert('Save the course first to preview it.');
+    }
   };
 
   const handlePublish = async () => {
@@ -418,63 +504,84 @@ const CourseCreationPage: React.FC = () => {
       >
         <Toolbar sx={{ minHeight: '72px !important' }} /> {/* Spacer for fixed AppBar */}
 
-        {/* Content Area */}
-        <Box sx={{ flex: 1, p: { xs: 2, md: 3 }, overflowX: 'hidden' }}>
-          {/* Progress Stepper */}
-          <ProgressStepper
-            activeStep={activeStep}
-            completedSteps={completedSteps}
-            onStepClick={handleStepClick}
-          />
+        {/* Edit mode loading state */}
+        {isEditMode && courseLoading && (
+          <Box sx={{ p: 4, textAlign: 'center' }}>
+            <LinearProgress sx={{ mb: 2 }} />
+            <Typography color="text.secondary">Loading course...</Typography>
+          </Box>
+        )}
 
-          {/* Main Layout */}
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', lg: '1fr 350px' },
-              gap: 3,
-            }}
-          >
-            {/* Left Column - Form Sections */}
-            <Box>{renderSection()}</Box>
+        {/* Edit mode error state */}
+        {isEditMode && courseIsError && (
+          <Box sx={{ p: 4, textAlign: 'center' }}>
+            <Typography color="error.main" fontWeight={600}>
+              Failed to load course. Please try again.
+            </Typography>
+          </Box>
+        )}
 
-            {/* Right Column - Preview & Status */}
+        {/* Content Area — only show when not loading/erroring in edit mode */}
+        {(!isEditMode || (!courseLoading && !courseIsError)) && (
+          <Box sx={{ flex: 1, p: { xs: 2, md: 3 }, overflowX: 'hidden' }}>
+            {/* Progress Stepper */}
+            <ProgressStepper
+              activeStep={activeStep}
+              completedSteps={completedSteps}
+              onStepClick={handleStepClick}
+            />
+
+            {/* Main Layout */}
             <Box
               sx={{
-                display: 'flex',
-                flexDirection: 'column',
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', lg: '1fr 350px' },
                 gap: 3,
-                position: { lg: 'sticky' },
-                top: { lg: 100 },
-                alignSelf: 'flex-start',
               }}
             >
-              <CoursePreview
-                title={basicInfo.title}
-                description={basicInfo.shortDescription}
-                thumbnail={media.thumbnail}
-                difficulty={details.difficulty}
-                duration={{ hours: details.durationHours, minutes: details.durationMinutes }}
-                price={pricing.price}
-                pricingType={pricing.pricingType}
-                currency={pricing.currency}
-              />
+              {/* Left Column - Form Sections */}
+              <Box>{renderSection()}</Box>
 
-              <CompletionStatus status="draft" items={statusItems} />
+              {/* Right Column - Preview & Status */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 3,
+                  position: { lg: 'sticky' },
+                  top: { lg: 100 },
+                  alignSelf: 'flex-start',
+                }}
+              >
+                <CoursePreview
+                  title={basicInfo.title}
+                  description={basicInfo.shortDescription}
+                  thumbnail={media.thumbnail}
+                  difficulty={details.difficulty}
+                  duration={{ hours: details.durationHours, minutes: details.durationMinutes }}
+                  price={pricing.price}
+                  pricingType={pricing.pricingType}
+                  currency={pricing.currency}
+                />
+
+                <CompletionStatus status="draft" items={statusItems} />
+              </Box>
             </Box>
           </Box>
-        </Box>
+        )}
 
         {/* Bottom Actions */}
-        <FormActions
-          currentStep={activeStep}
-          totalSteps={TOTAL_STEPS}
-          onSaveDraft={handleSaveDraft}
-          onDiscard={handleDiscard}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-          onPublish={handlePublish}
-        />
+        {(!isEditMode || (!courseLoading && !courseIsError)) && (
+          <FormActions
+            currentStep={activeStep}
+            totalSteps={TOTAL_STEPS}
+            onSaveDraft={handleSaveDraft}
+            onDiscard={handleDiscard}
+            onPrevious={handlePrevious}
+            onNext={handleNext}
+            onPublish={handlePublish}
+          />
+        )}
       </Box>
 
       {/* Snackbar Feedback */}

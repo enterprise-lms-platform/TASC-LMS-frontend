@@ -56,11 +56,11 @@ export const useCourses = (params?: CourseListParams) =>
     queryFn: () => courseApi.getAll(params).then((r) => r.data),
   });
 
-export const useCourse = (id: number) =>
+export const useCourse = (id: number, options?: { enabled?: boolean }) =>
   useQuery({
     queryKey: queryKeys.courses.detail(id),
     queryFn: () => courseApi.getById(id).then((r) => r.data),
-    enabled: !!id,
+    enabled: options?.enabled ?? !!id,
   });
 
 export const useCreateCourse = () => {

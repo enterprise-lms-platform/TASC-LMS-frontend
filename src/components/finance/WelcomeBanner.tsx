@@ -1,8 +1,12 @@
 import React from 'react';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import { Download as DownloadIcon, Add as AddIcon } from '@mui/icons-material';
+import { useAuth } from '../../contexts/AuthContext';
 
 const WelcomeBanner: React.FC = () => {
+  const { user } = useAuth();
+  const firstName = user?.first_name || 'there';
+
   return (
     <Paper
       elevation={0}
@@ -11,14 +15,15 @@ const WelcomeBanner: React.FC = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
-        p: 4,
-        borderRadius: 3,
+        p: { xs: 3, md: 4 },
+        borderRadius: '1rem',
         mb: 4,
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
+        alignItems: { xs: 'flex-start', md: 'center' },
+        flexDirection: { xs: 'column', md: 'row' },
         gap: 2,
+        boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
         position: 'relative',
         overflow: 'hidden',
         '&::before': {
@@ -30,41 +35,104 @@ const WelcomeBanner: React.FC = () => {
         },
       }}
     >
-      <Box sx={{ position: 'relative', zIndex: 1 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-          Finance Overview
+      {/* Geometric pattern */}
+      <Box
+        component="svg"
+        viewBox="0 0 200 200"
+        sx={{
+          position: 'absolute',
+          right: -20,
+          bottom: -20,
+          width: 200,
+          height: 200,
+          opacity: 0.08,
+          pointerEvents: 'none',
+        }}
+      >
+        <circle cx="60" cy="60" r="50" fill="white" />
+        <rect x="120" y="20" width="60" height="60" rx="10" fill="white" />
+        <polygon points="140,140 180,180 100,180" fill="white" />
+      </Box>
+
+      <Box sx={{ minWidth: 0, position: 'relative', zIndex: 1 }}>
+        <Typography
+          variant="h4"
+          fontWeight={700}
+          gutterBottom
+          sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem', md: '2rem' } }}
+        >
+          Finance Overview, {firstName}!
         </Typography>
-        <Typography sx={{ opacity: 0.9, maxWidth: 600 }}>
+        <Typography
+          variant="body1"
+          sx={{
+            opacity: 0.9,
+            maxWidth: 600,
+            fontSize: { xs: '0.875rem', md: '1rem' },
+            display: { xs: 'none', sm: 'block' }
+          }}
+        >
           Track revenue, manage payments, and generate financial reports across your organization.
         </Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            opacity: 0.9,
+            display: { xs: 'block', sm: 'none' }
+          }}
+        >
+          Track revenue and manage payments.
+        </Typography>
       </Box>
-      <Box sx={{ 
-        display: 'flex', 
+      <Box sx={{
+        display: 'flex',
         flexDirection: { xs: 'column', sm: 'row' },
-        gap: 1.5,
-        width: { xs: '100%', sm: 'auto' },
+        gap: { xs: 1, md: 2 },
+        width: { xs: '100%', md: 'auto' },
         position: 'relative',
         zIndex: 1,
       }}>
         <Button
           variant="contained"
           startIcon={<DownloadIcon />}
+          size="small"
           sx={{
-            bgcolor: 'white',
-            color: 'text.primary',
-            '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+            bgcolor: 'rgba(255,255,255,0.2)',
+            backdropFilter: 'blur(8px)',
+            color: 'white',
+            textTransform: 'none',
+            fontWeight: 600,
+            px: { xs: 1.5, md: 3 },
+            py: { xs: 0.75, md: 1 },
+            fontSize: { xs: '0.8rem', md: '0.875rem' },
+            borderRadius: '50px',
+            border: '1px solid rgba(255,255,255,0.3)',
+            boxShadow: 'none',
+            '&:hover': { bgcolor: 'rgba(255,255,255,0.3)', boxShadow: 'none' },
+            flex: { xs: 1, sm: 'none' },
             width: { xs: '100%', sm: 'auto' },
           }}
         >
           Export Report
         </Button>
         <Button
-          variant="contained"
+          variant="outlined"
           startIcon={<AddIcon />}
+          size="small"
           sx={{
-            bgcolor: 'white',
-            color: 'text.primary',
-            '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+            color: 'white',
+            borderColor: 'rgba(255,255,255,0.3)',
+            textTransform: 'none',
+            fontWeight: 600,
+            px: { xs: 1.5, md: 3 },
+            py: { xs: 0.75, md: 1 },
+            fontSize: { xs: '0.8rem', md: '0.875rem' },
+            borderRadius: '50px',
+            '&:hover': {
+              borderColor: 'white',
+              bgcolor: 'rgba(255,255,255,0.1)',
+            },
+            flex: { xs: 1, sm: 'none' },
             width: { xs: '100%', sm: 'auto' },
           }}
         >

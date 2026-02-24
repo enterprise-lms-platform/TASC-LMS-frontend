@@ -8,8 +8,8 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
-  Chip,
   Avatar,
+  Badge,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -18,7 +18,6 @@ import {
   CreditCard as PaymentsIcon,
   Receipt as InvoicesIcon,
   PieChart as RevenueReportsIcon,
-  SwapHoriz as RefundsIcon,
   Sync as SubscriptionsIcon,
   History as HistoryIcon,
   BarChart as ChurnIcon,
@@ -32,24 +31,18 @@ import {
   Assessment as CustomReportsIcon,
   School as LogoIcon,
 } from '@mui/icons-material';
+import { useAuth } from '../../contexts/AuthContext';
+import { getUserDisplayName, getUserInitials } from '../../utils/userHelpers';
 
 // Sidebar width constant
 const DRAWER_WIDTH = 260;
-
-// Finance manager data
-const financeUser = {
-  name: 'Lisa Thompson',
-  role: 'Finance Manager',
-  initials: 'LT',
-  avatar: '/avatars/female face (4).jpg',
-};
 
 // Type for navigation items
 interface NavItem {
   text: string;
   icon: React.ReactNode;
   active?: boolean;
-  badge?: string;
+  badge?: number;
 }
 
 interface NavSection {
@@ -64,7 +57,7 @@ const navSections: NavSection[] = [
     items: [
       { text: 'Overview', icon: <DashboardIcon />, active: true },
       { text: 'Analytics', icon: <AnalyticsIcon /> },
-      { text: 'Alerts', icon: <AlertsIcon />, badge: '2' },
+      { text: 'Alerts', icon: <AlertsIcon />, badge: 2 },
     ],
   },
   {
@@ -73,7 +66,6 @@ const navSections: NavSection[] = [
       { text: 'All Payments', icon: <PaymentsIcon /> },
       { text: 'Invoices', icon: <InvoicesIcon /> },
       { text: 'Revenue Reports', icon: <RevenueReportsIcon /> },
-      { text: 'Refunds', icon: <RefundsIcon /> },
     ],
   },
   {
@@ -110,159 +102,174 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
+  const { user } = useAuth();
+  const userName = getUserDisplayName(user?.first_name, user?.last_name, user?.email);
+  const userInitials = getUserInitials(user?.first_name, user?.last_name);
+
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo */}
       <Box
         sx={{
           p: 3,
-          pb: 2,
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
           minHeight: 80,
         }}
       >
-        <Box
-          sx={{
-            color: 'primary.main',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <LogoIcon sx={{ fontSize: 28 }} />
-        </Box>
-        <Typography
-          variant="h6"
-          sx={{ fontWeight: 700, color: 'text.primary', whiteSpace: 'nowrap' }}
-        >
+        <LogoIcon sx={{ fontSize: 32, color: 'primary.dark' }} />
+        <Typography variant="h6" fontWeight={700} color="text.primary">
           TASC LMS
         </Typography>
       </Box>
 
+      {/* Gradient fade separator */}
+      <Box
+        sx={{
+          height: 16,
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.04), transparent)',
+          mx: 2,
+        }}
+      />
+
       {/* Finance User Info */}
       <Box
         sx={{
-          p: 2,
-          px: 3,
+          px: 2.5,
+          py: 2,
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
         }}
       >
         <Avatar
-          src={financeUser.avatar}
+          src={(user?.google_picture ?? undefined) as string | undefined}
           sx={{
             width: 40,
             height: 40,
             background: 'linear-gradient(135deg, #ffb74d, #f97316)',
             fontWeight: 600,
+            border: '2px solid',
+            borderColor: 'primary.main',
           }}
         >
-          {financeUser.initials}
+          {userInitials}
         </Avatar>
         <Box>
-          <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-            {financeUser.name}
+          <Typography variant="body2" fontWeight={600}>
+            {userName}
           </Typography>
-          <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 500 }}>
-            {financeUser.role}
+          <Typography variant="caption" sx={{ color: 'primary.dark', fontWeight: 500 }}>
+            Finance Manager
           </Typography>
         </Box>
       </Box>
 
       {/* Navigation Sections */}
-      <Box sx={{ flex: 1, overflowY: 'auto', py: 1 }}>
+      <Box className="ld-scrollbar" sx={{ flex: 1, overflowY: 'auto', py: 0.5 }}>
         {navSections.map((section) => (
           <Box key={section.title}>
-            <Box sx={{ py: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-              <Typography
-                variant="caption"
-                sx={{
-                  px: 3,
-                  pb: 1,
-                  display: 'block',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  color: 'text.secondary',
-                  letterSpacing: '0.05em',
-                  fontSize: '0.75rem',
-                }}
-              >
-                {section.title}
-              </Typography>
-              <List disablePadding>
-                {section.items.map((item) => (
+            <List disablePadding>
+              <ListItem disablePadding>
+                <Box sx={{ px: 3, pt: 2, pb: 1 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 600,
+                      color: 'text.disabled',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                      fontSize: '0.65rem',
+                    }}
+                  >
+                    {section.title}
+                  </Typography>
+                </Box>
+              </ListItem>
+              {section.items.map((item) => {
+                const isActive = item.active || false;
+                return (
                   <ListItem key={item.text} disablePadding>
                     <ListItemButton
+                      className={`nav-item ${isActive ? 'active' : ''}`}
                       sx={{
-                        py: 1,
+                        py: 0.75,
                         px: 3,
-                        color: item.active ? 'primary.main' : 'text.secondary',
-                        bgcolor: item.active ? 'rgba(255, 164, 36, 0.1)' : 'transparent',
-                        borderRight: item.active ? '3px solid' : 'none',
-                        borderColor: 'primary.main',
-                        '&:hover': {
-                          bgcolor: 'action.hover',
-                          color: 'primary.main',
-                        },
+                        mx: 1.5,
+                        borderRadius: '10px',
+                        position: 'relative',
+                        ...(isActive && {
+                          bgcolor: 'rgba(255, 164, 36, 0.08)',
+                          color: 'primary.dark',
+                          '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            left: 0,
+                            top: '20%',
+                            bottom: '20%',
+                            width: 4,
+                            borderRadius: 4,
+                            bgcolor: 'primary.main',
+                            boxShadow: '0 0 8px rgba(255,164,36,0.4)',
+                          },
+                        }),
                       }}
                     >
-                      <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
-                        {item.icon}
+                      <ListItemIcon
+                        sx={{
+                          minWidth: 36,
+                          color: isActive ? 'primary.dark' : 'text.secondary',
+                          '& svg': { fontSize: 20 },
+                        }}
+                      >
+                        {item.badge ? (
+                          <Badge
+                            badgeContent={item.badge}
+                            color="primary"
+                            sx={{ '& .MuiBadge-badge': { fontSize: '0.6rem', minWidth: 16, height: 16 } }}
+                          >
+                            {item.icon}
+                          </Badge>
+                        ) : (
+                          item.icon
+                        )}
                       </ListItemIcon>
                       <ListItemText
                         primary={item.text}
                         primaryTypographyProps={{
-                          fontWeight: 500,
-                          fontSize: '0.875rem',
+                          fontSize: '0.82rem',
+                          fontWeight: isActive ? 600 : 500,
                         }}
                       />
-                      {item.badge && (
-                        <Chip
-                          label={item.badge}
-                          size="small"
-                          sx={{
-                            height: 20,
-                            fontSize: '0.75rem',
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            '& .MuiChip-label': { px: 1 },
-                          }}
-                        />
-                      )}
                     </ListItemButton>
                   </ListItem>
-                ))}
-              </List>
-            </Box>
+                );
+              })}
+            </List>
           </Box>
         ))}
       </Box>
 
-      {/* Finance Summary at Bottom */}
+      {/* Today's Revenue at Bottom */}
       <Box
         sx={{
-          p: 2,
-          px: 3,
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
+          p: 2.5,
+          mx: 1.5,
+          mb: 1.5,
+          borderRadius: '12px',
+          bgcolor: 'rgba(255,164,36,0.04)',
         }}
       >
         <Typography
           variant="caption"
           sx={{
-            display: 'block',
             fontWeight: 600,
-            color: 'text.secondary',
+            color: 'text.disabled',
             textTransform: 'uppercase',
-            letterSpacing: '0.05em',
+            letterSpacing: '0.06em',
+            fontSize: '0.65rem',
+            display: 'block',
             mb: 1,
           }}
         >
@@ -279,7 +286,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
   );
 
   return (
-    <>
+    <Box component="nav" sx={{ width: { lg: DRAWER_WIDTH }, flexShrink: { lg: 0 } }}>
       {/* Mobile Drawer */}
       <Drawer
         variant="temporary"
@@ -291,7 +298,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: DRAWER_WIDTH,
-            bgcolor: 'background.paper',
+            bgcolor: '#fefdfb',
+            borderRight: 'none',
           },
         }}
       >
@@ -306,17 +314,18 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: DRAWER_WIDTH,
-            bgcolor: 'background.paper',
-            borderRight: '1px solid',
-            borderColor: 'divider',
+            bgcolor: '#fefdfb',
+            borderRight: 'none',
+            boxShadow: '1px 0 8px rgba(0,0,0,0.03)',
           },
         }}
         open
       >
         {drawerContent}
       </Drawer>
-    </>
+    </Box>
   );
 };
 
+export { DRAWER_WIDTH };
 export default Sidebar;

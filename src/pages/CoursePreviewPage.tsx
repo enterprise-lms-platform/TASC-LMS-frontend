@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Box, CssBaseline } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Box, CssBaseline, LinearProgress, Typography } from '@mui/material';
+import { useNavigate, useParams } from 'react-router-dom';
 import PreviewHeader from '../components/instructor/course-preview/PreviewHeader';
 import type { DeviceType, ViewMode } from '../components/instructor/course-preview/PreviewHeader';
 import PreviewFrame from '../components/instructor/course-preview/PreviewFrame';
@@ -13,8 +13,13 @@ import type { Module } from '../components/instructor/course-preview/CurriculumT
 import InstructorTab from '../components/instructor/course-preview/InstructorTab';
 import ReviewsTab from '../components/instructor/course-preview/ReviewsTab';
 import type { Review } from '../components/instructor/course-preview/ReviewsTab';
+import { useCourse } from '../hooks/useCatalogue';
 
-// Sample data
+/** Split a multi-line string into trimmed, non-empty lines */
+const strToLines = (s?: string | null): string[] =>
+  (s || '').split('\n').map((l) => l.trim()).filter(Boolean);
+
+// Sample data (curriculum, reviews stay as sample until those APIs are wired)
 const sampleModules: Module[] = [
   {
     id: '1',
@@ -72,17 +77,59 @@ const sampleReviews: Review[] = [
 
 const CoursePreviewPage: React.FC = () => {
   const navigate = useNavigate();
+  const { courseId } = useParams<{ courseId: string }>();
+  const id = courseId ? Number(courseId) : 0;
+
+  // Load course data from API
+  const { data: courseData, isLoading: courseLoading, isError: courseIsError } = useCourse(id, { enabled: !!courseId });
+
   const [deviceType, setDeviceType] = useState<DeviceType>('desktop');
   const [viewMode, setViewMode] = useState<ViewMode>('student');
   const [activeTab, setActiveTab] = useState(0);
 
   const handleEdit = () => {
-    navigate('/instructor/course/1/edit');
+    navigate(`/instructor/course/${courseId}/edit`);
   };
 
   const handlePublish = () => {
     console.log('Publishing course...');
   };
+
+  // Loading state
+  if (courseLoading) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
+        <CssBaseline />
+        <LinearProgress sx={{ width: '50%', mb: 2 }} />
+        <Typography color="text.secondary">Loading course...</Typography>
+      </Box>
+    );
+  }
+
+  // Error state
+  if (courseIsError || !courseData) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
+        <CssBaseline />
+        <Typography color="error.main" fontWeight={600}>
+          Failed to load course. Please try again.
+        </Typography>
+      </Box>
+    );
+  }
+
+  // Derive display values from API data
+  const instructorName = courseData.instructor_name || 'Instructor';
+  const instructorInitials = instructorName
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+  const currentPrice = parseFloat(courseData.discounted_price) || parseFloat(courseData.price) || 0;
+  const originalPrice = parseFloat(courseData.price) || 0;
+  const discount = courseData.discount_percentage ?? 0;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -100,25 +147,25 @@ const CoursePreviewPage: React.FC = () => {
 
       {/* Preview Frame */}
       <PreviewFrame deviceType={deviceType}>
-        {/* Hero Section - outside purchase card on desktop */}
+        {/* Hero Section */}
         <Box sx={{ position: 'relative' }}>
           <CourseHero
-            category="Web Development"
-            title="Advanced React Patterns & Best Practices"
-            subtitle="Master modern React development with hooks, context, HOCs, and advanced design patterns"
+            category={courseData.category?.name ?? '—'}
+            title={courseData.title}
+            subtitle={courseData.short_description ?? courseData.subtitle ?? ''}
             rating={4.8}
-            ratingCount={1234}
-            studentCount={5678}
-            duration="12 hours"
-            level="Intermediate"
+            ratingCount={0}
+            studentCount={courseData.enrollment_count}
+            duration={courseData.duration_hours ? `${courseData.duration_hours} hours` : '—'}
+            level={courseData.level ?? 'Intermediate'}
             instructor={{
-              name: 'Michael Rodriguez',
-              title: 'Senior React Developer',
-              initials: 'MR',
+              name: instructorName,
+              title: 'Instructor',
+              initials: instructorInitials,
             }}
           />
 
-          {/* Purchase Card - positioned absolutely on desktop, inline on mobile */}
+          {/* Purchase Card - positioned absolutely on desktop */}
           <Box
             sx={{
               display: deviceType === 'desktop' ? 'block' : 'none',
@@ -130,10 +177,9 @@ const CoursePreviewPage: React.FC = () => {
             }}
           >
             <PurchaseCard
-              currentPrice={49.99}
-              originalPrice={149.99}
-              discount={67}
-              saleEndTime="in 2 days"
+              currentPrice={currentPrice}
+              originalPrice={originalPrice}
+              discount={discount}
               onEnroll={() => console.log('Enroll clicked')}
               onAddToCart={() => console.log('Add to cart clicked')}
             />
@@ -144,10 +190,9 @@ const CoursePreviewPage: React.FC = () => {
         {deviceType !== 'desktop' && (
           <Box sx={{ p: 3, bgcolor: 'grey.100' }}>
             <PurchaseCard
-              currentPrice={49.99}
-              originalPrice={149.99}
-              discount={67}
-              saleEndTime="in 2 days"
+              currentPrice={currentPrice}
+              originalPrice={originalPrice}
+              discount={discount}
               onEnroll={() => console.log('Enroll clicked')}
               onAddToCart={() => console.log('Add to cart clicked')}
             />
@@ -171,27 +216,10 @@ const CoursePreviewPage: React.FC = () => {
 
             {activeTab === 0 && (
               <OverviewTab
-                description="This comprehensive course will take you from the basics to advanced React patterns. You'll learn how to build scalable, maintainable applications using modern React best practices including hooks, context API, custom hooks, and advanced component patterns."
-                objectives={[
-                  'Master React Hooks including useState, useEffect, useContext, and custom hooks',
-                  'Understand advanced patterns like Higher-Order Components and Render Props',
-                  'Build scalable applications with proper state management',
-                  'Implement performance optimization techniques',
-                  'Create reusable component libraries',
-                  'Write clean, maintainable React code',
-                ]}
-                requirements={[
-                  'Basic understanding of JavaScript (ES6+)',
-                  'Familiarity with HTML and CSS',
-                  'Node.js and npm installed',
-                  'A code editor (VS Code recommended)',
-                ]}
-                targetAudience={[
-                  'React developers looking to level up their skills',
-                  'Frontend developers wanting to learn advanced patterns',
-                  'Anyone building complex React applications',
-                  'Developers preparing for senior-level positions',
-                ]}
+                description={courseData.description}
+                objectives={courseData.learning_objectives_list ?? strToLines(courseData.learning_objectives)}
+                requirements={strToLines(courseData.prerequisites)}
+                targetAudience={strToLines(courseData.target_audience)}
               />
             )}
 
@@ -207,15 +235,15 @@ const CoursePreviewPage: React.FC = () => {
             {activeTab === 2 && (
               <InstructorTab
                 instructor={{
-                  name: 'Michael Rodriguez',
-                  title: 'Senior React Developer & Instructor',
-                  initials: 'MR',
-                  bio: 'With over 10 years of experience in web development, Michael has worked with companies ranging from startups to Fortune 500 enterprises. He specializes in React and modern JavaScript, and has trained thousands of developers through his online courses and workshops.',
+                  name: instructorName,
+                  title: 'Instructor',
+                  initials: instructorInitials,
+                  bio: 'Instructor biography will be loaded from the user profile API.',
                   stats: {
-                    students: 15420,
-                    courses: 8,
+                    students: courseData.enrollment_count,
+                    courses: 1,
                     rating: 4.8,
-                    reviews: 3240,
+                    reviews: 0,
                   },
                 }}
               />
@@ -224,7 +252,7 @@ const CoursePreviewPage: React.FC = () => {
             {activeTab === 3 && (
               <ReviewsTab
                 averageRating={4.8}
-                totalReviews={1234}
+                totalReviews={sampleReviews.length}
                 ratingDistribution={[
                   { stars: 5, percentage: 75 },
                   { stars: 4, percentage: 18 },

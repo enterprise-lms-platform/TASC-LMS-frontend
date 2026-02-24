@@ -99,6 +99,7 @@ export default function AppRoutes() {
           {/* Protected Instructor Routes */}
           <Route path="/instructor" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><InstructorDashboard /></ProtectedRoute>} />
           <Route path="/instructor/course/create" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><CourseCreationPage /></ProtectedRoute>} />
+          <Route path="/instructor/course/:courseId/edit" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><CourseCreationPage /></ProtectedRoute>} />
           <Route path="/instructor/course/:courseId/structure" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><CourseStructurePage /></ProtectedRoute>} />
           <Route path="/instructor/course/:courseId/upload" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><ContentUploadPage /></ProtectedRoute>} />
           <Route path="/instructor/course/:courseId/preview" element={<ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><CoursePreviewPage /></ProtectedRoute>} />

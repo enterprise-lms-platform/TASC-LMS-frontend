@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Box, Toolbar, CssBaseline } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Box, Toolbar, CssBaseline, LinearProgress, Typography } from '@mui/material';
+import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../components/instructor/Sidebar';
 import StructureTopBar from '../components/instructor/course-structure/StructureTopBar';
 import StructureFooter from '../components/instructor/course-structure/StructureFooter';
@@ -17,18 +17,10 @@ import type { LessonFormData } from '../components/instructor/course-structure/A
 import type { ModuleData } from '../components/instructor/course-structure/ModuleCard';
 import type { LessonData } from '../components/instructor/course-structure/LessonItem';
 import type { SaveStatus } from '../components/instructor/course-structure/StructureFooter';
+import type { CourseHeaderData } from '../components/instructor/course-structure/CourseHeaderCard';
+import { useCourse } from '../hooks/useCatalogue';
 
-// Sample data
-const initialCourseData = {
-  title: 'Advanced React Patterns',
-  modules: 5,
-  lessons: 24,
-  duration: '12h 30m',
-  enrolled: 452,
-  progress: 75,
-  progressText: '75% Complete - 6 lessons remaining',
-};
-
+// Sample modules (real module/lesson data not yet loaded from API)
 const initialModules: (ModuleData & { lessons: LessonData[] })[] = [
   {
     id: '1',
@@ -92,6 +84,11 @@ const initialModules: (ModuleData & { lessons: LessonData[] })[] = [
 
 const CourseStructurePage: React.FC = () => {
   const navigate = useNavigate();
+  const { courseId } = useParams<{ courseId: string }>();
+  const id = courseId ? Number(courseId) : 0;
+
+  // Load course data from API
+  const { data: courseData, isLoading: courseLoading, isError: courseIsError } = useCourse(id, { enabled: !!courseId });
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
@@ -99,6 +96,22 @@ const CourseStructurePage: React.FC = () => {
   const [lessonModalOpen, setLessonModalOpen] = useState(false);
   const [activeModuleId, setActiveModuleId] = useState<string>('');
   const [modules, setModules] = useState(initialModules);
+
+  // Build header data from API response
+  const headerCourse: CourseHeaderData | null = courseData
+    ? {
+        title: courseData.title,
+        thumbnail: courseData.thumbnail ?? undefined,
+        modules: 0, // Module count not yet from API
+        lessons: courseData.total_sessions ?? 0,
+        duration: `${courseData.duration_hours ?? 0}h`,
+        enrolled: courseData.enrollment_count,
+        progress: 0,
+        progressText: '—',
+      }
+    : null;
+
+  const courseTitle = courseData?.title ?? 'Course';
 
   const handleMobileMenuToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -134,8 +147,6 @@ const CourseStructurePage: React.FC = () => {
   };
 
   const handleSaveLesson = (data: LessonFormData) => {
-    const courseId = '1'; // Will come from route params in production
-
     setModules((prev) =>
       prev.map((mod) => {
         if (mod.id !== activeModuleId) return mod;
@@ -166,13 +177,13 @@ const CourseStructurePage: React.FC = () => {
         navigate(`/instructor/course/${courseId}/upload?type=${data.type}&lesson=${lessonParam}`);
         break;
       case 'quiz':
-        navigate(`/instructor/course/${courseId}/quiz/builder?lesson=${lessonParam}&course=${encodeURIComponent(initialCourseData.title)}`);
+        navigate(`/instructor/course/${courseId}/quiz/builder?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'assignment':
-        navigate(`/instructor/assignment/create?lesson=${lessonParam}&course=${encodeURIComponent(initialCourseData.title)}`);
+        navigate(`/instructor/assignment/create?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'livestream':
-        navigate(`/instructor/sessions/schedule?lesson=${lessonParam}&course=${encodeURIComponent(initialCourseData.title)}`);
+        navigate(`/instructor/sessions/schedule?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`);
         break;
       // 'html' stays on the structure page
       default:
@@ -183,8 +194,6 @@ const CourseStructurePage: React.FC = () => {
   const activeModuleTitle = modules.find((m) => m.id === activeModuleId)?.title || '';
 
   const handleQuickAdd = (type: string) => {
-    // Navigate to the appropriate page based on content type
-    const courseId = '1'; // Will come from route params in production
     switch (type) {
       case 'video':
       case 'document':
@@ -192,13 +201,13 @@ const CourseStructurePage: React.FC = () => {
         navigate(`/instructor/course/${courseId}/upload?type=${type}`);
         break;
       case 'quiz':
-        navigate(`/instructor/course/${courseId}/quiz/builder?course=${encodeURIComponent(initialCourseData.title)}`);
+        navigate(`/instructor/course/${courseId}/quiz/builder?course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'assignment':
-        navigate(`/instructor/assignment/create?course=${encodeURIComponent(initialCourseData.title)}`);
+        navigate(`/instructor/assignment/create?course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'livestream':
-        navigate(`/instructor/sessions/schedule?course=${encodeURIComponent(initialCourseData.title)}`);
+        navigate(`/instructor/sessions/schedule?course=${encodeURIComponent(courseTitle)}`);
         break;
       default:
         break;
@@ -211,7 +220,7 @@ const CourseStructurePage: React.FC = () => {
   };
 
   const handlePreview = () => {
-    navigate('/instructor/course/1/preview');
+    navigate(`/instructor/course/${courseId}/preview`);
   };
 
   const handlePublish = () => {
@@ -219,7 +228,11 @@ const CourseStructurePage: React.FC = () => {
   };
 
   const handleSettings = () => {
-    navigate('/instructor/course/create');
+    navigate(`/instructor/course/${courseId}/edit`);
+  };
+
+  const handleEditInfo = () => {
+    navigate(`/instructor/course/${courseId}/edit`);
   };
 
   return (
@@ -231,7 +244,7 @@ const CourseStructurePage: React.FC = () => {
 
       {/* Top Bar */}
       <StructureTopBar
-        courseTitle={initialCourseData.title}
+        courseTitle={courseTitle}
         onBack={handleBack}
         onMobileMenuToggle={handleMobileMenuToggle}
         onPreview={handlePreview}
@@ -251,8 +264,27 @@ const CourseStructurePage: React.FC = () => {
         <Toolbar sx={{ minHeight: '72px !important' }} />
 
         <Box sx={{ p: { xs: 2, md: 3 } }}>
-          {/* Course Header */}
-          <CourseHeaderCard course={initialCourseData} />
+          {/* Loading state */}
+          {courseLoading && (
+            <Box sx={{ mb: 3 }}>
+              <LinearProgress />
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: 'center' }}>
+                Loading course...
+              </Typography>
+            </Box>
+          )}
+
+          {/* Error state */}
+          {courseIsError && (
+            <Typography color="error.main" fontWeight={600} sx={{ mb: 3, textAlign: 'center' }}>
+              Failed to load course. Please try again.
+            </Typography>
+          )}
+
+          {/* Course Header — only render when data is loaded */}
+          {headerCourse && (
+            <CourseHeaderCard course={headerCourse} onEditInfo={handleEditInfo} />
+          )}
 
           {/* Two Column Layout */}
           <Box

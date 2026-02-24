@@ -126,8 +126,9 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ data, onChange }) =
             value={data.category}
             label="Category"
             onChange={(e) => {
-              handleChange('category', e.target.value as number);
-              handleChange('subcategory', '');
+              const raw = String(e.target.value);
+              const val = raw === '' ? '' : Number(raw);
+              onChange({ ...data, category: val as typeof data.category, subcategory: '' });
             }}
             disabled={categoriesLoading}
           >
