@@ -25,6 +25,10 @@ import ManagerDashboard from '../pages/ManagerDashboard';
 import SuperadminDashboard from '../pages/SuperadminDashboard';
 import FinanceDashboard from '../pages/FinanceDashboard';
 import FinanceAnalyticsPage from '../pages/FinanceAnalyticsPage';
+import FinanceAlertsPage from '../pages/FinanceAlertsPage';
+import FinancePaymentsPage from '../pages/FinancePaymentsPage';
+import FinanceInvoicesPage from '../pages/FinanceInvoicesPage';
+import FinanceRevenueReportsPage from '../pages/FinanceRevenueReportsPage';
 import CourseCataloguePage from '../pages/CourseCataloguePage';
 import ForBusinessPage from '../pages/ForBusinessPage';
 import CourseLandingPage from '../pages/CourseLandingPage';
@@ -151,6 +155,10 @@ export default function AppRoutes() {
           {/* Protected Finance Routes */}
           <Route path="/finance" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceDashboard /></ProtectedRoute>} />
           <Route path="/finance/analytics" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceAnalyticsPage /></ProtectedRoute>} />
+          <Route path="/finance/alerts" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceAlertsPage /></ProtectedRoute>} />
+          <Route path="/finance/payments" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinancePaymentsPage /></ProtectedRoute>} />
+          <Route path="/finance/invoices" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceInvoicesPage /></ProtectedRoute>} />
+          <Route path="/finance/revenue-reports" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceRevenueReportsPage /></ProtectedRoute>} />
         </Routes>
   );
 }
