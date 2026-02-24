@@ -36,6 +36,10 @@ import FinancePricingPage from '../pages/FinancePricingPage';
 import FinanceExportPage from '../pages/FinanceExportPage';
 import FinanceStatementsPage from '../pages/FinanceStatementsPage';
 import FinanceCustomReportsPage from '../pages/FinanceCustomReportsPage';
+import GatewayMpesaPage from '../pages/GatewayMpesaPage';
+import GatewayMtnPage from '../pages/GatewayMtnPage';
+import GatewayAirtelPage from '../pages/GatewayAirtelPage';
+import GatewayPesapalPage from '../pages/GatewayPesapalPage';
 import CourseCataloguePage from '../pages/CourseCataloguePage';
 import ForBusinessPage from '../pages/ForBusinessPage';
 import CourseLandingPage from '../pages/CourseLandingPage';
@@ -173,6 +177,10 @@ export default function AppRoutes() {
           <Route path="/finance/export" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceExportPage /></ProtectedRoute>} />
           <Route path="/finance/statements" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceStatementsPage /></ProtectedRoute>} />
           <Route path="/finance/custom-reports" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceCustomReportsPage /></ProtectedRoute>} />
+          <Route path="/finance/gateway/mpesa" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><GatewayMpesaPage /></ProtectedRoute>} />
+          <Route path="/finance/gateway/mtn" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><GatewayMtnPage /></ProtectedRoute>} />
+          <Route path="/finance/gateway/airtel" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><GatewayAirtelPage /></ProtectedRoute>} />
+          <Route path="/finance/gateway/pesapal" element={<ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><GatewayPesapalPage /></ProtectedRoute>} />
         </Routes>
   );
 }

@@ -1,112 +1,64 @@
 import React from 'react';
-import { Box, Paper, Typography, Avatar, Link } from '@mui/material';
+import { Box, Paper, Typography, Avatar, Chip } from '@mui/material';
 import { Person as InstructorIcon, MenuBook as BookIcon, People as StudentsIcon, Star as StarIcon } from '@mui/icons-material';
 
-// Instructors data (will come from backend later)
 const instructorsData = [
-  {
-    name: 'Michael Rodriguez',
-    initials: 'MR',
-    avatarColor: 'linear-gradient(135deg, #667eea, #764ba2)',
-    courses: 4,
-    learners: 842,
-    rating: 4.8,
-  },
-  {
-    name: 'David Wilson',
-    initials: 'DW',
-    avatarColor: 'linear-gradient(135deg, #f093fb, #f5576c)',
-    courses: 3,
-    learners: 567,
-    rating: 4.6,
-  },
-  {
-    name: 'Amina Nakato',
-    initials: 'AN',
-    avatarColor: 'linear-gradient(135deg, #11998e, #38ef7d)',
-    courses: 2,
-    learners: 423,
-    rating: 4.9,
-  },
+  { name: 'Michael Rodriguez', initials: 'MR', avatarColor: 'linear-gradient(135deg, #667eea, #764ba2)', courses: 4, learners: 842, rating: 4.8 },
+  { name: 'David Wilson', initials: 'DW', avatarColor: 'linear-gradient(135deg, #f093fb, #f5576c)', courses: 3, learners: 567, rating: 4.6 },
+  { name: 'Amina Nakato', initials: 'AN', avatarColor: 'linear-gradient(135deg, #11998e, #38ef7d)', courses: 2, learners: 423, rating: 4.9 },
 ];
+
+const cardSx = {
+  borderRadius: '1rem', overflow: 'hidden',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
+  transition: 'box-shadow 0.3s',
+  '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' },
+};
+const headerSx = { p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider' };
 
 const InstructorPerformance: React.FC = () => {
   return (
-    <Paper elevation={0} sx={{ border: 1, borderColor: 'divider', borderRadius: 3, overflow: 'hidden' }}>
-      {/* Header */}
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          p: 2.5,
-          px: 3,
-          borderBottom: 1,
-          borderColor: 'divider',
-        }}
-      >
+    <Paper elevation={0} sx={cardSx}>
+      <Box sx={{ ...headerSx, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <InstructorIcon sx={{ color: 'primary.dark' }} />
-          <Typography variant="subtitle1" fontWeight={600}>
-            Instructor Performance
-          </Typography>
+          <InstructorIcon sx={{ color: '#ffa424', fontSize: 20 }} />
+          <Typography fontWeight={700}>Instructor Performance</Typography>
         </Box>
-        <Link href="#" underline="hover" sx={{ fontSize: '0.75rem', fontWeight: 500, color: 'primary.dark' }}>
-          View All
-        </Link>
+        <Chip label="View All" size="small" clickable
+          sx={{ height: 24, fontSize: '0.7rem', fontWeight: 600, bgcolor: 'rgba(255,164,36,0.08)', color: '#ffa424',
+            '&:hover': { bgcolor: 'rgba(255,164,36,0.15)' } }} />
       </Box>
 
-      {/* Instructor List */}
-      <Box>
-        {instructorsData.map((instructor, index) => (
-          <Box
-            key={index}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1.5,
-              p: 2,
-              px: 3,
-              borderBottom: index < instructorsData.length - 1 ? 1 : 0,
-              borderColor: 'divider',
-            }}
-          >
-            <Avatar
-              sx={{
-                width: 40,
-                height: 40,
-                background: instructor.avatarColor,
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                flexShrink: 0,
-              }}
-            >
-              {instructor.initials}
-            </Avatar>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
-                {instructor.name}
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2, fontSize: '0.75rem', color: 'text.secondary' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <BookIcon sx={{ fontSize: 14, color: 'text.disabled' }} />
-                  <Typography variant="caption">{instructor.courses} courses</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <StudentsIcon sx={{ fontSize: 14, color: 'text.disabled' }} />
-                  <Typography variant="caption">{instructor.learners} learners</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-                  <StarIcon sx={{ fontSize: 14, color: 'warning.main' }} />
-                  <Typography variant="caption" fontWeight={600}>
-                    {instructor.rating}
-                  </Typography>
-                </Box>
+      {instructorsData.map((inst, i) => (
+        <Box key={i} sx={{
+          display: 'flex', alignItems: 'center', gap: 1.5, p: 2, px: 3,
+          borderBottom: i < instructorsData.length - 1 ? 1 : 0, borderColor: 'divider',
+          cursor: 'pointer', transition: 'all 0.15s',
+          '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' },
+        }}>
+          <Avatar sx={{
+            width: 40, height: 40, background: inst.avatarColor,
+            fontSize: '0.8rem', fontWeight: 600, flexShrink: 0,
+          }}>{inst.initials}</Avatar>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{inst.name}</Typography>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <BookIcon sx={{ fontSize: 13, color: '#a1a1aa' }} />
+                <Typography variant="caption" color="text.secondary">{inst.courses} courses</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <StudentsIcon sx={{ fontSize: 13, color: '#a1a1aa' }} />
+                <Typography variant="caption" color="text.secondary">{inst.learners} learners</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                <StarIcon sx={{ fontSize: 13, color: '#f59e0b' }} />
+                <Typography variant="caption" fontWeight={700} sx={{ color: '#f59e0b' }}>{inst.rating}</Typography>
               </Box>
             </Box>
           </Box>
-        ))}
-      </Box>
+        </Box>
+      ))}
     </Paper>
   );
 };

@@ -9,11 +9,10 @@ import {
   ListItemText,
   Typography,
   Avatar,
-  Divider,
-  Chip,
+  Badge,
 } from '@mui/material';
 import {
-  School as SchoolIcon,
+  School as LogoIcon,
   Dashboard as DashboardIcon,
   Analytics as AnalyticsIcon,
   Description as ReportsIcon,
@@ -41,29 +40,20 @@ import {
   Notifications as NotificationsIcon,
   Extension as IntegrationsIcon,
   CreditCard as BillingIcon,
-  Business as BusinessIcon,
-  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { getUserDisplayName, getUserInitials, getRoleDisplayName } from '../../utils/userHelpers';
 
 // Sidebar width constant
-const DRAWER_WIDTH = 280;
-
-// Manager data (will come from backend later)
-const managerData = {
-  name: 'Sarah Johnson',
-  role: 'LMS Manager',
-  initials: 'SJ',
-  avatar: '/avatars/female face (3).jpg',
-  organization: 'Acme Corporation',
-};
+const DRAWER_WIDTH = 260;
 
 // Type for navigation items
 interface NavItem {
   text: string;
   icon: React.ReactNode;
-  active?: boolean;
-  badge?: string;
-  badgeColor?: 'warning' | 'error';
+  path?: string;
+  badge?: number;
 }
 
 interface NavSection {
@@ -71,68 +61,68 @@ interface NavSection {
   items: NavItem[];
 }
 
-// Navigation sections data (will come from backend later)
+// Navigation sections data with routes
 const navSections: NavSection[] = [
   {
     title: 'Dashboard',
     items: [
-      { text: 'Overview', icon: <DashboardIcon />, active: true },
-      { text: 'Analytics', icon: <AnalyticsIcon /> },
-      { text: 'Reports', icon: <ReportsIcon /> },
+      { text: 'Overview', icon: <DashboardIcon />, path: '/manager' },
+      { text: 'Analytics', icon: <AnalyticsIcon />, path: '/manager/analytics' },
+      { text: 'Reports', icon: <ReportsIcon />, path: '/manager/reports' },
     ],
   },
   {
     title: 'User Management',
     items: [
-      { text: 'All Users', icon: <UsersIcon />, badge: '2,450' },
-      { text: 'Add / Invite Users', icon: <PersonAddIcon /> },
-      { text: 'Role Assignment', icon: <RoleIcon /> },
-      { text: 'Bulk Import', icon: <ImportIcon /> },
-      { text: 'User Activity', icon: <ActivityIcon /> },
+      { text: 'All Users', icon: <UsersIcon />, path: '/manager/users' },
+      { text: 'Add / Invite Users', icon: <PersonAddIcon />, path: '/manager/invite' },
+      { text: 'Role Assignment', icon: <RoleIcon />, path: '/manager/roles' },
+      { text: 'Bulk Import', icon: <ImportIcon />, path: '/manager/import' },
+      { text: 'User Activity', icon: <ActivityIcon />, path: '/manager/activity' },
     ],
   },
   {
     title: 'Learning Content',
     items: [
-      { text: 'All Courses', icon: <CoursesIcon /> },
-      { text: 'Create Course', icon: <CreateIcon /> },
-      { text: 'Categories', icon: <CategoriesIcon /> },
-      { text: 'Instructors', icon: <InstructorIcon /> },
-      { text: 'Pending Approval', icon: <PendingIcon />, badge: '5', badgeColor: 'warning' },
+      { text: 'All Courses', icon: <CoursesIcon />, path: '/manager/courses' },
+      { text: 'Create Course', icon: <CreateIcon />, path: '/manager/create-course' },
+      { text: 'Categories', icon: <CategoriesIcon />, path: '/manager/categories' },
+      { text: 'Instructors', icon: <InstructorIcon />, path: '/manager/instructors' },
+      { text: 'Pending Approval', icon: <PendingIcon />, path: '/manager/pending', badge: 5 },
     ],
   },
   {
     title: 'Enrollments',
     items: [
-      { text: 'All Enrollments', icon: <EnrollmentsIcon /> },
-      { text: 'Bulk Enrollment', icon: <BulkEnrollIcon /> },
-      { text: 'Progress Tracking', icon: <ProgressIcon /> },
-      { text: 'Certificates', icon: <CertificatesIcon /> },
+      { text: 'All Enrollments', icon: <EnrollmentsIcon />, path: '/manager/enrollments' },
+      { text: 'Bulk Enrollment', icon: <BulkEnrollIcon />, path: '/manager/bulk-enroll' },
+      { text: 'Progress Tracking', icon: <ProgressIcon />, path: '/manager/progress' },
+      { text: 'Certificates', icon: <CertificatesIcon />, path: '/manager/certificates' },
     ],
   },
   {
     title: 'Assessments',
     items: [
-      { text: 'Quizzes', icon: <QuizzesIcon /> },
-      { text: 'Assignments', icon: <AssignmentsIcon />, badge: '12', badgeColor: 'error' },
-      { text: 'Gradebook', icon: <GradebookIcon /> },
+      { text: 'Quizzes', icon: <QuizzesIcon />, path: '/manager/quizzes' },
+      { text: 'Assignments', icon: <AssignmentsIcon />, path: '/manager/assignments', badge: 12 },
+      { text: 'Gradebook', icon: <GradebookIcon />, path: '/manager/gradebook' },
     ],
   },
   {
     title: 'Live Sessions',
     items: [
-      { text: 'Scheduled Sessions', icon: <SessionsIcon /> },
-      { text: 'Recordings', icon: <RecordingsIcon /> },
-      { text: 'Schedule New', icon: <ScheduleIcon /> },
+      { text: 'Scheduled Sessions', icon: <SessionsIcon />, path: '/manager/sessions' },
+      { text: 'Recordings', icon: <RecordingsIcon />, path: '/manager/recordings' },
+      { text: 'Schedule New', icon: <ScheduleIcon />, path: '/manager/schedule-new' },
     ],
   },
   {
     title: 'Settings',
     items: [
-      { text: 'Organization Settings', icon: <SettingsIcon /> },
-      { text: 'Notifications', icon: <NotificationsIcon />, badge: '8' },
-      { text: 'Integrations', icon: <IntegrationsIcon /> },
-      { text: 'Billing', icon: <BillingIcon /> },
+      { text: 'Organization Settings', icon: <SettingsIcon />, path: '/manager/settings' },
+      { text: 'Notifications', icon: <NotificationsIcon />, path: '/manager/notifications', badge: 8 },
+      { text: 'Integrations', icon: <IntegrationsIcon />, path: '/manager/integrations' },
+      { text: 'Billing', icon: <BillingIcon />, path: '/manager/billing' },
     ],
   },
 ];
@@ -142,7 +132,27 @@ interface SidebarProps {
   onMobileClose?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose = () => {} }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+  const userName = getUserDisplayName(user?.first_name, user?.last_name, user?.email);
+  const userInitials = getUserInitials(user?.first_name, user?.last_name);
+  const userRole = user?.role ? getRoleDisplayName(user.role) : 'LMS Manager';
+
+  const handleNavClick = (path?: string) => {
+    if (path) {
+      navigate(path);
+      onMobileClose();
+    }
+  };
+
+  const isActive = (path?: string) => {
+    if (!path) return false;
+    if (path === '/manager') return location.pathname === '/manager';
+    return location.pathname.startsWith(path);
+  };
+
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo */}
@@ -152,98 +162,69 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
-          borderBottom: 1,
-          borderColor: 'divider',
           minHeight: 80,
-          position: 'sticky',
-          top: 0,
-          bgcolor: 'background.paper',
-          zIndex: 10,
+          cursor: 'pointer',
         }}
+        onClick={() => navigate('/manager')}
       >
-        <SchoolIcon sx={{ fontSize: 32, color: 'primary.dark' }} />
+        <LogoIcon sx={{ fontSize: 32, color: 'primary.dark' }} />
         <Typography variant="h6" fontWeight={700} color="text.primary">
           TASC LMS
         </Typography>
       </Box>
 
-      {/* Manager Info */}
+      {/* Gradient fade separator */}
       <Box
         sx={{
-          p: 2,
-          borderBottom: 1,
-          borderColor: 'divider',
-          background: 'linear-gradient(135deg, rgba(255, 164, 36, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)',
+          height: 16,
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.04), transparent)',
+          mx: 2,
         }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-          <Avatar
-            src={managerData.avatar}
-            sx={{
-              width: 48,
-              height: 48,
-              background: 'linear-gradient(135deg, #ffb74d, #f97316)',
-              fontWeight: 700,
-              fontSize: '1.125rem',
-            }}
-          >
-            {managerData.initials}
-          </Avatar>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography
-              variant="body1"
-              fontWeight={600}
-              sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-            >
-              {managerData.name}
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{
-                color: 'primary.dark',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-              }}
-            >
-              {managerData.role}
-            </Typography>
-          </Box>
-        </Box>
+      />
 
-        {/* Organization Selector */}
-        <Box
+      {/* Manager User Info */}
+      <Box
+        sx={{
+          px: 2.5,
+          py: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          cursor: 'pointer',
+          '&:hover': { bgcolor: 'rgba(255, 164, 36, 0.05)' },
+          transition: 'background 0.15s',
+        }}
+        onClick={() => navigate('/manager/profile')}
+      >
+        <Avatar
+          src={(user?.google_picture ?? undefined) as string | undefined}
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            p: 1,
-            bgcolor: 'background.paper',
-            border: 1,
-            borderColor: 'divider',
-            borderRadius: 1,
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            '&:hover': {
-              borderColor: 'primary.main',
-              bgcolor: 'primary.50',
-            },
+            width: 40,
+            height: 40,
+            background: 'linear-gradient(135deg, #ffb74d, #f97316)',
+            fontWeight: 600,
+            border: '2px solid',
+            borderColor: 'primary.main',
           }}
         >
-          <BusinessIcon sx={{ fontSize: 18, color: 'primary.dark' }} />
+          {userInitials}
+        </Avatar>
+        <Box sx={{ minWidth: 0 }}>
           <Typography
             variant="body2"
-            fontWeight={500}
-            sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+            fontWeight={600}
+            sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
           >
-            {managerData.organization}
+            {userName}
           </Typography>
-          <ExpandMoreIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+          <Typography variant="caption" sx={{ color: 'primary.dark', fontWeight: 500 }}>
+            {userRole}
+          </Typography>
         </Box>
       </Box>
 
       {/* Navigation Sections */}
-      <Box sx={{ flex: 1, overflowY: 'auto' }}>
+      <Box className="ld-scrollbar" sx={{ flex: 1, overflowY: 'auto', py: 0.5 }}>
         {navSections.map((section) => (
           <Box key={section.title}>
             <List disablePadding>
@@ -253,75 +234,124 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
                     variant="caption"
                     sx={{
                       fontWeight: 600,
-                      color: 'text.secondary',
+                      color: 'text.disabled',
                       textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
+                      letterSpacing: '0.06em',
+                      fontSize: '0.65rem',
                     }}
                   >
                     {section.title}
                   </Typography>
                 </Box>
               </ListItem>
-              {section.items.map((item) => (
-                <ListItem key={item.text} disablePadding>
-                  <ListItemButton
-                    sx={{
-                      py: 1,
-                      px: 3,
-                      borderRadius: 0,
-                      ...(item.active && {
-                        bgcolor: 'rgba(255, 164, 36, 0.1)',
-                        color: 'primary.dark',
-                        borderRight: 3,
-                        borderColor: 'primary.dark',
-                      }),
-                    }}
-                  >
-                    <ListItemIcon
+              {section.items.map((item) => {
+                const active = isActive(item.path);
+                return (
+                  <ListItem key={item.text} disablePadding>
+                    <ListItemButton
+                      onClick={() => handleNavClick(item.path)}
                       sx={{
-                        minWidth: 40,
-                        color: item.active ? 'primary.dark' : 'inherit',
+                        py: 0.75,
+                        px: 3,
+                        mx: 1.5,
+                        borderRadius: '10px',
+                        position: 'relative',
+                        ...(active && {
+                          bgcolor: 'rgba(255, 164, 36, 0.08)',
+                          color: 'primary.dark',
+                          '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            left: 0,
+                            top: '20%',
+                            bottom: '20%',
+                            width: 4,
+                            borderRadius: 4,
+                            bgcolor: 'primary.main',
+                            boxShadow: '0 0 8px rgba(255,164,36,0.4)',
+                          },
+                        }),
                       }}
                     >
-                      {item.icon}
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={item.text}
-                      primaryTypographyProps={{
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                      }}
-                    />
-                    {item.badge && (
-                      <Chip
-                        label={item.badge}
-                        size="small"
+                      <ListItemIcon
                         sx={{
-                          height: 20,
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          bgcolor: item.badgeColor === 'warning'
-                            ? 'warning.main'
-                            : item.badgeColor === 'error'
-                            ? 'error.main'
-                            : 'primary.dark',
-                          color: 'white',
+                          minWidth: 36,
+                          color: active ? 'primary.dark' : 'text.secondary',
+                          '& svg': { fontSize: 20 },
+                        }}
+                      >
+                        {item.badge ? (
+                          <Badge
+                            badgeContent={item.badge}
+                            color="primary"
+                            sx={{ '& .MuiBadge-badge': { fontSize: '0.6rem', minWidth: 16, height: 16 } }}
+                          >
+                            {item.icon}
+                          </Badge>
+                        ) : (
+                          item.icon
+                        )}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={item.text}
+                        primaryTypographyProps={{
+                          fontSize: '0.82rem',
+                          fontWeight: active ? 600 : 500,
                         }}
                       />
-                    )}
-                  </ListItemButton>
-                </ListItem>
-              ))}
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
             </List>
-            <Divider sx={{ my: 1 }} />
           </Box>
         ))}
+      </Box>
+
+      {/* Org Info at Bottom */}
+      <Box
+        sx={{
+          p: 2.5,
+          mx: 1.5,
+          mb: 1.5,
+          borderRadius: '12px',
+          bgcolor: 'rgba(255,164,36,0.04)',
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 600,
+            color: 'text.disabled',
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            fontSize: '0.65rem',
+            display: 'block',
+            mb: 1,
+          }}
+        >
+          Organization
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{ fontWeight: 600, color: 'text.primary', textAlign: 'center' }}
+        >
+          Acme Corporation
+        </Typography>
       </Box>
     </Box>
   );
 
+  const drawerPaperStyles = {
+    boxSizing: 'border-box' as const,
+    width: DRAWER_WIDTH,
+    bgcolor: '#fefdfb',
+    borderRight: 'none',
+    boxShadow: '1px 0 8px rgba(0,0,0,0.03)',
+  };
+
   return (
-    <Box component="nav" sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}>
+    <Box component="nav" sx={{ width: { lg: DRAWER_WIDTH }, flexShrink: { lg: 0 } }}>
       {/* Mobile Drawer */}
       <Drawer
         variant="temporary"
@@ -329,8 +359,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
         onClose={onMobileClose}
         ModalProps={{ keepMounted: true }}
         sx={{
-          display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: DRAWER_WIDTH },
+          display: { xs: 'block', lg: 'none' },
+          '& .MuiDrawer-paper': drawerPaperStyles,
         }}
       >
         {drawerContent}
@@ -340,13 +370,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
       <Drawer
         variant="permanent"
         sx={{
-          display: { xs: 'none', md: 'block' },
-          '& .MuiDrawer-paper': {
-            boxSizing: 'border-box',
-            width: DRAWER_WIDTH,
-            borderRight: 1,
-            borderColor: 'divider',
-          },
+          display: { xs: 'none', lg: 'block' },
+          '& .MuiDrawer-paper': drawerPaperStyles,
         }}
         open
       >
