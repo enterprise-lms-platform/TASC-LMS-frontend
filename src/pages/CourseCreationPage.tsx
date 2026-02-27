@@ -29,7 +29,7 @@ import FormActions from '../components/instructor/course-creation/FormActions';
 
 // API hooks
 import { useCreateCourse, usePartialUpdateCourse, useCourse } from '../hooks/useCatalogue';
-import { uploadThumbnail, uploadBanner } from '../services/upload.services';
+import { uploadApi } from '../services/upload.services';
 import { getErrorMessage } from '../utils/config';
 import type { CourseCreateRequest } from '../types/types';
 
@@ -257,10 +257,10 @@ const CourseCreationPage: React.FC = () => {
     const urls: { thumbnail?: string; banner?: string } = {};
 
     if (media.thumbnailFile) {
-      urls.thumbnail = await uploadThumbnail(media.thumbnailFile);
+      urls.thumbnail = await uploadApi.uploadThumbnail(media.thumbnailFile);
     }
     if (media.bannerFile) {
-      urls.banner = await uploadBanner(media.bannerFile);
+      urls.banner = await uploadApi.uploadBanner(media.bannerFile);
     }
 
     return urls;

@@ -38,6 +38,7 @@ import {
   publicTagApi,
   publicCourseApi,
 } from './public.services';
+import { uploadApi } from './upload.services';
 
 /*
   Consolidated API object with all services
@@ -94,6 +95,9 @@ export const api = {
     tag: publicTagApi,
     course: publicCourseApi,
   },
+
+  // Uploads (DO Spaces presigned)
+  upload: uploadApi,
 };
 
 export default api;

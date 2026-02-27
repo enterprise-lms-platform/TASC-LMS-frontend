@@ -11,6 +11,7 @@ import {
 } from '../services/catalogue.services';
 import { queryKeys } from './queryKeys';
 import type {
+  CategoryCreateRequest,
   CourseCreateRequest,
   SessionCreateRequest,
   CourseList,
@@ -32,6 +33,41 @@ export const useCategory = (id: number) =>
     queryFn: () => categoryApi.getById(id).then((r) => r.data),
     enabled: !!id,
   });
+
+export const useCreateCategory = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CategoryCreateRequest) =>
+      categoryApi.create(data).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['categories'] });
+    },
+  });
+};
+
+export const useUpdateCategory = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<CategoryCreateRequest> }) =>
+      categoryApi.partialUpdate(id, data).then((r) => r.data),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['categories'] });
+      qc.invalidateQueries({
+        queryKey: queryKeys.categories.detail(variables.id),
+      });
+    },
+  });
+};
+
+export const useDeleteCategory = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => categoryApi.delete(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['categories'] });
+    },
+  });
+};
 
 // ── Tags ──
 

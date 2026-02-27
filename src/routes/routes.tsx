@@ -22,6 +22,7 @@ import InvoiceReceiptPage from '../pages/InvoiceReceiptPage';
 import SubscriptionManagementPage from '../pages/SubscriptionManagementPage';
 import PaymentHistoryPage from '../pages/PaymentHistoryPage';
 import ManagerDashboard from '../pages/ManagerDashboard';
+import ManagerCategoriesPage from '../pages/ManagerCategoriesPage';
 import SuperadminDashboard from '../pages/SuperadminDashboard';
 import FinanceDashboard from '../pages/FinanceDashboard';
 import FinanceAnalyticsPage from '../pages/FinanceAnalyticsPage';
@@ -138,6 +139,7 @@ export default function AppRoutes() {
           
           {/* Protected Manager Routes */}
           <Route path="/manager" element={<ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerDashboard /></ProtectedRoute>} />
+          <Route path="/manager/categories" element={<ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerCategoriesPage /></ProtectedRoute>} />
           
           {/* Protected Admin Routes */}
           <Route path="/superadmin" element={<ProtectedRoute requiredRole="tasc_admin"><SuperadminDashboard /></ProtectedRoute>} />

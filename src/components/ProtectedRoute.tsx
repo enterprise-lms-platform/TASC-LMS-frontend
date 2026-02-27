@@ -19,7 +19,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   allowedRoles,
 }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
-
+3
   // Temporarily bypass all route protection for development
   if (DEV_BYPASS_AUTH) {
     return children;

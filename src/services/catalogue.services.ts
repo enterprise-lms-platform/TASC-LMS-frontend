@@ -7,6 +7,7 @@ import { apiClient } from '../utils/config';
 import type {
   Category,
   CategoryDetail,
+  CategoryCreateRequest,
   Tag,
   CourseList,
   CourseDetail,
@@ -30,6 +31,22 @@ export const categoryApi = {
 // Get category details by ID
   getById: (id: number) =>
     apiClient.get<CategoryDetail>(`${BASE_PATH}/categories/${id}/`),
+
+// Create a new category
+  create: (data: CategoryCreateRequest) =>
+    apiClient.post<Category>(`${BASE_PATH}/categories/`, data),
+
+// Update a category
+  update: (id: number, data: CategoryCreateRequest) =>
+    apiClient.put<Category>(`${BASE_PATH}/categories/${id}/`, data),
+
+// Partially update a category
+  partialUpdate: (id: number, data: Partial<CategoryCreateRequest>) =>
+    apiClient.patch<Category>(`${BASE_PATH}/categories/${id}/`, data),
+
+// Delete a category
+  delete: (id: number) =>
+    apiClient.delete(`${BASE_PATH}/categories/${id}/`),
 };
 
 // TAGS

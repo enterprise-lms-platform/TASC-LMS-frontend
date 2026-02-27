@@ -257,6 +257,15 @@ export interface CategoryDetail extends Category {
   children: Category[];
 }
 
+export interface CategoryCreateRequest {
+  name: string;
+  slug?: string;
+  description?: string;
+  icon?: string | null;
+  parent?: number | null;
+  is_active?: boolean;
+}
+
 export interface Tag {
   id: number;
   name: string;
@@ -772,4 +781,21 @@ export interface AuditLogFilters {
 export interface HealthCheckResponse {
   status: string;
   service: string;
+}
+
+// UPLOAD TYPES (DO Spaces presigned uploads)
+
+export type UploadPrefix = 'course-thumbnails' | 'course-banners';
+
+export interface PresignRequest {
+  prefix: UploadPrefix;
+  filename: string;
+  content_type: string;
+}
+
+export interface PresignResponse {
+  upload_url: string;
+  public_url: string;
+  method: 'PUT';
+  headers: Record<string, string>;
 }
