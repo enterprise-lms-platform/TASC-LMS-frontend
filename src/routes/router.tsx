@@ -14,7 +14,7 @@
  * - Failed loaders redirect to appropriate fallback routes
  */
 
-import { createBrowserRouter, RouteObject } from 'react-router-dom';
+import { createBrowserRouter, type RouteObject } from 'react-router-dom';
 import { QueryClient } from '@tanstack/react-query';
 
 // Layout & Error Components
@@ -133,8 +133,10 @@ import * as sharedLoaders from './loaders/sharedLoaders';
  * This pattern allows loaders to inject queryClient dependency
  */
 export const createLoader =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (loaderFn: (queryClient: QueryClient, ...args: any[]) => any) =>
   (queryClient: QueryClient) =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (...args: any[]) =>
     loaderFn(queryClient, ...args);
 
@@ -227,7 +229,7 @@ export const createAppRouter = (queryClient: QueryClient) => {
     {
       path: '/learner/notifications',
       element: <ProtectedRoute><LearnerNotificationsPage /></ProtectedRoute>,
-      loader: async () => learnerLoaders.learnerNotificationsLoader(queryClient),
+      loader: async () => learnerLoaders.learnerNotificationsLoader(),
     },
     {
       path: '/learner/progress',
@@ -261,7 +263,8 @@ export const createAppRouter = (queryClient: QueryClient) => {
     {
       path: '/learner/payments',
       element: <ProtectedRoute><PaymentHistoryPage /></ProtectedRoute>,
-      loader: async () => learnerLoaders.paymentHistoryLoader(queryClient),
+      // changes to be made in loader once payments service is ready
+      // loader: async () => learnerLoaders.paymentHistoryLoader(queryClient),
     },
 
     // Checkout & Payments
@@ -336,7 +339,7 @@ export const createAppRouter = (queryClient: QueryClient) => {
     {
       path: '/instructor/grading',
       element: <ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><GradingPage /></ProtectedRoute>,
-      loader: async () => instructorLoaders.gradingLoader(queryClient),
+      // loader: async () => instructorLoaders.gradingLoader(queryClient),
     },
     {
       path: '/instructor/gradebook',
