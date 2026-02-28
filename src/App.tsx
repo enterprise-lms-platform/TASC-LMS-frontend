@@ -1,16 +1,18 @@
-import { BrowserRouter } from 'react-router-dom';
+import { RouterProvider } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
-import AppRoutes from './routes/routes';
+import createAppRouter from './routes/router';
 
 
 const App = () => {
-  return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
-  )
-}
+  const queryClient = useQueryClient();
+  const router = createAppRouter(queryClient);
 
-export default App
+  return (
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  );
+};
+
+export default App;
