@@ -776,6 +776,7 @@ export interface AuditLogFilters {
   resource?: string;
   page?: number;
   page_size?: number;
+  limit?: number;
 }
 
 export interface HealthCheckResponse {

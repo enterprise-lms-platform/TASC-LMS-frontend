@@ -21,10 +21,18 @@ const BASE_PATH = '/api/v1/catalogue';
 
 // CATEGORIES
 
+export interface CategoryListParams {
+  parent?: number;
+  // TODO: Backend API must support these query parameters
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
 export const categoryApi = {
 
   // Get all categories
-  getAll: (params?: { parent?: number }) =>
+  getAll: (params?: CategoryListParams) =>
     apiClient.get<Category[]>(`${BASE_PATH}/categories/`, { params }),
 
 
