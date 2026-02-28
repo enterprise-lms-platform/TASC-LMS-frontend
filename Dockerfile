@@ -1,47 +1,60 @@
 # ================================================================
-# TASC LMS Frontend - Build-Only Dockerfile
+# TASC LMS Frontend (Vite/React) - Docker Build + Optional Export
 # ================================================================
-# This Dockerfile builds the React/Vite frontend into static files.
-# It does NOT run a web server - it only produces the build artifacts.
+# What this Dockerfile does:
+# --------------------------
+# ✅ Builds the Vite/React frontend into production-ready static files.
+# ✅ Output artifacts live in: /app/dist (inside the build stage)
 #
-# Build artifacts location: /app/dist
+# By default, this file is "build-first" (CI/CD friendly).
+# You can either:
+#   1) Extract /app/dist to the host, OR
+#   2) Use the exported /dist stage, OR
+#   3) Extend later to serve with Nginx (runtime stage)
 #
-# Usage:
-# ------
-# 1. Build the Docker image:
-#    docker build -t tasc-lms-frontend-builder .
+# Build artifacts location:
+# -------------------------
+#   /app/dist
 #
-# 2. Extract build output to your host filesystem:
-#    docker create --name temp-builder tasc-lms-frontend-builder
-#    docker cp temp-builder:/app/dist ./dist
-#    docker rm temp-builder
+# Typical usage (build-only):
+# ---------------------------
+# 1) Build image:
+#    docker build -t tasc-frontend-builder .
 #
-# 3. Serve the static files with any web server:
-#    - Nginx: Copy ./dist/* to /var/www/html
-#    - Apache: Copy ./dist/* to /var/www/html
-#    - Python: python -m http.server --directory ./dist
-#    - Node: npx serve ./dist
+# 2) Extract dist to host:
+#    docker create --name tasc-fe-temp tasc-frontend-builder
+#    docker cp tasc-fe-temp:/app/dist ./dist
+#    docker rm tasc-fe-temp
+#
+# Notes for CI/CD:
+# ---------------
+# - This Dockerfile uses npm ci (reproducible installs).
+# - Dependency layer caching is optimized by copying package*.json first.
+# - Works best when package-lock.json is committed.
 #
 # ================================================================
 
-# Use Node.js LTS (Long Term Support) version
+# ------------------------------
+# Stage 1: Builder
+# ------------------------------
+# Use Node.js LTS on Alpine for small images and fast builds.
 FROM node:20-alpine AS builder
 
-# Set working directory
+# Set working directory inside the container
 WORKDIR /app
 
-# Copy package files first (for better layer caching)
+# Copy dependency manifests first for better Docker layer caching
+# (rebuilds are faster when only source code changes)
 COPY package.json package-lock.json ./
 
-# Install dependencies
-# --frozen-lockfile ensures exact versions from package-lock.json
-RUN npm ci 
+# Install dependencies (clean + reproducible)
+# npm ci requires package-lock.json and installs exact versions.
+RUN npm ci
 
-# Copy source code
+# Copy the rest of the source code into the image
 COPY . .
 
-# Build the Vite application
-# This runs TypeScript compilation and Vite build
+# Build the Vite app (outputs production build to /app/dist)
 RUN npm run build
 
 # ================================================================
@@ -50,14 +63,25 @@ RUN npm run build
 # The dist folder contains:
 # - index.html
 # - assets/ (JS, CSS, images, fonts)
-# - All static assets ready for deployment
+# - Static files ready to be served by Nginx/Apache/CDN/etc.
 #
-# To extract the build:
-#   docker create --name builder tasc-lms-frontend-builder
-#   docker cp builder:/app/dist ./dist
-#   docker rm builder
 # ================================================================
 
-# Optional: Verification stage to ensure build succeeded
+# ------------------------------
+# Stage 2: Export (optional)
+# ------------------------------
+# This stage exists ONLY to make it easy to "copy out" dist artifacts
+# in CI/CD pipelines or local builds without shipping a full runtime image.
 FROM scratch AS export
+
+# Copy dist build artifacts to /dist in the final stage
 COPY --from=builder /app/dist /dist
+
+# ================================================================
+# Export stage usage:
+# ------------------
+# docker build --target export -t tasc-frontend-export .
+# docker create --name tasc-fe-export tasc-frontend-export
+# docker cp tasc-fe-export:/dist ./dist
+# docker rm tasc-fe-export
+# ================================================================
