@@ -1,0 +1,17 @@
+# ================================================================
+# TASC LMS Frontend - Docker Compose
+# ================================================================
+# This compose file:
+# - Builds frontend Docker image
+# - Runs Nginx container serving built static files
+# - Exposes container only to localhost (secure)
+#
+# Host Nginx will reverse proxy to this container.
+# ================================================================
+
+services:
+  frontend:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9010:80"
