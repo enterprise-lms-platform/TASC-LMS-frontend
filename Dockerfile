@@ -1,87 +1,49 @@
 # ================================================================
-# TASC LMS Frontend (Vite/React) - Docker Build + Optional Export
+# TASC LMS Frontend (Vite/React) - Dockerized Runtime Build
 # ================================================================
-# What this Dockerfile does:
-# --------------------------
-# ✅ Builds the Vite/React frontend into production-ready static files.
-# ✅ Output artifacts live in: /app/dist (inside the build stage)
+# This Dockerfile:
+# 1) Builds the Vite/React frontend into /app/dist
+# 2) Serves the static files using Nginx inside the container
 #
-# By default, this file is "build-first" (CI/CD friendly).
-# You can either:
-#   1) Extract /app/dist to the host, OR
-#   2) Use the exported /dist stage, OR
-#   3) Extend later to serve with Nginx (runtime stage)
-#
-# Build artifacts location:
-# -------------------------
-#   /app/dist
-#
-# Typical usage (build-only):
-# ---------------------------
-# 1) Build image:
-#    docker build -t tasc-frontend-builder .
-#
-# 2) Extract dist to host:
-#    docker create --name tasc-fe-temp tasc-frontend-builder
-#    docker cp tasc-fe-temp:/app/dist ./dist
-#    docker rm tasc-fe-temp
-#
-# Notes for CI/CD:
-# ---------------
-# - This Dockerfile uses npm ci (reproducible installs).
-# - Dependency layer caching is optimized by copying package*.json first.
-# - Works best when package-lock.json is committed.
-#
+# Result:
+# - Container listens on port 80
+# - Host Nginx will reverse proxy to it (127.0.0.1:9010)
 # ================================================================
 
 # ------------------------------
-# Stage 1: Builder
+# Stage 1: Build (Node)
 # ------------------------------
-# Use Node.js LTS on Alpine for small images and fast builds.
-FROM node:20-alpine AS builder
+    FROM node:20-alpine AS builder
 
-# Set working directory inside the container
-WORKDIR /app
-
-# Copy dependency manifests first for better Docker layer caching
-# (rebuilds are faster when only source code changes)
-COPY package.json package-lock.json ./
-
-# Install dependencies (clean + reproducible)
-# npm ci requires package-lock.json and installs exact versions.
-RUN npm ci
-
-# Copy the rest of the source code into the image
-COPY . .
-
-# Build the Vite app (outputs production build to /app/dist)
-RUN npm run build
-
-# ================================================================
-# Build output is now in /app/dist
-# ================================================================
-# The dist folder contains:
-# - index.html
-# - assets/ (JS, CSS, images, fonts)
-# - Static files ready to be served by Nginx/Apache/CDN/etc.
-#
-# ================================================================
-
-# ------------------------------
-# Stage 2: Export (optional)
-# ------------------------------
-# This stage exists ONLY to make it easy to "copy out" dist artifacts
-# in CI/CD pipelines or local builds without shipping a full runtime image.
-FROM scratch AS export
-
-# Copy dist build artifacts to /dist in the final stage
-COPY --from=builder /app/dist /dist
-
-# ================================================================
-# Export stage usage:
-# ------------------
-# docker build --target export -t tasc-frontend-export .
-# docker create --name tasc-fe-export tasc-frontend-export
-# docker cp tasc-fe-export:/dist ./dist
-# docker rm tasc-fe-export
-# ================================================================
+    WORKDIR /app
+    
+    # Copy dependency manifests first for better caching
+    COPY package.json package-lock.json ./
+    
+    # Install exact dependencies
+    RUN npm ci
+    
+    # Copy the source code
+    COPY . .
+    
+    # Build production bundle to /app/dist
+    RUN npm run build
+    
+    # ------------------------------
+    # Stage 2: Runtime (Nginx)
+    # ------------------------------
+    FROM nginx:alpine
+    
+    # Remove default nginx site config
+    RUN rm /etc/nginx/conf.d/default.conf
+    
+    # Copy our SPA nginx config (you must add nginx.conf in repo root)
+    COPY nginx.conf /etc/nginx/conf.d/default.conf
+    
+    # Copy build output to Nginx web root
+    COPY --from=builder /app/dist /usr/share/nginx/html
+    
+    EXPOSE 80
+    
+    # Start Nginx in foreground (required for containers)
+    CMD ["nginx", "-g", "daemon off;"]
