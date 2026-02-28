@@ -4,7 +4,7 @@
  */
 
 import { QueryClient } from '@tanstack/react-query';
-import { LoaderFunctionArgs, redirect } from 'react-router-dom';
+import { type LoaderFunctionArgs, redirect } from 'react-router-dom';
 import { queryKeys } from '../../hooks/queryKeys';
 import { enrollmentApi, sessionProgressApi, certificateApi } from '../../services/learning.services';
 import { courseApi } from '../../services/catalogue.services';
@@ -44,6 +44,7 @@ export const learnerDashboardLoader = async (queryClient: QueryClient) => {
       progress,
       certificates,
     };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     // Redirect on auth errors
     if (error?.status === 401) {
@@ -91,6 +92,7 @@ export const learnerCourseCatalogLoader = async (
     });
 
     return { courses };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     if (error?.status === 401) return redirect('/login');
     return { courses: [] };
@@ -254,6 +256,7 @@ export const checkoutLoader = async (
     });
 
     return { course };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     if (error?.status === 401) return redirect('/login');
     if (error?.status === 404) return redirect('/learner/courses');
@@ -265,7 +268,7 @@ export const checkoutLoader = async (
  * Payment History Loader
  * Pre-fetches learner's payment history
  */
-export const paymentHistoryLoader = async (queryClient: QueryClient) => {
+export const paymentHistoryLoader = async () => {
   try {
     // This would use usePayments hook if available
     // For now, allow page to fetch its own data
@@ -281,7 +284,7 @@ export const paymentHistoryLoader = async (queryClient: QueryClient) => {
  * Notifications Loader
  * Pre-fetches learner notifications
  */
-export const learnerNotificationsLoader = async (queryClient: QueryClient) => {
+export const learnerNotificationsLoader = async () => {
   try {
     // When notifications service is ready, add here
     return {};
