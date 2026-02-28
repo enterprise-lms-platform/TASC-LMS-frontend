@@ -20,41 +20,46 @@ const BASE_PATH = '/api/v1/payments';
 export interface InvoiceParams {
   customer?: number;
   status?: string;
+  // TODO: Backend API must support these query parameters
+  limit?: number;               // Limit the number of results returned
+  page?: number;                // Pagination page number
+  date_from?: string;           // Filter invoices from this date
+  date_to?: string;             // Filter invoices up to this date
 }
 
 export const invoiceApi = {
-  
-//  List all invoices (finance team sees all, users see their own)
+
+  //  List all invoices (finance team sees all, users see their own)
   getAll: (params?: InvoiceParams) =>
     apiClient.get<Invoice[]>(`${BASE_PATH}/invoices/`, { params }),
 
-  
-//  Get invoice details by ID
+
+  //  Get invoice details by ID
   getById: (id: number) =>
     apiClient.get<Invoice>(`${BASE_PATH}/invoices/${id}/`),
 
-  
-//  Create a new invoice (finance team only)
+
+  //  Create a new invoice (finance team only)
   create: (data: InvoiceCreateRequest) =>
     apiClient.post<Invoice>(`${BASE_PATH}/invoices/`, data),
 
-  
-//  Update an invoice (finance team only)
+
+  //  Update an invoice (finance team only)
   update: (id: number, data: Partial<Invoice>) =>
     apiClient.put<Invoice>(`${BASE_PATH}/invoices/${id}/`, data),
 
-  
-//  Partially update an invoice (finance team only)
+
+  //  Partially update an invoice (finance team only)
   partialUpdate: (id: number, data: Partial<Invoice>) =>
     apiClient.patch<Invoice>(`${BASE_PATH}/invoices/${id}/`, data),
 
-  
-//  Delete an invoice
+
+  //  Delete an invoice
   delete: (id: number) =>
     apiClient.delete(`${BASE_PATH}/invoices/${id}/`),
 
-  
-//  Pay an invoice
+
+  //  Pay an invoice
   pay: (id: number) =>
     apiClient.post<Invoice>(`${BASE_PATH}/invoices/${id}/pay/`),
 };
@@ -64,16 +69,21 @@ export const invoiceApi = {
 export interface TransactionParams {
   invoice?: number;
   status?: string;
+  // TODO: Backend API must support these query parameters
+  limit?: number;               // Limit the number of results returned
+  page?: number;                // Pagination page number
+  date_from?: string;           // Filter transactions from this date
+  date_to?: string;             // Filter transactions up to this date
 }
 
 export const transactionApi = {
-  
-//  List all transactions (finance team sees all, users see their own)
+
+  //  List all transactions (finance team sees all, users see their own)
   getAll: (params?: TransactionParams) =>
     apiClient.get<Transaction[]>(`${BASE_PATH}/transactions/`, { params }),
 
-  
-//  Get transaction details by ID
+
+  //  Get transaction details by ID
   getById: (id: number) =>
     apiClient.get<Transaction>(`${BASE_PATH}/transactions/${id}/`),
 };
@@ -81,38 +91,38 @@ export const transactionApi = {
 // PAYMENT METHODS
 
 export const paymentMethodApi = {
-  
-//  List all saved payment methods for the authenticated user
+
+  //  List all saved payment methods for the authenticated user
   getAll: () =>
     apiClient.get<PaymentMethod[]>(`${BASE_PATH}/payment-methods/`),
 
-  
-//  Get payment method details by ID
+
+  //  Get payment method details by ID
   getById: (id: number) =>
     apiClient.get<PaymentMethod>(`${BASE_PATH}/payment-methods/${id}/`),
 
-  
-//  Add a new payment method
+
+  //  Add a new payment method
   create: (data: PaymentMethodCreateRequest) =>
     apiClient.post<PaymentMethod>(`${BASE_PATH}/payment-methods/`, data),
 
-  
-//  Update a payment method
+
+  //  Update a payment method
   update: (id: number, data: Partial<PaymentMethod>) =>
     apiClient.put<PaymentMethod>(`${BASE_PATH}/payment-methods/${id}/`, data),
 
-  
-//  Partially update a payment method
+
+  //  Partially update a payment method
   partialUpdate: (id: number, data: Partial<PaymentMethod>) =>
     apiClient.patch<PaymentMethod>(`${BASE_PATH}/payment-methods/${id}/`, data),
 
-  
-//  Delete a saved payment method
+
+  //  Delete a saved payment method
   delete: (id: number) =>
     apiClient.delete(`${BASE_PATH}/payment-methods/${id}/`),
 
-  
-//  Set a payment method as default
+
+  //  Set a payment method as default
   setDefault: (id: number) =>
     apiClient.post<PaymentMethod>(`${BASE_PATH}/payment-methods/${id}/set_default/`),
 };
@@ -120,13 +130,13 @@ export const paymentMethodApi = {
 // SUBSCRIPTIONS (Plans)
 
 export const subscriptionApi = {
-  
-//  List all active subscription plans
+
+  //  List all active subscription plans
   getAll: () =>
     apiClient.get<Subscription[]>(`${BASE_PATH}/subscriptions/`),
 
-  
-//  Get subscription plan details by ID
+
+  //  Get subscription plan details by ID
   getById: (id: number) =>
     apiClient.get<Subscription>(`${BASE_PATH}/subscriptions/${id}/`),
 };
@@ -139,45 +149,45 @@ export interface UserSubscriptionParams {
 }
 
 export const userSubscriptionApi = {
-  
-//  List user subscriptions (finance team sees all, users see their own)
+
+  //  List user subscriptions (finance team sees all, users see their own)
   getAll: (params?: UserSubscriptionParams) =>
     apiClient.get<UserSubscription[]>(`${BASE_PATH}/user-subscriptions/`, {
       params,
     }),
 
-  
-//  Get user subscription details by ID
+
+  //  Get user subscription details by ID
   getById: (id: number) =>
     apiClient.get<UserSubscription>(`${BASE_PATH}/user-subscriptions/${id}/`),
 
-  
-//  Subscribe to a subscription plan
+
+  //  Subscribe to a subscription plan
   create: (data: UserSubscriptionCreateRequest) =>
     apiClient.post<UserSubscription>(`${BASE_PATH}/user-subscriptions/`, data),
 
-  
-//  Update a user subscription
+
+  //  Update a user subscription
   update: (id: number, data: Partial<UserSubscription>) =>
     apiClient.put<UserSubscription>(`${BASE_PATH}/user-subscriptions/${id}/`, data),
 
-  
-//  Partially update a user subscription
+
+  //  Partially update a user subscription
   partialUpdate: (id: number, data: Partial<UserSubscription>) =>
     apiClient.patch<UserSubscription>(`${BASE_PATH}/user-subscriptions/${id}/`, data),
 
-  
-//  Delete a user subscription
+
+  //  Delete a user subscription
   delete: (id: number) =>
     apiClient.delete(`${BASE_PATH}/user-subscriptions/${id}/`),
 
-  
-//  Cancel an active subscription
+
+  //  Cancel an active subscription
   cancel: (id: number) =>
     apiClient.post<UserSubscription>(`${BASE_PATH}/user-subscriptions/${id}/cancel/`),
 
-  
-//  Renew a subscription for another billing period
+
+  //  Renew a subscription for another billing period
   renew: (id: number) =>
     apiClient.post<UserSubscription>(`${BASE_PATH}/user-subscriptions/${id}/renew/`),
 };
