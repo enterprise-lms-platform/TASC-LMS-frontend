@@ -1,63 +1,49 @@
 # ================================================================
-# TASC LMS Frontend - Build-Only Dockerfile
+# TASC LMS Frontend (Vite/React) - Dockerized Runtime Build
 # ================================================================
-# This Dockerfile builds the React/Vite frontend into static files.
-# It does NOT run a web server - it only produces the build artifacts.
+# This Dockerfile:
+# 1) Builds the Vite/React frontend into /app/dist
+# 2) Serves the static files using Nginx inside the container
 #
-# Build artifacts location: /app/dist
-#
-# Usage:
-# ------
-# 1. Build the Docker image:
-#    docker build -t tasc-lms-frontend-builder .
-#
-# 2. Extract build output to your host filesystem:
-#    docker create --name temp-builder tasc-lms-frontend-builder
-#    docker cp temp-builder:/app/dist ./dist
-#    docker rm temp-builder
-#
-# 3. Serve the static files with any web server:
-#    - Nginx: Copy ./dist/* to /var/www/html
-#    - Apache: Copy ./dist/* to /var/www/html
-#    - Python: python -m http.server --directory ./dist
-#    - Node: npx serve ./dist
-#
+# Result:
+# - Container listens on port 80
+# - Host Nginx will reverse proxy to it (127.0.0.1:9010)
 # ================================================================
 
-# Use Node.js LTS (Long Term Support) version
-FROM node:20-alpine AS builder
+# ------------------------------
+# Stage 1: Build (Node)
+# ------------------------------
+    FROM node:20-alpine AS builder
 
-# Set working directory
-WORKDIR /app
-
-# Copy package files first (for better layer caching)
-COPY package.json package-lock.json ./
-
-# Install dependencies
-# --frozen-lockfile ensures exact versions from package-lock.json
-RUN npm ci 
-
-# Copy source code
-COPY . .
-
-# Build the Vite application
-# This runs TypeScript compilation and Vite build
-RUN npm run build
-
-# ================================================================
-# Build output is now in /app/dist
-# ================================================================
-# The dist folder contains:
-# - index.html
-# - assets/ (JS, CSS, images, fonts)
-# - All static assets ready for deployment
-#
-# To extract the build:
-#   docker create --name builder tasc-lms-frontend-builder
-#   docker cp builder:/app/dist ./dist
-#   docker rm builder
-# ================================================================
-
-# Optional: Verification stage to ensure build succeeded
-FROM scratch AS export
-COPY --from=builder /app/dist /dist
+    WORKDIR /app
+    
+    # Copy dependency manifests first for better caching
+    COPY package.json package-lock.json ./
+    
+    # Install exact dependencies
+    RUN npm ci
+    
+    # Copy the source code
+    COPY . .
+    
+    # Build production bundle to /app/dist
+    RUN npm run build
+    
+    # ------------------------------
+    # Stage 2: Runtime (Nginx)
+    # ------------------------------
+    FROM nginx:alpine
+    
+    # Remove default nginx site config
+    RUN rm /etc/nginx/conf.d/default.conf
+    
+    # Copy our SPA nginx config (you must add nginx.conf in repo root)
+    COPY nginx.conf /etc/nginx/conf.d/default.conf
+    
+    # Copy build output to Nginx web root
+    COPY --from=builder /app/dist /usr/share/nginx/html
+    
+    EXPOSE 80
+    
+    # Start Nginx in foreground (required for containers)
+    CMD ["nginx", "-g", "daemon off;"]
