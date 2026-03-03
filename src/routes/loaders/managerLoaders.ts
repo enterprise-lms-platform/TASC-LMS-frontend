@@ -61,6 +61,32 @@ export const managerCategoriesLoader = async (
 };
 
 /**
+ * Manager Analytics Loader
+ * Pre-fetches data for analytics overview
+ */
+export const managerAnalyticsLoader = async (queryClient: QueryClient) => {
+  try {
+    const categories = await queryClient.ensureQueryData({
+      queryKey: queryKeys.categories.all(),
+      queryFn: () => categoryApi.getAll().then((r) => r.data),
+      staleTime: 15 * 60 * 1000,
+    });
+
+    const coursesData = await queryClient.ensureQueryData({
+      queryKey: queryKeys.courses.all({ limit: 20 }),
+      queryFn: () => courseApi.getAll({ limit: 20 }).then((r) => r.data),
+      staleTime: 10 * 60 * 1000,
+    });
+
+    return { categories, coursesData };
+  } catch (error: unknown) {
+    const err = error as { status?: number };
+    if (err.status === 401) return redirect('/login');
+    return { categories: { results: [], count: 0 }, coursesData: { results: [], count: 0 } };
+  }
+};
+
+/**
  * Generic Manager Route Loader
  * Used for pages that need basic manager auth check
  */

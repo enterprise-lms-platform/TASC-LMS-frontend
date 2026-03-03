@@ -76,6 +76,7 @@ import WorkshopDetailsPage from '../pages/WorkshopDetailsPage';
 // Manager Pages
 import ManagerDashboard from '../pages/ManagerDashboard';
 import ManagerCategoriesPage from '../pages/ManagerCategoriesPage';
+import ManagerAnalyticsPage from '../pages/ManagerAnalyticsPage';
 
 // Finance Pages
 import FinanceDashboard from '../pages/FinanceDashboard';
@@ -410,6 +411,11 @@ export const createAppRouter = (queryClient: QueryClient) => {
       path: '/manager/categories',
       element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerCategoriesPage /></ProtectedRoute>,
       loader: async () => managerLoaders.managerCategoriesLoader(queryClient),
+    },
+    {
+      path: '/manager/analytics',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerAnalyticsPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerAnalyticsLoader(queryClient),
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
