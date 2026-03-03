@@ -12,7 +12,6 @@ import {
   Badge,
 } from '@mui/material';
 import {
-  School as SchoolIcon,
   Dashboard as DashboardIcon,
   Analytics as AnalyticsIcon,
   Notifications as NotificationsIcon,
@@ -151,8 +150,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
         }}
         onClick={() => navigate('/instructor')}
       >
-        <SchoolIcon sx={{ fontSize: 32, color: 'primary.dark' }} />
-        <Typography variant="h6" fontWeight={700} color="text.primary">
+        <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 64, height: 64, objectFit: 'contain' }} />
+        <Typography variant="h6" fontWeight={700} color="#ffa424">
           TASC LMS
         </Typography>
       </Box>

@@ -128,9 +128,7 @@ const CTA: React.FC<CTAProps> = ({ isMobile }) => {
                 backdropFilter: 'blur(10px)',
               }}
             >
-              <div style={{ fontSize: '5rem', color: 'rgba(255, 255, 255, 0.3)' }}>
-                <i className="fas fa-graduation-cap" />
-              </div>
+              <img src="/TASC logo.png" alt="TASC Logo" style={{ width: '220px', height: '220px', objectFit: 'contain' }} />
             </div>
           </div>
         </div>

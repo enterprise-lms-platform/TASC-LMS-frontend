@@ -68,20 +68,11 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ open, onClose }) => {
               fontWeight: 700,
             }}
           >
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                backgroundColor: '#ffa424',
-                borderRadius: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-              }}
-            >
-              <i className="fas fa-graduation-cap" />
-            </div>
+            <img
+              src="/TASC logo.png"
+              alt="TASC Logo"
+              style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+            />
             <span>TASC</span>
           </div>
           <button

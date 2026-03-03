@@ -1,7 +1,7 @@
 import { Box, Stack, Typography, TextField, Button, Alert, CircularProgress } from "@mui/material"
 import { passwordResetStyles } from "../styles/passwordReset"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faClock, faEnvelope, faGraduationCap, faShieldAlt, faCheckCircle, faArrowLeft } from "@fortawesome/free-solid-svg-icons"
+import { faClock, faEnvelope, faShieldAlt, faCheckCircle, faArrowLeft } from "@fortawesome/free-solid-svg-icons"
 import type { ReactNode } from "react"
 import { useState } from "react"
 import { useNavigate, useSearchParams, useParams } from "react-router-dom"
@@ -156,10 +156,7 @@ function PasswordResetPage() {
       {/* Left Panel */}
       <Box sx={passwordResetStyles.resetLeft}>
         <Box sx={passwordResetStyles.logoContainer}>
-          <Box sx={passwordResetStyles.logoIcon}>
-            <FontAwesomeIcon icon={faGraduationCap} />
-          </Box>
-          <Box sx={passwordResetStyles.logoText}>TASC LMS</Box>
+          <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 160, height: 160, objectFit: 'contain' }} />
         </Box>
 
         <Typography sx={passwordResetStyles.securityTagline}>Secure Account Recovery</Typography>

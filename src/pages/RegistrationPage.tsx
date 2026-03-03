@@ -306,8 +306,7 @@ const RegistrationPage: React.FC = () => {
                 <Box sx={loginStyles.leftPanel}>
                     <Stack sx={loginStyles.leftPanelContent}>
                         <Box sx={loginStyles.logoContainer}>
-                            <Box sx={loginStyles.logoIcon}><FontAwesomeIcon icon={faGraduationCap} /></Box>
-                            <Typography sx={loginStyles.logoText}>TASC LMS</Typography>
+                            <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 160, height: 160, objectFit: 'contain' }} />
                         </Box>
                         <Typography sx={loginStyles.tagline}>Start Your Learning Journey Today</Typography>
                         <Stack sx={loginStyles.featureContainer}>
@@ -359,8 +358,7 @@ const RegistrationPage: React.FC = () => {
             <Box sx={loginStyles.leftPanel}>
                 <Stack sx={loginStyles.leftPanelContent}>
                     <Box sx={loginStyles.logoContainer}>
-                        <Box sx={loginStyles.logoIcon}><FontAwesomeIcon icon={faGraduationCap} /></Box>
-                        <Typography sx={loginStyles.logoText}>TASC LMS</Typography>
+                        <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 160, height: 160, objectFit: 'contain' }} />
                     </Box>
                     <Typography sx={loginStyles.tagline}>Start Your Learning Journey Today</Typography>
                     <Stack sx={loginStyles.featureContainer}>

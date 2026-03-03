@@ -29,7 +29,6 @@ import {
   TableChart as ExportIcon,
   PictureAsPdf as StatementsIcon,
   Assessment as CustomReportsIcon,
-  School as LogoIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -137,8 +136,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
         }}
         onClick={() => navigate('/finance')}
       >
-        <LogoIcon sx={{ fontSize: 32, color: 'primary.dark' }} />
-        <Typography variant="h6" fontWeight={700} color="text.primary">
+        <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 64, height: 64, objectFit: 'contain' }} />
+        <Typography variant="h6" fontWeight={700} color="#ffa424">
           TASC LMS
         </Typography>
       </Box>

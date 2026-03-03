@@ -120,9 +120,10 @@ export const verificationStyles = {
   // Logo
   logoContainer: {
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: verificationSpacing[4],
+    gap: verificationSpacing[2],
     marginBottom: verificationSpacing[8],
   },
 
@@ -134,7 +135,7 @@ export const verificationStyles = {
   logoText: {
     fontSize: verificationFont.sizing.xl3,
     fontWeight: 700,
-    color: verificationColors.neutral[800],
+    color: '#ffa424',
   },
 
   // Security content

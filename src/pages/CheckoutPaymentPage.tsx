@@ -306,7 +306,7 @@ const CheckoutPaymentPage: React.FC = () => {
           sx={{ cursor: 'pointer' }}
           onClick={() => navigate('/')}
         >
-          <SchoolIcon sx={{ color: '#ffa424', fontSize: 32 }} />
+          <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 48, height: 48, objectFit: 'contain' }} />
           <Typography variant="h6" fontWeight={700} color="text.primary">
             TASC LMS
           </Typography>

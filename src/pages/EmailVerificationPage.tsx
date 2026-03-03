@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Box, Button, CircularProgress, Typography, Stack } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheckCircle, faExclamationCircle, faGraduationCap } from '@fortawesome/free-solid-svg-icons';
+import { faCheckCircle, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 import { loginStyles, loginColors } from '../styles/loginTheme';
 import { authApi, getErrorMessage } from '../services/main.api';
 
@@ -43,10 +43,7 @@ const EmailVerificationPage: React.FC = () => {
       <Box sx={loginStyles.leftPanel}>
         <Stack sx={loginStyles.leftPanelContent}>
           <Box sx={loginStyles.logoContainer}>
-            <Box sx={loginStyles.logoIcon}>
-              <FontAwesomeIcon icon={faGraduationCap} />
-            </Box>
-            <Typography sx={loginStyles.logoText}>TASC LMS</Typography>
+            <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 160, height: 160, objectFit: 'contain' }} />
           </Box>
           <Typography sx={loginStyles.tagline}>Verify Your Email Address</Typography>
         </Stack>
