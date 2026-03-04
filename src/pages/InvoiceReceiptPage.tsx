@@ -16,7 +16,6 @@ import {
   Grid,
 } from '@mui/material';
 import {
-  School as SchoolIcon,
   ArrowBack as ArrowBackIcon,
   Print as PrintIcon,
   Download as DownloadIcon,
@@ -155,7 +154,7 @@ const InvoiceReceiptPage: React.FC = () => {
           sx={{ cursor: 'pointer' }}
           onClick={() => navigate('/')}
         >
-          <SchoolIcon sx={{ color: '#ffa424', fontSize: 32 }} />
+          <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 48, height: 48, objectFit: 'contain' }} />
           <Typography variant="h6" fontWeight={700} color="text.primary">
             TASC LMS
           </Typography>
@@ -230,7 +229,7 @@ const InvoiceReceiptPage: React.FC = () => {
               sx={{ position: 'relative', zIndex: 1 }}
             >
               <Stack direction="row" spacing={1.5} alignItems="center">
-                <SchoolIcon sx={{ fontSize: 40 }} />
+                <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 56, height: 56, objectFit: 'contain' }} />
                 <Box>
                   <Typography variant="h5" fontWeight={700}>TASC LMS</Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>Learning Management System</Typography>

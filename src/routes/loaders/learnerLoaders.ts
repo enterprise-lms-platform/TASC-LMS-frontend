@@ -50,9 +50,9 @@ export const learnerDashboardLoader = async (queryClient: QueryClient) => {
     if (error?.status === 401) {
       return redirect('/login');
     }
-    // For other errors, allow component to handle
+    // For other errors, return empty data so the page can still render
     console.error('Dashboard loader error:', error);
-    throw error;
+    return { enrollments: [], progress: [], certificates: [] };
   }
 };
 

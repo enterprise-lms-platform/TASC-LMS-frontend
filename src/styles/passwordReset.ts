@@ -118,9 +118,10 @@ export const passwordResetStyles = {
 
   logoContainer: {
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: resetSpacing[4],
+    gap: resetSpacing[2],
     marginBottom: resetSpacing[8],
   },
 
@@ -132,7 +133,7 @@ export const passwordResetStyles = {
   logoText: {
     fontSize: globalFontSizes["3xl"],
     fontWeight: 700,
-    color: resetColors.neutral[800],
+    color: '#ffa424',
   },
 
   securityTagline: {

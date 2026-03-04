@@ -10,7 +10,7 @@ import {
   Paper,
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGraduationCap, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import { faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { authApi, getErrorMessage } from '../services/main.api';
 import { loginColors } from '../styles/loginTheme';
 
@@ -114,13 +114,8 @@ const SetPasswordPage: React.FC = () => {
           color: 'white',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
-          <Box sx={{ fontSize: '3rem' }}>
-            <FontAwesomeIcon icon={faGraduationCap} />
-          </Box>
-          <Typography variant="h3" fontWeight={700}>
-            TASC LMS
-          </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
+          <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 160, height: 160, objectFit: 'contain' }} />
         </Box>
         <Typography variant="h5" fontWeight={600} mb={2} textAlign="center">
           Welcome to TASC Learning Management System

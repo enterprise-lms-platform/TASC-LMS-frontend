@@ -30,19 +30,20 @@ const Header: React.FC<HeaderProps> = ({ scrolled, onMobileMenuToggle, isMobile 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '16px 0',
+            padding: '6px 0',
           }}
         >
           {/* Logo */}
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
-            <i
-              className="fas fa-graduation-cap"
-              style={{ fontSize: '32px', color: '#ffa424' }}
+            <img
+              src="/TASC logo.png"
+              alt="TASC Logo"
+              style={{ width: '72px', height: '72px', objectFit: 'contain' }}
             />
             <h1
               style={{
                 fontWeight: 700,
-                color: '#27272a',
+                color: '#ffa424',
                 margin: 0,
                 fontSize: '1.5rem',
               }}

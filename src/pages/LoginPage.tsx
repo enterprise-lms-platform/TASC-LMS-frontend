@@ -1,6 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'  //this is a stubborn import
 import { Link, useNavigate } from 'react-router-dom';
-import { faBookOpen, faCertificate, faChalkboardTeacher, faEye, faEyeSlash, faGraduationCap, faSignIn, faShieldAlt, faSpinner } from '@fortawesome/free-solid-svg-icons'
+import { faBookOpen, faCertificate, faChalkboardTeacher, faEye, faEyeSlash, faSignIn, faShieldAlt, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import {  loginStyles } from '../styles/loginTheme'
 
 import { Box, Button, Divider, Stack, Typography, TextField, FormControlLabel, Checkbox, Alert } from "@mui/material"
@@ -256,12 +256,7 @@ const LoginPage = () => {
         <Box sx={loginStyles.leftPanel}>
           <Stack sx={loginStyles.leftPanelContent}>
             <Box sx={loginStyles.logoContainer}>
-              <Box sx={loginStyles.logoIcon}>
-                <FontAwesomeIcon icon={faGraduationCap} />
-              </Box>
-              <Typography sx={loginStyles.logoText}>
-                TASC LMS
-              </Typography>
+              <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 160, height: 160, objectFit: 'contain' }} />
             </Box>
             <Typography sx={loginStyles.tagline}>
               Empower Your Learning Journey

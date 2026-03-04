@@ -106,9 +106,10 @@ export const loginStyles = {
   // Logo
   logoContainer: {
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
+    gap: 1,
     marginBottom: loginSpacing[8]
   },
 
@@ -120,7 +121,7 @@ export const loginStyles = {
   logoText: {
     fontSize: '2rem',
     fontWeight: 700,
-    color: loginColors.neutral[800],
+    color: '#ffa424',
   },
   // login features flex container
   featureContainer: {

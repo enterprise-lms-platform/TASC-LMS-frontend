@@ -34,7 +34,6 @@ import {
   Storage as DataMigrationIcon,
   Security as SecurityIcon,
   SettingsApplications as GatewayIcon,
-  School as LogoIcon,
 } from '@mui/icons-material';
 
 const DRAWER_WIDTH = 280;
@@ -142,20 +141,14 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
         }}
       >
         <Box
-          sx={{
-            color: 'primary.main',
-            fontSize: '1.5rem',
-            minWidth: 32,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <LogoIcon sx={{ fontSize: 28 }} />
-        </Box>
+          component="img"
+          src="/TASC logo.png"
+          alt="TASC Logo"
+          sx={{ width: 64, height: 64, objectFit: 'contain' }}
+        />
         <Typography
           variant="h6"
-          sx={{ fontWeight: 700, color: 'text.primary', whiteSpace: 'nowrap', fontSize: '1.1rem' }}
+          sx={{ fontWeight: 700, color: '#ffa424', whiteSpace: 'nowrap', fontSize: '1.1rem' }}
         >
           TASC LMS
         </Typography>

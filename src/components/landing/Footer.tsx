@@ -71,8 +71,8 @@ const Footer: React.FC<FooterProps> = ({ isMobile = false }) => {
                 justifyContent: isMobile ? 'center' : 'flex-start',
               }}
             >
-              <i className="fas fa-graduation-cap" style={{ fontSize: '1.5rem', color: '#ffb74d' }} />
-              <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'white' }}>TASC LMS</span>
+              <img src="/TASC logo.png" alt="TASC Logo" style={{ width: '60px', height: '60px', objectFit: 'contain' }} />
+              <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#ffa424' }}>TASC LMS</span>
             </div>
             <p
               className="footer-description"

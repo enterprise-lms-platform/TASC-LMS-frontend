@@ -1,6 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faGraduationCap,
   faShieldAlt,
   faUserShield,
   faMobileAlt,
@@ -891,10 +890,7 @@ const VerificationPage = () => {
       <Box sx={verificationStyles.leftPanel}>
         <Box sx={verificationStyles.leftPanelContent}>
           <Box sx={verificationStyles.logoContainer}>
-            <Box sx={verificationStyles.logoIcon}>
-              <FontAwesomeIcon icon={faGraduationCap} />
-            </Box>
-            <Typography sx={verificationStyles.logoText}>TASC LMS</Typography>
+            <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 160, height: 160, objectFit: 'contain' }} />
           </Box>
 
           <Typography sx={verificationStyles.tagline}>Enhanced Account Security</Typography>

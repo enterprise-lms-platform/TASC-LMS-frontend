@@ -18,7 +18,6 @@ import {
   Dashboard as DashboardIcon,
   MenuBook as MenuBookIcon,
   Notifications as NotificationsIcon,
-  School as SchoolIcon,
   Search as SearchIcon,
   DateRange as DateRangeIcon,
   Bookmark as BookmarkIcon,
@@ -121,8 +120,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
           minHeight: 80,
         }}
       >
-        <SchoolIcon sx={{ fontSize: 32, color: 'primary.dark' }} />
-        <Typography variant="h6" fontWeight={700} color="text.primary">
+        <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 64, height: 64, objectFit: 'contain' }} />
+        <Typography variant="h6" fontWeight={700} color="#ffa424">
           TASC LMS
         </Typography>
       </Box>
