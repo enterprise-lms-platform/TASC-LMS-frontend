@@ -25,7 +25,11 @@ export type CourseLevel = typeof CourseLevel[keyof typeof CourseLevel];
 
 export const CourseStatus = {
   DRAFT: 'draft',
+  PENDING_APPROVAL: 'pending_approval',
+  APPROVED: 'approved',
   PUBLISHED: 'published',
+  REJECTED: 'rejected',
+  PENDING_DELETION: 'pending_deletion',
   ARCHIVED: 'archived',
 } as const;
 export type CourseStatus = typeof CourseStatus[keyof typeof CourseStatus];
@@ -47,6 +51,20 @@ export const SessionStatus = {
   PUBLISHED: 'published',
 } as const;
 export type SessionStatus = typeof SessionStatus[keyof typeof SessionStatus];
+
+export const ContentSource = {
+  INLINE: 'inline',
+  UPLOAD: 'upload',
+  EXTERNAL: 'external',
+} as const;
+export type ContentSource = typeof ContentSource[keyof typeof ContentSource];
+
+export const ExternalVideoProvider = {
+  YOUTUBE: 'youtube',
+  VIMEO: 'vimeo',
+  LOOM: 'loom',
+} as const;
+export type ExternalVideoProvider = typeof ExternalVideoProvider[keyof typeof ExternalVideoProvider];
 
 export const EnrollmentStatus = {
   ACTIVE: 'active',
@@ -237,6 +255,7 @@ export interface InviteUserRequest {
   first_name: string;
   last_name: string;
   role: UserRole;
+  organization?: number | null;
 }
 
 // CATALOGUE TYPES
@@ -295,6 +314,8 @@ export interface CourseList {
   featured: boolean;
   status: CourseStatus;
   published_at?: string | null;
+  rejection_reason?: string | null;
+  latest_approval_request?: number | null;
 }
 
 export interface Session {
@@ -309,6 +330,10 @@ export interface Session {
   duration_minutes: number;
   video_url?: string | null;
   content_text?: string;
+  content_source?: ContentSource;
+  external_video_url?: string | null;
+  external_video_provider?: ExternalVideoProvider | null;
+  external_video_embed_url?: string | null;
   is_free_preview: boolean;
   is_mandatory: boolean;
   created_at: string;
@@ -375,6 +400,8 @@ export interface CourseDetail {
   sessions: Session[];
   created_at: string;
   updated_at: string;
+  rejection_reason?: string | null;
+  latest_approval_request?: number | null;
 }
 
 export interface PublicCourseDetail extends Omit<CourseDetail, 'sessions'> {
@@ -433,6 +460,8 @@ export interface SessionCreateRequest {
   video_duration_seconds?: number | null;
   video_url?: string | null;
   content_text?: string;
+  content_source?: ContentSource;
+  external_video_url?: string | null;
   is_free_preview?: boolean;
   is_mandatory?: boolean;
 }
@@ -465,9 +494,6 @@ export interface Enrollment {
 
 export interface EnrollmentCreateRequest {
   course: number;
-  organization?: number | null;
-  paid_amount?: string;
-  currency?: string;
 }
 
 export interface SessionProgress {
@@ -799,4 +825,72 @@ export interface PresignResponse {
   public_url: string;
   method: 'PUT';
   headers: Record<string, string>;
+}
+
+// ORGANIZATION TYPES
+
+export interface Organization {
+  id: number;
+  name: string;
+  slug: string;
+  logo_url?: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+// COURSE APPROVAL TYPES
+
+export const ApprovalRequestType = {
+  CREATE: 'create',
+  EDIT: 'edit',
+  DELETE: 'delete',
+} as const;
+export type ApprovalRequestType = typeof ApprovalRequestType[keyof typeof ApprovalRequestType];
+
+export const ApprovalStatus = {
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
+} as const;
+export type ApprovalStatus = typeof ApprovalStatus[keyof typeof ApprovalStatus];
+
+export interface CourseApprovalRequest {
+  id: number;
+  course: number;
+  course_title: string;
+  course_thumbnail?: string | null;
+  request_type: ApprovalRequestType;
+  requested_by: number;
+  requested_by_name: string;
+  reviewed_by?: number | null;
+  reviewed_by_name?: string;
+  status: ApprovalStatus;
+  reviewer_comments?: string;
+  submitted_at: string;
+  reviewed_at?: string | null;
+  changes_snapshot?: Record<string, unknown>;
+}
+
+export interface CourseApprovalActionRequest {
+  reviewer_comments?: string;
+}
+
+// SUBSCRIPTION STATUS (for /api/v1/payments/subscription/me/)
+
+export interface SubscriptionPlanInfo {
+  id: number;
+  name: string;
+  price: string;
+  currency: string;
+  billing_cycle: BillingCycle;
+}
+
+export interface MySubscriptionStatus {
+  has_active_subscription: boolean;
+  status: string;
+  is_trial: boolean;
+  start_date: string | null;
+  end_date: string | null;
+  days_remaining: number;
+  plan: SubscriptionPlanInfo | null;
 }

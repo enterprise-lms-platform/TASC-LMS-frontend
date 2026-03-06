@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
-import { Box, Toolbar, CssBaseline, Paper, Typography, Chip } from '@mui/material';
+import {
+  Box, Toolbar, CssBaseline, Paper, Typography, Chip,
+  ToggleButtonGroup, ToggleButton, TextField, Alert, Stack,
+} from '@mui/material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   PlayCircle as VideoIcon,
   Description as DocIcon,
   ViewInAr as ScormIcon,
+  CloudUpload as UploadIcon,
+  Link as LinkIcon,
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../components/instructor/Sidebar';
 import UploadTopBar from '../components/instructor/content-upload/UploadTopBar';
@@ -60,6 +65,11 @@ const ContentUploadPage: React.FC = () => {
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [fileEntries, setFileEntries] = useState<UploadFileEntry[]>([]);
+
+  // External video URL state (only relevant when contentType === 'video')
+  const [contentSource, setContentSource] = useState<'upload' | 'external'>('upload');
+  const [externalVideoUrl, setExternalVideoUrl] = useState('');
+  const [externalVideoError, setExternalVideoError] = useState('');
 
   // Content settings (toggles only — title/description already captured in lesson)
   const [requireCompletion, setRequireCompletion] = useState(false);
@@ -120,12 +130,41 @@ const ContentUploadPage: React.FC = () => {
     navigate(-1);
   };
 
+  const validateExternalUrl = (url: string): boolean => {
+    if (!url.startsWith('https://')) {
+      setExternalVideoError('Only HTTPS URLs are allowed.');
+      return false;
+    }
+    const supportedPatterns = [
+      /^https:\/\/(www\.)?youtube\.com\/watch\?v=[\w-]+/,
+      /^https:\/\/youtu\.be\/[\w-]+/,
+      /^https:\/\/vimeo\.com\/\d+/,
+      /^https:\/\/(www\.)?loom\.com\/share\/[\w-]+/,
+    ];
+    if (!supportedPatterns.some((p) => p.test(url))) {
+      setExternalVideoError('Unsupported video provider. Supported: YouTube, Vimeo, Loom.');
+      return false;
+    }
+    setExternalVideoError('');
+    return true;
+  };
+
   const handleComplete = () => {
-    console.log('Completing upload with:', {
-      type: contentType,
-      files: fileEntries.map((e) => e.file.name),
-      settings: { requireCompletion, includeInProgress, downloadable },
-    });
+    if (contentType === 'video' && contentSource === 'external') {
+      if (!validateExternalUrl(externalVideoUrl)) return;
+      console.log('Completing with external video:', {
+        content_source: 'external',
+        external_video_url: externalVideoUrl,
+        settings: { requireCompletion, includeInProgress, downloadable },
+      });
+    } else {
+      console.log('Completing upload with:', {
+        type: contentType,
+        content_source: 'upload',
+        files: fileEntries.map((e) => e.file.name),
+        settings: { requireCompletion, includeInProgress, downloadable },
+      });
+    }
     navigate(-1);
   };
 
@@ -199,13 +238,49 @@ const ContentUploadPage: React.FC = () => {
             <Box>
               {/* Upload Zone */}
               <Paper elevation={0} sx={{ borderRadius: 2, border: 1, borderColor: 'grey.200', overflow: 'hidden' }}>
-                <Box sx={{ p: 2, px: 3, borderBottom: 1, borderColor: 'grey.200', bgcolor: 'grey.50' }}>
+                <Box sx={{ p: 2, px: 3, borderBottom: 1, borderColor: 'grey.200', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box sx={{ fontWeight: 700, fontSize: '1.125rem' }}>
-                    Upload {typeInfo.label}
+                    {contentType === 'video' && contentSource === 'external' ? 'External Video URL' : `Upload ${typeInfo.label}`}
                   </Box>
+                  {contentType === 'video' && (
+                    <ToggleButtonGroup
+                      value={contentSource}
+                      exclusive
+                      onChange={(_, val) => val && setContentSource(val)}
+                      size="small"
+                    >
+                      <ToggleButton value="upload" sx={{ textTransform: 'none', px: 2, fontSize: '0.8rem' }}>
+                        <UploadIcon sx={{ fontSize: 16, mr: 0.5 }} /> Upload
+                      </ToggleButton>
+                      <ToggleButton value="external" sx={{ textTransform: 'none', px: 2, fontSize: '0.8rem' }}>
+                        <LinkIcon sx={{ fontSize: 16, mr: 0.5 }} /> External URL
+                      </ToggleButton>
+                    </ToggleButtonGroup>
+                  )}
                 </Box>
                 <Box sx={{ p: 3 }}>
-                  <UploadZone type={contentType} onFilesSelected={handleFilesSelected} />
+                  {contentType === 'video' && contentSource === 'external' ? (
+                    <Stack spacing={2}>
+                      <TextField
+                        fullWidth
+                        label="Video URL"
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        value={externalVideoUrl}
+                        onChange={(e) => {
+                          setExternalVideoUrl(e.target.value);
+                          if (externalVideoError) setExternalVideoError('');
+                        }}
+                        error={!!externalVideoError}
+                        helperText={externalVideoError}
+                      />
+                      <Alert severity="info" sx={{ '& .MuiAlert-message': { fontSize: '0.85rem' } }}>
+                        Supported providers: <strong>YouTube</strong>, <strong>Vimeo</strong>, <strong>Loom</strong>.
+                        Paste the share URL and the system will generate an embed automatically.
+                      </Alert>
+                    </Stack>
+                  ) : (
+                    <UploadZone type={contentType} onFilesSelected={handleFilesSelected} />
+                  )}
                 </Box>
               </Paper>
 

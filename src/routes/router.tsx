@@ -49,6 +49,7 @@ import CheckoutPaymentPage from '../pages/CheckoutPaymentPage';
 import InvoiceReceiptPage from '../pages/InvoiceReceiptPage';
 import SubscriptionManagementPage from '../pages/SubscriptionManagementPage';
 import PaymentHistoryPage from '../pages/PaymentHistoryPage';
+import LearnerCertificatesPage from '../pages/LearnerCertificatesPage';
 
 // Instructor Pages
 import InstructorDashboard from '../pages/InstructorDashboard';
@@ -77,6 +78,9 @@ import WorkshopDetailsPage from '../pages/WorkshopDetailsPage';
 import ManagerDashboard from '../pages/ManagerDashboard';
 import ManagerCategoriesPage from '../pages/ManagerCategoriesPage';
 import ManagerAnalyticsPage from '../pages/ManagerAnalyticsPage';
+import ManagerInviteUserPage from '../pages/ManagerInviteUserPage';
+import CourseApprovalPage from '../pages/CourseApprovalPage';
+import CourseApprovalDetailPage from '../pages/CourseApprovalDetailPage';
 
 // Finance Pages
 import FinanceDashboard from '../pages/FinanceDashboard';
@@ -250,6 +254,11 @@ export const createAppRouter = (queryClient: QueryClient) => {
       element: <ProtectedRoute><SavedCoursesPage /></ProtectedRoute>,
     },
     {
+      path: '/learner/certificates',
+      element: <ProtectedRoute><LearnerCertificatesPage /></ProtectedRoute>,
+      loader: async () => learnerLoaders.learnerCertificatesLoader(queryClient),
+    },
+    {
       path: '/learner/profile',
       element: <ProtectedRoute><LearnerProfilePage /></ProtectedRoute>,
     },
@@ -416,6 +425,21 @@ export const createAppRouter = (queryClient: QueryClient) => {
       path: '/manager/analytics',
       element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerAnalyticsPage /></ProtectedRoute>,
       loader: async () => managerLoaders.managerAnalyticsLoader(queryClient),
+    },
+    {
+      path: '/manager/approvals',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><CourseApprovalPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.approvalQueueLoader(queryClient),
+    },
+    {
+      path: '/manager/approvals/:requestId',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><CourseApprovalDetailPage /></ProtectedRoute>,
+      loader: async (args) => managerLoaders.approvalDetailLoader(queryClient, args as { params: { requestId?: string } }),
+    },
+    {
+      path: '/manager/invite-user',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerInviteUserPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -621,6 +645,16 @@ export const createAppRouter = (queryClient: QueryClient) => {
       path: '/superadmin/add-user',
       element: <ProtectedRoute requiredRole="tasc_admin"><InviteUserPage /></ProtectedRoute>,
       loader: async () => superadminLoaders.superadminRouteLoader(queryClient),
+    },
+    {
+      path: '/superadmin/approvals',
+      element: <ProtectedRoute requiredRole="tasc_admin"><CourseApprovalPage /></ProtectedRoute>,
+      loader: async () => superadminLoaders.approvalQueueLoader(queryClient),
+    },
+    {
+      path: '/superadmin/approvals/:requestId',
+      element: <ProtectedRoute requiredRole="tasc_admin"><CourseApprovalDetailPage /></ProtectedRoute>,
+      loader: async (args) => superadminLoaders.approvalDetailLoader(queryClient, args as { params: { requestId?: string } }),
     },
   ];
 

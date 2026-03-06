@@ -28,7 +28,7 @@ import type { StatusItem } from '../components/instructor/course-creation/Comple
 import FormActions from '../components/instructor/course-creation/FormActions';
 
 // API hooks
-import { useCreateCourse, usePartialUpdateCourse, useCourse } from '../hooks/useCatalogue';
+import { useCreateCourse, usePartialUpdateCourse, useCourse, useSubmitCourseForApproval } from '../hooks/useCatalogue';
 import { uploadApi } from '../services/upload.services';
 import { getErrorMessage } from '../utils/config';
 import type { CourseCreateRequest } from '../types/types';
@@ -113,6 +113,7 @@ const CourseCreationPage: React.FC = () => {
   // API mutations
   const createCourse = useCreateCourse();
   const updateCourse = usePartialUpdateCourse();
+  const submitForApproval = useSubmitCourseForApproval();
 
   // Load existing course data for edit mode
   const {
@@ -421,11 +422,16 @@ const CourseCreationPage: React.FC = () => {
   };
 
   const handlePublish = async () => {
-    // Save course metadata and navigate to curriculum builder
+    // Save course metadata, then submit for approval
     const result = await saveCourse('draft');
     if (result) {
-      setSnackbar({ open: true, message: 'Course saved! Redirecting to curriculum builder...', severity: 'success' });
-      navigate(`/instructor/course/${result.id}/structure`);
+      try {
+        await submitForApproval.mutateAsync(result.id);
+        setSnackbar({ open: true, message: 'Course submitted for approval! An LMS Manager will review it.', severity: 'success' });
+        setTimeout(() => navigate('/instructor/courses'), 1500);
+      } catch {
+        setSnackbar({ open: true, message: 'Course saved, but failed to submit for approval. You can submit later from My Courses.', severity: 'error' });
+      }
     }
   };
 
@@ -518,6 +524,30 @@ const CourseCreationPage: React.FC = () => {
             <Typography color="error.main" fontWeight={600}>
               Failed to load course. Please try again.
             </Typography>
+          </Box>
+        )}
+
+        {/* Rejection banner — shown when editing a rejected course */}
+        {isEditMode && courseData?.status === 'rejected' && courseData?.rejection_reason && (
+          <Box sx={{
+            mx: { xs: 2, md: 3 }, mt: 2, p: 2, borderRadius: 2,
+            bgcolor: '#fef2f2', border: '1px solid #fecaca',
+            display: 'flex', alignItems: 'flex-start', gap: 1.5,
+          }}>
+            <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, mt: 0.25 }}>
+              <Typography sx={{ color: '#dc2626', fontWeight: 700, fontSize: '0.8rem' }}>!</Typography>
+            </Box>
+            <Box>
+              <Typography variant="body2" fontWeight={700} sx={{ color: '#dc2626' }}>
+                Course Rejected
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#991b1b', mt: 0.5 }}>
+                {courseData.rejection_reason}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#b91c1c', mt: 1, display: 'block' }}>
+                Please address the feedback and submit again for review.
+              </Typography>
+            </Box>
           </Box>
         )}
 

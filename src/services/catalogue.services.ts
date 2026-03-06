@@ -15,6 +15,8 @@ import type {
   Session,
   SessionCreateRequest,
   PaginatedResponse,
+  CourseApprovalRequest,
+  CourseApprovalActionRequest,
 } from '../types/types';
 
 const BASE_PATH = '/api/v1/catalogue';
@@ -119,6 +121,14 @@ export const courseApi = {
   // Delete a course (instructor/admin only)
   delete: (id: number) =>
     apiClient.delete(`${BASE_PATH}/courses/${id}/`),
+
+  // Submit a draft course for approval
+  submitForApproval: (id: number) =>
+    apiClient.post<CourseDetail>(`${BASE_PATH}/courses/${id}/submit-for-approval/`),
+
+  // Request deletion of a published course (goes through approval)
+  requestDeletion: (id: number) =>
+    apiClient.post<CourseDetail>(`${BASE_PATH}/courses/${id}/request-deletion/`),
 };
 
 // SESSIONS
@@ -158,4 +168,41 @@ export const sessionApi = {
   // Delete a session
   delete: (id: number) =>
     apiClient.delete(`${BASE_PATH}/sessions/${id}/`),
+};
+
+// COURSE APPROVAL REQUESTS
+
+export interface ApprovalListParams {
+  status?: string;
+  request_type?: string;
+  course?: number;
+  page?: number;
+  page_size?: number;
+}
+
+export const courseApprovalApi = {
+  // List all approval requests with optional filters
+  getAll: (params?: ApprovalListParams) =>
+    apiClient.get<PaginatedResponse<CourseApprovalRequest>>(
+      `${BASE_PATH}/approval-requests/`,
+      { params },
+    ),
+
+  // Get a single approval request by ID
+  getById: (id: number) =>
+    apiClient.get<CourseApprovalRequest>(`${BASE_PATH}/approval-requests/${id}/`),
+
+  // Approve a course approval request
+  approve: (id: number, data?: CourseApprovalActionRequest) =>
+    apiClient.post<CourseApprovalRequest>(
+      `${BASE_PATH}/approval-requests/${id}/approve/`,
+      data,
+    ),
+
+  // Reject a course approval request (reviewer_comments required)
+  reject: (id: number, data: CourseApprovalActionRequest) =>
+    apiClient.post<CourseApprovalRequest>(
+      `${BASE_PATH}/approval-requests/${id}/reject/`,
+      data,
+    ),
 };

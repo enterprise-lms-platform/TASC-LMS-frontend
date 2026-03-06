@@ -26,6 +26,7 @@ import {
   School as InstructorsIcon,
   CardMembership as CertificationsIcon,
   Quiz as AssessmentsIcon,
+  CheckCircle as ApprovalsIcon,
   CreditCard as PaymentsIcon,
   PieChart as RevenueIcon,
   Receipt as InvoicesIcon,
@@ -80,6 +81,7 @@ const navSections: NavSection[] = [
     title: 'Learning Content',
     items: [
       { text: 'All Courses', icon: <CoursesIcon />, path: '/superadmin/courses' },
+      { text: 'Course Approvals', icon: <ApprovalsIcon />, path: '/superadmin/approvals' },
       { text: 'Instructors', icon: <InstructorsIcon />, path: '/superadmin/instructors' },
       { text: 'Certifications', icon: <CertificationsIcon />, path: '/superadmin/certifications' },
       { text: 'Assessments', icon: <AssessmentsIcon />, path: '/superadmin/assessments' },
@@ -257,7 +259,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
   };
 
   return (
-    <>
+    <Box component="nav" sx={{ width: { lg: DRAWER_WIDTH }, flexShrink: { lg: 0 } }}>
       {/* Mobile Drawer */}
       <Drawer
         variant="temporary"
@@ -283,7 +285,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
       >
         {drawerContent}
       </Drawer>
-    </>
+    </Box>
   );
 };
 

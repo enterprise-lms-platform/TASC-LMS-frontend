@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Stack, useMediaQuery, useTheme, CssBaseline, Toolbar } from '@mui/material';
+import { Box, Stack, useMediaQuery, useTheme, CssBaseline, Toolbar, Alert } from '@mui/material';
 
 // Import Layout components
 import Sidebar, { DRAWER_WIDTH } from '../components/learner/Sidebar';
 import TopBar from '../components/learner/TopBar';
+
+// Import hooks
+import { useMySubscription } from '../hooks/usePayments';
+import { useCreateEnrollment } from '../hooks/useLearning';
 
 // Import Course components
 import CourseDetailHero from '../components/learner/course/CourseDetailHero';
@@ -40,30 +44,53 @@ const LearnerCourseDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { courseId } = useParams<{ courseId: string }>();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [enrollError, setEnrollError] = useState('');
+
+  // Subscription & enrollment
+  const { data: subscriptionStatus, isLoading: subLoading } = useMySubscription();
+  const createEnrollment = useCreateEnrollment();
+  const hasSubscription = subscriptionStatus?.has_active_subscription ?? false;
 
   const handleMobileMenuToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
   const handleEnroll = () => {
-    // Navigate to checkout with course data
-    navigate('/checkout', {
-      state: {
-        subscription: {
-          id: 'biannual-plan',
-          title: 'Biannual Access Pass',
-          description: 'Unlimited access to all courses for 6 months',
-          price: 99.00,
-          billingPeriod: '6 months',
-          features: ['Unlimited Course Access', 'Certificates Included', 'Downloadable Resources']
+    if (hasSubscription && courseId) {
+      // User has an active subscription — create enrollment and go to player
+      setEnrollError('');
+      createEnrollment.mutate(
+        { course: Number(courseId) },
+        {
+          onSuccess: () => {
+            navigate(`/learner/course/${courseId}/player`);
+          },
+          onError: (err: unknown) => {
+            const message =
+              err instanceof Error ? err.message : 'Failed to enroll. Please try again.';
+            setEnrollError(message);
+          },
         },
-      },
-    });
+      );
+    } else {
+      // No active subscription — send to subscription / checkout
+      navigate('/checkout', {
+        state: {
+          subscription: {
+            id: 'biannual-plan',
+            title: 'Biannual Access Pass',
+            description: 'Unlimited access to all courses for 6 months',
+            price: 99.00,
+            billingPeriod: '6 months',
+            features: ['Unlimited Course Access', 'Certificates Included', 'Downloadable Resources'],
+          },
+        },
+      });
+    }
   };
 
   const handlePreview = () => {
     console.log('Starting preview for course:', courseId);
-    // Handle preview logic
   };
 
   return (
@@ -87,11 +114,21 @@ const LearnerCourseDetailPage: React.FC = () => {
       >
         <Toolbar /> {/* Spacer for fixed AppBar */}
 
+        {/* Enrollment error */}
+        {enrollError && (
+          <Alert severity="error" sx={{ mx: { xs: 2, md: 4 }, mt: 2 }} onClose={() => setEnrollError('')}>
+            {enrollError}
+          </Alert>
+        )}
+
         {/* Course Hero */}
         <CourseDetailHero
           course={sampleCourse}
           onEnroll={handleEnroll}
           onPreview={handlePreview}
+          hasSubscription={hasSubscription}
+          isEnrolling={createEnrollment.isPending}
+          isLoadingSubscription={subLoading}
         />
 
         {/* Course Content */}

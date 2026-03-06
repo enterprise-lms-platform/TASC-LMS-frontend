@@ -11,6 +11,7 @@ import type {
   Subscription,
   UserSubscription,
   UserSubscriptionCreateRequest,
+  MySubscriptionStatus,
 } from '../types/types';
 
 const BASE_PATH = '/api/v1/payments';
@@ -135,10 +136,13 @@ export const subscriptionApi = {
   getAll: () =>
     apiClient.get<Subscription[]>(`${BASE_PATH}/subscriptions/`),
 
-
   //  Get subscription plan details by ID
   getById: (id: number) =>
     apiClient.get<Subscription>(`${BASE_PATH}/subscriptions/${id}/`),
+
+  //  Get the current user's subscription status
+  getMyStatus: () =>
+    apiClient.get<MySubscriptionStatus>(`${BASE_PATH}/subscription/me/`),
 };
 
 // USER SUBSCRIPTIONS (Enrollments in subscription plans)

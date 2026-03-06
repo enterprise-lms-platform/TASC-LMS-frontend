@@ -233,6 +233,26 @@ export const learnerProgressLoader = async (queryClient: QueryClient) => {
 };
 
 /**
+ * Certificates Loader
+ * Pre-fetches learner's certificates
+ */
+export const learnerCertificatesLoader = async (queryClient: QueryClient) => {
+  try {
+    const certificates = await queryClient.ensureQueryData({
+      queryKey: queryKeys.certificates.all,
+      queryFn: () => certificateApi.getAll().then((r) => r.data),
+      staleTime: 15 * 60 * 1000,
+    });
+
+    return { certificates };
+  } catch (error: unknown) {
+    const err = error as { status?: number };
+    if (err.status === 401) return redirect('/login');
+    return { certificates: [] };
+  }
+};
+
+/**
  * Checkout Loader
  * Pre-fetches course and payment info for checkout
  */

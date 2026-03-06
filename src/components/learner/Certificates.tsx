@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, Button, Grid, Paper } from '@mui/material';
 import { EmojiEvents, ChevronRight } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 // Certificates data (will come from backend later)
 const certificates = [
@@ -10,6 +11,8 @@ const certificates = [
 ];
 
 const Certificates: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <Paper
       elevation={0}
@@ -26,6 +29,7 @@ const Certificates: React.FC = () => {
         </Typography>
         <Button
           endIcon={<ChevronRight />}
+          onClick={() => navigate('/learner/certificates')}
           sx={{ textTransform: 'none', fontWeight: 500, color: 'primary.dark', fontSize: '0.8rem' }}
         >
           View All

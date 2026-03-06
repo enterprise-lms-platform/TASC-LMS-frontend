@@ -218,6 +218,12 @@ export const useSubscription = (id: number) =>
     enabled: !!id,
   });
 
+export const useMySubscription = () =>
+  useQuery({
+    queryKey: queryKeys.subscriptions.myStatus,
+    queryFn: () => subscriptionApi.getMyStatus().then((r) => r.data),
+  });
+
 // ── User Subscriptions ──
 
 export const useUserSubscriptions = (params?: UserSubscriptionParams) =>

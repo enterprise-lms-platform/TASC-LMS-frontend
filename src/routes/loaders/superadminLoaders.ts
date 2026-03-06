@@ -6,7 +6,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { redirect } from 'react-router-dom';
 import { queryKeys } from '../../hooks/queryKeys';
-import { courseApi } from '../../services/catalogue.services';
+import { courseApi, courseApprovalApi } from '../../services/catalogue.services';
 import { auditLogApi } from '../../services/superadmin.services';
 
 /**
@@ -84,6 +84,62 @@ export const allCoursesLoader = async (
     const err = error as { status?: number };
     if (err.status === 401) return redirect('/login');
     return { courses: { results: [], count: 0 } };
+  }
+};
+
+/**
+ * Superadmin Approval Queue Loader
+ * Pre-fetches pending approval requests for course approvals page
+ */
+export const approvalQueueLoader = async (queryClient: QueryClient) => {
+  try {
+    const approvalRequests = await queryClient.ensureQueryData({
+      queryKey: queryKeys.approvalRequests.all({ status: 'pending' }),
+      queryFn: () => courseApprovalApi.getAll({ status: 'pending' }).then((r) => r.data),
+      staleTime: 5 * 60 * 1000,
+    });
+
+    return { approvalRequests };
+  } catch (error: unknown) {
+    const err = error as { status?: number };
+    if (err.status === 401) return redirect('/login');
+    if (err.status === 403) return redirect('/learner');
+    return { approvalRequests: { results: [], count: 0 } };
+  }
+};
+
+/**
+ * Superadmin Approval Detail Loader
+ * Pre-fetches a single approval request and its associated course
+ */
+export const approvalDetailLoader = async (
+  queryClient: QueryClient,
+  args: { params: { requestId?: string } }
+) => {
+  const requestId = Number(args.params.requestId);
+  if (!requestId) return redirect('/superadmin');
+
+  try {
+    const approvalRequest = await queryClient.ensureQueryData({
+      queryKey: queryKeys.approvalRequests.detail(requestId),
+      queryFn: () => courseApprovalApi.getById(requestId).then((r) => r.data),
+      staleTime: 5 * 60 * 1000,
+    });
+
+    if (approvalRequest.course) {
+      await queryClient.ensureQueryData({
+        queryKey: queryKeys.courses.detail(approvalRequest.course),
+        queryFn: () => courseApi.getById(approvalRequest.course).then((r) => r.data),
+        staleTime: 5 * 60 * 1000,
+      });
+    }
+
+    return { approvalRequest };
+  } catch (error: unknown) {
+    const err = error as { status?: number };
+    if (err.status === 401) return redirect('/login');
+    if (err.status === 403) return redirect('/learner');
+    return redirect('/superadmin');
   }
 };
 

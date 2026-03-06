@@ -1,9 +1,10 @@
 // queryKeys.ts
 
-import type { CategoryListParams, CourseListParams, SessionListParams } from '../services/catalogue.services';
+import type { CategoryListParams, CourseListParams, SessionListParams, ApprovalListParams } from '../services/catalogue.services';
 import type { SessionProgressParams, DiscussionParams, DiscussionReplyParams } from '../services/learning.services';
 import type { InvoiceParams, TransactionParams, UserSubscriptionParams } from '../services/payments.services';
 import type { PublicCourseParams } from '../services/public.services';
+import type { OrganizationListParams } from '../services/organization.services';
 import type { AuditLogFilters } from '../types/types';
 
 export const queryKeys = {
@@ -71,6 +72,7 @@ export const queryKeys = {
   subscriptions: {
     all: ['subscriptions'] as const,
     detail: (id: number) => ['subscriptions', 'detail', id] as const,
+    myStatus: ['subscriptions', 'my-status'] as const,
   },
   userSubscriptions: {
     all: (params?: UserSubscriptionParams) => ['user-subscriptions', params] as const,
@@ -97,5 +99,17 @@ export const queryKeys = {
   // Superadmin
   auditLogs: {
     all: (filters?: AuditLogFilters) => ['audit-logs', filters] as const,
+  },
+
+  // Organizations
+  organizations: {
+    all: (params?: OrganizationListParams) => ['organizations', params] as const,
+    detail: (id: number) => ['organizations', 'detail', id] as const,
+  },
+
+  // Course Approval Requests
+  approvalRequests: {
+    all: (params?: ApprovalListParams) => ['approval-requests', params] as const,
+    detail: (id: number) => ['approval-requests', 'detail', id] as const,
   },
 };

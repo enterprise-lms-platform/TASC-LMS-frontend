@@ -20,7 +20,14 @@ import {
 import '../styles/LearnerDashboard.css';
 
 /* ── Types ── */
-interface Lesson { id: string; title: string; duration: string; type: 'video' | 'article' | 'quiz'; }
+interface Lesson {
+  id: string;
+  title: string;
+  duration: string;
+  type: 'video' | 'article' | 'quiz';
+  contentSource?: 'inline' | 'upload' | 'external';
+  externalVideoEmbedUrl?: string;
+}
 interface Module { id: string; title: string; lessons: Lesson[]; }
 interface Note { id: number; text: string; timestamp: string; lessonTitle: string; }
 interface Question { id: number; author: string; text: string; votes: number; replies: number; time: string; }
@@ -288,83 +295,108 @@ const CoursePlayerPage: React.FC = () => {
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', minWidth: 0, height: 'calc(100vh - 56px)' }}>
 
           {/* Video Player */}
-          <Box
-            onClick={togglePlayPause}
-            sx={{
-              position: 'relative',
-              width: '100%',
-              paddingTop: '56.25%',
-              background: '#000',
-              cursor: 'pointer',
-              flexShrink: 0,
-              overflow: 'hidden',
-            }}
-          >
-            {/* Actual video element */}
-            <video
-              ref={videoRef}
-              src="/video/Course_player.m4v"
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              onEnded={() => setIsPlaying(false)}
-              style={{
-                position: 'absolute',
-                top: 0, left: 0,
-                width: '100%', height: '100%',
-                objectFit: 'contain',
+          {activeLesson.contentSource === 'external' && activeLesson.externalVideoEmbedUrl ? (
+            /* External Video (YouTube/Vimeo/Loom) via iframe */
+            <Box
+              sx={{
+                position: 'relative',
+                width: '100%',
+                paddingTop: '56.25%',
                 background: '#000',
+                flexShrink: 0,
+                overflow: 'hidden',
               }}
-            />
+            >
+              <iframe
+                src={activeLesson.externalVideoEmbedUrl}
+                title={activeLesson.title}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </Box>
+          ) : (
+            /* Uploaded / Inline Video */
+            <Box
+              onClick={togglePlayPause}
+              sx={{
+                position: 'relative',
+                width: '100%',
+                paddingTop: '56.25%',
+                background: '#000',
+                cursor: 'pointer',
+                flexShrink: 0,
+                overflow: 'hidden',
+              }}
+            >
+              <video
+                ref={videoRef}
+                src="/video/Course_player.m4v"
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onEnded={() => setIsPlaying(false)}
+                style={{
+                  position: 'absolute',
+                  top: 0, left: 0,
+                  width: '100%', height: '100%',
+                  objectFit: 'contain',
+                  background: '#000',
+                }}
+              />
 
-            {/* Play Button Overlay — hidden when playing */}
-            {!isPlaying && (
-              <>
-                {/* Decorative grid */}
-                <Box sx={{
-                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                  backgroundImage: 'radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)',
-                  backgroundSize: '24px 24px',
-                  pointerEvents: 'none',
-                }} />
-
-                {/* Play Button */}
-                <Box
-                  className="cp-play-btn"
-                  sx={{
-                    position: 'absolute',
-                    top: '50%', left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: 80, height: 80,
-                    borderRadius: '50%',
-                    bgcolor: 'rgba(255,164,36,0.9)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 4px 30px rgba(255,164,36,0.4)',
-                    transition: 'transform 0.3s, box-shadow 0.3s',
-                    '&:hover': { transform: 'translate(-50%, -50%) scale(1.12)', boxShadow: '0 6px 40px rgba(255,164,36,0.6)' },
+              {/* Play Button Overlay — hidden when playing */}
+              {!isPlaying && (
+                <>
+                  <Box sx={{
+                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundImage: 'radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)',
+                    backgroundSize: '24px 24px',
                     pointerEvents: 'none',
-                  }}
-                >
-                  <PlayIcon sx={{ fontSize: 44, color: '#fff', ml: 0.5 }} />
-                </Box>
+                  }} />
 
-                {/* Bottom gradient with lesson info */}
-                <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, p: 2.5, background: 'linear-gradient(transparent, rgba(0,0,0,0.75))', pointerEvents: 'none' }}>
-                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', letterSpacing: 1, textTransform: 'uppercase', fontSize: '0.65rem' }}>
-                    Module {modules.findIndex(m => m.lessons.some(l => l.id === activeLessonId)) + 1}
-                  </Typography>
-                  <Typography variant="h6" sx={{ color: '#fff', fontWeight: 600, mt: 0.25 }}>{activeLesson.title}</Typography>
-                </Box>
+                  <Box
+                    className="cp-play-btn"
+                    sx={{
+                      position: 'absolute',
+                      top: '50%', left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: 80, height: 80,
+                      borderRadius: '50%',
+                      bgcolor: 'rgba(255,164,36,0.9)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 4px 30px rgba(255,164,36,0.4)',
+                      transition: 'transform 0.3s, box-shadow 0.3s',
+                      '&:hover': { transform: 'translate(-50%, -50%) scale(1.12)', boxShadow: '0 6px 40px rgba(255,164,36,0.6)' },
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    <PlayIcon sx={{ fontSize: 44, color: '#fff', ml: 0.5 }} />
+                  </Box>
 
-                {/* Duration chip */}
-                <Chip
-                  icon={<TimeIcon sx={{ fontSize: 14, color: '#fff !important' }} />}
-                  label={activeLesson.duration}
-                  size="small"
-                  sx={{ position: 'absolute', top: 16, right: 16, bgcolor: 'rgba(0,0,0,0.55)', color: '#fff', backdropFilter: 'blur(6px)', fontSize: '0.75rem', pointerEvents: 'none' }}
-                />
-              </>
-            )}
-          </Box>
+                  <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, p: 2.5, background: 'linear-gradient(transparent, rgba(0,0,0,0.75))', pointerEvents: 'none' }}>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', letterSpacing: 1, textTransform: 'uppercase', fontSize: '0.65rem' }}>
+                      Module {modules.findIndex(m => m.lessons.some(l => l.id === activeLessonId)) + 1}
+                    </Typography>
+                    <Typography variant="h6" sx={{ color: '#fff', fontWeight: 600, mt: 0.25 }}>{activeLesson.title}</Typography>
+                  </Box>
+
+                  <Chip
+                    icon={<TimeIcon sx={{ fontSize: 14, color: '#fff !important' }} />}
+                    label={activeLesson.duration}
+                    size="small"
+                    sx={{ position: 'absolute', top: 16, right: 16, bgcolor: 'rgba(0,0,0,0.55)', color: '#fff', backdropFilter: 'blur(6px)', fontSize: '0.75rem', pointerEvents: 'none' }}
+                  />
+                </>
+              )}
+            </Box>
+          )}
 
           {/* Lesson Navigation */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: { xs: 2, md: 3 }, py: 1.5, bgcolor: '#fff', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>

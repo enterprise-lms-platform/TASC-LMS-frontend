@@ -74,7 +74,7 @@ const navSections: NavSection[] = [
     title: 'User Management',
     items: [
       { text: 'All Users', icon: <UsersIcon />, path: '/manager/users' },
-      { text: 'Add / Invite Users', icon: <PersonAddIcon />, path: '/manager/invite' },
+      { text: 'Add / Invite Users', icon: <PersonAddIcon />, path: '/manager/invite-user' },
       { text: 'Role Assignment', icon: <RoleIcon />, path: '/manager/roles' },
       { text: 'Bulk Import', icon: <ImportIcon />, path: '/manager/import' },
       { text: 'User Activity', icon: <ActivityIcon />, path: '/manager/activity' },
@@ -87,7 +87,7 @@ const navSections: NavSection[] = [
       { text: 'Create Course', icon: <CreateIcon />, path: '/manager/create-course' },
       { text: 'Categories', icon: <CategoriesIcon />, path: '/manager/categories' },
       { text: 'Instructors', icon: <InstructorIcon />, path: '/manager/instructors' },
-      { text: 'Pending Approval', icon: <PendingIcon />, path: '/manager/pending', badge: 5 },
+      { text: 'Course Approvals', icon: <PendingIcon />, path: '/manager/approvals' },
     ],
   },
   {

@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import SuperadminLayout from '../components/superadmin/SuperadminLayout';
 import { getErrorMessage, adminApi } from '../services/main.api';
+import { useOrganizations } from '../hooks/useOrganizations';
 import type { UserRole } from '../types/types';
 
 // Allowed roles for invitation (excluding learner and tasc_admin)
@@ -21,6 +22,9 @@ const INVITE_ROLES: { value: UserRole; label: string }[] = [
   { value: 'instructor', label: 'Instructor' },
   { value: 'finance', label: 'Finance' },
 ];
+
+// Roles that require an organization assignment
+const ROLES_REQUIRING_ORG: UserRole[] = ['lms_manager', 'instructor'];
 
 const InviteUserPage: React.FC = () => {
   const navigate = useNavigate();
@@ -40,19 +44,27 @@ const InviteUserPage: React.FC = () => {
     first_name: '',
     last_name: '',
     role: 'lms_manager' as UserRole,
+    organization: null as number | null,
   });
 
   const [errors, setErrors] = useState({
     email: '',
     first_name: '',
     last_name: '',
+    organization: '',
   });
+
+  // Fetch organizations for the dropdown
+  const { data: organizations = [], isLoading: orgsLoading } = useOrganizations({ is_active: true });
+
+  const requiresOrg = ROLES_REQUIRING_ORG.includes(formData.role);
 
   const validateForm = (): boolean => {
     const newErrors = {
       email: '',
       first_name: '',
       last_name: '',
+      organization: '',
     };
 
     if (!formData.email) {
@@ -69,6 +81,10 @@ const InviteUserPage: React.FC = () => {
       newErrors.last_name = 'Last name is required';
     }
 
+    if (requiresOrg && !formData.organization) {
+      newErrors.organization = 'Organisation is required for this role';
+    }
+
     setErrors(newErrors);
     return !Object.values(newErrors).some((error) => error !== '');
   };
@@ -82,7 +98,14 @@ const InviteUserPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const response = await adminApi.inviteUser(formData);
+      const payload = {
+        email: formData.email,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        role: formData.role,
+        ...(requiresOrg && formData.organization ? { organization: formData.organization } : {}),
+      };
+      const response = await adminApi.inviteUser(payload);
       setSnackbar({
         open: true,
         message: `Invitation sent successfully to ${response.data.email}`,
@@ -93,6 +116,7 @@ const InviteUserPage: React.FC = () => {
         first_name: '',
         last_name: '',
         role: 'lms_manager',
+        organization: null,
       });
     } catch (error) {
       setSnackbar({
@@ -102,6 +126,18 @@ const InviteUserPage: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRoleChange = (role: UserRole) => {
+    setFormData({
+      ...formData,
+      role,
+      // Clear org when switching to a role that doesn't need it
+      organization: ROLES_REQUIRING_ORG.includes(role) ? formData.organization : null,
+    });
+    if (!ROLES_REQUIRING_ORG.includes(role)) {
+      setErrors({ ...errors, organization: '' });
     }
   };
 
@@ -165,9 +201,9 @@ const InviteUserPage: React.FC = () => {
             select
             label="Role"
             value={formData.role}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
+            onChange={(e) => handleRoleChange(e.target.value as UserRole)}
             disabled={isLoading}
-            sx={{ mb: 4 }}
+            sx={{ mb: 3 }}
           >
             {INVITE_ROLES.map((option) => (
               <MenuItem key={option.value} value={option.value}>
@@ -175,6 +211,40 @@ const InviteUserPage: React.FC = () => {
               </MenuItem>
             ))}
           </TextField>
+
+          {requiresOrg && (
+            <TextField
+              fullWidth
+              select
+              label="Organisation"
+              value={formData.organization ?? ''}
+              onChange={(e) =>
+                setFormData({ ...formData, organization: e.target.value ? Number(e.target.value) : null })
+              }
+              error={!!errors.organization}
+              helperText={errors.organization || (
+                formData.role === 'lms_manager'
+                  ? 'The manager will be scoped to this organisation only'
+                  : 'The instructor will be assigned to this organisation'
+              )}
+              disabled={isLoading || orgsLoading}
+              sx={{ mb: 4 }}
+            >
+              {orgsLoading ? (
+                <MenuItem disabled>Loading organisations...</MenuItem>
+              ) : organizations.length === 0 ? (
+                <MenuItem disabled>No organisations available</MenuItem>
+              ) : (
+                organizations.map((org) => (
+                  <MenuItem key={org.id} value={org.id}>
+                    {org.name}
+                  </MenuItem>
+                ))
+              )}
+            </TextField>
+          )}
+
+          {!requiresOrg && <Box sx={{ mb: 1 }} />}
 
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button

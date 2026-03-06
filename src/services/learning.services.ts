@@ -41,25 +41,9 @@ export const enrollmentApi = {
     apiClient.get<Enrollment>(`${BASE_PATH}/enrollments/${id}/`),
 
 
-  //  Enroll in a course
+  //  Enroll in a course (idempotent: 201 first time, 200 if already enrolled)
   create: (data: EnrollmentCreateRequest) =>
     apiClient.post<Enrollment>(`${BASE_PATH}/enrollments/`, data),
-
-
-  //  Update enrollment
-  update: (id: number, data: Partial<Enrollment>) =>
-    apiClient.put<Enrollment>(`${BASE_PATH}/enrollments/${id}/`, data),
-
-
-  //  Partially update enrollment
-  partialUpdate: (id: number, data: Partial<SessionProgressUpdateRequest>) =>
-    apiClient.patch<Enrollment>(`${BASE_PATH}/enrollments/${id}/`, data),
-
-
-  //  Delete enrollment (unenroll)
-  delete: (id: number) =>
-    apiClient.delete(`${BASE_PATH}/enrollments/${id}/`),
-
 
   //  Generate certificate for completed enrollment
   generateCertificate: (id: number) =>

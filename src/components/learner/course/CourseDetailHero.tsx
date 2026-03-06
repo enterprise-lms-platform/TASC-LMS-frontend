@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Chip, Stack, Button } from '@mui/material';
+import { Box, Typography, Chip, Stack, Button, CircularProgress } from '@mui/material';
 import {
   Star as StarIcon,
   People as PeopleIcon,
@@ -9,6 +9,7 @@ import {
   ShoppingCart as CartIcon,
   PlayCircle as PlayIcon,
   CheckCircle as CheckIcon,
+  RocketLaunch as StartIcon,
 } from '@mui/icons-material';
 
 export interface CourseHeroData {
@@ -31,12 +32,18 @@ interface CourseDetailHeroProps {
   course: CourseHeroData;
   onEnroll?: () => void;
   onPreview?: () => void;
+  hasSubscription?: boolean;
+  isEnrolling?: boolean;
+  isLoadingSubscription?: boolean;
 }
 
 const CourseDetailHero: React.FC<CourseDetailHeroProps> = ({
   course,
   onEnroll,
   onPreview,
+  hasSubscription = false,
+  isEnrolling = false,
+  isLoadingSubscription = false,
 }) => {
   return (
     <Box
@@ -199,61 +206,129 @@ const CourseDetailHero: React.FC<CourseDetailHeroProps> = ({
               p: 4,
             }}
           >
-            {/* Subscription Info */}
-            <Box sx={{ mb: 3 }}>
-              <Chip 
-                label="Biannual Plan" 
-                sx={{ 
-                  bgcolor: 'rgba(255, 164, 36, 0.15)', 
-                  color: '#ffa424', 
-                  fontWeight: 700,
-                  mb: 1.5,
-                  border: '1px solid rgba(255, 164, 36, 0.3)'
-                }} 
-              />
-              <Typography variant="h4" fontWeight={700} sx={{ mb: 0.5 }}>
-                $99.00 <Typography component="span" variant="h6" sx={{ opacity: 0.8, fontWeight: 500 }}>/ 6 months</Typography>
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                Unlimited access to this and all other courses
-              </Typography>
-            </Box>
+            {isLoadingSubscription ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress sx={{ color: '#ffa424' }} />
+              </Box>
+            ) : hasSubscription ? (
+              /* ── Active subscription: show Start Course ── */
+              <>
+                <Box sx={{ mb: 3 }}>
+                  <Chip
+                    label="Active Subscription"
+                    sx={{
+                      bgcolor: 'rgba(16, 185, 129, 0.2)',
+                      color: '#10b981',
+                      fontWeight: 700,
+                      mb: 1.5,
+                      border: '1px solid rgba(16, 185, 129, 0.4)',
+                    }}
+                  />
+                  <Typography variant="h5" fontWeight={700} sx={{ mb: 0.5 }}>
+                    You have full access
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                    Your subscription includes unlimited access to this course
+                  </Typography>
+                </Box>
 
-            {/* Buttons */}
-            <Stack spacing={1.5} sx={{ mb: 3 }}>
-              <Button
-                variant="contained"
-                size="large"
-                fullWidth
-                startIcon={<CartIcon />}
-                onClick={onEnroll}
-                sx={{
-                  bgcolor: 'white',
-                  color: '#ffa424',
-                  fontWeight: 600,
-                  py: 1.5,
-                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' },
-                }}
-              >
-                Get Full Access
-              </Button>
-              <Button
-                variant="outlined"
-                size="large"
-                fullWidth
-                startIcon={<PlayIcon />}
-                onClick={onPreview}
-                sx={{
-                  borderColor: 'white',
-                  color: 'white',
-                  fontWeight: 600,
-                  py: 1.5,
-                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)', borderColor: 'white' },
-                }}
-              >
-                Start Free Preview
-              </Button>
-            </Stack>
+                <Stack spacing={1.5} sx={{ mb: 3 }}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    startIcon={isEnrolling ? <CircularProgress size={20} sx={{ color: '#ffa424' }} /> : <StartIcon />}
+                    onClick={onEnroll}
+                    disabled={isEnrolling}
+                    sx={{
+                      bgcolor: 'white',
+                      color: '#ffa424',
+                      fontWeight: 600,
+                      py: 1.5,
+                      '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' },
+                    }}
+                  >
+                    {isEnrolling ? 'Starting...' : 'Start Course'}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    fullWidth
+                    startIcon={<PlayIcon />}
+                    onClick={onPreview}
+                    sx={{
+                      borderColor: 'white',
+                      color: 'white',
+                      fontWeight: 600,
+                      py: 1.5,
+                      '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)', borderColor: 'white' },
+                    }}
+                  >
+                    Preview Course
+                  </Button>
+                </Stack>
+              </>
+            ) : (
+              /* ── No subscription: show Subscribe ── */
+              <>
+                <Box sx={{ mb: 3 }}>
+                  <Chip
+                    label="Biannual Plan"
+                    sx={{
+                      bgcolor: 'rgba(255, 164, 36, 0.15)',
+                      color: '#ffa424',
+                      fontWeight: 700,
+                      mb: 1.5,
+                      border: '1px solid rgba(255, 164, 36, 0.3)',
+                    }}
+                  />
+                  <Typography variant="h4" fontWeight={700} sx={{ mb: 0.5 }}>
+                    $99.00{' '}
+                    <Typography component="span" variant="h6" sx={{ opacity: 0.8, fontWeight: 500 }}>
+                      / 6 months
+                    </Typography>
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                    Unlimited access to this and all other courses
+                  </Typography>
+                </Box>
+
+                <Stack spacing={1.5} sx={{ mb: 3 }}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    startIcon={<CartIcon />}
+                    onClick={onEnroll}
+                    sx={{
+                      bgcolor: 'white',
+                      color: '#ffa424',
+                      fontWeight: 600,
+                      py: 1.5,
+                      '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' },
+                    }}
+                  >
+                    Get Full Access
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    fullWidth
+                    startIcon={<PlayIcon />}
+                    onClick={onPreview}
+                    sx={{
+                      borderColor: 'white',
+                      color: 'white',
+                      fontWeight: 600,
+                      py: 1.5,
+                      '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)', borderColor: 'white' },
+                    }}
+                  >
+                    Start Free Preview
+                  </Button>
+                </Stack>
+              </>
+            )}
 
             {/* Features */}
             <Stack spacing={1.5}>

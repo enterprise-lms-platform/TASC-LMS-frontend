@@ -15,7 +15,6 @@ import type {
   SessionProgressUpdateRequest,
   DiscussionCreateRequest,
   DiscussionReplyCreateRequest,
-  Enrollment,
   Discussion,
   DiscussionReply,
 } from '../types/types';
@@ -41,65 +40,6 @@ export const useCreateEnrollment = () => {
     mutationFn: (data: EnrollmentCreateRequest) =>
       enrollmentApi.create(data).then((r) => r.data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['enrollments'] });
-    },
-  });
-};
-
-export const useUpdateEnrollment = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<Enrollment> }) =>
-      enrollmentApi.update(id, data).then((r) => r.data),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ['enrollments'] });
-      qc.invalidateQueries({
-        queryKey: queryKeys.enrollments.detail(variables.id),
-      });
-    },
-  });
-};
-
-export const usePartialUpdateEnrollment = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: number;
-      data: Partial<SessionProgressUpdateRequest>;
-    }) => enrollmentApi.partialUpdate(id, data).then((r) => r.data),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ['enrollments'] });
-      qc.invalidateQueries({
-        queryKey: queryKeys.enrollments.detail(variables.id),
-      });
-    },
-  });
-};
-
-export const useDeleteEnrollment = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: number) => enrollmentApi.delete(id),
-    onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: ['enrollments'] });
-      const previous = qc.getQueryData<Enrollment[]>(queryKeys.enrollments.all);
-      if (previous) {
-        qc.setQueryData(
-          queryKeys.enrollments.all,
-          previous.filter((e) => e.id !== id),
-        );
-      }
-      return { previous };
-    },
-    onError: (_err, _id, context) => {
-      if (context?.previous) {
-        qc.setQueryData(queryKeys.enrollments.all, context.previous);
-      }
-    },
-    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['enrollments'] });
     },
   });

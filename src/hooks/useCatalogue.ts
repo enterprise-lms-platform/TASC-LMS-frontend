@@ -6,8 +6,10 @@ import {
   tagApi,
   courseApi,
   sessionApi,
+  courseApprovalApi,
   type CourseListParams,
   type SessionListParams,
+  type ApprovalListParams,
 } from '../services/catalogue.services';
 import { queryKeys } from './queryKeys';
 import type {
@@ -17,6 +19,7 @@ import type {
   CourseList,
   Session,
   PaginatedResponse,
+  CourseApprovalActionRequest,
 } from '../types/types';
 
 // ── Categories ──
@@ -251,6 +254,69 @@ export const useDeleteSession = () => {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['sessions'] });
+    },
+  });
+};
+
+// ── Course Approval Requests ──
+
+export const useApprovalRequests = (params?: ApprovalListParams) =>
+  useQuery({
+    queryKey: queryKeys.approvalRequests.all(params),
+    queryFn: () => courseApprovalApi.getAll(params).then((r) => r.data),
+  });
+
+export const useApprovalRequest = (id: number) =>
+  useQuery({
+    queryKey: queryKeys.approvalRequests.detail(id),
+    queryFn: () => courseApprovalApi.getById(id).then((r) => r.data),
+    enabled: !!id,
+  });
+
+export const useSubmitCourseForApproval = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (courseId: number) =>
+      courseApi.submitForApproval(courseId).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['courses'] });
+      qc.invalidateQueries({ queryKey: ['approval-requests'] });
+    },
+  });
+};
+
+export const useRequestCourseDeletion = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (courseId: number) =>
+      courseApi.requestDeletion(courseId).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['courses'] });
+      qc.invalidateQueries({ queryKey: ['approval-requests'] });
+    },
+  });
+};
+
+export const useApproveCourse = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data?: CourseApprovalActionRequest }) =>
+      courseApprovalApi.approve(id, data).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['courses'] });
+      qc.invalidateQueries({ queryKey: ['approval-requests'] });
+    },
+  });
+};
+
+export const useRejectCourse = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: CourseApprovalActionRequest }) =>
+      courseApprovalApi.reject(id, data).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['courses'] });
+      qc.invalidateQueries({ queryKey: ['approval-requests'] });
     },
   });
 };
