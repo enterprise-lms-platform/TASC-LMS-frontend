@@ -11,7 +11,7 @@ interface ProtectedRouteProps {
 }
 
 // TODO: Remove this bypass before deploying to production!
-const DEV_BYPASS_AUTH = true;
+const DEV_BYPASS_AUTH = false;
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
