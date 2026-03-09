@@ -58,10 +58,9 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({ certificate }) 
         <Typography
           sx={{
             position: 'absolute',
-            top: '33%',
-            left: '50%',
-            transform: 'translateX(-35%)',
-            width: '50%',
+            top: '37%',
+            left: '35%',
+            width: '55%',
             textAlign: 'center',
             fontFamily: '"Georgia", "Times New Roman", serif',
             fontWeight: 700,
@@ -78,8 +77,7 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({ certificate }) 
           sx={{
             position: 'absolute',
             top: '52%',
-            left: '50%',
-            transform: 'translateX(-30%)',
+            left: '35%',
             width: '55%',
             textAlign: 'center',
             fontWeight: 600,
@@ -95,12 +93,12 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({ certificate }) 
         <Typography
           sx={{
             position: 'absolute',
-            bottom: '5%',
-            left: '13%',
-            width: '20%',
+            bottom: '7%',
+            left: '30%',
+            width: '18%',
             textAlign: 'center',
             fontWeight: 600,
-            fontSize: 'clamp(0.5rem, 1.2vw, 0.8rem)',
+            fontSize: 'clamp(0.45rem, 1.1vw, 0.75rem)',
             color: '#333',
           }}
         >
@@ -111,12 +109,12 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({ certificate }) 
         <Typography
           sx={{
             position: 'absolute',
-            bottom: '5%',
-            left: '40%',
-            width: '22%',
+            bottom: '7%',
+            left: '51%',
+            width: '18%',
             textAlign: 'center',
             fontWeight: 600,
-            fontSize: 'clamp(0.45rem, 1.1vw, 0.75rem)',
+            fontSize: 'clamp(0.4rem, 1vw, 0.7rem)',
             color: '#333',
             fontFamily: 'monospace',
           }}
@@ -128,12 +126,12 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({ certificate }) 
         <Typography
           sx={{
             position: 'absolute',
-            bottom: '5%',
-            right: '5%',
-            width: '22%',
+            bottom: '7%',
+            right: '2%',
+            width: '24%',
             textAlign: 'center',
             fontWeight: 600,
-            fontSize: 'clamp(0.5rem, 1.2vw, 0.75rem)',
+            fontSize: 'clamp(0.4rem, 1vw, 0.7rem)',
             color: '#333',
           }}
         >

@@ -4,21 +4,48 @@
  * Follows the same pattern as useCreateCourse / useUpdateCourse in useCatalogue.ts.
  */
 
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { uploadApi } from '../services/upload.services';
+import { sessionApi } from '../services/catalogue.services';
 import type { UploadPrefix } from '../types/types';
+import type { SessionAssetUploadResult } from '../services/upload.services';
 
 /**
- * Mutation hook for uploading a media file via presigned URL.
- *
- * @example
- * ```tsx
- * const upload = useUploadMedia();
- * const url = await upload.mutateAsync({ file, prefix: 'course-thumbnails' });
- * ```
+ * Mutation hook for uploading a public media file (thumbnails, banners).
  */
 export const useUploadMedia = () =>
   useMutation({
     mutationFn: ({ file, prefix }: { file: File; prefix: UploadPrefix }) =>
       uploadApi.uploadToSpaces(file, prefix),
+  });
+
+/**
+ * Mutation hook for uploading a session asset (video, PDF, SCORM zip).
+ * Supports progress tracking via onProgress callback.
+ */
+export const useUploadSessionAsset = () =>
+  useMutation<
+    SessionAssetUploadResult,
+    Error,
+    {
+      file: File;
+      courseId: number;
+      sessionId: number;
+      onProgress?: (percent: number) => void;
+    }
+  >({
+    mutationFn: ({ file, courseId, sessionId, onProgress }) =>
+      uploadApi.uploadSessionAsset(file, courseId, sessionId, onProgress),
+  });
+
+/**
+ * Query hook for fetching a short-lived presigned GET URL for a session asset.
+ * Enabled only when a sessionId is provided.
+ */
+export const useSessionAssetUrl = (sessionId: number | undefined) =>
+  useQuery({
+    queryKey: ['sessions', 'asset-url', sessionId],
+    queryFn: () => sessionApi.getAssetUrl(sessionId!).then((r) => r.data),
+    enabled: !!sessionId,
+    staleTime: 4 * 60 * 1000, // Refetch before the 5-min expiry
   });

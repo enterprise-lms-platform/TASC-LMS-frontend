@@ -1,9 +1,22 @@
 @media print {
-  /* Hide everything except the certificate */
+  /* Force landscape */
+  @page {
+    size: landscape;
+    margin: 0;
+  }
+
+  /* Hide everything */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
   body * {
     visibility: hidden !important;
   }
 
+  /* Show only the certificate */
   #certificate-print-area,
   #certificate-print-area * {
     visibility: visible !important;
@@ -20,18 +33,24 @@
     padding: 0 !important;
     box-shadow: none !important;
     border-radius: 0 !important;
+    overflow: hidden !important;
+    z-index: 99999 !important;
+    aspect-ratio: unset !important;
   }
 
-  /* Landscape orientation */
-  @page {
-    size: A4 landscape;
-    margin: 0;
+  #certificate-print-area img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: fill !important;
   }
 
   /* Hide UI chrome */
   .MuiDrawer-root,
-  .MuiAppBar-root,
-  .MuiDialogTitle-root {
+  .MuiAppBar-root {
+    display: none !important;
+  }
+
+  .MuiBackdrop-root {
     display: none !important;
   }
 }

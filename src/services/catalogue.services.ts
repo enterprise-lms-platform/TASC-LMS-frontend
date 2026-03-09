@@ -17,6 +17,7 @@ import type {
   PaginatedResponse,
   CourseApprovalRequest,
   CourseApprovalActionRequest,
+  AssetUrlResponse,
 } from '../types/types';
 
 const BASE_PATH = '/api/v1/catalogue';
@@ -168,6 +169,10 @@ export const sessionApi = {
   // Delete a session
   delete: (id: number) =>
     apiClient.delete(`${BASE_PATH}/sessions/${id}/`),
+
+  // Get a short-lived presigned GET URL for a session's uploaded asset
+  getAssetUrl: (id: number) =>
+    apiClient.get<AssetUrlResponse>(`${BASE_PATH}/sessions/${id}/asset-url/`),
 };
 
 // COURSE APPROVAL REQUESTS

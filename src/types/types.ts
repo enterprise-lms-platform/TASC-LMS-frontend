@@ -334,6 +334,11 @@ export interface Session {
   external_video_url?: string | null;
   external_video_provider?: ExternalVideoProvider | null;
   external_video_embed_url?: string | null;
+  asset_object_key?: string | null;
+  asset_bucket?: string | null;
+  asset_mime_type?: string | null;
+  asset_size_bytes?: number | null;
+  asset_original_filename?: string | null;
   is_free_preview: boolean;
   is_mandatory: boolean;
   created_at: string;
@@ -462,6 +467,11 @@ export interface SessionCreateRequest {
   content_text?: string;
   content_source?: ContentSource;
   external_video_url?: string | null;
+  asset_object_key?: string | null;
+  asset_bucket?: string | null;
+  asset_mime_type?: string | null;
+  asset_size_bytes?: number | null;
+  asset_original_filename?: string | null;
   is_free_preview?: boolean;
   is_mandatory?: boolean;
 }
@@ -812,12 +822,14 @@ export interface HealthCheckResponse {
 
 // UPLOAD TYPES (DO Spaces presigned uploads)
 
-export type UploadPrefix = 'course-thumbnails' | 'course-banners';
+export type UploadPrefix = 'course-thumbnails' | 'course-banners' | 'session-assets';
 
 export interface PresignRequest {
   prefix: UploadPrefix;
   filename: string;
   content_type: string;
+  course_id?: number;
+  session_id?: number;
 }
 
 export interface PresignResponse {
@@ -825,6 +837,20 @@ export interface PresignResponse {
   public_url: string;
   method: 'PUT';
   headers: Record<string, string>;
+}
+
+export interface PresignSessionAssetResponse {
+  upload_url: string;
+  object_key: string;
+  bucket: string;
+  expires_in: number;
+  method: 'PUT';
+  headers: Record<string, string>;
+}
+
+export interface AssetUrlResponse {
+  url: string;
+  expires_in: number;
 }
 
 // ORGANIZATION TYPES

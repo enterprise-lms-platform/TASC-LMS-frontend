@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Box, Toolbar, CssBaseline, Paper, Typography, Chip,
   ToggleButtonGroup, ToggleButton, TextField, Alert, Stack,
@@ -24,12 +24,17 @@ import UploadTipsCard from '../components/instructor/content-upload/UploadTipsCa
 import StorageInfoCard from '../components/instructor/content-upload/StorageInfoCard';
 import RecentUploadsCard from '../components/instructor/content-upload/RecentUploadsCard';
 import type { RecentUploadItem } from '../components/instructor/content-upload/RecentUploadsCard';
+import { uploadApi } from '../services/upload.services';
+import type { SessionAssetUploadResult } from '../services/upload.services';
+import { sessionApi } from '../services/catalogue.services';
 
 interface UploadFileEntry {
   id: string;
   file: File;
   progress: number;
   status: UploadStatus;
+  assetResult?: SessionAssetUploadResult;
+  error?: string;
 }
 
 function formatFileSize(bytes: number): string {
@@ -62,9 +67,12 @@ const ContentUploadPage: React.FC = () => {
     : 'video';
 
   const lessonTitle = searchParams.get('lesson') || '';
+  const courseId = Number(searchParams.get('courseId')) || 0;
+  const sessionId = Number(searchParams.get('sessionId')) || 0;
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [fileEntries, setFileEntries] = useState<UploadFileEntry[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   // External video URL state (only relevant when contentType === 'video')
   const [contentSource, setContentSource] = useState<'upload' | 'external'>('upload');
@@ -84,6 +92,60 @@ const ContentUploadPage: React.FC = () => {
     navigate(-1);
   };
 
+  /**
+   * Upload a single file via the presigned URL flow.
+   * Updates progress on the file entry in real-time.
+   */
+  const uploadFile = useCallback(async (entryId: string, file: File) => {
+    if (!courseId || !sessionId) {
+      // No course/session context — fall back to simulated progress
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 15 + 5;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          setFileEntries((prev) =>
+            prev.map((e) => e.id === entryId ? { ...e, progress: 100, status: 'complete' as UploadStatus } : e)
+          );
+        } else {
+          setFileEntries((prev) =>
+            prev.map((e) => e.id === entryId ? { ...e, progress: Math.round(progress) } : e)
+          );
+        }
+      }, 500);
+      return;
+    }
+
+    try {
+      const result = await uploadApi.uploadSessionAsset(
+        file,
+        courseId,
+        sessionId,
+        (percent) => {
+          setFileEntries((prev) =>
+            prev.map((e) => e.id === entryId ? { ...e, progress: percent } : e)
+          );
+        },
+      );
+
+      setFileEntries((prev) =>
+        prev.map((e) => e.id === entryId
+          ? { ...e, progress: 100, status: 'complete' as UploadStatus, assetResult: result }
+          : e
+        )
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Upload failed';
+      setFileEntries((prev) =>
+        prev.map((e) => e.id === entryId
+          ? { ...e, status: 'error' as UploadStatus, error: message }
+          : e
+        )
+      );
+    }
+  }, [courseId, sessionId]);
+
   const handleFilesSelected = (files: File[]) => {
     const newEntries: UploadFileEntry[] = files.map((file, i) => ({
       id: `${Date.now()}-${i}`,
@@ -93,28 +155,10 @@ const ContentUploadPage: React.FC = () => {
     }));
     setFileEntries((prev) => [...prev, ...newEntries]);
 
-    // Simulate upload progress for each file
+    // Start real upload for each file
     newEntries.forEach((entry) => {
-      simulateUpload(entry.id);
+      uploadFile(entry.id, entry.file);
     });
-  };
-
-  const simulateUpload = (fileId: string) => {
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 15 + 5;
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(interval);
-        setFileEntries((prev) =>
-          prev.map((e) => e.id === fileId ? { ...e, progress: 100, status: 'complete' as UploadStatus } : e)
-        );
-      } else {
-        setFileEntries((prev) =>
-          prev.map((e) => e.id === fileId ? { ...e, progress: Math.round(progress) } : e)
-        );
-      }
-    }, 500);
   };
 
   const handleCancelUpload = (fileId: string) => {
@@ -149,28 +193,59 @@ const ContentUploadPage: React.FC = () => {
     return true;
   };
 
-  const handleComplete = () => {
-    if (contentType === 'video' && contentSource === 'external') {
-      if (!validateExternalUrl(externalVideoUrl)) return;
-      console.log('Completing with external video:', {
-        content_source: 'external',
-        external_video_url: externalVideoUrl,
-        settings: { requireCompletion, includeInProgress, downloadable },
-      });
-    } else {
-      console.log('Completing upload with:', {
-        type: contentType,
-        content_source: 'upload',
-        files: fileEntries.map((e) => e.file.name),
-        settings: { requireCompletion, includeInProgress, downloadable },
-      });
+  const handleComplete = async () => {
+    if (!sessionId) {
+      // No session context — just navigate back
+      navigate(-1);
+      return;
     }
-    navigate(-1);
+
+    setIsSaving(true);
+
+    try {
+      if (contentType === 'video' && contentSource === 'external') {
+        // External video — save URL on the session
+        if (!validateExternalUrl(externalVideoUrl)) {
+          setIsSaving(false);
+          return;
+        }
+        await sessionApi.partialUpdate(sessionId, {
+          content_source: 'external',
+          external_video_url: externalVideoUrl,
+        });
+      } else {
+        // Upload — save asset metadata on the session
+        const firstCompleted = fileEntries.find((e) => e.status === 'complete' && e.assetResult);
+        if (firstCompleted?.assetResult) {
+          const asset = firstCompleted.assetResult;
+          await sessionApi.partialUpdate(sessionId, {
+            content_source: 'upload',
+            asset_object_key: asset.object_key,
+            asset_bucket: asset.bucket,
+            asset_mime_type: asset.mime_type,
+            asset_size_bytes: asset.size_bytes,
+            asset_original_filename: asset.original_filename,
+          });
+        }
+      }
+
+      navigate(-1);
+    } catch (err) {
+      console.error('Failed to save session asset:', err);
+      setIsSaving(false);
+    }
   };
 
   const uploadingFiles = fileEntries.filter((e) => e.status === 'uploading');
   const completedFiles = fileEntries.filter((e) => e.status === 'complete');
+  const errorFiles = fileEntries.filter((e) => e.status === 'error');
   const typeInfo = typeLabels[contentType];
+
+  const isCompleteDisabled = isSaving || (
+    contentSource === 'upload'
+      ? completedFiles.length === 0 && uploadingFiles.length > 0
+      : !externalVideoUrl
+  );
 
   return (
     <Box sx={{ display: 'flex', bgcolor: '#f8f9fa', minHeight: '100vh' }}>
@@ -225,6 +300,13 @@ const ContentUploadPage: React.FC = () => {
               </Typography>
             )}
           </Paper>
+
+          {/* No session context warning */}
+          {!sessionId && (
+            <Alert severity="warning" sx={{ mb: 3 }}>
+              No session context provided. Uploads will be simulated. Navigate here from a lesson to enable real uploads.
+            </Alert>
+          )}
 
           {/* Two Column Layout */}
           <Box
@@ -308,6 +390,13 @@ const ContentUploadPage: React.FC = () => {
                 </Paper>
               )}
 
+              {/* Upload Errors */}
+              {errorFiles.length > 0 && (
+                <Alert severity="error" sx={{ mt: 3 }}>
+                  {errorFiles.length} file(s) failed to upload: {errorFiles.map((e) => e.error || 'Unknown error').join(', ')}
+                </Alert>
+              )}
+
               {/* Uploaded Files */}
               {completedFiles.length > 0 && (
                 <Paper elevation={0} sx={{ borderRadius: 2, border: 1, borderColor: 'grey.200', overflow: 'hidden', mt: 3 }}>
@@ -362,10 +451,11 @@ const ContentUploadPage: React.FC = () => {
 
       {/* Footer */}
       <UploadFooter
-        uploadCount={fileEntries.length}
+        uploadCount={contentSource === 'external' ? (externalVideoUrl ? 1 : 0) : fileEntries.length}
         onCancel={handleCancel}
         onAddMore={() => {}}
         onComplete={handleComplete}
+        disabled={isCompleteDisabled}
       />
     </Box>
   );
