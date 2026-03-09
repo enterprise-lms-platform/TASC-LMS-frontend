@@ -71,7 +71,7 @@ export const uploadApi = {
       );
     }
 
-    return presign.public_url;
+    return presign.public_url ?? '';
   },
 
   /**

@@ -9,9 +9,10 @@ interface UploadFooterProps {
   onAddMore: () => void;
   onComplete: () => void;
   disabled?: boolean;
+  savingLabel?: string;
 }
 
-const UploadFooter: React.FC<UploadFooterProps> = ({ uploadCount, onCancel, onAddMore, onComplete, disabled }) => {
+const UploadFooter: React.FC<UploadFooterProps> = ({ uploadCount, onCancel, onAddMore, onComplete, disabled, savingLabel }) => {
   return (
     <Box
       sx={{
@@ -43,8 +44,8 @@ const UploadFooter: React.FC<UploadFooterProps> = ({ uploadCount, onCancel, onAd
         <Button variant="outlined" startIcon={<AddMoreIcon />} onClick={onAddMore} sx={{ borderColor: 'grey.300', color: 'text.secondary' }}>
           Add More Content
         </Button>
-        <Button variant="contained" startIcon={<CompleteIcon />} onClick={onComplete} disabled={disabled ?? uploadCount === 0}>
-          Complete Upload
+        <Button variant="contained" startIcon={<CompleteIcon />} onClick={onComplete} disabled={disabled}>
+          {savingLabel || 'Complete Upload'}
         </Button>
       </Box>
     </Box>

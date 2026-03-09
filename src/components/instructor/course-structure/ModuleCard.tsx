@@ -38,6 +38,7 @@ interface ModuleCardProps {
   onEdit?: () => void;
   onDuplicate?: () => void;
   onMore?: () => void;
+  onDropModule?: () => void;
   children?: React.ReactNode;
 }
 
@@ -54,6 +55,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
   onEdit,
   onDuplicate,
   onMore,
+  onDropModule,
   children,
 }) => {
   const statusStyle = statusColors[module.status];
@@ -69,6 +71,8 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
         overflow: 'hidden',
         bgcolor: 'grey.50',
       }}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => { e.preventDefault(); onDropModule?.(); }}
     >
       {/* Module Header */}
       <Box

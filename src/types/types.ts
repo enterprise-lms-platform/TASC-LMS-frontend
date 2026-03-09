@@ -385,6 +385,19 @@ export interface PublicSession {
   is_mandatory: boolean;
 }
 
+export interface CourseDetailInstructor {
+  id: number;
+  name: string;
+  email: string;
+  avatar?: string | null;
+}
+
+export interface CourseDetailCreatedBy {
+  id: number;
+  name: string;
+  email: string;
+}
+
 export interface CourseDetail {
   id: number;
   title: string;
@@ -404,7 +417,7 @@ export interface CourseDetail {
   duration_minutes?: number;
   duration_weeks?: number;
   total_sessions?: number;
-  instructor: number;
+  instructor: CourseDetailInstructor | null;
   instructor_name: string;
   enrollment_count: number;
   featured: boolean;
@@ -429,7 +442,7 @@ export interface CourseDetail {
   meta_title?: string;
   meta_description?: string;
   meta_keywords?: string;
-  created_by: number;
+  created_by: CourseDetailCreatedBy | null;
   sessions: Session[];
   created_at: string;
   updated_at: string;
@@ -863,7 +876,10 @@ export interface PresignRequest {
 
 export interface PresignResponse {
   upload_url: string;
-  public_url: string;
+  public_url?: string;
+  object_key: string;
+  bucket: string;
+  expires_in: number;
   method: 'PUT';
   headers: Record<string, string>;
 }

@@ -33,10 +33,21 @@ import {
   Notifications as NotifIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useUpdateProfile } from '../hooks/useAuthQueries';
 import { getUserInitials } from '../utils/userHelpers';
 import Sidebar, { DRAWER_WIDTH } from '../components/instructor/Sidebar';
+import { getErrorMessage } from '../utils/config';
+import FeedbackSnackbar from '../components/common/FeedbackSnackbar';
+
+const cardSx = {
+  borderRadius: '1rem',
+  overflow: 'hidden',
+  mb: 3,
+  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
+  transition: 'box-shadow 0.3s',
+  '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' },
+} as const;
 
 const InstructorProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -44,12 +55,12 @@ const InstructorProfilePage: React.FC = () => {
   const updateProfile = useUpdateProfile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [saveError, setSaveError] = useState('');
+  const [snackError, setSnackError] = useState<string | null>(null);
 
   // Profile fields — initialized from logged-in user, synced when user loads
   const [firstName, setFirstName] = useState(user?.first_name ?? '');
   const [lastName, setLastName] = useState(user?.last_name ?? '');
-  const [email, setEmail] = useState(user?.email ?? '');
+  const email = user?.email ?? '';
   const [phone, setPhone] = useState(user?.phone_number ?? '');
   const [location, setLocation] = useState(user?.country ?? '');
   const [bio, setBio] = useState('');
@@ -63,7 +74,6 @@ const InstructorProfilePage: React.FC = () => {
     if (user) {
       setFirstName(user.first_name ?? '');
       setLastName(user.last_name ?? '');
-      setEmail(user.email ?? '');
       setPhone(user.phone_number ?? '');
       setLocation(user.country ?? '');
       setBio(user.bio ?? '');
@@ -81,7 +91,7 @@ const InstructorProfilePage: React.FC = () => {
   const displayInitials = getUserInitials(firstName || user?.first_name, lastName || user?.last_name);
 
   const handleSave = async () => {
-    setSaveError('');
+    setSnackError(null);
     try {
       await updateProfile.mutateAsync({
         first_name: firstName,
@@ -93,8 +103,8 @@ const InstructorProfilePage: React.FC = () => {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to save profile';
-      setSaveError(message);
+      const message = getErrorMessage(err);
+      setSnackError(message);
     }
   };
 
@@ -143,28 +153,16 @@ const InstructorProfilePage: React.FC = () => {
             </Alert>
           )}
 
-          {saveError && (
-            <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setSaveError('')}>
-              {saveError}
-            </Alert>
-          )}
 
           {/* Avatar Section */}
           <Paper
             elevation={0}
-            sx={{
-              borderRadius: '1rem',
-              overflow: 'hidden',
-              mb: 3,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
-              transition: 'box-shadow 0.3s',
-              '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' },
-            }}
+            sx={cardSx}
           >
             <Box sx={{ p: 4, display: 'flex', alignItems: 'center', gap: 3, bgcolor: 'grey.50' }}>
               <Box sx={{ position: 'relative' }}>
                 <Avatar
-                  src={(user?.google_picture ?? undefined) as string | undefined}
+                  src={(user?.avatar ?? user?.google_picture ?? undefined) as string | undefined}
                   sx={{
                     width: 96,
                     height: 96,
@@ -205,14 +203,7 @@ const InstructorProfilePage: React.FC = () => {
           {/* Personal Info */}
           <Paper
             elevation={0}
-            sx={{
-              borderRadius: '1rem',
-              overflow: 'hidden',
-              mb: 3,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
-              transition: 'box-shadow 0.3s',
-              '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' },
-            }}
+            sx={cardSx}
           >
             <Box sx={{ p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider' }}>
               <Typography fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -229,7 +220,7 @@ const InstructorProfilePage: React.FC = () => {
                   <TextField fullWidth label="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Email" value={email} onChange={(e) => setEmail(e.target.value)} InputProps={{ startAdornment: <EmailIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 20 }} /> }} />
+                  <TextField fullWidth label="Email" value={email} disabled helperText="Email cannot be changed" InputProps={{ startAdornment: <EmailIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 20 }} /> }} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} InputProps={{ startAdornment: <PhoneIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 20 }} /> }} />
@@ -238,13 +229,13 @@ const InstructorProfilePage: React.FC = () => {
                   <TextField fullWidth label="Location" value={location} onChange={(e) => setLocation(e.target.value)} InputProps={{ startAdornment: <LocationIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 20 }} /> }} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Title / Role" value={title} onChange={(e) => setTitle(e.target.value)} InputProps={{ startAdornment: <SchoolIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 20 }} /> }} />
+                  <TextField fullWidth label="Title / Role" value={title} disabled helperText="Coming soon" InputProps={{ startAdornment: <SchoolIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 20 }} /> }} />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <TextField fullWidth label="Bio" value={bio} onChange={(e) => setBio(e.target.value)} multiline minRows={3} />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <TextField fullWidth label="Areas of Expertise" value={expertise} onChange={(e) => setExpertise(e.target.value)} helperText="Comma-separated list of skills" />
+                  <TextField fullWidth label="Areas of Expertise" value={expertise} disabled helperText="Coming soon" />
                 </Grid>
               </Grid>
             </Box>
@@ -253,14 +244,7 @@ const InstructorProfilePage: React.FC = () => {
           {/* Social Links */}
           <Paper
             elevation={0}
-            sx={{
-              borderRadius: '1rem',
-              overflow: 'hidden',
-              mb: 3,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
-              transition: 'box-shadow 0.3s',
-              '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' },
-            }}
+            sx={cardSx}
           >
             <Box sx={{ p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider' }}>
               <Typography fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -271,10 +255,10 @@ const InstructorProfilePage: React.FC = () => {
             <Box sx={{ p: 3 }}>
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Website" value={website} onChange={(e) => setWebsite(e.target.value)} InputProps={{ startAdornment: <WebsiteIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 20 }} /> }} />
+                  <TextField fullWidth label="Website" value={website} disabled helperText="Coming soon" InputProps={{ startAdornment: <WebsiteIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 20 }} /> }} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="LinkedIn" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} InputProps={{ startAdornment: <LinkedInIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 20 }} /> }} />
+                  <TextField fullWidth label="LinkedIn" value={linkedin} disabled helperText="Coming soon" InputProps={{ startAdornment: <LinkedInIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 20 }} /> }} />
                 </Grid>
               </Grid>
             </Box>
@@ -283,14 +267,7 @@ const InstructorProfilePage: React.FC = () => {
           {/* Notifications */}
           <Paper
             elevation={0}
-            sx={{
-              borderRadius: '1rem',
-              overflow: 'hidden',
-              mb: 3,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
-              transition: 'box-shadow 0.3s',
-              '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' },
-            }}
+            sx={cardSx}
           >
             <Box sx={{ p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider' }}>
               <Typography fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -311,14 +288,7 @@ const InstructorProfilePage: React.FC = () => {
           {/* Security */}
           <Paper
             elevation={0}
-            sx={{
-              borderRadius: '1rem',
-              overflow: 'hidden',
-              mb: 3,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
-              transition: 'box-shadow 0.3s',
-              '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' },
-            }}
+            sx={cardSx}
           >
             <Box sx={{ p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider' }}>
               <Typography fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -337,6 +307,8 @@ const InstructorProfilePage: React.FC = () => {
           </Paper>
         </Box>
       </Box>
+
+      <FeedbackSnackbar message={snackError} onClose={() => setSnackError(null)} />
     </Box>
   );
 };

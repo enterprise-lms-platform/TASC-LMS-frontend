@@ -30,7 +30,7 @@ import {
   Groups as WorkshopsIcon,
   Person as ProfileIcon,
 } from '@mui/icons-material';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, matchPath } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { getUserDisplayName, getUserInitials } from '../../utils/userHelpers';
 
@@ -65,16 +65,16 @@ const navSections: NavSection[] = [
   {
     title: 'Course Management',
     items: [
-      { text: 'My Courses', icon: <CoursesIcon />, path: '/instructor/courses', activePatterns: ['/instructor/courses'] },
+      { text: 'My Courses', icon: <CoursesIcon />, path: '/instructor/courses' },
       { text: 'Create Course', icon: <CreateIcon />, path: '/instructor/course/create' },
-      { text: 'Course Structure', icon: <StructureIcon />, path: '/instructor/course/1/structure', activePatterns: ['/instructor/course/'] },
-      { text: 'Upload Content', icon: <UploadIcon />, path: '/instructor/course/1/upload' },
+      { text: 'Course Structure', icon: <StructureIcon />, path: '/instructor/courses', activePatterns: ['/instructor/course/:courseId/structure'] },
+      { text: 'Upload Content', icon: <UploadIcon />, path: '/instructor/courses', activePatterns: ['/instructor/course/:courseId/upload'] },
     ],
   },
   {
     title: 'Assessments',
     items: [
-      { text: 'Quiz Builder', icon: <QuizzesIcon />, path: '/instructor/course/1/quiz/builder' },
+      { text: 'Quiz Builder', icon: <QuizzesIcon />, path: '/instructor/courses', activePatterns: ['/instructor/course/:courseId/quiz/*'] },
       { text: 'Question Bank', icon: <StructureIcon />, path: '/instructor/question-bank' },
       { text: 'Assignments', icon: <AssignmentsIcon />, path: '/instructor/assignment/create', badge: 12, badgeColor: 'error' },
       { text: 'Grading', icon: <GradebookIcon />, path: '/instructor/grading', badge: 18, badgeColor: 'error' },
@@ -130,9 +130,11 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
   };
 
   const isActive = (item: NavItem) => {
+    if (item.activePatterns?.length) {
+      return item.activePatterns.some((p) => matchPath(p, location.pathname));
+    }
     if (!item.path) return false;
-    if (location.pathname === item.path) return true;
-    return item.activePatterns?.some((p) => location.pathname.startsWith(p)) ?? false;
+    return location.pathname === item.path;
   };
 
   const userName = getUserDisplayName(user?.first_name, user?.last_name, user?.email);

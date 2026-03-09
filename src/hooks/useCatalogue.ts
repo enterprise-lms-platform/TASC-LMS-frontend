@@ -185,7 +185,7 @@ export const useDeleteCourse = () => {
 export const useModules = (params?: ModuleListParams) =>
   useQuery({
     queryKey: queryKeys.modules.all(params),
-    queryFn: () => moduleApi.getAll(params).then((r) => r.data),
+    queryFn: () => moduleApi.getAll(params).then((r) => r.data.results),
     enabled: !!params?.course,
   });
 
@@ -194,11 +194,9 @@ export const useCreateModule = () => {
   return useMutation({
     mutationFn: (data: ModuleCreateRequest) =>
       moduleApi.create(data).then((r) => r.data),
-    onSuccess: (_data, variables) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['modules'] });
-      qc.invalidateQueries({
-        queryKey: queryKeys.courses.detail(variables.course),
-      });
+      qc.invalidateQueries({ queryKey: ['courses'] });
     },
   });
 };
@@ -206,10 +204,11 @@ export const useCreateModule = () => {
 export const usePartialUpdateModule = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<ModuleCreateRequest> }) =>
+    mutationFn: ({ id, data }: { id: number; data: Partial<Module> }) =>
       moduleApi.partialUpdate(id, data).then((r) => r.data),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['modules'] });
+      qc.invalidateQueries({ queryKey: ['courses'] });
       qc.invalidateQueries({
         queryKey: queryKeys.modules.detail(variables.id),
       });
@@ -221,26 +220,9 @@ export const useDeleteModule = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => moduleApi.delete(id),
-    onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: ['modules'] });
-      const allQueries = qc.getQueriesData<Module[]>({
-        queryKey: ['modules'],
-        exact: false,
-      });
-      allQueries.forEach(([key, data]) => {
-        if (Array.isArray(data)) {
-          qc.setQueryData(key, data.filter((m) => m.id !== id));
-        }
-      });
-      return { allQueries };
-    },
-    onError: (_err, _id, context) => {
-      context?.allQueries.forEach(([key, data]) => {
-        qc.setQueryData(key, data);
-      });
-    },
-    onSettled: () => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['modules'] });
+      qc.invalidateQueries({ queryKey: ['courses'] });
     },
   });
 };
@@ -250,7 +232,7 @@ export const useDeleteModule = () => {
 export const useSessions = (params?: SessionListParams) =>
   useQuery({
     queryKey: queryKeys.sessions.all(params),
-    queryFn: () => sessionApi.getAll(params).then((r) => r.data),
+    queryFn: () => sessionApi.getAll(params).then((r) => r.data.results),
   });
 
 export const useSession = (id: number) =>
@@ -265,11 +247,9 @@ export const useCreateSession = () => {
   return useMutation({
     mutationFn: (data: SessionCreateRequest) =>
       sessionApi.create(data).then((r) => r.data),
-    onSuccess: (_data, variables) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sessions'] });
-      qc.invalidateQueries({
-        queryKey: queryKeys.courses.detail(variables.course),
-      });
+      qc.invalidateQueries({ queryKey: ['courses'] });
     },
   });
 };
@@ -281,6 +261,7 @@ export const useUpdateSession = () => {
       sessionApi.update(id, data).then((r) => r.data),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['sessions'] });
+      qc.invalidateQueries({ queryKey: ['courses'] });
       qc.invalidateQueries({
         queryKey: queryKeys.sessions.detail(variables.id),
       });
@@ -295,6 +276,7 @@ export const usePartialUpdateSession = () => {
       sessionApi.partialUpdate(id, data).then((r) => r.data),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['sessions'] });
+      qc.invalidateQueries({ queryKey: ['courses'] });
       qc.invalidateQueries({
         queryKey: queryKeys.sessions.detail(variables.id),
       });
@@ -326,6 +308,7 @@ export const useDeleteSession = () => {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['sessions'] });
+      qc.invalidateQueries({ queryKey: ['courses'] });
     },
   });
 };

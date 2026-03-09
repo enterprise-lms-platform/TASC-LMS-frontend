@@ -40,7 +40,7 @@ interface LessonFormData {
 
 const typeOptions: { value: LessonType; label: string; hint: string; icon: React.ReactNode; color: string }[] = [
   { value: 'video', label: 'Video', hint: 'Upload a video file', icon: <VideoIcon />, color: '#3b82f6' },
-  { value: 'document', label: 'Document', hint: 'Upload PDF, DOCX, PPTX', icon: <DocIcon />, color: '#10b981' },
+  { value: 'document', label: 'Document', hint: 'Upload PDF', icon: <DocIcon />, color: '#10b981' },
   { value: 'quiz', label: 'Quiz', hint: 'Build a quiz with questions', icon: <QuizIcon />, color: '#8b5cf6' },
   { value: 'assignment', label: 'Assignment', hint: 'Create a graded assignment', icon: <AssignmentIcon />, color: '#f59e0b' },
   { value: 'scorm', label: 'SCORM', hint: 'Upload a SCORM package', icon: <ScormIcon />, color: '#ef4444' },

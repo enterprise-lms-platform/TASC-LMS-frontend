@@ -70,25 +70,22 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 };
 
 // Helper function to extract error message from API error
-export const getErrorMessage = (error: unknown): string => {
-  if (axios.isAxiosError(error)) {
-    const data = error.response?.data as ApiError;
-    if (data?.detail) {
-      return data.detail;
-    }
+export const getErrorMessage = (error: unknown, fallback = 'An unexpected error occurred. Please try again.'): string => {
+  if (axios.isAxiosError(error) && error.response?.data) {
+    const data = error.response.data;
+    if (typeof data === 'string') return data;
+    if (data.detail) return String(data.detail);
+    if (data.non_field_errors) return [].concat(data.non_field_errors).join(' ');
     // Handle validation errors (field: ["error1", "error2"])
-    if (data && typeof data === 'object') {
-      const firstError = Object.values(data).find((value) => Array.isArray(value) && value.length > 0);
-      if (firstError && Array.isArray(firstError)) {
-        return firstError[0];
-      }
-      const firstStringError = Object.values(data).find((value) => typeof value === 'string');
-      if (firstStringError && typeof firstStringError === 'string') {
-        return firstStringError;
-      }
+    if (typeof data === 'object') {
+      const fieldMsgs = Object.entries(data)
+        .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+        .join('; ');
+      if (fieldMsgs) return fieldMsgs;
     }
   }
-  return 'An unexpected error occurred. Please try again.';
+  if (error instanceof Error) return error.message;
+  return fallback;
 };
 
 // Create axios instance with default configuration

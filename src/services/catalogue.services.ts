@@ -142,7 +142,7 @@ export interface ModuleListParams {
 
 export const moduleApi = {
   getAll: (params?: ModuleListParams) =>
-    apiClient.get<Module[]>(`${BASE_PATH}/modules/`, { params }),
+    apiClient.get<PaginatedResponse<Module>>(`${BASE_PATH}/modules/`, { params }),
 
   getById: (id: number) =>
     apiClient.get<Module>(`${BASE_PATH}/modules/${id}/`),
@@ -168,7 +168,7 @@ export const sessionApi = {
 
   // List all sessions with optional filters
   getAll: (params?: SessionListParams) =>
-    apiClient.get<Session[]>(`${BASE_PATH}/sessions/`, { params }),
+    apiClient.get<PaginatedResponse<Session>>(`${BASE_PATH}/sessions/`, { params }),
 
 
   // Get session details by ID

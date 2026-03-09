@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Box, Toolbar, CssBaseline, Paper, Typography, Chip,
-  ToggleButtonGroup, ToggleButton, TextField, Alert, Stack,
+  ToggleButtonGroup, ToggleButton, TextField, Stack,
 } from '@mui/material';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
@@ -12,21 +12,20 @@ import {
   Link as LinkIcon,
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../components/instructor/Sidebar';
-import UploadTopBar from '../components/instructor/content-upload/UploadTopBar';
-import UploadFooter from '../components/instructor/content-upload/UploadFooter';
 import UploadZone from '../components/instructor/content-upload/UploadZone';
 import type { UploadContentType } from '../components/instructor/content-upload/UploadZone';
 import UploadProgress from '../components/instructor/content-upload/UploadProgress';
 import type { UploadStatus } from '../components/instructor/content-upload/UploadProgress';
-import UploadedFileItem from '../components/instructor/content-upload/UploadedFileItem';
-import ContentDetailsForm from '../components/instructor/content-upload/ContentDetailsForm';
 import UploadTipsCard from '../components/instructor/content-upload/UploadTipsCard';
 import StorageInfoCard from '../components/instructor/content-upload/StorageInfoCard';
 import RecentUploadsCard from '../components/instructor/content-upload/RecentUploadsCard';
 import type { RecentUploadItem } from '../components/instructor/content-upload/RecentUploadsCard';
+import UploadFooter from '../components/instructor/content-upload/UploadFooter';
 import { uploadApi } from '../services/upload.services';
 import type { SessionAssetUploadResult } from '../services/upload.services';
-import { sessionApi } from '../services/catalogue.services';
+import { usePartialUpdateSession } from '../hooks/useCatalogue';
+import { getErrorMessage } from '../utils/config';
+import FeedbackSnackbar from '../components/common/FeedbackSnackbar';
 
 interface UploadFileEntry {
   id: string;
@@ -34,7 +33,7 @@ interface UploadFileEntry {
   progress: number;
   status: UploadStatus;
   assetResult?: SessionAssetUploadResult;
-  error?: string;
+  errorMessage?: string;
 }
 
 function formatFileSize(bytes: number): string {
@@ -45,9 +44,9 @@ function formatFileSize(bytes: number): string {
 }
 
 const typeLabels: Record<UploadContentType, { label: string; icon: React.ReactNode; color: string }> = {
-  video: { label: 'Video', icon: <VideoIcon sx={{ fontSize: 18 }} />, color: '#3b82f6' },
-  document: { label: 'Document', icon: <DocIcon sx={{ fontSize: 18 }} />, color: '#10b981' },
-  scorm: { label: 'SCORM Package', icon: <ScormIcon sx={{ fontSize: 18 }} />, color: '#8b5cf6' },
+  video: { label: 'Video', icon: <VideoIcon />, color: '#3b82f6' },
+  document: { label: 'Document', icon: <DocIcon />, color: '#10b981' },
+  scorm: { label: 'SCORM', icon: <ScormIcon />, color: '#8b5cf6' },
 };
 
 const sampleRecentUploads: RecentUploadItem[] = [
@@ -58,94 +57,77 @@ const sampleRecentUploads: RecentUploadItem[] = [
 
 const ContentUploadPage: React.FC = () => {
   const navigate = useNavigate();
-  const { courseId: courseIdParam } = useParams<{ courseId: string }>();
+  const { courseId } = useParams<{ courseId: string }>();
   const [searchParams] = useSearchParams();
 
-  // Content type from URL search params (passed from lesson creation)
+  const numericCourseId = courseId ? Number(courseId) : 0;
+  const sessionId = searchParams.get('sessionId') ? Number(searchParams.get('sessionId')) : 0;
+
   const typeParam = searchParams.get('type') as UploadContentType | null;
   const contentType: UploadContentType = typeParam && ['video', 'document', 'scorm'].includes(typeParam)
     ? typeParam
     : 'video';
 
   const lessonTitle = searchParams.get('lesson') || '';
-  const courseId = Number(courseIdParam) || 0;
-  const sessionId = Number(searchParams.get('sessionId')) || 0;
+
+  const patchSession = usePartialUpdateSession();
+  const abortControllers = useRef<Map<string, AbortController>>(new Map());
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [fileEntries, setFileEntries] = useState<UploadFileEntry[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const [snackError, setSnackError] = useState<string | null>(null);
+  const [snackSuccess, setSnackSuccess] = useState<string | null>(null);
 
-  // External video URL state (only relevant when contentType === 'video')
   const [contentSource, setContentSource] = useState<'upload' | 'external'>('upload');
   const [externalVideoUrl, setExternalVideoUrl] = useState('');
   const [externalVideoError, setExternalVideoError] = useState('');
 
-  // Content settings (toggles only — title/description already captured in lesson)
-  const [requireCompletion, setRequireCompletion] = useState(false);
-  const [includeInProgress, setIncludeInProgress] = useState(true);
-  const [downloadable, setDownloadable] = useState(false);
+  const hasSession = !!(numericCourseId && sessionId);
+  const fileType: 'video' | 'document' | 'scorm' = contentType;
 
-  const handleMobileMenuToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
+  // Abort pending uploads on unmount
+  useEffect(() => {
+    const controllers = abortControllers.current;
+    return () => { controllers.forEach((c) => c.abort()); };
+  }, []);
 
-  const handleBack = () => {
-    navigate(-1);
-  };
+  const updateFileEntry = useCallback(
+    (entryId: string, patch: Partial<UploadFileEntry>) =>
+      setFileEntries((prev) => prev.map((e) => (e.id === entryId ? { ...e, ...patch } : e))),
+    [],
+  );
 
-  /**
-   * Upload a single file via the presigned URL flow.
-   * Updates progress on the file entry in real-time.
-   */
-  const uploadFile = useCallback(async (entryId: string, file: File) => {
-    if (!courseId || !sessionId) {
-      // No course/session context — fall back to simulated progress
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += Math.random() * 15 + 5;
-        if (progress >= 100) {
-          progress = 100;
-          clearInterval(interval);
-          setFileEntries((prev) =>
-            prev.map((e) => e.id === entryId ? { ...e, progress: 100, status: 'complete' as UploadStatus } : e)
-          );
-        } else {
-          setFileEntries((prev) =>
-            prev.map((e) => e.id === entryId ? { ...e, progress: Math.round(progress) } : e)
-          );
-        }
-      }, 500);
+  const realUpload = useCallback(async (file: File, entryId: string) => {
+    if (!hasSession) {
+      updateFileEntry(entryId, { status: 'error' as UploadStatus, progress: 0 });
+      setSnackError('Missing session information. Please create the lesson from the course structure page.');
       return;
     }
 
     try {
-      const result = await uploadApi.uploadSessionAsset(
+      updateFileEntry(entryId, { progress: 10 });
+
+      const controller = new AbortController();
+      abortControllers.current.set(entryId, controller);
+
+      const assetResult = await uploadApi.uploadSessionAsset(
         file,
-        courseId,
+        numericCourseId,
         sessionId,
-        (percent) => {
-          setFileEntries((prev) =>
-            prev.map((e) => e.id === entryId ? { ...e, progress: percent } : e)
-          );
-        },
+        (percent) => updateFileEntry(entryId, { progress: Math.min(percent, 99) }),
       );
 
-      setFileEntries((prev) =>
-        prev.map((e) => e.id === entryId
-          ? { ...e, progress: 100, status: 'complete' as UploadStatus, assetResult: result }
-          : e
-        )
-      );
+      abortControllers.current.delete(entryId);
+      updateFileEntry(entryId, { progress: 100, status: 'complete' as UploadStatus, assetResult });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Upload failed';
-      setFileEntries((prev) =>
-        prev.map((e) => e.id === entryId
-          ? { ...e, status: 'error' as UploadStatus, error: message }
-          : e
-        )
-      );
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      abortControllers.current.delete(entryId);
+      const msg = getErrorMessage(err, 'Upload failed');
+      updateFileEntry(entryId, { status: 'error' as UploadStatus, progress: 0, errorMessage: msg });
+      setSnackError(msg);
     }
-  }, [courseId, sessionId]);
+  }, [hasSession, numericCourseId, sessionId, updateFileEntry]);
 
   const handleFilesSelected = (files: File[]) => {
     const newEntries: UploadFileEntry[] = files.map((file, i) => ({
@@ -156,14 +138,25 @@ const ContentUploadPage: React.FC = () => {
     }));
     setFileEntries((prev) => [...prev, ...newEntries]);
 
-    // Start real upload for each file
     newEntries.forEach((entry) => {
-      uploadFile(entry.id, entry.file);
+      realUpload(entry.file, entry.id);
     });
   };
 
   const handleCancelUpload = (fileId: string) => {
+    const controller = abortControllers.current.get(fileId);
+    if (controller) {
+      controller.abort();
+      abortControllers.current.delete(fileId);
+    }
     setFileEntries((prev) => prev.filter((e) => e.id !== fileId));
+  };
+
+  const handleRetryUpload = (fileId: string) => {
+    const entry = fileEntries.find((e) => e.id === fileId);
+    if (!entry) return;
+    updateFileEntry(fileId, { status: 'uploading' as UploadStatus, progress: 0, errorMessage: undefined });
+    realUpload(entry.file, entry.id);
   };
 
   const handleDeleteFile = (fileId: string) => {
@@ -171,97 +164,154 @@ const ContentUploadPage: React.FC = () => {
   };
 
   const handleCancel = () => {
+    abortControllers.current.forEach((c) => c.abort());
+    abortControllers.current.clear();
     setFileEntries([]);
     navigate(-1);
   };
 
   const validateExternalUrl = (url: string): boolean => {
-    if (!url.startsWith('https://')) {
-      setExternalVideoError('Only HTTPS URLs are allowed.');
-      return false;
-    }
-    const supportedPatterns = [
-      /^https:\/\/(www\.)?youtube\.com\/watch\?v=[\w-]+/,
-      /^https:\/\/youtu\.be\/[\w-]+/,
-      /^https:\/\/vimeo\.com\/\d+/,
-      /^https:\/\/(www\.)?loom\.com\/share\/[\w-]+/,
-    ];
-    if (!supportedPatterns.some((p) => p.test(url))) {
-      setExternalVideoError('Unsupported video provider. Supported: YouTube, Vimeo, Loom.');
-      return false;
-    }
     setExternalVideoError('');
+
+    if (!url.trim()) {
+      setExternalVideoError('Please enter a video URL');
+      return false;
+    }
+
+    try {
+      const parsed = new URL(url);
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        setExternalVideoError('URL must start with http:// or https://');
+        return false;
+      }
+    } catch {
+      setExternalVideoError('Please enter a valid URL');
+      return false;
+    }
+
+    const supportedDomains = ['youtube.com', 'youtu.be', 'vimeo.com', 'dailymotion.com', 'wistia.com'];
+    try {
+      const hostname = new URL(url).hostname.replace('www.', '');
+      if (!supportedDomains.some((d) => hostname.includes(d))) {
+        setExternalVideoError('');
+      }
+    } catch {
+      // ignore
+    }
+
     return true;
   };
 
   const handleComplete = async () => {
-    if (!sessionId) {
-      // No session context — just navigate back
-      navigate(-1);
+    if (contentType === 'video' && contentSource === 'external') {
+      if (!validateExternalUrl(externalVideoUrl)) return;
+      if (!sessionId) {
+        setSnackError('Missing session information.');
+        return;
+      }
+      try {
+        setCompleting(true);
+        await patchSession.mutateAsync({
+          id: sessionId,
+          data: {
+            content_source: 'external',
+            external_video_url: externalVideoUrl,
+          },
+        });
+        setSnackSuccess('External video saved successfully.');
+        setTimeout(() => navigate(`/instructor/course/${courseId}/structure`), 800);
+      } catch (err) {
+        setSnackError(getErrorMessage(err, 'Failed to save external video.'));
+      } finally {
+        setCompleting(false);
+      }
       return;
     }
 
-    setIsSaving(true);
+    const completedEntry = fileEntries.find((e) => e.status === 'complete' && e.assetResult);
+    if (!completedEntry?.assetResult) {
+      setSnackError('No file has been uploaded yet.');
+      return;
+    }
+    if (!sessionId) {
+      setSnackError('Missing session information.');
+      return;
+    }
 
     try {
-      if (contentType === 'video' && contentSource === 'external') {
-        // External video — save URL on the session
-        if (!validateExternalUrl(externalVideoUrl)) {
-          setIsSaving(false);
-          return;
-        }
-        await sessionApi.partialUpdate(sessionId, {
-          content_source: 'external',
-          external_video_url: externalVideoUrl,
-        });
-      } else {
-        // Upload — save asset metadata on the session
-        const firstCompleted = fileEntries.find((e) => e.status === 'complete' && e.assetResult);
-        if (firstCompleted?.assetResult) {
-          const asset = firstCompleted.assetResult;
-          await sessionApi.partialUpdate(sessionId, {
-            content_source: 'upload',
-            asset_object_key: asset.object_key,
-            asset_bucket: asset.bucket,
-            asset_mime_type: asset.mime_type,
-            asset_size_bytes: asset.size_bytes,
-            asset_original_filename: asset.original_filename,
-          });
-        }
-      }
-
-      navigate(-1);
+      setCompleting(true);
+      const { object_key, bucket, mime_type, size_bytes, original_filename } = completedEntry.assetResult;
+      await patchSession.mutateAsync({
+        id: sessionId,
+        data: {
+          content_source: 'upload',
+          asset_object_key: object_key,
+          asset_bucket: bucket,
+          asset_mime_type: mime_type,
+          asset_size_bytes: size_bytes,
+          asset_original_filename: original_filename,
+        },
+      });
+      setSnackSuccess('Upload saved successfully.');
+      setTimeout(() => navigate(`/instructor/course/${courseId}/structure`), 800);
     } catch (err) {
-      console.error('Failed to save session asset:', err);
-      setIsSaving(false);
+      setSnackError(getErrorMessage(err, 'Failed to save upload metadata.'));
+    } finally {
+      setCompleting(false);
     }
   };
 
   const uploadingFiles = fileEntries.filter((e) => e.status === 'uploading');
   const completedFiles = fileEntries.filter((e) => e.status === 'complete');
   const errorFiles = fileEntries.filter((e) => e.status === 'error');
+  const hasAnyComplete = completedFiles.length > 0;
+  const isStillUploading = uploadingFiles.length > 0;
   const typeInfo = typeLabels[contentType];
 
-  const isCompleteDisabled = isSaving || (
-    contentSource === 'upload'
-      ? completedFiles.length === 0 && uploadingFiles.length > 0
-      : !externalVideoUrl
-  );
-
   return (
-    <Box sx={{ display: 'flex', bgcolor: '#f8f9fa', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', bgcolor: 'grey.100', minHeight: '100vh' }}>
       <CssBaseline />
-
-      {/* Sidebar */}
       <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
 
       {/* Top Bar */}
-      <UploadTopBar
-        onBack={handleBack}
-        onMobileMenuToggle={handleMobileMenuToggle}
-        onContentLibrary={() => console.log('Content library')}
-        onBulkUpload={() => console.log('Bulk upload')}
-      />
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: { xs: 0, md: DRAWER_WIDTH },
+          right: 0,
+          zIndex: 1100,
+          bgcolor: 'background.paper',
+          borderBottom: 1,
+          borderColor: 'divider',
+        }}
+      >
+        <Toolbar sx={{ gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
+            <UploadIcon sx={{ color: 'primary.main' }} />
+            <Box>
+              <Typography variant="subtitle1" fontWeight={700}>
+                Upload Content
+              </Typography>
+              {lessonTitle && (
+                <Typography variant="caption" color="text.secondary">
+                  {lessonTitle}
+                </Typography>
+              )}
+            </Box>
+          </Box>
+          <Chip
+            icon={typeInfo.icon as React.ReactElement}
+            label={typeInfo.label}
+            sx={{
+              bgcolor: `${typeInfo.color}15`,
+              color: typeInfo.color,
+              fontWeight: 600,
+              '& .MuiChip-icon': { color: typeInfo.color },
+            }}
+          />
+        </Toolbar>
+      </Box>
 
       {/* Main Content */}
       <Box
@@ -269,105 +319,90 @@ const ContentUploadPage: React.FC = () => {
         sx={{
           flexGrow: 1,
           width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-          pb: 12,
+          pb: 10,
         }}
       >
-        <Toolbar sx={{ minHeight: '72px !important' }} />
+        <Toolbar />
 
         <Box sx={{ p: { xs: 2, md: 3 } }}>
-          {/* Context Banner */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              px: 3,
-              mb: 3,
-              borderRadius: 2,
-              border: 1,
-              borderColor: 'grey.200',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-            }}
-          >
-            <Chip
-              icon={typeInfo.icon as React.ReactElement}
-              label={`Uploading ${typeInfo.label}`}
-              sx={{ bgcolor: `${typeInfo.color}15`, color: typeInfo.color, fontWeight: 600 }}
-            />
-            {lessonTitle && (
-              <Typography variant="body2" color="text.secondary">
-                for <Typography component="span" fontWeight={600} color="text.primary">{lessonTitle}</Typography>
-              </Typography>
-            )}
-          </Paper>
-
-          {/* No session context warning */}
-          {!sessionId && (
-            <Alert severity="warning" sx={{ mb: 3 }}>
-              No session context provided. Uploads will be simulated. Navigate here from a lesson to enable real uploads.
-            </Alert>
-          )}
-
-          {/* Two Column Layout */}
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', lg: '1fr 380px' },
+              gridTemplateColumns: { xs: '1fr', lg: '1fr 320px' },
               gap: 3,
             }}
           >
-            {/* Left: Upload Area */}
+            {/* Left Column */}
             <Box>
-              {/* Upload Zone */}
-              <Paper elevation={0} sx={{ borderRadius: 2, border: 1, borderColor: 'grey.200', overflow: 'hidden' }}>
-                <Box sx={{ p: 2, px: 3, borderBottom: 1, borderColor: 'grey.200', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box sx={{ fontWeight: 700, fontSize: '1.125rem' }}>
-                    {contentType === 'video' && contentSource === 'external' ? 'External Video URL' : `Upload ${typeInfo.label}`}
+              {/* Video Source Toggle */}
+              {contentType === 'video' && (
+                <Paper elevation={0} sx={{ borderRadius: 2, border: 1, borderColor: 'grey.200', overflow: 'hidden', mb: 3 }}>
+                  <Box sx={{ p: 2, px: 3, borderBottom: 1, borderColor: 'grey.200', bgcolor: 'grey.50' }}>
+                    <Typography fontWeight={700}>Content Source</Typography>
                   </Box>
-                  {contentType === 'video' && (
+                  <Box sx={{ p: 3 }}>
                     <ToggleButtonGroup
                       value={contentSource}
                       exclusive
-                      onChange={(_, val) => val && setContentSource(val)}
-                      size="small"
+                      onChange={(_e, val) => val && setContentSource(val)}
+                      fullWidth
+                      sx={{
+                        '& .MuiToggleButton-root': {
+                          textTransform: 'none',
+                          fontWeight: 600,
+                          py: 1.5,
+                          '&.Mui-selected': {
+                            bgcolor: 'primary.main',
+                            color: 'white',
+                            '&:hover': { bgcolor: 'primary.dark' },
+                          },
+                        },
+                      }}
                     >
-                      <ToggleButton value="upload" sx={{ textTransform: 'none', px: 2, fontSize: '0.8rem' }}>
-                        <UploadIcon sx={{ fontSize: 16, mr: 0.5 }} /> Upload
+                      <ToggleButton value="upload">
+                        <UploadIcon sx={{ mr: 1, fontSize: 20 }} />
+                        Upload File
                       </ToggleButton>
-                      <ToggleButton value="external" sx={{ textTransform: 'none', px: 2, fontSize: '0.8rem' }}>
-                        <LinkIcon sx={{ fontSize: 16, mr: 0.5 }} /> External URL
+                      <ToggleButton value="external">
+                        <LinkIcon sx={{ mr: 1, fontSize: 20 }} />
+                        External URL
                       </ToggleButton>
                     </ToggleButtonGroup>
-                  )}
-                </Box>
-                <Box sx={{ p: 3 }}>
-                  {contentType === 'video' && contentSource === 'external' ? (
-                    <Stack spacing={2}>
-                      <TextField
-                        fullWidth
-                        label="Video URL"
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        value={externalVideoUrl}
-                        onChange={(e) => {
-                          setExternalVideoUrl(e.target.value);
-                          if (externalVideoError) setExternalVideoError('');
-                        }}
-                        error={!!externalVideoError}
-                        helperText={externalVideoError}
-                      />
-                      <Alert severity="info" sx={{ '& .MuiAlert-message': { fontSize: '0.85rem' } }}>
-                        Supported providers: <strong>YouTube</strong>, <strong>Vimeo</strong>, <strong>Loom</strong>.
-                        Paste the share URL and the system will generate an embed automatically.
-                      </Alert>
-                    </Stack>
-                  ) : (
-                    <UploadZone type={contentType} onFilesSelected={handleFilesSelected} />
-                  )}
-                </Box>
-              </Paper>
+                  </Box>
+                </Paper>
+              )}
 
-              {/* Upload Progress */}
+              {/* Upload Zone or External URL */}
+              {contentType === 'video' && contentSource === 'external' ? (
+                <Paper elevation={0} sx={{ borderRadius: 2, border: 1, borderColor: 'grey.200', overflow: 'hidden', mb: 3 }}>
+                  <Box sx={{ p: 2, px: 3, borderBottom: 1, borderColor: 'grey.200', bgcolor: 'grey.50' }}>
+                    <Typography fontWeight={700}>External Video URL</Typography>
+                  </Box>
+                  <Box sx={{ p: 3 }}>
+                    <TextField
+                      fullWidth
+                      label="Video URL"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      value={externalVideoUrl}
+                      onChange={(e) => {
+                        setExternalVideoUrl(e.target.value);
+                        setExternalVideoError('');
+                      }}
+                      error={!!externalVideoError}
+                      helperText={externalVideoError || 'Supports YouTube, Vimeo, Dailymotion, and Wistia URLs'}
+                    />
+                    <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: 'wrap' }}>
+                      {['YouTube', 'Vimeo', 'Dailymotion', 'Wistia'].map((p) => (
+                        <Chip key={p} label={p} size="small" variant="outlined" />
+                      ))}
+                    </Stack>
+                  </Box>
+                </Paper>
+              ) : (
+                <UploadZone type={contentType} onFilesSelected={handleFilesSelected} />
+              )}
+
+              {/* Uploading Files */}
               {uploadingFiles.length > 0 && (
                 <Paper elevation={0} sx={{ borderRadius: 2, border: 1, borderColor: 'grey.200', overflow: 'hidden', mt: 3 }}>
                   <Box sx={{ p: 2, px: 3, borderBottom: 1, borderColor: 'grey.200', bgcolor: 'grey.50' }}>
@@ -381,9 +416,9 @@ const ContentUploadPage: React.FC = () => {
                         key={entry.id}
                         fileName={entry.file.name}
                         fileSize={formatFileSize(entry.file.size)}
-                        fileType={contentType === 'scorm' ? 'scorm' : contentType === 'document' ? 'document' : 'video'}
+                        fileType={fileType}
                         progress={entry.progress}
-                        status="uploading"
+                        status={entry.status}
                         onCancel={() => handleCancelUpload(entry.id)}
                       />
                     ))}
@@ -391,11 +426,29 @@ const ContentUploadPage: React.FC = () => {
                 </Paper>
               )}
 
-              {/* Upload Errors */}
+              {/* Failed Uploads */}
               {errorFiles.length > 0 && (
-                <Alert severity="error" sx={{ mt: 3 }}>
-                  {errorFiles.length} file(s) failed to upload: {errorFiles.map((e) => e.error || 'Unknown error').join(', ')}
-                </Alert>
+                <Paper elevation={0} sx={{ borderRadius: 2, border: 1, borderColor: 'error.light', overflow: 'hidden', mt: 3 }}>
+                  <Box sx={{ p: 2, px: 3, borderBottom: 1, borderColor: 'error.light', bgcolor: '#fef2f2' }}>
+                    <Box sx={{ fontWeight: 700, fontSize: '1.125rem', color: 'error.main' }}>
+                      Failed ({errorFiles.length} {errorFiles.length === 1 ? 'file' : 'files'})
+                    </Box>
+                  </Box>
+                  <Box sx={{ p: 2 }}>
+                    {errorFiles.map((entry) => (
+                      <UploadProgress
+                        key={entry.id}
+                        fileName={entry.file.name}
+                        fileSize={formatFileSize(entry.file.size)}
+                        fileType={fileType}
+                        progress={0}
+                        status="error"
+                        onRetry={() => handleRetryUpload(entry.id)}
+                        onCancel={() => handleDeleteFile(entry.id)}
+                      />
+                    ))}
+                  </Box>
+                </Paper>
               )}
 
               {/* Uploaded Files */}
@@ -403,47 +456,31 @@ const ContentUploadPage: React.FC = () => {
                 <Paper elevation={0} sx={{ borderRadius: 2, border: 1, borderColor: 'grey.200', overflow: 'hidden', mt: 3 }}>
                   <Box sx={{ p: 2, px: 3, borderBottom: 1, borderColor: 'grey.200', bgcolor: 'grey.50' }}>
                     <Box sx={{ fontWeight: 700, fontSize: '1.125rem' }}>
-                      Uploaded Files ({completedFiles.length})
+                      Uploaded ({completedFiles.length} {completedFiles.length === 1 ? 'file' : 'files'})
                     </Box>
                   </Box>
-                  <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  <Box sx={{ p: 2 }}>
                     {completedFiles.map((entry) => (
-                      <UploadedFileItem
+                      <UploadProgress
                         key={entry.id}
-                        id={entry.id}
-                        name={entry.file.name}
-                        type={contentType === 'scorm' ? 'scorm' : contentType === 'document' ? 'document' : 'video'}
-                        size={formatFileSize(entry.file.size)}
-                        status="ready"
-                        onDelete={() => handleDeleteFile(entry.id)}
+                        fileName={entry.file.name}
+                        fileSize={formatFileSize(entry.file.size)}
+                        fileType={fileType}
+                        progress={100}
+                        status="complete"
+                        onCancel={() => handleDeleteFile(entry.id)}
                       />
                     ))}
                   </Box>
                 </Paper>
               )}
 
-              {/* Content Settings */}
-              <Paper elevation={0} sx={{ borderRadius: 2, border: 1, borderColor: 'grey.200', overflow: 'hidden', mt: 3 }}>
-                <Box sx={{ p: 2, px: 3, borderBottom: 1, borderColor: 'grey.200', bgcolor: 'grey.50' }}>
-                  <Box sx={{ fontWeight: 700, fontSize: '1.125rem' }}>Content Settings</Box>
-                </Box>
-                <Box sx={{ p: 3 }}>
-                  <ContentDetailsForm
-                    requireCompletion={requireCompletion}
-                    includeInProgress={includeInProgress}
-                    downloadable={downloadable}
-                    onRequireCompletionChange={setRequireCompletion}
-                    onIncludeInProgressChange={setIncludeInProgress}
-                    onDownloadableChange={setDownloadable}
-                  />
-                </Box>
-              </Paper>
             </Box>
 
-            {/* Right: Sidebar Widgets */}
+            {/* Right Column */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <UploadTipsCard />
-              <StorageInfoCard used={3.2} total={10} />
+              <UploadTipsCard contentType={contentType} />
+              <StorageInfoCard />
               <RecentUploadsCard uploads={sampleRecentUploads} />
             </Box>
           </Box>
@@ -452,12 +489,16 @@ const ContentUploadPage: React.FC = () => {
 
       {/* Footer */}
       <UploadFooter
-        uploadCount={contentSource === 'external' ? (externalVideoUrl ? 1 : 0) : fileEntries.length}
+        uploadCount={completedFiles.length}
         onCancel={handleCancel}
         onAddMore={() => {}}
         onComplete={handleComplete}
-        disabled={isCompleteDisabled}
+        disabled={completing || isStillUploading || !hasAnyComplete}
+        savingLabel={completing ? 'Saving\u2026' : isStillUploading ? 'Uploading\u2026' : undefined}
       />
+
+      <FeedbackSnackbar message={snackError} onClose={() => setSnackError(null)} />
+      <FeedbackSnackbar message={snackSuccess} onClose={() => setSnackSuccess(null)} severity="success" autoHideDuration={3000} />
     </Box>
   );
 };

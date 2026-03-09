@@ -38,6 +38,10 @@ interface CurriculumBuilderProps {
   onAddLesson: (moduleId: string) => void;
   onEditModule?: (moduleId: string) => void;
   onEditLesson?: (lessonId: string) => void;
+  onPreviewLesson?: (lessonId: string) => void;
+  onDragStartLesson?: (lessonId: number) => void;
+  onDragEndLesson?: () => void;
+  onDropModule?: (moduleId: string) => void;
 }
 
 const CurriculumBuilder: React.FC<CurriculumBuilderProps> = ({
@@ -46,8 +50,14 @@ const CurriculumBuilder: React.FC<CurriculumBuilderProps> = ({
   onAddLesson,
   onEditModule,
   onEditLesson,
+  onPreviewLesson,
+  onDragStartLesson,
+  onDragEndLesson,
+  onDropModule,
 }) => {
-  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set(['1']));
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(
+    () => new Set(data.modules.map((m) => m.id))
+  );
   const [viewMode, setViewMode] = useState<'detailed' | 'compact'>('detailed');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -188,12 +198,17 @@ const CurriculumBuilder: React.FC<CurriculumBuilderProps> = ({
             expanded={expandedModules.has(module.id)}
             onToggle={() => toggleModule(module.id)}
             onEdit={() => onEditModule?.(module.id)}
+            onDropModule={() => onDropModule?.(module.id)}
           >
             {module.lessons.map((lesson) => (
               <LessonItem
                 key={lesson.id}
                 lesson={lesson}
                 onEdit={() => onEditLesson?.(lesson.id)}
+                onPreview={() => onPreviewLesson?.(lesson.id)}
+                draggable={true}
+                onDragStart={() => onDragStartLesson?.(Number(lesson.id))}
+                onDragEnd={onDragEndLesson}
               />
             ))}
             <AddLessonButton onClick={() => onAddLesson(module.id)} />

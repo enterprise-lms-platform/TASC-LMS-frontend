@@ -17,20 +17,20 @@ interface UploadZoneProps {
 const typeConfig: Record<UploadContentType, { title: string; formats: string; maxSize: string; maxBytes: number; accept: string; validExtensions: string[]; gradient: string }> = {
   video: {
     title: 'Drag & Drop Video Files Here',
-    formats: 'MP4, WebM, MOV, AVI',
+    formats: 'MP4, WebM, MOV',
     maxSize: 'Maximum 2GB per file',
     maxBytes: 2 * 1024 * 1024 * 1024,
-    accept: 'video/*',
-    validExtensions: ['mp4', 'webm', 'mov', 'avi', 'mkv'],
+    accept: '.mp4,.webm,.mov',
+    validExtensions: ['mp4', 'webm', 'mov'],
     gradient: 'linear-gradient(135deg, #ffb74d, #f97316)',
   },
   document: {
     title: 'Drag & Drop Documents Here',
-    formats: 'PDF, DOCX, PPTX, XLSX',
+    formats: 'PDF only',
     maxSize: 'Maximum 50MB per file',
     maxBytes: 50 * 1024 * 1024,
-    accept: '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx',
-    validExtensions: ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'],
+    accept: '.pdf',
+    validExtensions: ['pdf'],
     gradient: 'linear-gradient(135deg, #10b981, #34d399)',
   },
   scorm: {
@@ -68,9 +68,8 @@ const UploadZone: React.FC<UploadZoneProps> = ({ type, onFilesSelected }) => {
       }
 
       const ext = file.name.split('.').pop()?.toLowerCase() || '';
-      const isValidByMime = type === 'video' ? file.type.startsWith('video/') : false;
 
-      if (!isValidByMime && !config.validExtensions.includes(ext)) {
+      if (!config.validExtensions.includes(ext)) {
         errors.push(`"${file.name}" is not a supported format. Accepted: ${config.formats}`);
         continue;
       }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, IconButton, Checkbox } from '@mui/material';
+import { Box, Typography, IconButton, Checkbox, Tooltip } from '@mui/material';
 import {
   DragIndicator as DragIcon,
   Edit as EditIcon,
@@ -24,6 +24,10 @@ interface LessonData {
   meta?: string;
   isComplete?: boolean;
   isFreePreview?: boolean;
+  contentLabel?: string;
+  contentBadgeBg?: string;
+  contentBadgeColor?: string;
+  contentTooltip?: string;
 }
 
 interface LessonItemProps {
@@ -32,6 +36,9 @@ interface LessonItemProps {
   onPreview?: () => void;
   onMore?: () => void;
   onToggleComplete?: () => void;
+  draggable?: boolean;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
 const typeConfig: Record<string, { icon: React.ReactNode; bg: string; color: string }> = {
@@ -52,11 +59,17 @@ const LessonItem: React.FC<LessonItemProps> = ({
   onPreview,
   onMore,
   onToggleComplete,
+  draggable = false,
+  onDragStart,
+  onDragEnd,
 }) => {
   const config = typeConfig[lesson.type] || typeConfig['document'];
 
   return (
     <Box
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
       sx={{
         bgcolor: 'white',
         border: 1,
@@ -124,6 +137,21 @@ const LessonItem: React.FC<LessonItemProps> = ({
                 Free Preview
               </Box>
             )}
+            {lesson.contentLabel && (
+              <Box
+                sx={{
+                  px: 1,
+                  py: 0.25,
+                  bgcolor: lesson.contentBadgeBg ?? '#e4e4e7',
+                  color: lesson.contentBadgeColor ?? '#52525b',
+                  borderRadius: '10px',
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                }}
+              >
+                {lesson.contentLabel}
+              </Box>
+            )}
           </Box>
           <Box sx={{ display: 'flex', gap: 2, mt: 0.25 }}>
             <Typography variant="caption" color="text.secondary">
@@ -150,9 +178,11 @@ const LessonItem: React.FC<LessonItemProps> = ({
           <IconButton size="small" onClick={onEdit}>
             <EditIcon fontSize="small" />
           </IconButton>
-          <IconButton size="small" onClick={onPreview}>
-            <PreviewIcon fontSize="small" />
-          </IconButton>
+          <Tooltip title={lesson.contentTooltip ?? 'Preview content'} arrow>
+            <IconButton size="small" onClick={onPreview}>
+              <PreviewIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <IconButton size="small" onClick={onMore}>
             <MoreIcon fontSize="small" />
           </IconButton>
