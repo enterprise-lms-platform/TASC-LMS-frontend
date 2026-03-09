@@ -5,9 +5,11 @@ import {
   categoryApi,
   tagApi,
   courseApi,
+  moduleApi,
   sessionApi,
   courseApprovalApi,
   type CourseListParams,
+  type ModuleListParams,
   type SessionListParams,
   type ApprovalListParams,
 } from '../services/catalogue.services';
@@ -15,8 +17,10 @@ import { queryKeys } from './queryKeys';
 import type {
   CategoryCreateRequest,
   CourseCreateRequest,
+  ModuleCreateRequest,
   SessionCreateRequest,
   CourseList,
+  Module,
   Session,
   PaginatedResponse,
   CourseApprovalActionRequest,
@@ -176,6 +180,71 @@ export const useDeleteCourse = () => {
   });
 };
 
+// ── Modules ──
+
+export const useModules = (params?: ModuleListParams) =>
+  useQuery({
+    queryKey: queryKeys.modules.all(params),
+    queryFn: () => moduleApi.getAll(params).then((r) => r.data),
+    enabled: !!params?.course,
+  });
+
+export const useCreateModule = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ModuleCreateRequest) =>
+      moduleApi.create(data).then((r) => r.data),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['modules'] });
+      qc.invalidateQueries({
+        queryKey: queryKeys.courses.detail(variables.course),
+      });
+    },
+  });
+};
+
+export const usePartialUpdateModule = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<ModuleCreateRequest> }) =>
+      moduleApi.partialUpdate(id, data).then((r) => r.data),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['modules'] });
+      qc.invalidateQueries({
+        queryKey: queryKeys.modules.detail(variables.id),
+      });
+    },
+  });
+};
+
+export const useDeleteModule = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => moduleApi.delete(id),
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ['modules'] });
+      const allQueries = qc.getQueriesData<Module[]>({
+        queryKey: ['modules'],
+        exact: false,
+      });
+      allQueries.forEach(([key, data]) => {
+        if (Array.isArray(data)) {
+          qc.setQueryData(key, data.filter((m) => m.id !== id));
+        }
+      });
+      return { allQueries };
+    },
+    onError: (_err, _id, context) => {
+      context?.allQueries.forEach(([key, data]) => {
+        qc.setQueryData(key, data);
+      });
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['modules'] });
+    },
+  });
+};
+
 // ── Sessions ──
 
 export const useSessions = (params?: SessionListParams) =>
@@ -196,8 +265,11 @@ export const useCreateSession = () => {
   return useMutation({
     mutationFn: (data: SessionCreateRequest) =>
       sessionApi.create(data).then((r) => r.data),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['sessions'] });
+      qc.invalidateQueries({
+        queryKey: queryKeys.courses.detail(variables.course),
+      });
     },
   });
 };

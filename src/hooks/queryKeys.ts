@@ -1,6 +1,6 @@
 // queryKeys.ts
 
-import type { CategoryListParams, CourseListParams, SessionListParams, ApprovalListParams } from '../services/catalogue.services';
+import type { CategoryListParams, CourseListParams, SessionListParams, ApprovalListParams, ModuleListParams } from '../services/catalogue.services';
 import type { SessionProgressParams, DiscussionParams, DiscussionReplyParams } from '../services/learning.services';
 import type { InvoiceParams, TransactionParams, UserSubscriptionParams } from '../services/payments.services';
 import type { PublicCourseParams } from '../services/public.services';
@@ -27,6 +27,10 @@ export const queryKeys = {
   courses: {
     all: (params?: CourseListParams) => ['courses', params] as const,
     detail: (id: number) => ['courses', 'detail', id] as const,
+  },
+  modules: {
+    all: (params?: ModuleListParams) => ['modules', params] as const,
+    detail: (id: number) => ['modules', 'detail', id] as const,
   },
   sessions: {
     all: (params?: SessionListParams) => ['sessions', params] as const,

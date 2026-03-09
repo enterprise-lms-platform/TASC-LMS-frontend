@@ -1,12 +1,17 @@
-import React, { useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
+import { useParams, useNavigate, useLoaderData } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '../hooks/queryKeys';
+import type { CourseDetail, Session, SessionProgress } from '../types/types';
+import { useSessionAssetUrl } from '../hooks/useUpload';
+import ReactPlayer from 'react-player';
 import {
   Box, Typography, IconButton, Button, Tabs, Tab, LinearProgress,
   Checkbox, Collapse, Drawer, Divider, TextField, Avatar, Chip,
-  Tooltip, useMediaQuery, useTheme, AppBar, Toolbar,
+  Tooltip, useMediaQuery, useTheme, AppBar, Toolbar, CircularProgress,
 } from '@mui/material';
 import {
-  ArrowBack as BackIcon, PlayArrow as PlayIcon,
+  ArrowBack as BackIcon,
   SkipPrevious as PrevIcon, SkipNext as NextIcon,
   ExpandMore as ExpandIcon, ChevronRight as ChevronIcon,
   PlayCircleOutline as VideoIcon, Description as ArticleIcon, Quiz as QuizIcon,
@@ -15,90 +20,39 @@ import {
   Download as DownloadIcon, ThumbUpAltOutlined as LikeIcon,
   Send as SendIcon, NoteAdd as NoteIcon,
   MenuOpen as MenuOpenIcon, Menu as MenuIcon,
-  AccessTime as TimeIcon,
 } from '@mui/icons-material';
 import '../styles/LearnerDashboard.css';
 
 /* ── Types ── */
-interface Lesson {
-  id: string;
-  title: string;
-  duration: string;
-  type: 'video' | 'article' | 'quiz';
-  contentSource?: 'inline' | 'upload' | 'external';
-  externalVideoEmbedUrl?: string;
-}
-interface Module { id: string; title: string; lessons: Lesson[]; }
-interface Note { id: number; text: string; timestamp: string; lessonTitle: string; }
+interface Note { id: number; text: string; timestamp: string; sessionTitle: string; }
 interface Question { id: number; author: string; text: string; votes: number; replies: number; time: string; }
 interface Resource { id: number; name: string; type: string; size: string; }
 
-/* ── Sample Data ── */
-const courseTitle = 'Advanced React Patterns';
-const instructorName = 'Michael Rodriguez';
-
-const modules: Module[] = [
-  {
-    id: '1', title: 'Module 1: React Fundamentals Review',
-    lessons: [
-      { id: '1-1', title: 'Introduction to Advanced Patterns', duration: '12:30', type: 'video' },
-      { id: '1-2', title: 'Component Composition Deep Dive', duration: '18:45', type: 'video' },
-      { id: '1-3', title: 'State Management Patterns', duration: '22:10', type: 'video' },
-      { id: '1-4', title: 'Module 1 Reading Material', duration: '10 min', type: 'article' },
-      { id: '1-5', title: 'Module 1 Quiz', duration: '15 min', type: 'quiz' },
-    ],
-  },
-  {
-    id: '2', title: 'Module 2: Advanced Component Patterns',
-    lessons: [
-      { id: '2-1', title: 'Render Props Pattern', duration: '25:00', type: 'video' },
-      { id: '2-2', title: 'Higher-Order Components', duration: '20:15', type: 'video' },
-      { id: '2-3', title: 'Compound Components', duration: '28:30', type: 'video' },
-      { id: '2-4', title: 'Building a Modal with Compound Pattern', duration: '35:00', type: 'video' },
-      { id: '2-5', title: 'Module 2 Quiz', duration: '20 min', type: 'quiz' },
-    ],
-  },
-  {
-    id: '3', title: 'Module 3: Custom Hooks Mastery',
-    lessons: [
-      { id: '3-1', title: 'Creating Custom Hooks', duration: '22:00', type: 'video' },
-      { id: '3-2', title: 'useLocalStorage Hook', duration: '15:30', type: 'video' },
-      { id: '3-3', title: 'useFetch Hook', duration: '18:45', type: 'video' },
-      { id: '3-4', title: 'useDebounce and useThrottle', duration: '20:00', type: 'video' },
-    ],
-  },
-  {
-    id: '4', title: 'Module 4: Performance Optimization',
-    lessons: [
-      { id: '4-1', title: 'React.memo and useMemo', duration: '19:00', type: 'video' },
-      { id: '4-2', title: 'useCallback Deep Dive', duration: '16:30', type: 'video' },
-      { id: '4-3', title: 'Virtualization Techniques', duration: '24:00', type: 'video' },
-      { id: '4-4', title: 'Performance Audit Workshop', duration: '30 min', type: 'article' },
-      { id: '4-5', title: 'Final Assessment', duration: '30 min', type: 'quiz' },
-    ],
-  },
-];
-
+/* ── Sample Data for Notes/Q&A ── */
 const sampleNotes: Note[] = [
-  { id: 1, text: 'Key insight: Render props allow inversion of control for component rendering', timestamp: '5:23', lessonTitle: 'Render Props Pattern' },
-  { id: 2, text: 'Remember to memoize callback functions passed as render props', timestamp: '12:45', lessonTitle: 'Render Props Pattern' },
+  { id: 1, text: 'Key insight: This is important', timestamp: '5:23', sessionTitle: 'Sample Session' },
 ];
 
 const sampleQuestions: Question[] = [
-  { id: 1, author: 'Sarah K.', text: 'How does this pattern compare to hooks for sharing logic?', votes: 12, replies: 3, time: '2 days ago' },
-  { id: 2, author: 'James L.', text: 'Can we use render props with TypeScript generics?', votes: 8, replies: 2, time: '1 week ago' },
-  { id: 3, author: 'Maria G.', text: 'What are the performance implications of using render props vs HOCs?', votes: 5, replies: 1, time: '3 days ago' },
+  { id: 1, author: 'Sarah K.', text: 'How does this work?', votes: 12, replies: 3, time: '2 days ago' },
 ];
 
 const sampleResources: Resource[] = [
   { id: 1, name: 'Lesson Slides.pdf', type: 'PDF', size: '2.4 MB' },
-  { id: 2, name: 'Code Examples.zip', type: 'ZIP', size: '1.1 MB' },
-  { id: 3, name: 'React Patterns Cheat Sheet.pdf', type: 'PDF', size: '450 KB' },
 ];
 
-/* ── Helpers ── */
-const allLessons = modules.flatMap(m => m.lessons);
-const totalLessons = allLessons.length;
+/* ── Helper to Group Sessions into logical modules ── */
+// Note: TASC backend currently doesn't have a formal "Module" concept in the Session model,
+// so we group them into a single "Course Content" module or just list them.
+const groupSessions = (sessions: Session[]) => {
+  return [
+    {
+      id: 'module-1',
+      title: 'Course Sessions',
+      sessions: [...sessions].sort((a, b) => a.order - b.order),
+    }
+  ];
+};
 
 /* ── Component ── */
 const CoursePlayerPage: React.FC = () => {
@@ -106,56 +60,83 @@ const CoursePlayerPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const queryClient = useQueryClient();
+
+  // Load backend data from the router loader
+  const { course: initialCourse, progress: initialProgress } = useLoaderData() as {
+    course: CourseDetail;
+    progress: SessionProgress[];
+  };
+
+  // Keep state synced via React Query
+  const course = queryClient.getQueryData<CourseDetail>(queryKeys.courses.detail(Number(courseId))) || initialCourse;
+  const recordedProgress = queryClient.getQueryData<SessionProgress[]>(queryKeys.sessionProgress.all({ course: Number(courseId) })) || initialProgress;
+
+  const modules = useMemo(() => groupSessions(course?.sessions || []), [course?.sessions]);
+  const allSessions = useMemo(() => modules.flatMap(m => m.sessions), [modules]);
+  const totalSessions = allSessions.length;
 
   const [activeTab, setActiveTab] = useState(0);
-  const [activeLessonId, setActiveLessonId] = useState('2-1');
-  const [expandedModules, setExpandedModules] = useState<string[]>(['1', '2']);
-  const [completedLessons, setCompletedLessons] = useState<string[]>(['1-1', '1-2', '1-3', '1-4', '1-5']);
+  const [activeSessionId, setActiveSessionId] = useState<number | null>(allSessions[0]?.id || null);
+  const [expandedModules, setExpandedModules] = useState<string[]>(['module-1']);
   const [curriculumOpen, setCurriculumOpen] = useState(true);
   const [notes, setNotes] = useState<Note[]>(sampleNotes);
   const [newNote, setNewNote] = useState('');
-  const [isPlaying, setIsPlaying] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  
+  // Real completed sessions array based on backend progress
+  const completedSessions = recordedProgress.filter(p => p.is_completed).map(p => p.session);
+  const progressPercent = totalSessions > 0 ? Math.round((completedSessions.length / totalSessions) * 100) : 0;
 
-  const activeLesson = allLessons.find(l => l.id === activeLessonId) || allLessons[0];
-  const activeLessonIndex = allLessons.findIndex(l => l.id === activeLessonId);
-  const progress = Math.round((completedLessons.length / totalLessons) * 100);
+  const activeSession = allSessions.find(s => s.id === activeSessionId) || allSessions[0];
+  const activeSessionIndex = allSessions.findIndex(s => s.id === activeSessionId);
+
+  // Use the presigned URL hook — only triggers if the activeSession needs it and has an ID
+  const isPrivateAsset = activeSession?.content_source === 'upload' && !!activeSession?.asset_bucket;
+  const { data: assetUrlData, isLoading: isAssetLoading } = useSessionAssetUrl(isPrivateAsset ? activeSessionId || undefined : undefined);
 
   const toggleModule = (id: string) => {
     setExpandedModules(prev => prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]);
   };
 
-  const goToLesson = (lessonId: string) => {
-    setActiveLessonId(lessonId);
-    const mod = modules.find(m => m.lessons.some(l => l.id === lessonId));
+  const goToSession = (sessionId: number) => {
+    setActiveSessionId(sessionId);
+    const mod = modules.find(m => m.sessions.some(s => s.id === sessionId));
     if (mod && !expandedModules.includes(mod.id)) {
       setExpandedModules(prev => [...prev, mod.id]);
     }
   };
 
-  const toggleComplete = (lessonId: string) => {
-    setCompletedLessons(prev =>
-      prev.includes(lessonId) ? prev.filter(l => l !== lessonId) : [...prev, lessonId]
-    );
+  const toggleComplete = async (sessionId: number) => {
+    const progRecord = recordedProgress.find(p => p.session === sessionId) || {
+        id: Date.now(),
+        enrollment: 1,
+        session: sessionId,
+        session_title: allSessions.find(s => s.id === sessionId)?.title || '',
+        session_type: 'video',
+        is_started: true,
+        is_completed: false,
+        time_spent_seconds: 0,
+        time_spent_minutes: 0,
+        last_accessed_at: new Date().toISOString(),
+        duration_minutes: 0
+    };
+    
+    queryClient.setQueryData(queryKeys.sessionProgress.all({ course: Number(courseId) }), (oldData: SessionProgress[] = []) => {
+      const exists = oldData.find(p => p.session === sessionId);
+      if (exists) {
+        return oldData.map(p => p.session === sessionId ? { ...p, is_completed: !p.is_completed } : p);
+      }
+      return [...oldData, { ...progRecord, is_completed: true }];
+    });
   };
 
   const addNote = () => {
-    if (!newNote.trim()) return;
-    setNotes(prev => [{ id: Date.now(), text: newNote, timestamp: '0:00', lessonTitle: activeLesson.title }, ...prev]);
+    if (!newNote.trim() || !activeSession) return;
+    setNotes(prev => [{ id: Date.now(), text: newNote, timestamp: '0:00', sessionTitle: activeSession.title }, ...prev]);
     setNewNote('');
   };
 
-  const togglePlayPause = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    if (video.paused) {
-      video.play();
-      setIsPlaying(true);
-    } else {
-      video.pause();
-      setIsPlaying(false);
-    }
-  };
+
 
   const getLessonIcon = (type: string) => {
     switch (type) {
@@ -178,16 +159,16 @@ const CoursePlayerPage: React.FC = () => {
       {/* Progress */}
       <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid #e5e7eb' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-          <Typography variant="caption" color="text.secondary">{completedLessons.length}/{totalLessons} lessons complete</Typography>
-          <Typography variant="caption" fontWeight={600} color="primary.main">{progress}%</Typography>
+          <Typography variant="caption" color="text.secondary">{completedSessions.length}/{totalSessions} sessions complete</Typography>
+          <Typography variant="caption" fontWeight={600} color="primary.main">{progressPercent}%</Typography>
         </Box>
-        <LinearProgress variant="determinate" value={progress} sx={{ height: 6, borderRadius: 3, bgcolor: '#f0f0f0', '& .MuiLinearProgress-bar': { borderRadius: 3 } }} />
+        <LinearProgress variant="determinate" value={progressPercent} sx={{ height: 6, borderRadius: 3, bgcolor: '#f0f0f0', '& .MuiLinearProgress-bar': { borderRadius: 3 } }} />
       </Box>
 
       {/* Modules */}
       <Box sx={{ flex: 1, overflow: 'auto', '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { bgcolor: '#d1d5db', borderRadius: 2 } }}>
         {modules.map(mod => {
-          const modCompleted = mod.lessons.filter(l => completedLessons.includes(l.id)).length;
+          const modCompleted = mod.sessions.filter(s => completedSessions.includes(s.id)).length;
           const isExpanded = expandedModules.includes(mod.id);
           return (
             <Box key={mod.id}>
@@ -205,17 +186,17 @@ const CoursePlayerPage: React.FC = () => {
                 {isExpanded ? <ExpandIcon sx={{ fontSize: 20, color: '#ffa424' }} /> : <ChevronIcon sx={{ fontSize: 20 }} />}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography variant="body2" fontWeight={600} noWrap>{mod.title}</Typography>
-                  <Typography variant="caption" color="text.secondary">{modCompleted}/{mod.lessons.length} completed</Typography>
+                  <Typography variant="caption" color="text.secondary">{modCompleted}/{mod.sessions.length} completed</Typography>
                 </Box>
               </Box>
               <Collapse in={isExpanded}>
-                {mod.lessons.map(lesson => {
-                  const isActive = lesson.id === activeLessonId;
-                  const isDone = completedLessons.includes(lesson.id);
+                {mod.sessions.map(session => {
+                  const isActive = session.id === activeSessionId;
+                  const isDone = completedSessions.includes(session.id);
                   return (
                     <Box
-                      key={lesson.id}
-                      onClick={() => goToLesson(lesson.id)}
+                      key={session.id}
+                      onClick={() => goToSession(session.id)}
                       sx={{
                         pl: 2, pr: 1.5, py: 1,
                         display: 'flex', alignItems: 'center', gap: 1,
@@ -229,18 +210,18 @@ const CoursePlayerPage: React.FC = () => {
                       <Checkbox
                         checked={isDone}
                         size="small"
-                        onClick={(e) => { e.stopPropagation(); toggleComplete(lesson.id); }}
+                        onClick={(e) => { e.stopPropagation(); toggleComplete(session.id); }}
                         sx={{ p: 0.25, color: isDone ? '#10b981' : '#d1d5db', '&.Mui-checked': { color: '#10b981' } }}
                       />
                       <Box sx={{ color: isActive ? '#ffa424' : '#6b7280', display: 'flex', alignItems: 'center' }}>
-                        {getLessonIcon(lesson.type)}
+                        {getLessonIcon(session.session_type)}
                       </Box>
                       <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Typography variant="body2" noWrap sx={{ fontWeight: isActive ? 600 : 400, color: isActive ? '#1a1a2e' : 'text.primary', fontSize: '0.82rem' }}>
-                          {lesson.title}
+                          {session.title}
                         </Typography>
                       </Box>
-                      <Typography variant="caption" color="text.disabled" sx={{ flexShrink: 0 }}>{lesson.duration}</Typography>
+                      <Typography variant="caption" color="text.disabled" sx={{ flexShrink: 0 }}>{session.duration_minutes} min</Typography>
                     </Box>
                   );
                 })}
@@ -266,13 +247,13 @@ const CoursePlayerPage: React.FC = () => {
           </Tooltip>
           <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255,255,255,0.15)', mx: 0.5 }} />
           <Typography variant="body2" noWrap sx={{ flex: 1, color: '#e5e7eb', fontWeight: 500 }}>
-            {courseTitle}
+            {course?.title || 'Course Player'}
           </Typography>
 
           {/* Progress pill */}
           <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1, bgcolor: 'rgba(255,255,255,0.08)', px: 1.5, py: 0.5, borderRadius: '20px' }}>
-            <LinearProgress variant="determinate" value={progress} sx={{ width: 80, height: 4, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.15)', '& .MuiLinearProgress-bar': { borderRadius: 2, bgcolor: '#ffa424' } }} />
-            <Typography variant="caption" sx={{ color: '#ffa424', fontWeight: 600 }}>{progress}%</Typography>
+            <LinearProgress variant="determinate" value={progressPercent} sx={{ width: 80, height: 4, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.15)', '& .MuiLinearProgress-bar': { borderRadius: 2, bgcolor: '#ffa424' } }} />
+            <Typography variant="caption" sx={{ color: '#ffa424', fontWeight: 600 }}>{progressPercent}%</Typography>
           </Box>
 
           <Tooltip title="Bookmark"><IconButton sx={{ color: 'rgba(255,255,255,0.7)' }}><BookmarkIcon /></IconButton></Tooltip>
@@ -295,7 +276,7 @@ const CoursePlayerPage: React.FC = () => {
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', minWidth: 0, height: 'calc(100vh - 56px)' }}>
 
           {/* Video Player */}
-          {activeLesson.contentSource === 'external' && activeLesson.externalVideoEmbedUrl ? (
+          {activeSession?.session_type === 'video' && activeSession?.content_source === 'external' && activeSession?.external_video_embed_url ? (
             /* External Video (YouTube/Vimeo/Loom) via iframe */
             <Box
               sx={{
@@ -308,8 +289,8 @@ const CoursePlayerPage: React.FC = () => {
               }}
             >
               <iframe
-                src={activeLesson.externalVideoEmbedUrl}
-                title={activeLesson.title}
+                src={activeSession.external_video_embed_url}
+                title={activeSession.title}
                 style={{
                   position: 'absolute',
                   top: 0,
@@ -322,99 +303,68 @@ const CoursePlayerPage: React.FC = () => {
                 allowFullScreen
               />
             </Box>
-          ) : (
-            /* Uploaded / Inline Video */
+          ) : activeSession?.session_type === 'video' ? (
+            /* Uploaded Presigned Asset via ReactPlayer */
             <Box
-              onClick={togglePlayPause}
               sx={{
                 position: 'relative',
                 width: '100%',
                 paddingTop: '56.25%',
                 background: '#000',
-                cursor: 'pointer',
                 flexShrink: 0,
                 overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <video
-                ref={videoRef}
-                src="/video/Course_player.m4v"
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                onEnded={() => setIsPlaying(false)}
-                style={{
-                  position: 'absolute',
-                  top: 0, left: 0,
-                  width: '100%', height: '100%',
-                  objectFit: 'contain',
-                  background: '#000',
-                }}
-              />
-
-              {/* Play Button Overlay — hidden when playing */}
-              {!isPlaying && (
-                <>
-                  <Box sx={{
-                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundImage: 'radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)',
-                    backgroundSize: '24px 24px',
-                    pointerEvents: 'none',
-                  }} />
-
-                  <Box
-                    className="cp-play-btn"
-                    sx={{
-                      position: 'absolute',
-                      top: '50%', left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      width: 80, height: 80,
-                      borderRadius: '50%',
-                      bgcolor: 'rgba(255,164,36,0.9)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      boxShadow: '0 4px 30px rgba(255,164,36,0.4)',
-                      transition: 'transform 0.3s, box-shadow 0.3s',
-                      '&:hover': { transform: 'translate(-50%, -50%) scale(1.12)', boxShadow: '0 6px 40px rgba(255,164,36,0.6)' },
-                      pointerEvents: 'none',
-                    }}
-                  >
-                    <PlayIcon sx={{ fontSize: 44, color: '#fff', ml: 0.5 }} />
-                  </Box>
-
-                  <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, p: 2.5, background: 'linear-gradient(transparent, rgba(0,0,0,0.75))', pointerEvents: 'none' }}>
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', letterSpacing: 1, textTransform: 'uppercase', fontSize: '0.65rem' }}>
-                      Module {modules.findIndex(m => m.lessons.some(l => l.id === activeLessonId)) + 1}
-                    </Typography>
-                    <Typography variant="h6" sx={{ color: '#fff', fontWeight: 600, mt: 0.25 }}>{activeLesson.title}</Typography>
-                  </Box>
-
-                  <Chip
-                    icon={<TimeIcon sx={{ fontSize: 14, color: '#fff !important' }} />}
-                    label={activeLesson.duration}
-                    size="small"
-                    sx={{ position: 'absolute', top: 16, right: 16, bgcolor: 'rgba(0,0,0,0.55)', color: '#fff', backdropFilter: 'blur(6px)', fontSize: '0.75rem', pointerEvents: 'none' }}
-                  />
-                </>
+              {isAssetLoading ? (
+                <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CircularProgress sx={{ color: '#ffa424' }} />
+                </Box>
+              ) : assetUrlData?.url || activeSession?.video_url ? (
+                <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+                  {/* @ts-ignore ReactPlayer typing issues with React 19 */}
+                  {(ReactPlayer as any)({
+                    url: (assetUrlData?.url || activeSession?.video_url || '') as string,
+                    controls: true,
+                    width: "100%",
+                    height: "100%",
+                    style: { backgroundColor: '#000' }
+                  })}
+                </Box>
+              ) : (
+                <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 3, textAlign: 'center' }}>
+                  <VideoIcon sx={{ fontSize: 64, color: 'rgba(255,255,255,0.2)', mb: 2 }} />
+                  <Typography variant="body1" sx={{ color: '#fff' }}>Video content is not available.</Typography>
+                </Box>
               )}
+            </Box>
+          ) : (
+            /* Non-video content placeholder */
+            <Box sx={{ width: '100%', pt: '30%', bgcolor: '#f0f2f5', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #e5e7eb' }}>
+               {getLessonIcon(activeSession?.session_type || 'text')}
+               <Typography variant="body1" fontWeight={600} sx={{ mt: 2, color: 'text.secondary' }}>Non-video Content: {activeSession?.title}</Typography>
             </Box>
           )}
 
-          {/* Lesson Navigation */}
+          {/* Session Navigation */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: { xs: 2, md: 3 }, py: 1.5, bgcolor: '#fff', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
             <Button
               startIcon={<PrevIcon />}
-              disabled={activeLessonIndex <= 0}
-              onClick={() => activeLessonIndex > 0 && goToLesson(allLessons[activeLessonIndex - 1].id)}
+              disabled={activeSessionIndex <= 0}
+              onClick={() => activeSessionIndex > 0 && goToSession(allSessions[activeSessionIndex - 1].id)}
               sx={{ textTransform: 'none', fontWeight: 600, color: 'text.secondary' }}
             >
               Previous
             </Button>
             <Typography variant="body2" color="text.secondary" fontWeight={500}>
-              Lesson {activeLessonIndex + 1} of {totalLessons}
+              Session {activeSessionIndex + 1} of {totalSessions}
             </Typography>
             <Button
               endIcon={<NextIcon />}
-              disabled={activeLessonIndex >= totalLessons - 1}
-              onClick={() => activeLessonIndex < totalLessons - 1 && goToLesson(allLessons[activeLessonIndex + 1].id)}
+              disabled={activeSessionIndex >= totalSessions - 1}
+              onClick={() => activeSessionIndex < totalSessions - 1 && goToSession(allSessions[activeSessionIndex + 1].id)}
               variant="contained"
               sx={{ textTransform: 'none', fontWeight: 600, color: '#fff' }}
             >
@@ -422,25 +372,25 @@ const CoursePlayerPage: React.FC = () => {
             </Button>
           </Box>
 
-          {/* Mark Complete + Lesson Title */}
+          {/* Mark Complete + Session Title */}
           <Box sx={{ px: { xs: 2, md: 3 }, py: 2, bgcolor: '#fff', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', flexShrink: 0 }}>
             <Button
-              variant={completedLessons.includes(activeLessonId) ? 'contained' : 'outlined'}
+              variant={activeSession && completedSessions.includes(activeSession.id) ? 'contained' : 'outlined'}
               startIcon={<CheckIcon />}
-              onClick={() => toggleComplete(activeLessonId)}
+              onClick={() => activeSession && toggleComplete(activeSession.id)}
               sx={{
                 borderRadius: '50px', textTransform: 'none', fontWeight: 600,
-                bgcolor: completedLessons.includes(activeLessonId) ? '#10b981' : 'transparent',
-                borderColor: completedLessons.includes(activeLessonId) ? '#10b981' : '#d1d5db',
-                color: completedLessons.includes(activeLessonId) ? '#fff' : 'text.secondary',
-                '&:hover': { bgcolor: completedLessons.includes(activeLessonId) ? '#059669' : 'rgba(0,0,0,0.04)', borderColor: completedLessons.includes(activeLessonId) ? '#059669' : '#d1d5db' },
+                bgcolor: activeSession && completedSessions.includes(activeSession.id) ? '#10b981' : 'transparent',
+                borderColor: activeSession && completedSessions.includes(activeSession.id) ? '#10b981' : '#d1d5db',
+                color: activeSession && completedSessions.includes(activeSession.id) ? '#fff' : 'text.secondary',
+                '&:hover': { bgcolor: activeSession && completedSessions.includes(activeSession.id) ? '#059669' : 'rgba(0,0,0,0.04)', borderColor: activeSession && completedSessions.includes(activeSession.id) ? '#059669' : '#d1d5db' },
               }}
             >
-              {completedLessons.includes(activeLessonId) ? 'Completed' : 'Mark Complete'}
+              {activeSession && completedSessions.includes(activeSession.id) ? 'Completed' : 'Mark Complete'}
             </Button>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="h6" fontWeight={700}>{activeLesson.title}</Typography>
-              <Typography variant="body2" color="text.secondary">{instructorName}</Typography>
+              <Typography variant="h6" fontWeight={700}>{activeSession?.title}</Typography>
+              <Typography variant="body2" color="text.secondary">{course?.instructor_name || 'Instructor'}</Typography>
             </Box>
           </Box>
 
@@ -468,27 +418,10 @@ const CoursePlayerPage: React.FC = () => {
             {/* ── Overview ── */}
             {activeTab === 0 && (
               <Box>
-                <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>About this lesson</Typography>
+                <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>About this session</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3, lineHeight: 1.8 }}>
-                  In this lesson, we'll explore the Render Props pattern — one of the most powerful techniques for sharing
-                  logic between React components. You'll learn how to create flexible, reusable components that can adapt
-                  their rendering based on the consumer's needs. We'll cover real-world use cases, performance
-                  considerations, and how this pattern compares to custom hooks.
+                  {activeSession?.description || activeSession?.content_text || 'No additional description provided for this session.'}
                 </Typography>
-
-                <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>Key Takeaways</Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {['Understand the render props pattern and when to use it',
-                    'Build reusable components with flexible rendering',
-                    'Compare render props vs hooks for code sharing',
-                    'Optimize performance with memoization techniques',
-                  ].map((item, i) => (
-                    <Box key={i} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                      <CheckIcon sx={{ fontSize: 18, color: '#10b981', mt: 0.3 }} />
-                      <Typography variant="body2">{item}</Typography>
-                    </Box>
-                  ))}
-                </Box>
               </Box>
             )}
 
@@ -498,7 +431,7 @@ const CoursePlayerPage: React.FC = () => {
                 <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
                   <TextField
                     fullWidth size="small"
-                    placeholder="Add a note for this lesson..."
+                    placeholder="Add a note for this session..."
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && addNote()}
@@ -516,7 +449,7 @@ const CoursePlayerPage: React.FC = () => {
                       <Box key={note.id} sx={{ p: 2, bgcolor: '#fffbeb', borderRadius: '12px', borderLeft: '3px solid #ffa424' }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                           <Chip label={note.timestamp} size="small" sx={{ bgcolor: '#ffa424', color: '#fff', fontSize: '0.7rem', height: 22 }} />
-                          <Typography variant="caption" color="text.secondary">{note.lessonTitle}</Typography>
+                          <Typography variant="caption" color="text.secondary">{note.sessionTitle}</Typography>
                         </Box>
                         <Typography variant="body2">{note.text}</Typography>
                       </Box>
@@ -532,7 +465,7 @@ const CoursePlayerPage: React.FC = () => {
                 <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
                   <TextField
                     fullWidth size="small"
-                    placeholder="Ask a question about this lesson..."
+                    placeholder="Ask a question about this session..."
                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
                   />
                   <Button variant="contained" startIcon={<SendIcon />} sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 3, whiteSpace: 'nowrap', color: '#fff' }}>Ask</Button>

@@ -34,14 +34,17 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useUpdateProfile } from '../hooks/useAuthQueries';
 import { getUserInitials } from '../utils/userHelpers';
 import Sidebar, { DRAWER_WIDTH } from '../components/instructor/Sidebar';
 
 const InstructorProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const updateProfile = useUpdateProfile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   // Profile fields — initialized from logged-in user, synced when user loads
   const [firstName, setFirstName] = useState(user?.first_name ?? '');
@@ -63,6 +66,7 @@ const InstructorProfilePage: React.FC = () => {
       setEmail(user.email ?? '');
       setPhone(user.phone_number ?? '');
       setLocation(user.country ?? '');
+      setBio(user.bio ?? '');
     }
   }, [user]);
 
@@ -76,9 +80,22 @@ const InstructorProfilePage: React.FC = () => {
   const displayName = [firstName, lastName].filter(Boolean).join(' ') || user?.email || 'User';
   const displayInitials = getUserInitials(firstName || user?.first_name, lastName || user?.last_name);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSave = async () => {
+    setSaveError('');
+    try {
+      await updateProfile.mutateAsync({
+        first_name: firstName,
+        last_name: lastName,
+        phone_number: phone || null,
+        country: location || null,
+        bio,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save profile';
+      setSaveError(message);
+    }
   };
 
   return (
@@ -108,9 +125,10 @@ const InstructorProfilePage: React.FC = () => {
             variant="contained"
             startIcon={<SaveIcon />}
             onClick={handleSave}
+            disabled={updateProfile.isPending}
             sx={{ textTransform: 'none', fontWeight: 600, bgcolor: 'primary.main' }}
           >
-            Save Changes
+            {updateProfile.isPending ? 'Saving...' : 'Save Changes'}
           </Button>
         </Toolbar>
       </AppBar>
@@ -122,6 +140,12 @@ const InstructorProfilePage: React.FC = () => {
           {saved && (
             <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
               Profile updated successfully!
+            </Alert>
+          )}
+
+          {saveError && (
+            <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setSaveError('')}>
+              {saveError}
             </Alert>
           )}
 

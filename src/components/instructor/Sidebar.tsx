@@ -42,6 +42,7 @@ interface NavItem {
   text: string;
   icon: React.ReactNode;
   path?: string;
+  activePatterns?: string[];
   badge?: number;
   badgeColor?: 'warning' | 'error' | 'primary';
 }
@@ -64,9 +65,9 @@ const navSections: NavSection[] = [
   {
     title: 'Course Management',
     items: [
-      { text: 'My Courses', icon: <CoursesIcon />, path: '/instructor/courses' },
+      { text: 'My Courses', icon: <CoursesIcon />, path: '/instructor/courses', activePatterns: ['/instructor/courses'] },
       { text: 'Create Course', icon: <CreateIcon />, path: '/instructor/course/create' },
-      { text: 'Course Structure', icon: <StructureIcon />, path: '/instructor/course/1/structure' },
+      { text: 'Course Structure', icon: <StructureIcon />, path: '/instructor/course/1/structure', activePatterns: ['/instructor/course/'] },
       { text: 'Upload Content', icon: <UploadIcon />, path: '/instructor/course/1/upload' },
     ],
   },
@@ -128,9 +129,10 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
     }
   };
 
-  const isActive = (path?: string) => {
-    if (!path) return false;
-    return location.pathname === path;
+  const isActive = (item: NavItem) => {
+    if (!item.path) return false;
+    if (location.pathname === item.path) return true;
+    return item.activePatterns?.some((p) => location.pathname.startsWith(p)) ?? false;
   };
 
   const userName = getUserDisplayName(user?.first_name, user?.last_name, user?.email);
@@ -232,7 +234,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
                 </Box>
               </ListItem>
               {section.items.map((item) => {
-                const active = isActive(item.path);
+                const active = isActive(item);
                 return (
                   <ListItem key={item.text} disablePadding>
                     <ListItemButton

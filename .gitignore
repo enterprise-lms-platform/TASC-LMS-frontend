@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Environment files (keep .env.example as reference)
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -34,3 +39,4 @@ userStories.md
 AUTH_INTEGRATION_SUMMARY.md
 AUTH_INTEGRATION.md
 QUICKSTART.md
+FRONTEND_INTEGRATION_HANDOFF.md

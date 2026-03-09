@@ -45,7 +45,9 @@ const typeOptions: { value: LessonType; label: string; hint: string; icon: React
   { value: 'assignment', label: 'Assignment', hint: 'Create a graded assignment', icon: <AssignmentIcon />, color: '#f59e0b' },
   { value: 'scorm', label: 'SCORM', hint: 'Upload a SCORM package', icon: <ScormIcon />, color: '#ef4444' },
   { value: 'livestream', label: 'Livestream', hint: 'Schedule a live session', icon: <LiveIcon />, color: '#f97316' },
+  { value: 'live', label: 'Live Session', hint: 'Schedule a live session', icon: <LiveIcon />, color: '#f97316' },
   { value: 'html', label: 'HTML / Text', hint: 'Rich text content', icon: <HtmlIcon />, color: '#3f3f46' },
+  { value: 'text', label: 'Text', hint: 'Rich text content', icon: <HtmlIcon />, color: '#3f3f46' },
 ];
 
 const nextStepLabel: Record<LessonType, string> = {
@@ -55,7 +57,9 @@ const nextStepLabel: Record<LessonType, string> = {
   quiz: 'Save & Build Quiz',
   assignment: 'Save & Create Assignment',
   livestream: 'Save & Schedule Session',
+  live: 'Save & Schedule Session',
   html: 'Save Lesson',
+  text: 'Save Lesson',
 };
 
 const defaultFormData: LessonFormData = {

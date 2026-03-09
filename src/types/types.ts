@@ -146,6 +146,8 @@ export interface UserMe {
   google_picture?: string | null;
   marketing_opt_in?: boolean;
   terms_accepted_at?: string | null;
+  avatar?: string | null;
+  bio?: string;
   email_verified: boolean;
   is_active: boolean;
 }
@@ -318,9 +320,35 @@ export interface CourseList {
   latest_approval_request?: number | null;
 }
 
+export interface Module {
+  id: number;
+  course: number;
+  title: string;
+  description: string;
+  status: 'draft' | 'published' | 'hidden';
+  icon: string;
+  order: number;
+  require_sequential: boolean;
+  allow_preview: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ModuleCreateRequest {
+  course: number;
+  title: string;
+  description?: string;
+  status?: 'draft' | 'published' | 'hidden';
+  icon?: string;
+  order?: number;
+  require_sequential?: boolean;
+  allow_preview?: boolean;
+}
+
 export interface Session {
   id: number;
   course: number;
+  module?: number | null;
   title: string;
   description?: string;
   session_type: SessionType;
@@ -457,6 +485,7 @@ export interface CourseCreateRequest {
 
 export interface SessionCreateRequest {
   course: number;
+  module?: number | null;
   title: string;
   description?: string;
   session_type?: SessionType;

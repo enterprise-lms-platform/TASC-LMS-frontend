@@ -14,12 +14,12 @@ import {
   Code as HtmlIcon,
 } from '@mui/icons-material';
 
-type LessonType = 'video' | 'document' | 'quiz' | 'assignment' | 'scorm' | 'livestream' | 'html';
+type LessonType = 'video' | 'document' | 'quiz' | 'assignment' | 'scorm' | 'livestream' | 'html' | 'live' | 'text';
 
 interface LessonData {
   id: string;
   title: string;
-  type: LessonType;
+  type: LessonType | string;
   duration?: string;
   meta?: string;
   isComplete?: boolean;
@@ -34,7 +34,7 @@ interface LessonItemProps {
   onToggleComplete?: () => void;
 }
 
-const typeConfig: Record<LessonType, { icon: React.ReactNode; bg: string; color: string }> = {
+const typeConfig: Record<string, { icon: React.ReactNode; bg: string; color: string }> = {
   video: { icon: <VideoIcon />, bg: '#dbeafe', color: '#3b82f6' },
   document: { icon: <DocIcon />, bg: '#d1fae5', color: '#10b981' },
   quiz: { icon: <QuizIcon />, bg: '#ede9fe', color: '#8b5cf6' },
@@ -42,6 +42,8 @@ const typeConfig: Record<LessonType, { icon: React.ReactNode; bg: string; color:
   scorm: { icon: <ScormIcon />, bg: '#fee2e2', color: '#ef4444' },
   livestream: { icon: <LiveIcon />, bg: '#ffe0b2', color: '#f97316' },
   html: { icon: <HtmlIcon />, bg: '#e4e4e7', color: '#3f3f46' },
+  live: { icon: <LiveIcon />, bg: '#ffe0b2', color: '#f97316' },
+  text: { icon: <HtmlIcon />, bg: '#e4e4e7', color: '#3f3f46' },
 };
 
 const LessonItem: React.FC<LessonItemProps> = ({
@@ -51,7 +53,7 @@ const LessonItem: React.FC<LessonItemProps> = ({
   onMore,
   onToggleComplete,
 }) => {
-  const config = typeConfig[lesson.type];
+  const config = typeConfig[lesson.type] || typeConfig['document'];
 
   return (
     <Box

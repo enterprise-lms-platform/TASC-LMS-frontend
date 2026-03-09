@@ -12,6 +12,8 @@ import type {
   CourseList,
   CourseDetail,
   CourseCreateRequest,
+  Module,
+  ModuleCreateRequest,
   Session,
   SessionCreateRequest,
   PaginatedResponse,
@@ -130,6 +132,29 @@ export const courseApi = {
   // Request deletion of a published course (goes through approval)
   requestDeletion: (id: number) =>
     apiClient.post<CourseDetail>(`${BASE_PATH}/courses/${id}/request-deletion/`),
+};
+
+// MODULES
+
+export interface ModuleListParams {
+  course?: number;
+}
+
+export const moduleApi = {
+  getAll: (params?: ModuleListParams) =>
+    apiClient.get<Module[]>(`${BASE_PATH}/modules/`, { params }),
+
+  getById: (id: number) =>
+    apiClient.get<Module>(`${BASE_PATH}/modules/${id}/`),
+
+  create: (data: ModuleCreateRequest) =>
+    apiClient.post<Module>(`${BASE_PATH}/modules/`, data),
+
+  partialUpdate: (id: number, data: Partial<ModuleCreateRequest>) =>
+    apiClient.patch<Module>(`${BASE_PATH}/modules/${id}/`, data),
+
+  delete: (id: number) =>
+    apiClient.delete(`${BASE_PATH}/modules/${id}/`),
 };
 
 // SESSIONS

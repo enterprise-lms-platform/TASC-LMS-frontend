@@ -3,7 +3,7 @@ import {
   Box, Toolbar, CssBaseline, Paper, Typography, Chip,
   ToggleButtonGroup, ToggleButton, TextField, Alert, Stack,
 } from '@mui/material';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   PlayCircle as VideoIcon,
   Description as DocIcon,
@@ -58,6 +58,7 @@ const sampleRecentUploads: RecentUploadItem[] = [
 
 const ContentUploadPage: React.FC = () => {
   const navigate = useNavigate();
+  const { courseId: courseIdParam } = useParams<{ courseId: string }>();
   const [searchParams] = useSearchParams();
 
   // Content type from URL search params (passed from lesson creation)
@@ -67,7 +68,7 @@ const ContentUploadPage: React.FC = () => {
     : 'video';
 
   const lessonTitle = searchParams.get('lesson') || '';
-  const courseId = Number(searchParams.get('courseId')) || 0;
+  const courseId = Number(courseIdParam) || 0;
   const sessionId = Number(searchParams.get('sessionId')) || 0;
 
   const [mobileOpen, setMobileOpen] = useState(false);

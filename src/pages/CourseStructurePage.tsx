@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Box, Toolbar, CssBaseline, LinearProgress, Typography } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../components/instructor/Sidebar';
@@ -18,92 +18,89 @@ import type { ModuleData } from '../components/instructor/course-structure/Modul
 import type { LessonData } from '../components/instructor/course-structure/LessonItem';
 import type { SaveStatus } from '../components/instructor/course-structure/StructureFooter';
 import type { CourseHeaderData } from '../components/instructor/course-structure/CourseHeaderCard';
-import { useCourse } from '../hooks/useCatalogue';
+import { useCourse, useModules, useCreateModule, useCreateSession } from '../hooks/useCatalogue';
+import type { Session, SessionType } from '../types/types';
 
-// Sample modules (real module/lesson data not yet loaded from API)
-const initialModules: (ModuleData & { lessons: LessonData[] })[] = [
-  {
-    id: '1',
-    title: 'Module 1: Introduction to Advanced Patterns',
-    lessonCount: 5,
-    duration: '2h 15m',
-    completionPercent: 100,
-    status: 'published',
-    lessons: [
-      { id: '1-1', title: 'Welcome & Course Overview', type: 'video', duration: '12:30', isComplete: true, isFreePreview: true },
-      { id: '1-2', title: 'Understanding Component Patterns', type: 'video', duration: '25:45', isComplete: true },
-      { id: '1-3', title: 'Pattern Cheat Sheet (PDF)', type: 'document', meta: '2.4 MB', isComplete: true },
-      { id: '1-4', title: 'Module 1 Quiz', type: 'quiz', meta: '10 Questions • 15 min', isComplete: true },
-    ],
-  },
-  {
-    id: '2',
-    title: 'Module 2: Higher-Order Components (HOC)',
-    lessonCount: 6,
-    duration: '3h 20m',
-    completionPercent: 100,
-    status: 'published',
-    lessons: [
-      { id: '2-1', title: 'What are Higher-Order Components?', type: 'video', duration: '18:20', isComplete: true },
-    ],
-  },
-  {
-    id: '3',
-    title: 'Module 3: Render Props Pattern',
-    lessonCount: 5,
-    duration: '2h 45m',
-    completionPercent: 60,
-    status: 'draft',
-    lessons: [
-      { id: '3-1', title: 'Introduction to Render Props', type: 'video', duration: '22:15', isComplete: true },
-    ],
-  },
-  {
-    id: '4',
-    title: 'Module 4: Custom Hooks',
-    lessonCount: 8,
-    duration: '4h 10m',
-    completionPercent: 25,
-    status: 'draft',
-    lessons: [
-      { id: '4-1', title: 'Live Coding: Building Custom Hooks', type: 'livestream', meta: 'Scheduled: Feb 10', isComplete: false },
-    ],
-  },
-  {
-    id: '5',
-    title: 'Module 5: Final Project & Assessment',
-    lessonCount: 3,
-    duration: '1h 30m',
-    completionPercent: 0,
-    status: 'hidden',
-    lessons: [
-      { id: '5-1', title: 'Final Project: Build a Pattern Library', type: 'assignment', meta: '100 Points', isComplete: false },
-    ],
-  },
-];
+// Convert a Session to the UI LessonData shape
+const sessionToLesson = (s: Session): LessonData => ({
+  id: String(s.id),
+  title: s.title,
+  type: s.session_type as string,
+  duration: `${s.duration_minutes || 0} min`,
+  isComplete: false,
+  isFreePreview: s.is_free_preview,
+});
 
 const CourseStructurePage: React.FC = () => {
   const navigate = useNavigate();
   const { courseId } = useParams<{ courseId: string }>();
   const id = courseId ? Number(courseId) : 0;
 
-  // Load course data from API
+  // Load course data (includes sessions) and modules from API
   const { data: courseData, isLoading: courseLoading, isError: courseIsError } = useCourse(id, { enabled: !!courseId });
+  const { data: apiModules = [] } = useModules({ course: id });
+  const createModuleMutation = useCreateModule();
+  const createSessionMutation = useCreateSession();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
   const [moduleModalOpen, setModuleModalOpen] = useState(false);
   const [lessonModalOpen, setLessonModalOpen] = useState(false);
   const [activeModuleId, setActiveModuleId] = useState<string>('');
-  const [modules, setModules] = useState(initialModules);
+
+  // Build UI modules from API modules + sessions
+  const modules = useMemo((): (ModuleData & { lessons: LessonData[] })[] => {
+    const sessions = courseData?.sessions ?? [];
+
+    // Group sessions by module ID
+    const sessionsByModule = new Map<number | null, Session[]>();
+    sessions.forEach((s) => {
+      const key = s.module ?? null;
+      const existing = sessionsByModule.get(key) || [];
+      existing.push(s);
+      sessionsByModule.set(key, existing);
+    });
+
+    // Build module cards from API modules
+    const moduleCards: (ModuleData & { lessons: LessonData[] })[] = apiModules.map((m) => {
+      const moduleSessions = (sessionsByModule.get(m.id) || []).sort((a, b) => a.order - b.order);
+      return {
+        id: String(m.id),
+        title: m.title,
+        lessonCount: moduleSessions.length,
+        duration: `${Math.round(moduleSessions.reduce((acc, s) => acc + (s.duration_minutes || 0), 0) / 60)}h`,
+        completionPercent: 0,
+        status: m.status === 'published' ? 'published' as const : 'draft' as const,
+        lessons: moduleSessions.map(sessionToLesson),
+      };
+    });
+
+    // Sessions without a module go into an "Unassigned" bucket
+    const unassigned = (sessionsByModule.get(null) || []).sort((a, b) => a.order - b.order);
+    if (unassigned.length > 0) {
+      moduleCards.push({
+        id: 'unassigned',
+        title: 'Unassigned Lessons',
+        lessonCount: unassigned.length,
+        duration: `${Math.round(unassigned.reduce((acc, s) => acc + (s.duration_minutes || 0), 0) / 60)}h`,
+        completionPercent: 0,
+        status: 'draft' as const,
+        lessons: unassigned.map(sessionToLesson),
+      });
+    }
+
+    return moduleCards;
+  }, [courseData?.sessions, apiModules]);
+
+  const totalLessons = modules.reduce((acc, m) => acc + m.lessons.length, 0);
 
   // Build header data from API response
   const headerCourse: CourseHeaderData | null = courseData
     ? {
         title: courseData.title,
         thumbnail: courseData.thumbnail ?? undefined,
-        modules: 0, // Module count not yet from API
-        lessons: courseData.total_sessions ?? 0,
+        modules: apiModules.length,
+        lessons: courseData.total_sessions ?? totalLessons,
         duration: `${courseData.duration_hours ?? 0}h`,
         enrolled: courseData.enrollment_count,
         progress: 0,
@@ -125,20 +122,20 @@ const CourseStructurePage: React.FC = () => {
     setModuleModalOpen(true);
   };
 
-  const handleSaveModule = (data: ModuleFormData) => {
-    const newModule: ModuleData & { lessons: LessonData[] } = {
-      id: String(modules.length + 1),
-      title: data.title,
-      lessonCount: 0,
-      duration: '0m',
-      completionPercent: 0,
-      status: data.status,
-      lessons: [],
-    };
-    setModules((prev: (ModuleData & { lessons: LessonData[] })[]) => [...prev, newModule]);
-    setModuleModalOpen(false);
-    setSaveStatus('saving');
-    setTimeout(() => setSaveStatus('saved'), 1500);
+  const handleSaveModule = async (data: ModuleFormData) => {
+    try {
+      setSaveStatus('saving');
+      await createModuleMutation.mutateAsync({
+        course: id,
+        title: data.title,
+        description: data.description || '',
+      });
+      setModuleModalOpen(false);
+      setSaveStatus('saved');
+    } catch (err) {
+      console.error('Failed to create module:', err);
+      setSaveStatus('saved');
+    }
   };
 
   const handleAddLesson = (moduleId: string) => {
@@ -146,48 +143,56 @@ const CourseStructurePage: React.FC = () => {
     setLessonModalOpen(true);
   };
 
-  const handleSaveLesson = (data: LessonFormData) => {
-    setModules((prev) =>
-      prev.map((mod) => {
-        if (mod.id !== activeModuleId) return mod;
-        const newLesson: LessonData = {
-          id: `${mod.id}-${mod.lessons.length + 1}`,
-          title: data.title,
-          type: data.type,
-          isComplete: false,
-          isFreePreview: data.isFreePreview,
-        };
-        return {
-          ...mod,
-          lessons: [...mod.lessons, newLesson],
-          lessonCount: mod.lessonCount + 1,
-        };
-      })
-    );
-    setLessonModalOpen(false);
-    setSaveStatus('saving');
-    setTimeout(() => setSaveStatus('saved'), 1500);
+  const handleSaveLesson = async (data: LessonFormData) => {
+    try {
+      setSaveStatus('saving');
 
-    // Navigate to the content page based on lesson type
-    const lessonParam = encodeURIComponent(data.title);
-    switch (data.type) {
-      case 'video':
-      case 'document':
-      case 'scorm':
-        navigate(`/instructor/course/${courseId}/upload?type=${data.type}&lesson=${lessonParam}`);
-        break;
-      case 'quiz':
-        navigate(`/instructor/course/${courseId}/quiz/builder?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`);
-        break;
-      case 'assignment':
-        navigate(`/instructor/assignment/create?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`);
-        break;
-      case 'livestream':
-        navigate(`/instructor/sessions/schedule?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`);
-        break;
-      // 'html' stays on the structure page
-      default:
-        break;
+      // Determine the module ID (null for unassigned)
+      const moduleNumericId = activeModuleId && activeModuleId !== 'unassigned'
+        ? Number(activeModuleId)
+        : null;
+
+      // Calculate next order within the module (or globally for unassigned)
+      const relevantLessons = modules.find((m) => m.id === activeModuleId)?.lessons ?? [];
+      const nextOrder = relevantLessons.length + 1;
+
+      const newSession = await createSessionMutation.mutateAsync({
+        course: id,
+        module: moduleNumericId,
+        title: data.title,
+        session_type: data.type as SessionType,
+        status: 'draft',
+        order: nextOrder,
+        is_free_preview: data.isFreePreview,
+        is_mandatory: false,
+      });
+
+      setLessonModalOpen(false);
+      setSaveStatus('saved');
+
+      // Navigate to the content page with the actual sessionId
+      const lessonParam = encodeURIComponent(newSession.title);
+      switch (data.type) {
+        case 'video':
+        case 'document':
+        case 'scorm':
+          navigate(`/instructor/course/${courseId}/upload?type=${data.type}&lesson=${lessonParam}&sessionId=${newSession.id}`);
+          break;
+        case 'quiz':
+          navigate(`/instructor/course/${courseId}/quiz/builder?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}&sessionId=${newSession.id}`);
+          break;
+        case 'assignment':
+          navigate(`/instructor/assignment/create?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}&sessionId=${newSession.id}`);
+          break;
+        case 'livestream':
+          navigate(`/instructor/sessions/schedule?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}&sessionId=${newSession.id}`);
+          break;
+        default:
+          break;
+      }
+    } catch (err) {
+      console.error('Failed to create session:', err);
+      setSaveStatus('saved');
     }
   };
 
@@ -307,19 +312,19 @@ const CourseStructurePage: React.FC = () => {
               <ContentLibraryWidget />
               <CourseStatsWidget
                 stats={{
-                  modules: modules.length,
-                  lessons: modules.reduce((acc: number, m: ModuleData & { lessons: LessonData[] }) => acc + m.lessons.length, 0),
-                  quizzes: 3,
-                  assignments: 2,
+                  modules: apiModules.length,
+                  lessons: totalLessons,
+                  quizzes: (courseData?.sessions ?? []).filter((s) => s.session_type === 'quiz').length,
+                  assignments: (courseData?.sessions ?? []).filter((s) => s.session_type === 'assignment').length,
                 }}
               />
               <PublishChecklistWidget items={[
-                { id: '1', text: 'Course info complete', complete: true },
-                { id: '2', text: 'Thumbnail uploaded', complete: true },
-                { id: '3', text: 'At least 5 lessons', complete: true },
-                { id: '4', text: 'Pricing configured', complete: true },
-                { id: '5', text: 'All modules published', complete: false },
-                { id: '6', text: 'Preview video added', complete: false },
+                { id: '1', text: 'Course info complete', complete: !!courseData?.description },
+                { id: '2', text: 'Thumbnail uploaded', complete: !!courseData?.thumbnail },
+                { id: '3', text: 'At least 5 lessons', complete: totalLessons >= 5 },
+                { id: '4', text: 'Pricing configured', complete: !!courseData?.price && courseData.price !== '0.00' },
+                { id: '5', text: 'All modules published', complete: apiModules.length > 0 && apiModules.every((m) => m.status === 'published') },
+                { id: '6', text: 'Preview video added', complete: !!courseData?.trailer_video_url },
               ]} />
             </Box>
           </Box>
