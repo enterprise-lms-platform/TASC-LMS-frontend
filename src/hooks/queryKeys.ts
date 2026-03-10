@@ -1,7 +1,7 @@
 // queryKeys.ts
 
 import type { CategoryListParams, CourseListParams, SessionListParams, ApprovalListParams, ModuleListParams } from '../services/catalogue.services';
-import type { SessionProgressParams, DiscussionParams, DiscussionReplyParams } from '../services/learning.services';
+import type { SessionProgressParams, DiscussionParams, DiscussionReplyParams, SubmissionParams } from '../services/learning.services';
 import type { InvoiceParams, TransactionParams, UserSubscriptionParams } from '../services/payments.services';
 import type { PublicCourseParams } from '../services/public.services';
 import type { OrganizationListParams } from '../services/organization.services';
@@ -58,6 +58,10 @@ export const queryKeys = {
   discussionReplies: {
     all: (params?: DiscussionReplyParams) => ['discussion-replies', params] as const,
     detail: (id: number) => ['discussion-replies', 'detail', id] as const,
+  },
+  submissions: {
+    all: (params?: SubmissionParams) => ['submissions', params] as const,
+    detail: (id: number) => ['submissions', 'detail', id] as const,
   },
 
   // Payments

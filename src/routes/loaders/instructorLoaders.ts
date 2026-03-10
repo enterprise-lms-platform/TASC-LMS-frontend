@@ -8,7 +8,7 @@ import type { LoaderFunctionArgs } from 'react-router-dom';
 import { redirect } from 'react-router-dom';
 import { queryKeys } from '../../hooks/queryKeys';
 import { courseApi } from '../../services/catalogue.services';
-import { enrollmentApi } from '../../services/learning.services';
+import { enrollmentApi, submissionApi } from '../../services/learning.services';
 
 /**
  * Instructor Dashboard Loader
@@ -181,17 +181,17 @@ export const instructorLearnersLoader = async (
  * NOTE: Requires backend endpoint for submissions/grading
  */
 export const gradingLoader = async (
-  // _queryClient: QueryClient,
-  // _params?: { courseId?: number; page?: number }
+  queryClient: QueryClient,
+  params?: { courseId?: number; page?: number }
 ) => {
   try {
-    // TODO: Replace with actual submissions service call once submissionApi is available
-    // const submissions = await queryClient.ensureQueryData({
-    //   queryKey: ['submissions', params],
-    //   queryFn: () => submissionApi.getAll(params).then((r) => r.data),
-    // });
+    const submissions = await queryClient.ensureQueryData({
+      queryKey: queryKeys.submissions.all(params),
+      queryFn: () => submissionApi.getAll(params).then((r) => r.data),
+      staleTime: 5 * 60 * 1000,
+    });
 
-    return { submissions: [] };
+    return { submissions };
   } catch (error: unknown) {
     const err = error as { status?: number };
     if (err.status === 401) return redirect('/login');

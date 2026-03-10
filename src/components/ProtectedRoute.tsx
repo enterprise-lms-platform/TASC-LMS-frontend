@@ -10,8 +10,16 @@ interface ProtectedRouteProps {
   allowedRoles?: UserRole[];
 }
 
-// TODO: Remove this bypass before deploying to production!
-const DEV_BYPASS_AUTH = true;
+// ⚠️ SECURITY: Development-only auth bypass (NEVER enable in production)
+// Only enabled when VITE_AUTH_BYPASS=true in .env.local AND in dev mode
+// This should ONLY be used for local development. Never commit with this enabled externally.
+const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;
+
+if (DEV_BYPASS_AUTH) {
+  console.warn(
+    '⚠️  SECURITY WARNING: Authentication is BYPASSED. This is only safe in local development.'
+  );
+}
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
@@ -20,7 +28,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
 
-  // Temporarily bypass all route protection for development
+  // ⚠️ Only bypass in local dev with explicit env var AND dev mode enabled
   if (DEV_BYPASS_AUTH) {
     return children;
   }
