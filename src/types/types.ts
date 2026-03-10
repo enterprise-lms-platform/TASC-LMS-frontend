@@ -129,6 +129,14 @@ export const UserSubscriptionStatus = {
 } as const;
 export type UserSubscriptionStatus = typeof UserSubscriptionStatus[keyof typeof UserSubscriptionStatus];
 
+export const SubmissionStatus = {
+  DRAFT: 'draft',
+  SUBMITTED: 'submitted',
+  GRADED: 'graded',
+  PENDING_REVIEW: 'pending_review',
+  REJECTED: 'rejected',
+} as const;
+export type SubmissionStatus = typeof SubmissionStatus[keyof typeof SubmissionStatus];
 
 // AUTHENTICATION & USER TYPES
 
@@ -385,6 +393,95 @@ export interface PublicSession {
   is_mandatory: boolean;
 }
 
+// Quiz authoring (session-scoped)
+export interface QuizSettings {
+  time_limit_minutes?: number;
+  passing_score_percent?: number;
+  max_attempts?: number;
+  shuffle_questions?: boolean;
+  show_correct_answers?: boolean;
+  show_timer?: boolean;
+  allow_back_navigation?: boolean;
+  shuffle_answers?: boolean;
+  show_feedback?: string;
+}
+
+export type QuizQuestionType =
+  | 'multiple-choice'
+  | 'true-false'
+  | 'short-answer'
+  | 'essay'
+  | 'matching'
+  | 'fill-blank';
+
+export interface QuizQuestion {
+  id: number;
+  order: number;
+  question_type: QuizQuestionType;
+  question_text: string;
+  points: number;
+  answer_payload: Record<string, unknown>;
+}
+
+export interface QuizDetailResponse {
+  session: {
+    id: number;
+    title: string;
+    description: string;
+    status: 'draft' | 'published';
+  };
+  settings: QuizSettings;
+  questions: QuizQuestion[];
+}
+
+// Question Bank (instructor-owned)
+export interface QuestionCategory {
+  id: number;
+  name: string;
+  order: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BankQuestion {
+  id: number;
+  category: number | { id: number; name: string } | null;
+  question_type: QuizQuestionType;
+  question_text: string;
+  points: number;
+  answer_payload: Record<string, unknown>;
+  difficulty: string;
+  tags: string[];
+  explanation: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BankQuestionListParams {
+  category?: number;
+  search?: string;
+  question_type?: string;
+  difficulty?: string;
+  tags?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface AddFromBankPayload {
+  bank_question_ids: number[];
+}
+
+export interface AddFromBankResponse {
+  questions: QuizQuestion[];
+}
+
+/** Lightweight quiz session option for Add-to-Quiz modal (id + display label) */
+export interface QuizSessionOption {
+  id: number;
+  title: string;
+  courseTitle?: string;
+}
+
 export interface CourseDetailInstructor {
   id: number;
   name: string;
@@ -630,6 +727,54 @@ export interface DiscussionReplyCreateRequest {
   discussion: number;
   parent?: number | null;
   content: string;
+}
+
+// SUBMISSION/GRADING TYPES
+
+export interface Submission {
+  id: number;
+  assignment: number;
+  assignment_title: string;
+  session: number;
+  session_title: string;
+  enrollment: number;
+  user: number;
+  user_name: string;
+  user_email: string;
+  status: SubmissionStatus;
+  submitted_at: string;
+  submitted_file_url?: string | null;
+  submitted_file_name?: string | null;
+  submitted_text?: string | null;
+  grade?: number | null;
+  feedback?: string | null;
+  graded_at?: string | null;
+  graded_by?: number | null;
+  graded_by_name?: string | null;
+  internal_notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubmissionCreateRequest {
+  enrollment: number;
+  assignment: number;
+  submitted_text?: string;
+  submitted_file_url?: string;
+  submitted_file_name?: string;
+}
+
+export interface SubmissionUpdateRequest {
+  status?: SubmissionStatus;
+  submitted_text?: string | null;
+  submitted_file_url?: string | null;
+  submitted_file_name?: string | null;
+}
+
+export interface GradeSubmissionRequest {
+  grade: number;
+  feedback?: string;
+  internal_notes?: string;
 }
 
 // PAYMENT TYPES

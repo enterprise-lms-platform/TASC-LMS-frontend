@@ -1,6 +1,6 @@
 /**
  * Learning API Service
- * Handles enrollments, progress tracking, certificates, and discussions
+ * Handles enrollments, progress tracking, certificates, discussions, and submissions
  */
 
 import { apiClient } from '../utils/config';
@@ -14,6 +14,10 @@ import type {
   DiscussionCreateRequest,
   DiscussionReply,
   DiscussionReplyCreateRequest,
+  Submission,
+  SubmissionCreateRequest,
+  SubmissionUpdateRequest,
+  GradeSubmissionRequest,
 } from '../types/types';
 
 const BASE_PATH = '/api/v1/learning';
@@ -199,4 +203,45 @@ export const discussionReplyApi = {
   //  Delete a reply
   delete: (id: number) =>
     apiClient.delete(`${BASE_PATH}/discussion-replies/${id}/`),
+};
+
+// SUBMISSIONS
+
+export interface SubmissionParams {
+  course?: number;              // Filter submissions by course ID
+  session?: number;             // Filter submissions by session/assignment ID
+  enrollment?: number;          // Filter submissions by enrollment ID
+  status?: string;              // Filter by submission status
+  page?: number;                // Pagination page number
+}
+
+export const submissionApi = {
+
+  //  List all submissions (instructors see their course submissions, learners see their own)
+  getAll: (params?: SubmissionParams) =>
+    apiClient.get<Submission[]>(`${BASE_PATH}/submissions/`, { params }),
+
+  //  Get submission details by ID
+  getById: (id: number) =>
+    apiClient.get<Submission>(`${BASE_PATH}/submissions/${id}/`),
+
+  //  Create a new submission (learner)
+  create: (data: SubmissionCreateRequest) =>
+    apiClient.post<Submission>(`${BASE_PATH}/submissions/`, data),
+
+  //  Update submission (learner can update draft submissions)
+  update: (id: number, data: SubmissionUpdateRequest) =>
+    apiClient.put<Submission>(`${BASE_PATH}/submissions/${id}/`, data),
+
+  //  Partially update submission
+  partialUpdate: (id: number, data: Partial<SubmissionUpdateRequest>) =>
+    apiClient.patch<Submission>(`${BASE_PATH}/submissions/${id}/`, data),
+
+  //  Grade a submission (instructor only)
+  grade: (id: number, data: GradeSubmissionRequest) =>
+    apiClient.post<Submission>(`${BASE_PATH}/submissions/${id}/grade/`, data),
+
+  //  Delete a submission (usually only drafts)
+  delete: (id: number) =>
+    apiClient.delete(`${BASE_PATH}/submissions/${id}/`),
 };
