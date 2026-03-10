@@ -2,14 +2,34 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { Lightbulb as TipIcon, CheckCircle as CheckIcon } from '@mui/icons-material';
 
-const tips = [
+import type { UploadContentType } from './UploadZone';
+
+const commonTips = [
   'Use descriptive filenames for better organization',
-  'Keep video files under 2GB for faster uploads',
-  'Add subtitles to make videos more accessible',
-  'Use high-quality PDF files for documents',
 ];
 
-const UploadTipsCard: React.FC = () => {
+const typeSpecificTips: Record<UploadContentType, string[]> = {
+  video: [
+    'Keep video files under 2GB for faster uploads',
+    'Add subtitles to make videos more accessible',
+  ],
+  document: [
+    'Use high-quality PDF files for documents',
+    'Ensure text is easily legible',
+  ],
+  scorm: [
+    'Ensure your SCORM package is a .zip file',
+    'Test your package locally before uploading',
+  ],
+};
+
+interface UploadTipsCardProps {
+  contentType?: UploadContentType;
+}
+
+const UploadTipsCard: React.FC<UploadTipsCardProps> = ({ contentType = 'video' }) => {
+  const displayTips = [...commonTips, ...typeSpecificTips[contentType]];
+
   return (
     <Box
       sx={{
@@ -24,7 +44,7 @@ const UploadTipsCard: React.FC = () => {
         <Typography fontWeight={700}>Quick Tips</Typography>
       </Box>
       <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
-        {tips.map((tip, index) => (
+        {displayTips.map((tip, index) => (
           <Box
             component="li"
             key={index}

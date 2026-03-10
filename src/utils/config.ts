@@ -4,7 +4,7 @@
 
 import axios from 'axios';
 import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
-import type { ApiError } from '../types/types';
+
 
 // API Configuration
 // In development the Vite proxy forwards /api/* to Django at 127.0.0.1:8000.
@@ -154,7 +154,7 @@ export const createApiClient = (): AxiosInstance => {
           );
 
           const { access } = response.data;
-          
+
           // Update stored token
           setTokens(access, refreshToken);
 

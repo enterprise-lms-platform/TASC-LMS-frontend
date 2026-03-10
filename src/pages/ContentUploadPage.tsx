@@ -189,7 +189,7 @@ const ContentUploadPage: React.FC = () => {
       return false;
     }
 
-    const supportedDomains = ['youtube.com', 'youtu.be', 'vimeo.com', 'dailymotion.com', 'wistia.com'];
+    const supportedDomains = ['youtube.com', 'vimeo.com', 'dailymotion.com', 'wistia.com'];
     try {
       const hostname = new URL(url).hostname.replace('www.', '');
       if (!supportedDomains.some((d) => hostname.includes(d))) {
@@ -480,7 +480,7 @@ const ContentUploadPage: React.FC = () => {
             {/* Right Column */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <UploadTipsCard contentType={contentType} />
-              <StorageInfoCard />
+              <StorageInfoCard used={0} total={10} />  {/* TODO: Replace with real storage quota from backend API when available */}
               <RecentUploadsCard uploads={sampleRecentUploads} />
             </Box>
           </Box>
@@ -491,7 +491,7 @@ const ContentUploadPage: React.FC = () => {
       <UploadFooter
         uploadCount={completedFiles.length}
         onCancel={handleCancel}
-        onAddMore={() => {}}
+        onAddMore={() => { }}
         onComplete={handleComplete}
         disabled={completing || isStillUploading || !hasAnyComplete}
         savingLabel={completing ? 'Saving\u2026' : isStillUploading ? 'Uploading\u2026' : undefined}

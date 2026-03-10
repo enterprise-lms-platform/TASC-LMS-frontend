@@ -64,10 +64,11 @@ const InstructorProfilePage: React.FC = () => {
   const [phone, setPhone] = useState(user?.phone_number ?? '');
   const [location, setLocation] = useState(user?.country ?? '');
   const [bio, setBio] = useState('');
-  const [title, setTitle] = useState('Senior Instructor');
-  const [website, setWebsite] = useState('');
-  const [linkedin, setLinkedin] = useState('');
-  const [expertise, setExpertise] = useState('');
+  // Read-only placeholders — will become editable when backend supports them.(or changed to useStates as they were before)
+  const title = 'Senior Instructor';
+  const website = '';
+  const linkedin = '';
+  const expertise: string[] = [];
 
   // Sync form from auth user when user loads or changes (e.g. after login)
   React.useEffect(() => {
@@ -192,7 +193,7 @@ const InstructorProfilePage: React.FC = () => {
                 <Typography variant="h5" fontWeight={700}>{displayName}</Typography>
                 <Typography variant="body2" color="text.secondary">{title}</Typography>
                 <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
-                  {expertise ? expertise.split(', ').map((skill) => (
+                  {expertise.length > 0 ? expertise.map((skill) => (
                     <Chip key={skill} label={skill} size="small" sx={{ height: 22, fontSize: '0.7rem', fontWeight: 500, bgcolor: 'rgba(255,164,36,0.1)', color: 'primary.main' }} />
                   )) : null}
                 </Box>
