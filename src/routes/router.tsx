@@ -81,6 +81,28 @@ import ManagerAnalyticsPage from '../pages/ManagerAnalyticsPage';
 import ManagerInviteUserPage from '../pages/ManagerInviteUserPage';
 import CourseApprovalPage from '../pages/CourseApprovalPage';
 import CourseApprovalDetailPage from '../pages/CourseApprovalDetailPage';
+import ManagerReportsPage from '../pages/ManagerReportsPage';
+import ManagerUsersPage from '../pages/ManagerUsersPage';
+import ManagerRolesPage from '../pages/ManagerRolesPage';
+import ManagerBulkImportPage from '../pages/ManagerBulkImportPage';
+import ManagerActivityPage from '../pages/ManagerActivityPage';
+import ManagerCoursesPage from '../pages/ManagerCoursesPage';
+import ManagerCreateCoursePage from '../pages/ManagerCreateCoursePage';
+import ManagerInstructorsPage from '../pages/ManagerInstructorsPage';
+import ManagerEnrollmentsPage from '../pages/ManagerEnrollmentsPage';
+import ManagerBulkEnrollPage from '../pages/ManagerBulkEnrollPage';
+import ManagerProgressPage from '../pages/ManagerProgressPage';
+import ManagerCertificatesPage from '../pages/ManagerCertificatesPage';
+import ManagerQuizzesPage from '../pages/ManagerQuizzesPage';
+import ManagerAssignmentsPage from '../pages/ManagerAssignmentsPage';
+import ManagerGradebookPage from '../pages/ManagerGradebookPage';
+import ManagerSessionsPage from '../pages/ManagerSessionsPage';
+import ManagerRecordingsPage from '../pages/ManagerRecordingsPage';
+import ManagerScheduleNewPage from '../pages/ManagerScheduleNewPage';
+import ManagerSettingsPage from '../pages/ManagerSettingsPage';
+import ManagerNotificationsPage from '../pages/ManagerNotificationsPage';
+import ManagerIntegrationsPage from '../pages/ManagerIntegrationsPage';
+import ManagerBillingPage from '../pages/ManagerBillingPage';
 
 // Finance Pages
 import FinanceDashboard from '../pages/FinanceDashboard';
@@ -439,6 +461,116 @@ export const createAppRouter = (queryClient: QueryClient) => {
     {
       path: '/manager/invite-user',
       element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerInviteUserPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/reports',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerReportsPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/users',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerUsersPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/roles',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerRolesPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/import',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerBulkImportPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/activity',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerActivityPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/courses',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerCoursesPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/create-course',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerCreateCoursePage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/instructors',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerInstructorsPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/enrollments',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerEnrollmentsPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/bulk-enroll',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerBulkEnrollPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/progress',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerProgressPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/certificates',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerCertificatesPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/quizzes',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerQuizzesPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/assignments',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerAssignmentsPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/gradebook',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerGradebookPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/sessions',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerSessionsPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/recordings',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerRecordingsPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/schedule-new',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerScheduleNewPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/settings',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerSettingsPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/notifications',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerNotificationsPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/integrations',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerIntegrationsPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/billing',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerBillingPage /></ProtectedRoute>,
       loader: async () => managerLoaders.managerRouteLoader(queryClient),
     },
 
