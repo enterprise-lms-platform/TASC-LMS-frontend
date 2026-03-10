@@ -129,6 +129,14 @@ export const UserSubscriptionStatus = {
 } as const;
 export type UserSubscriptionStatus = typeof UserSubscriptionStatus[keyof typeof UserSubscriptionStatus];
 
+export const SubmissionStatus = {
+  DRAFT: 'draft',
+  SUBMITTED: 'submitted',
+  GRADED: 'graded',
+  PENDING_REVIEW: 'pending_review',
+  REJECTED: 'rejected',
+} as const;
+export type SubmissionStatus = typeof SubmissionStatus[keyof typeof SubmissionStatus];
 
 // AUTHENTICATION & USER TYPES
 
@@ -630,6 +638,54 @@ export interface DiscussionReplyCreateRequest {
   discussion: number;
   parent?: number | null;
   content: string;
+}
+
+// SUBMISSION/GRADING TYPES
+
+export interface Submission {
+  id: number;
+  assignment: number;
+  assignment_title: string;
+  session: number;
+  session_title: string;
+  enrollment: number;
+  user: number;
+  user_name: string;
+  user_email: string;
+  status: SubmissionStatus;
+  submitted_at: string;
+  submitted_file_url?: string | null;
+  submitted_file_name?: string | null;
+  submitted_text?: string | null;
+  grade?: number | null;
+  feedback?: string | null;
+  graded_at?: string | null;
+  graded_by?: number | null;
+  graded_by_name?: string | null;
+  internal_notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubmissionCreateRequest {
+  enrollment: number;
+  assignment: number;
+  submitted_text?: string;
+  submitted_file_url?: string;
+  submitted_file_name?: string;
+}
+
+export interface SubmissionUpdateRequest {
+  status?: SubmissionStatus;
+  submitted_text?: string | null;
+  submitted_file_url?: string | null;
+  submitted_file_name?: string | null;
+}
+
+export interface GradeSubmissionRequest {
+  grade: number;
+  feedback?: string;
+  internal_notes?: string;
 }
 
 // PAYMENT TYPES
