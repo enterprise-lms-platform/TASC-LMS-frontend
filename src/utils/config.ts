@@ -71,18 +71,34 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 
 // Helper function to extract error message from API error
 export const getErrorMessage = (error: unknown, fallback = 'An unexpected error occurred. Please try again.'): string => {
-  if (axios.isAxiosError(error) && error.response?.data) {
-    const data = error.response.data;
-    if (typeof data === 'string') return data;
-    if (data.detail) return String(data.detail);
-    if (data.non_field_errors) return [].concat(data.non_field_errors).join(' ');
-    // Handle validation errors (field: ["error1", "error2"])
-    if (typeof data === 'object') {
-      const fieldMsgs = Object.entries(data)
-        .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
-        .join('; ');
-      if (fieldMsgs) return fieldMsgs;
+  if (axios.isAxiosError(error)) {
+    const status = error.response?.status;
+    const data = error.response?.data;
+
+    // If the server returned an HTML page (e.g. 500 error page), show a friendly message
+    if (typeof data === 'string' && data.trimStart().startsWith('<')) {
+      if (status === 500) return 'Server error (500). Please try again later or contact support.';
+      if (status === 502) return 'Bad gateway (502). The server is temporarily unavailable.';
+      if (status === 503) return 'Service unavailable (503). Please try again later.';
+      if (status === 504) return 'Gateway timeout (504). The server took too long to respond.';
+      return fallback;
     }
+
+    if (data) {
+      if (typeof data === 'string') return data;
+      if (data.detail) return String(data.detail);
+      if (data.non_field_errors) return [].concat(data.non_field_errors).join(' ');
+      // Handle validation errors (field: ["error1", "error2"])
+      if (typeof data === 'object') {
+        const fieldMsgs = Object.entries(data)
+          .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+          .join('; ');
+        if (fieldMsgs) return fieldMsgs;
+      }
+    }
+
+    // No data but we have a status code
+    if (status) return `Request failed with status ${status}. Please try again.`;
   }
   if (error instanceof Error) return error.message;
   return fallback;
