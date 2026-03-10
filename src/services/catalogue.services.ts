@@ -14,12 +14,20 @@ import type {
   CourseCreateRequest,
   Module,
   ModuleCreateRequest,
+  QuizDetailResponse,
+  QuizSettings,
+  QuizQuestion,
   Session,
   SessionCreateRequest,
   PaginatedResponse,
   CourseApprovalRequest,
   CourseApprovalActionRequest,
   AssetUrlResponse,
+  QuestionCategory,
+  BankQuestion,
+  BankQuestionListParams,
+  AddFromBankPayload,
+  AddFromBankResponse,
 } from '../types/types';
 
 const BASE_PATH = '/api/v1/catalogue';
@@ -162,6 +170,8 @@ export const moduleApi = {
 export interface SessionListParams {
   course?: number;
   type?: 'video' | 'text' | 'live' | 'document' | 'html' | 'quiz' | 'assignment' | 'scorm';
+  page?: number;
+  page_size?: number;
 }
 
 export const sessionApi = {
@@ -198,6 +208,86 @@ export const sessionApi = {
   // Get a short-lived presigned GET URL for a session's uploaded asset
   getAssetUrl: (id: number) =>
     apiClient.get<AssetUrlResponse>(`${BASE_PATH}/sessions/${id}/asset-url/`),
+
+  // Quiz authoring (session_type='quiz' only)
+  getQuiz: (sessionId: number) =>
+    apiClient.get<QuizDetailResponse>(`${BASE_PATH}/sessions/${sessionId}/quiz/`),
+
+  patchQuiz: (sessionId: number, payload: { settings: QuizSettings }) =>
+    apiClient.patch<QuizDetailResponse>(`${BASE_PATH}/sessions/${sessionId}/quiz/`, payload),
+
+  putQuizQuestions: (
+    sessionId: number,
+    payload: {
+      questions: Array<{
+        id?: number;
+        order?: number;
+        question_type: string;
+        question_text: string;
+        points?: number;
+        answer_payload?: Record<string, unknown>;
+      }>;
+    }
+  ) =>
+    apiClient.put<{ questions: QuizQuestion[] }>(
+      `${BASE_PATH}/sessions/${sessionId}/quiz/questions/`,
+      payload
+    ),
+
+  addQuestionsFromBank: (sessionId: number, payload: AddFromBankPayload) =>
+    apiClient.post<AddFromBankResponse>(
+      `${BASE_PATH}/sessions/${sessionId}/quiz/questions/add-from-bank/`,
+      payload
+    ),
+};
+
+// QUESTION CATEGORIES (instructor-owned)
+export interface QuestionCategoryCreatePayload {
+  name: string;
+  order?: number;
+}
+
+export const questionCategoryApi = {
+  list: (params?: { page?: number; page_size?: number }) =>
+    apiClient.get<PaginatedResponse<QuestionCategory>>(`${BASE_PATH}/question-categories/`, { params }),
+
+  create: (payload: QuestionCategoryCreatePayload) =>
+    apiClient.post<QuestionCategory>(`${BASE_PATH}/question-categories/`, payload),
+
+  patch: (id: number, payload: Partial<QuestionCategoryCreatePayload>) =>
+    apiClient.patch<QuestionCategory>(`${BASE_PATH}/question-categories/${id}/`, payload),
+
+  delete: (id: number) =>
+    apiClient.delete(`${BASE_PATH}/question-categories/${id}/`),
+};
+
+// BANK QUESTIONS (instructor-owned)
+export interface BankQuestionCreatePayload {
+  category?: number | null;
+  question_type: string;
+  question_text: string;
+  points?: number;
+  answer_payload?: Record<string, unknown>;
+  difficulty?: string;
+  tags?: string[];
+  explanation?: string;
+}
+
+export const bankQuestionApi = {
+  list: (params?: BankQuestionListParams) =>
+    apiClient.get<PaginatedResponse<BankQuestion>>(`${BASE_PATH}/bank-questions/`, { params }),
+
+  create: (payload: BankQuestionCreatePayload) =>
+    apiClient.post<BankQuestion>(`${BASE_PATH}/bank-questions/`, payload),
+
+  get: (id: number) =>
+    apiClient.get<BankQuestion>(`${BASE_PATH}/bank-questions/${id}/`),
+
+  patch: (id: number, payload: Partial<BankQuestionCreatePayload>) =>
+    apiClient.patch<BankQuestion>(`${BASE_PATH}/bank-questions/${id}/`, payload),
+
+  delete: (id: number) =>
+    apiClient.delete(`${BASE_PATH}/bank-questions/${id}/`),
 };
 
 // COURSE APPROVAL REQUESTS

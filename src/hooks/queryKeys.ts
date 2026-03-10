@@ -1,7 +1,14 @@
 // queryKeys.ts
 
-import type { CategoryListParams, CourseListParams, SessionListParams, ApprovalListParams, ModuleListParams } from '../services/catalogue.services';
-import type { SessionProgressParams, DiscussionParams, DiscussionReplyParams, SubmissionParams } from '../services/learning.services';
+import type {
+  CategoryListParams,
+  CourseListParams,
+  SessionListParams,
+  ApprovalListParams,
+  ModuleListParams,
+} from '../services/catalogue.services';
+import type { BankQuestionListParams } from '../types/types';
+import type { SessionProgressParams, DiscussionParams, DiscussionReplyParams } from '../services/learning.services';
 import type { InvoiceParams, TransactionParams, UserSubscriptionParams } from '../services/payments.services';
 import type { PublicCourseParams } from '../services/public.services';
 import type { OrganizationListParams } from '../services/organization.services';
@@ -35,6 +42,16 @@ export const queryKeys = {
   sessions: {
     all: (params?: SessionListParams) => ['sessions', params] as const,
     detail: (id: number) => ['sessions', 'detail', id] as const,
+  },
+  quiz: {
+    detail: (sessionId: number) => ['quiz', 'detail', sessionId] as const,
+  },
+  questionCategories: {
+    all: (params?: Record<string, unknown>) => ['question-categories', params] as const,
+  },
+  bankQuestions: {
+    list: (params?: BankQuestionListParams) => ['bank-questions', params] as const,
+    detail: (id: number) => ['bank-questions', 'detail', id] as const,
   },
 
   // Learning

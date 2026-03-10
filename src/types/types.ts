@@ -393,6 +393,95 @@ export interface PublicSession {
   is_mandatory: boolean;
 }
 
+// Quiz authoring (session-scoped)
+export interface QuizSettings {
+  time_limit_minutes?: number;
+  passing_score_percent?: number;
+  max_attempts?: number;
+  shuffle_questions?: boolean;
+  show_correct_answers?: boolean;
+  show_timer?: boolean;
+  allow_back_navigation?: boolean;
+  shuffle_answers?: boolean;
+  show_feedback?: string;
+}
+
+export type QuizQuestionType =
+  | 'multiple-choice'
+  | 'true-false'
+  | 'short-answer'
+  | 'essay'
+  | 'matching'
+  | 'fill-blank';
+
+export interface QuizQuestion {
+  id: number;
+  order: number;
+  question_type: QuizQuestionType;
+  question_text: string;
+  points: number;
+  answer_payload: Record<string, unknown>;
+}
+
+export interface QuizDetailResponse {
+  session: {
+    id: number;
+    title: string;
+    description: string;
+    status: 'draft' | 'published';
+  };
+  settings: QuizSettings;
+  questions: QuizQuestion[];
+}
+
+// Question Bank (instructor-owned)
+export interface QuestionCategory {
+  id: number;
+  name: string;
+  order: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BankQuestion {
+  id: number;
+  category: number | { id: number; name: string } | null;
+  question_type: QuizQuestionType;
+  question_text: string;
+  points: number;
+  answer_payload: Record<string, unknown>;
+  difficulty: string;
+  tags: string[];
+  explanation: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BankQuestionListParams {
+  category?: number;
+  search?: string;
+  question_type?: string;
+  difficulty?: string;
+  tags?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface AddFromBankPayload {
+  bank_question_ids: number[];
+}
+
+export interface AddFromBankResponse {
+  questions: QuizQuestion[];
+}
+
+/** Lightweight quiz session option for Add-to-Quiz modal (id + display label) */
+export interface QuizSessionOption {
+  id: number;
+  title: string;
+  courseTitle?: string;
+}
+
 export interface CourseDetailInstructor {
   id: number;
   name: string;
