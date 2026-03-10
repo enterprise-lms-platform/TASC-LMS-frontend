@@ -8,7 +8,7 @@ import type {
   ModuleListParams,
 } from '../services/catalogue.services';
 import type { BankQuestionListParams } from '../types/types';
-import type { SessionProgressParams, DiscussionParams, DiscussionReplyParams } from '../services/learning.services';
+import type { SessionProgressParams, DiscussionParams, DiscussionReplyParams, SubmissionParams } from '../services/learning.services';
 import type { InvoiceParams, TransactionParams, UserSubscriptionParams } from '../services/payments.services';
 import type { PublicCourseParams } from '../services/public.services';
 import type { OrganizationListParams } from '../services/organization.services';
