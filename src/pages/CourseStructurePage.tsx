@@ -44,12 +44,12 @@ const sessionTypeToLessonType: Record<string, LessonType> = {
 };
 
 const contentBadgeStyles: Record<string, { bg: string; color: string }> = {
-  pdf:      { bg: '#d1fae5', color: '#10b981' },
-  video:    { bg: '#dbeafe', color: '#2563eb' },
-  scorm:    { bg: '#fee2e2', color: '#ef4444' },
+  pdf: { bg: '#d1fae5', color: '#10b981' },
+  video: { bg: '#dbeafe', color: '#2563eb' },
+  scorm: { bg: '#fee2e2', color: '#ef4444' },
   external: { bg: '#ffedd5', color: '#ea580c' },
   uploaded: { bg: '#e4e4e7', color: '#52525b' },
-  inline:   { bg: '#ede9fe', color: '#7c3aed' },
+  inline: { bg: '#ede9fe', color: '#7c3aed' },
 };
 
 function deriveContentBadge(s: Session): {
@@ -186,6 +186,7 @@ const CourseStructurePage: React.FC = () => {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
   const [moduleModalOpen, setModuleModalOpen] = useState(false);
   const [lessonModalOpen, setLessonModalOpen] = useState(false);
+  const [lessonModalInitialType, setLessonModalInitialType] = useState<LessonType | undefined>(undefined);
   const [activeModuleId, setActiveModuleId] = useState<number | null>(null);
   const [draggedLessonId, setDraggedLessonId] = useState<number | null>(null);
   const [snackError, setSnackError] = useState<string | null>(null);
@@ -208,15 +209,15 @@ const CourseStructurePage: React.FC = () => {
     () =>
       courseData
         ? {
-            title: courseData.title,
-            thumbnail: courseData.thumbnail ?? undefined,
-            modules: modules.length,
-            lessons: backendSessions.length,
-            duration: `${courseData.duration_hours ?? 0}h`,
-            enrolled: courseData.enrollment_count,
-            progress: 0,
-            progressText: '\u2014',
-          }
+          title: courseData.title,
+          thumbnail: courseData.thumbnail ?? undefined,
+          modules: modules.length,
+          lessons: backendSessions.length,
+          duration: `${courseData.duration_hours ?? 0}h`,
+          enrolled: courseData.enrollment_count,
+          progress: 0,
+          progressText: '\u2014',
+        }
         : null,
     [courseData, modules.length, backendSessions.length],
   );
@@ -278,7 +279,8 @@ const CourseStructurePage: React.FC = () => {
     }
   };
 
-  const handleAddLesson = (moduleId?: number | string) => {
+  const handleAddLesson = (moduleId?: number | string, initialType?: LessonType) => {
+    setLessonModalInitialType(initialType);
     if (typeof moduleId === 'number') {
       setActiveModuleId(moduleId);
     } else if (typeof moduleId === 'string' && moduleId !== 'ungrouped') {
@@ -394,7 +396,50 @@ const CourseStructurePage: React.FC = () => {
       return;
     }
 
-    // Non-upload types: close modal and navigate to their respective builders
+    // Quiz: create session first, then navigate to builder
+    if (data.type === 'quiz' && id) {
+      try {
+        setSaveStatus('saving');
+        setLessonModalOpen(false);
+
+        const { data: paginatedSessions } = await sessionApi.getAll({ course: id });
+        const freshSessions = paginatedSessions.results;
+        const maxOrder = freshSessions.length > 0
+          ? Math.max(...freshSessions.map((s: Session) => s.order))
+          : -1;
+        const nextOrder = maxOrder + 1;
+
+        const session = await createSession.mutateAsync({
+          course: id,
+          ...(activeModuleId != null && { module: activeModuleId }),
+          title: data.title,
+          description: data.description || undefined,
+          session_type: 'quiz',
+          is_free_preview: data.isFreePreview,
+          order: nextOrder,
+        });
+
+        setActiveModuleId(null);
+        setLessonModalInitialType(undefined);
+        setSaveStatus('saved');
+
+        if (!session?.id) {
+          setSnackError('Session was created but the server did not return an ID. Please refresh and try again.');
+          return;
+        }
+
+        navigate(
+          `/instructor/course/${courseId}/quiz/builder?sessionId=${session.id}&lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`
+        );
+      } catch (err) {
+        setSaveStatus('saved');
+        const msg = getErrorMessage(err, 'Failed to create quiz lesson. Please try again.');
+        setSnackError(msg);
+      }
+      return;
+    }
+
+    // Other non-upload types: close modal and navigate to their respective builders
     setLessonModalOpen(false);
     setSaveStatus('saving');
     setTimeout(() => setSaveStatus('saved'), 1500);
@@ -424,7 +469,7 @@ const CourseStructurePage: React.FC = () => {
         navigate(`/instructor/course/${courseId}/upload?type=${type}`);
         break;
       case 'quiz':
-        navigate(`/instructor/course/${courseId}/quiz/builder?course=${encodeURIComponent(courseTitle)}`);
+        handleAddLesson(undefined, 'quiz');
         break;
       case 'assignment':
         navigate(`/instructor/assignment/create?course=${encodeURIComponent(courseTitle)}`);
@@ -531,47 +576,47 @@ const CourseStructurePage: React.FC = () => {
 
           {/* Two Column Layout — only for authorized editors */}
           {isOwnerOrAdmin && (
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', lg: '1fr 340px' },
-              gap: 3,
-            }}
-          >
-            {/* Left: Curriculum Builder */}
-            <CurriculumBuilder
-              data={{ modules }}
-              onAddModule={handleAddModule}
-              onAddLesson={handleAddLesson}
-              onEditLesson={handleEditLesson}
-              onPreviewLesson={handlePreviewLesson}
-              onDragStartLesson={handleDragStartLesson}
-              onDragEndLesson={handleDragEndLesson}
-              onDropModule={handleDropModule}
-            />
-
-            {/* Right: Sidebar Widgets */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <QuickAddWidget onAdd={handleQuickAdd} />
-              <ContentLibraryWidget />
-              <CourseStatsWidget
-                stats={{
-                  modules: modules.length,
-                  lessons: backendSessions.length,
-                  quizzes: backendSessions.filter((s) => s.session_type === 'quiz').length,
-                  assignments: backendSessions.filter((s) => s.session_type === 'assignment').length,
-                }}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', lg: '1fr 340px' },
+                gap: 3,
+              }}
+            >
+              {/* Left: Curriculum Builder */}
+              <CurriculumBuilder
+                data={{ modules }}
+                onAddModule={handleAddModule}
+                onAddLesson={handleAddLesson}
+                onEditLesson={handleEditLesson}
+                onPreviewLesson={handlePreviewLesson}
+                onDragStartLesson={handleDragStartLesson}
+                onDragEndLesson={handleDragEndLesson}
+                onDropModule={handleDropModule}
               />
-              <PublishChecklistWidget items={[
-                { id: '1', text: 'Course info complete', complete: !!courseData?.description },
-                { id: '2', text: 'Thumbnail uploaded', complete: !!courseData?.thumbnail },
-                { id: '3', text: 'At least 1 lesson', complete: backendSessions.length >= 1 },
-                { id: '4', text: 'Pricing configured', complete: !!courseData?.price },
-                { id: '5', text: 'All lessons published', complete: backendSessions.length > 0 && backendSessions.every((s) => s.status === 'published') },
-                { id: '6', text: 'Preview video added', complete: !!courseData?.trailer_video_url },
-              ]} />
+
+              {/* Right: Sidebar Widgets */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <QuickAddWidget onAdd={handleQuickAdd} />
+                <ContentLibraryWidget />
+                <CourseStatsWidget
+                  stats={{
+                    modules: modules.length,
+                    lessons: backendSessions.length,
+                    quizzes: backendSessions.filter((s) => s.session_type === 'quiz').length,
+                    assignments: backendSessions.filter((s) => s.session_type === 'assignment').length,
+                  }}
+                />
+                <PublishChecklistWidget items={[
+                  { id: '1', text: 'Course info complete', complete: !!courseData?.description },
+                  { id: '2', text: 'Thumbnail uploaded', complete: !!courseData?.thumbnail },
+                  { id: '3', text: 'At least 1 lesson', complete: backendSessions.length >= 1 },
+                  { id: '4', text: 'Pricing configured', complete: !!courseData?.price },
+                  { id: '5', text: 'All lessons published', complete: backendSessions.length > 0 && backendSessions.every((s) => s.status === 'published') },
+                  { id: '6', text: 'Preview video added', complete: !!courseData?.trailer_video_url },
+                ]} />
+              </Box>
             </Box>
-          </Box>
           )}
         </Box>
       </Box>
@@ -594,8 +639,9 @@ const CourseStructurePage: React.FC = () => {
       <AddLessonModal
         open={lessonModalOpen}
         moduleTitle={activeModuleTitle}
-        onClose={() => setLessonModalOpen(false)}
+        onClose={() => { setLessonModalOpen(false); setLessonModalInitialType(undefined); }}
         onSave={handleSaveLesson}
+        initialType={lessonModalInitialType}
       />
 
       <FeedbackSnackbar message={snackError} onClose={() => setSnackError(null)} />

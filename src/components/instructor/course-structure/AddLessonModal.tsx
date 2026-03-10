@@ -29,6 +29,7 @@ interface AddLessonModalProps {
   moduleTitle: string;
   onClose: () => void;
   onSave: (data: LessonFormData) => void;
+  initialType?: LessonType;
 }
 
 interface LessonFormData {

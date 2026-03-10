@@ -8,15 +8,20 @@ import {
   moduleApi,
   sessionApi,
   courseApprovalApi,
+  questionCategoryApi,
+  bankQuestionApi,
   type CourseListParams,
   type ModuleListParams,
   type SessionListParams,
   type ApprovalListParams,
+  type QuestionCategoryCreatePayload,
+  type BankQuestionCreatePayload,
 } from '../services/catalogue.services';
 import { queryKeys } from './queryKeys';
 import type {
   CategoryCreateRequest,
   CourseCreateRequest,
+  QuizSettings,
   ModuleCreateRequest,
   SessionCreateRequest,
   CourseList,
@@ -24,6 +29,7 @@ import type {
   Session,
   PaginatedResponse,
   CourseApprovalActionRequest,
+  BankQuestionListParams,
 } from '../types/types';
 
 // ── Categories ──
@@ -372,6 +378,157 @@ export const useRejectCourse = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['courses'] });
       qc.invalidateQueries({ queryKey: ['approval-requests'] });
+    },
+  });
+};
+
+// ── Quiz (session_type='quiz') ──
+
+export const useQuizDetail = (sessionId: number | null | undefined) =>
+  useQuery({
+    queryKey: queryKeys.quiz.detail(sessionId ?? 0),
+    queryFn: () => sessionApi.getQuiz(sessionId!).then((r) => r.data),
+    enabled: !!sessionId && sessionId > 0,
+  });
+
+export const usePatchQuiz = (sessionId: number) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { settings: QuizSettings }) =>
+      sessionApi.patchQuiz(sessionId, payload).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.quiz.detail(sessionId) });
+    },
+  });
+};
+
+export const usePutQuizQuestions = (sessionId: number) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      questions: Array<{
+        id?: number;
+        order?: number;
+        question_type: string;
+        question_text: string;
+        points?: number;
+        answer_payload?: Record<string, unknown>;
+      }>;
+    }) => sessionApi.putQuizQuestions(sessionId, payload).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.quiz.detail(sessionId) });
+    },
+  });
+};
+
+// ── Question Bank (instructor-owned) ──
+
+export const useQuestionCategories = (params?: { page?: number; page_size?: number }) =>
+  useQuery({
+    queryKey: queryKeys.questionCategories.all(params),
+    queryFn: () =>
+      questionCategoryApi.list(params).then((r) => r.data.results ?? r.data),
+  });
+
+export const useCreateQuestionCategory = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: QuestionCategoryCreatePayload) =>
+      questionCategoryApi.create(payload).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['question-categories'] });
+    },
+  });
+};
+
+export const usePatchQuestionCategory = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: Partial<QuestionCategoryCreatePayload>;
+    }) => questionCategoryApi.patch(id, payload).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['question-categories'] });
+    },
+  });
+};
+
+export const useDeleteQuestionCategory = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => questionCategoryApi.delete(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['question-categories'] });
+      qc.invalidateQueries({ queryKey: ['bank-questions'] });
+    },
+  });
+};
+
+export const useBankQuestions = (params?: BankQuestionListParams) =>
+  useQuery({
+    queryKey: queryKeys.bankQuestions.list(params),
+    queryFn: () => bankQuestionApi.list(params).then((r) => r.data),
+  });
+
+export const useBankQuestion = (id: number | null | undefined) =>
+  useQuery({
+    queryKey: queryKeys.bankQuestions.detail(id ?? 0),
+    queryFn: () => bankQuestionApi.get(id!).then((r) => r.data),
+    enabled: !!id && id > 0,
+  });
+
+export const useCreateBankQuestion = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: BankQuestionCreatePayload) =>
+      bankQuestionApi.create(payload).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bank-questions'] });
+    },
+  });
+};
+
+export const usePatchBankQuestion = (id?: number | null) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Partial<BankQuestionCreatePayload>) =>
+      bankQuestionApi.patch(id!, payload).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bank-questions'] });
+      if (id) {
+        qc.invalidateQueries({ queryKey: queryKeys.bankQuestions.detail(id) });
+      }
+    },
+  });
+};
+
+export const useDeleteBankQuestion = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => bankQuestionApi.delete(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bank-questions'] });
+    },
+  });
+};
+
+export interface AddQuestionsFromBankVariables {
+  sessionId: number;
+  bank_question_ids: number[];
+}
+
+export const useAddQuestionsFromBank = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ sessionId, bank_question_ids }: AddQuestionsFromBankVariables) =>
+      sessionApi.addQuestionsFromBank(sessionId, { bank_question_ids }).then((r) => r.data),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.quiz.detail(variables.sessionId) });
+      qc.invalidateQueries({ queryKey: ['bank-questions'] });
     },
   });
 };
