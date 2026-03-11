@@ -1,6 +1,23 @@
 import React, { useMemo, useState } from 'react';
-import { Box, CssBaseline, Paper, Typography, Toolbar, Button, Chip, Grid, Snackbar, Alert, CircularProgress } from '@mui/material';
-import { CheckBoxOutlineBlank as SelectIcon } from '@mui/icons-material';
+import {
+  Box,
+  CssBaseline,
+  Paper,
+  Typography,
+  Toolbar,
+  Button,
+  Chip,
+  Grid,
+  Snackbar,
+  Alert,
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+} from '@mui/material';
+import { CheckBoxOutlineBlank as SelectIcon, Add as AddIcon } from '@mui/icons-material';
 
 // Layout components
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
@@ -25,6 +42,7 @@ import {
   useQuestionCategories,
   useBankQuestion,
   useCreateBankQuestion,
+  useCreateQuestionCategory,
   usePatchBankQuestion,
   useDeleteBankQuestion,
   useAddQuestionsFromBank,
@@ -56,6 +74,8 @@ const QuestionBankPage: React.FC = () => {
   const [editingQuestion, setEditingQuestion] = useState<BankQuestion | null>(null);
   const [addToQuizModalOpen, setAddToQuizModalOpen] = useState(false);
   const [selectedQuizSessionId, setSelectedQuizSessionId] = useState<number | null>(null);
+  const [addCategoryModalOpen, setAddCategoryModalOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   // Snackbar
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
@@ -100,6 +120,7 @@ const QuestionBankPage: React.FC = () => {
   const { data: expandedQuestionDetail, isLoading: expandedLoading } = useBankQuestion(expandedQuestionId);
 
   const createQuestion = useCreateBankQuestion();
+  const createCategory = useCreateQuestionCategory();
   const patchQuestion = usePatchBankQuestion(editingQuestion?.id ?? null);
   const deleteQuestion = useDeleteBankQuestion();
   const addToQuiz = useAddQuestionsFromBank();
@@ -257,6 +278,32 @@ const QuestionBankPage: React.FC = () => {
     setAddToQuizModalOpen(true);
   };
 
+  const handleAddCategoryOpen = () => {
+    setNewCategoryName('');
+    setAddCategoryModalOpen(true);
+  };
+
+  const handleAddCategoryClose = () => {
+    setAddCategoryModalOpen(false);
+    setNewCategoryName('');
+  };
+
+  const handleAddCategorySubmit = async () => {
+    const name = newCategoryName.trim();
+    if (!name) return;
+    try {
+      await createCategory.mutateAsync({ name });
+      handleAddCategoryClose();
+      setSnackbar({ open: true, message: 'Category created successfully.', severity: 'success' });
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: getErrorMessage(err, 'Failed to create category.'),
+        severity: 'error',
+      });
+    }
+  };
+
   const handleAddToQuizConfirm = async () => {
     if (!selectedQuizSessionId || selectedQuestions.size === 0) return;
     const bank_question_ids = Array.from(selectedQuestions);
@@ -313,6 +360,7 @@ const QuestionBankPage: React.FC = () => {
                   setSelectedCategory(id);
                   setCurrentPage(1);
                 }}
+                onAddCategory={handleAddCategoryOpen}
               />
               <TagsCloud selectedTags={selectedTags} onTagToggle={handleTagToggle} />
             </Grid>
@@ -337,18 +385,28 @@ const QuestionBankPage: React.FC = () => {
                     </Typography>
                     <Chip label={totalCount} size="small" sx={{ bgcolor: 'primary.light', fontWeight: 600 }} />
                   </Box>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<SelectIcon />}
-                    onClick={handleSelectAll}
-                    disabled={questions.length === 0}
-                    sx={{ textTransform: 'none', borderColor: 'divider', color: 'text.secondary' }}
-                  >
-                    {selectedQuestions.size === questions.length && questions.length > 0
-                      ? 'Deselect All'
-                      : 'Select All'}
-                  </Button>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={() => setCreateModalOpen(true)}
+                      sx={{ textTransform: 'none', fontWeight: 600 }}
+                    >
+                      Add Question
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<SelectIcon />}
+                      onClick={handleSelectAll}
+                      disabled={questions.length === 0}
+                      sx={{ textTransform: 'none', borderColor: 'divider', color: 'text.secondary' }}
+                    >
+                      {selectedQuestions.size === questions.length && questions.length > 0
+                        ? 'Deselect All'
+                        : 'Select All'}
+                    </Button>
+                  </Box>
                 </Box>
 
                 <SearchFilterBar
@@ -451,6 +509,35 @@ const QuestionBankPage: React.FC = () => {
         suggestedTags={suggestedTags}
         isSubmitting={patchQuestion.isPending}
       />
+
+      <Dialog open={addCategoryModalOpen} onClose={handleAddCategoryClose} maxWidth="xs" fullWidth>
+        <DialogTitle>Add Category</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Category name"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddCategorySubmit()}
+            margin="normal"
+            size="small"
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleAddCategoryClose} sx={{ textTransform: 'none' }}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleAddCategorySubmit}
+            disabled={!newCategoryName.trim() || createCategory.isPending}
+            sx={{ textTransform: 'none' }}
+          >
+            {createCategory.isPending ? 'Creating…' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <SelectQuizModal
         open={addToQuizModalOpen}
