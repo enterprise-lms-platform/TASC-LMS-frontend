@@ -3,43 +3,34 @@ import { Box, Paper, Typography, IconButton } from '@mui/material';
 import {
   AccountTree as TreeIcon,
   Add as AddIcon,
-  Edit as EditIcon,
   Public as AllIcon,
-  Code as CodeIcon,
-  Javascript as JsIcon,
-  Css as CssIcon,
-  Schema as SchemaIcon,
-  Science as TestIcon,
-  Speed as PerfIcon,
+  Folder as FolderIcon,
 } from '@mui/icons-material';
 
-interface Category {
-  id: string;
+/**
+ * Category option for display in the panel.
+ * id: use 'all' as sentinel for "All Questions", or numeric id from API for real categories.
+ */
+export interface CategoryOption {
+  id: string | number;
   name: string;
-  count: number;
-  icon: React.ReactNode;
-  iconBgColor: string;
-  iconColor: string;
+  count?: number;
+  isAll?: boolean;
 }
 
-const categoriesData: Category[] = [
-  { id: 'all', name: 'All Questions', count: 248, icon: <AllIcon />, iconBgColor: '#e4e4e7', iconColor: '#52525b' },
-  { id: 'react-hooks', name: 'React Hooks', count: 45, icon: <CodeIcon />, iconBgColor: '#dbeafe', iconColor: '#3b82f6' },
-  { id: 'javascript', name: 'JavaScript Basics', count: 62, icon: <JsIcon />, iconBgColor: '#fef3c7', iconColor: '#f59e0b' },
-  { id: 'typescript', name: 'TypeScript', count: 38, icon: <CodeIcon />, iconBgColor: '#dbeafe', iconColor: '#3b82f6' },
-  { id: 'css', name: 'CSS & Styling', count: 28, icon: <CssIcon />, iconBgColor: '#fce7f3', iconColor: '#ec4899' },
-  { id: 'state-management', name: 'State Management', count: 32, icon: <SchemaIcon />, iconBgColor: '#ede9fe', iconColor: '#8b5cf6' },
-  { id: 'testing', name: 'Testing', count: 24, icon: <TestIcon />, iconBgColor: '#d1fae5', iconColor: '#10b981' },
-  { id: 'performance', name: 'Performance', count: 19, icon: <PerfIcon />, iconBgColor: '#fee2e2', iconColor: '#ef4444' },
+const DEFAULT_CATEGORIES: CategoryOption[] = [
+  { id: 'all', name: 'All Questions', isAll: true },
 ];
 
 interface CategoriesPanelProps {
-  selectedCategory: string;
+  /** Categories to display. Defaults to [All Questions] when omitted (backward compat until parent integration). */
+  categories?: CategoryOption[];
   onCategorySelect: (categoryId: string) => void;
-  onAddCategory: () => void;
+  onAddCategory?: () => void;
 }
 
 const CategoriesPanel: React.FC<CategoriesPanelProps> = ({
+  categories = DEFAULT_CATEGORIES,
   selectedCategory,
   onCategorySelect,
   onAddCategory,
@@ -74,17 +65,19 @@ const CategoriesPanel: React.FC<CategoriesPanelProps> = ({
             Categories
           </Typography>
         </Box>
-        <IconButton size="small" onClick={onAddCategory}>
-          <AddIcon fontSize="small" />
-        </IconButton>
+        {onAddCategory && (
+          <IconButton size="small" onClick={onAddCategory}>
+            <AddIcon fontSize="small" />
+          </IconButton>
+        )}
       </Box>
 
       {/* Categories List */}
       <Box sx={{ p: 1.5, maxHeight: 400, overflow: 'auto' }}>
-        {categoriesData.map((category) => (
+        {categories.map((category) => (
           <Box
-            key={category.id}
-            onClick={() => onCategorySelect(category.id)}
+            key={String(category.id)}
+            onClick={() => onCategorySelect(String(category.id))}
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -94,13 +87,11 @@ const CategoriesPanel: React.FC<CategoriesPanelProps> = ({
               cursor: 'pointer',
               mb: 0.5,
               transition: 'all 0.2s',
-              bgcolor: selectedCategory === category.id ? 'rgba(255, 164, 36, 0.1)' : 'transparent',
-              color: selectedCategory === category.id ? 'primary.main' : 'inherit',
+              bgcolor: selectedCategory === String(category.id) ? 'rgba(255, 164, 36, 0.1)' : 'transparent',
+              color: selectedCategory === String(category.id) ? 'primary.main' : 'inherit',
               '&:hover': {
-                bgcolor: selectedCategory === category.id ? 'rgba(255, 164, 36, 0.1)' : 'grey.50',
+                bgcolor: selectedCategory === String(category.id) ? 'rgba(255, 164, 36, 0.1)' : 'grey.50',
               },
-              '& .edit-btn': { opacity: 0 },
-              '&:hover .edit-btn': { opacity: 1 },
             }}
           >
             <Box
@@ -111,30 +102,27 @@ const CategoriesPanel: React.FC<CategoriesPanelProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                bgcolor: category.iconBgColor,
-                color: category.iconColor,
+                bgcolor: category.isAll ? '#e4e4e7' : 'primary.light',
+                color: category.isAll ? '#52525b' : 'primary.main',
                 fontSize: 16,
               }}
             >
-              {category.icon}
+              {category.isAll ? <AllIcon /> : <FolderIcon />}
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="body2" fontWeight={500} color="text.primary" noWrap>
                 {category.name}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {category.count} questions
-              </Typography>
+              {category.count !== undefined && (
+                <Typography variant="caption" color="text.secondary">
+                  {category.count} questions
+                </Typography>
+              )}
             </Box>
-            {category.id !== 'all' && (
-              <IconButton size="small" className="edit-btn" sx={{ transition: 'opacity 0.2s' }}>
-                <EditIcon fontSize="small" />
-              </IconButton>
-            )}
           </Box>
         ))}
 
-        {/* Add Category Button */}
+        {onAddCategory && (
         <Box
           onClick={onAddCategory}
           sx={{
@@ -162,6 +150,7 @@ const CategoriesPanel: React.FC<CategoriesPanelProps> = ({
             Add Category
           </Typography>
         </Box>
+        )}
       </Box>
     </Paper>
   );
