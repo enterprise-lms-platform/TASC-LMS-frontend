@@ -19,16 +19,72 @@ import {
   Lightbulb as TipIcon,
   Check as CheckIcon,
 } from '@mui/icons-material';
+import type { BankQuestion } from '../../../types/types';
+import { answerPayloadToOptions } from './answerPayloadHelpers';
 
+/**
+ * Display-friendly props for QuestionBankCard, suitable for API-backed questions.
+ * Use bankQuestionToDisplay() to convert BankQuestion to this shape.
+ * Supports id as string | number for backward compat with legacy Question.
+ */
+export interface QuestionBankCardDisplay {
+  id: number | string;
+  type: BankQuestion['question_type'];
+  text: string;
+  /** Preferred; use category as fallback for legacy Question. */
+  categoryName?: string;
+  /** Legacy fallback when categoryName not set. */
+  category?: string;
+  points: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  usedInQuizzes?: number;
+  tags: string[];
+  options?: Array<{ text: string; isCorrect: boolean }>;
+  explanation?: string;
+}
+
+/**
+ * Convert BankQuestion to QuestionBankCardDisplay for rendering.
+ */
+export function bankQuestionToDisplay(q: BankQuestion): QuestionBankCardDisplay {
+  const cat = q.category;
+  const categoryName =
+    typeof cat === 'object' && cat !== null && 'name' in cat
+      ? (cat as { id: number; name: string }).name
+      : '';
+
+  const diff = (q.difficulty || '').toLowerCase();
+  const difficulty: 'easy' | 'medium' | 'hard' =
+    diff === 'easy' || diff === 'medium' || diff === 'hard' ? diff : 'medium';
+
+  const options =
+    q.question_type === 'multiple-choice' || q.question_type === 'true-false'
+      ? answerPayloadToOptions(q.answer_payload, q.question_type)
+      : undefined;
+
+  return {
+    id: q.id,
+    type: q.question_type,
+    text: q.question_text,
+    categoryName,
+    points: q.points,
+    difficulty,
+    tags: Array.isArray(q.tags) ? q.tags : [],
+    options,
+    explanation: q.explanation || undefined,
+  };
+}
+
+/** Legacy Question type for backward compatibility (id as string). Deprecated; prefer QuestionBankCardDisplay. */
 export interface Question {
   id: string;
-  type: 'multiple-choice' | 'true-false' | 'short-answer' | 'essay' | 'matching' | 'fill-blank';
+  type: BankQuestion['question_type'];
   text: string;
   category: string;
   points: number;
   difficulty: 'easy' | 'medium' | 'hard';
   usedInQuizzes: number;
-  successRate: number;
+  successRate?: number;
   tags: string[];
   options?: Array<{ text: string; isCorrect: boolean }>;
   explanation?: string;
@@ -36,7 +92,10 @@ export interface Question {
 }
 
 interface QuestionBankCardProps {
-  question: Question;
+  question: QuestionBankCardDisplay;
+  /** When expanded, pass full question for preview (e.g. from detail fetch). Enriches options/explanation. */
+  fullQuestionForPreview?: BankQuestion | null;
+  isPreviewLoading?: boolean;
   selected: boolean;
   expanded: boolean;
   onSelect: () => void;
@@ -47,16 +106,16 @@ interface QuestionBankCardProps {
   onDelete: () => void;
 }
 
-const typeConfig = {
+const typeConfig: Record<string, { icon: React.ReactNode; bgColor: string; color: string }> = {
   'multiple-choice': { icon: <MCIcon />, bgColor: '#dbeafe', color: '#3b82f6' },
   'true-false': { icon: <TFIcon />, bgColor: '#d1fae5', color: '#10b981' },
   'short-answer': { icon: <ShortIcon />, bgColor: '#fef3c7', color: '#f59e0b' },
-  'essay': { icon: <EssayIcon />, bgColor: '#ede9fe', color: '#8b5cf6' },
-  'matching': { icon: <MatchIcon />, bgColor: '#fce7f3', color: '#ec4899' },
+  essay: { icon: <EssayIcon />, bgColor: '#ede9fe', color: '#8b5cf6' },
+  matching: { icon: <MatchIcon />, bgColor: '#fce7f3', color: '#ec4899' },
   'fill-blank': { icon: <BlankIcon />, bgColor: '#cffafe', color: '#06b6d4' },
 };
 
-const difficultyConfig = {
+const difficultyConfig: Record<string, { bgColor: string; color: string }> = {
   easy: { bgColor: '#d1fae5', color: '#10b981' },
   medium: { bgColor: '#fef3c7', color: '#f59e0b' },
   hard: { bgColor: '#fee2e2', color: '#ef4444' },
@@ -64,6 +123,8 @@ const difficultyConfig = {
 
 const QuestionBankCard: React.FC<QuestionBankCardProps> = ({
   question,
+  fullQuestionForPreview,
+  isPreviewLoading = false,
   selected,
   expanded,
   onSelect,
@@ -73,8 +134,16 @@ const QuestionBankCard: React.FC<QuestionBankCardProps> = ({
   onAddToQuiz,
   onDelete,
 }) => {
-  const typeInfo = typeConfig[question.type];
-  const diffInfo = difficultyConfig[question.difficulty];
+  const typeInfo = typeConfig[question.type] ?? typeConfig['multiple-choice'];
+  const diffInfo = difficultyConfig[question.difficulty] ?? difficultyConfig.medium;
+
+  const previewOptions =
+    fullQuestionForPreview &&
+    (fullQuestionForPreview.question_type === 'multiple-choice' ||
+      fullQuestionForPreview.question_type === 'true-false')
+      ? answerPayloadToOptions(fullQuestionForPreview.answer_payload, fullQuestionForPreview.question_type)
+      : question.options;
+  const previewExplanation = fullQuestionForPreview?.explanation ?? question.explanation;
 
   return (
     <Paper
@@ -95,16 +164,9 @@ const QuestionBankCard: React.FC<QuestionBankCardProps> = ({
         '&:hover .action-buttons': { opacity: 1 },
       }}
     >
-      {/* Card Header */}
       <Box sx={{ p: 2, display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-        <Checkbox
-          checked={selected}
-          onChange={onSelect}
-          size="small"
-          sx={{ mt: -0.5 }}
-        />
+        <Checkbox checked={selected} onChange={onSelect} size="small" sx={{ mt: -0.5 }} />
 
-        {/* Type Icon */}
         <Box
           sx={{
             width: 40,
@@ -121,18 +183,18 @@ const QuestionBankCard: React.FC<QuestionBankCardProps> = ({
           {typeInfo.icon}
         </Box>
 
-        {/* Content */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="body1" fontWeight={500} color="text.primary" sx={{ mb: 1 }}>
             {question.text}
           </Typography>
 
-          {/* Meta Info */}
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 1, fontSize: '0.75rem', color: 'text.secondary' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <FolderIcon sx={{ fontSize: 14 }} />
-              {question.category}
-            </Box>
+            {(question.categoryName ?? question.category) && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <FolderIcon sx={{ fontSize: 14 }} />
+                {question.categoryName ?? question.category}
+              </Box>
+            )}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <PointsIcon sx={{ fontSize: 14 }} />
               {question.points} points
@@ -151,34 +213,33 @@ const QuestionBankCard: React.FC<QuestionBankCardProps> = ({
             >
               {question.difficulty.charAt(0).toUpperCase() + question.difficulty.slice(1)}
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <StatsIcon sx={{ fontSize: 14 }} />
-              Used in {question.usedInQuizzes} quizzes
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              {question.successRate}% success rate
-            </Box>
+            {question.usedInQuizzes !== undefined && question.usedInQuizzes > 0 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <StatsIcon sx={{ fontSize: 14 }} />
+                Used in {question.usedInQuizzes} quizzes
+              </Box>
+            )}
           </Box>
 
-          {/* Tags */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {question.tags.map((tag) => (
-              <Chip
-                key={tag}
-                label={tag}
-                size="small"
-                sx={{
-                  height: 20,
-                  fontSize: '0.7rem',
-                  bgcolor: 'grey.200',
-                  color: 'text.secondary',
-                }}
-              />
-            ))}
-          </Box>
+          {question.tags.length > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {question.tags.map((tag) => (
+                <Chip
+                  key={tag}
+                  label={tag}
+                  size="small"
+                  sx={{
+                    height: 20,
+                    fontSize: '0.7rem',
+                    bgcolor: 'grey.200',
+                    color: 'text.secondary',
+                  }}
+                />
+              ))}
+            </Box>
+          )}
         </Box>
 
-        {/* Action Buttons */}
         <Box className="action-buttons" sx={{ display: 'flex', gap: 0.5, transition: 'opacity 0.2s' }}>
           <IconButton size="small" title="Preview" onClick={onExpand}>
             {expanded ? <ExpandIcon /> : <PreviewIcon />}
@@ -198,112 +259,94 @@ const QuestionBankCard: React.FC<QuestionBankCardProps> = ({
         </Box>
       </Box>
 
-      {/* Preview Panel */}
       <Collapse in={expanded}>
         <Box sx={{ p: 2, pt: 0, bgcolor: 'background.paper', borderTop: 1, borderColor: 'divider' }}>
-          {/* Answer Options */}
-          {question.options && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                Answer Options
+          {isPreviewLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                Loading preview…
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
-                {question.options.map((opt, idx) => (
+            </Box>
+          ) : (
+            <>
+              {previewOptions && previewOptions.length > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography
+                    variant="caption"
+                    fontWeight={600}
+                    color="text.secondary"
+                    sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}
+                  >
+                    Answer Options
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+                    {previewOptions.map((opt, idx) => (
+                      <Box
+                        key={idx}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1.5,
+                          p: 1.5,
+                          borderRadius: 1,
+                          bgcolor: opt.isCorrect ? 'success.light' : 'grey.50',
+                          border: opt.isCorrect ? 1 : 0,
+                          borderColor: 'success.main',
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            bgcolor: opt.isCorrect ? 'success.main' : 'grey.300',
+                            color: opt.isCorrect ? 'white' : 'text.secondary',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {opt.isCorrect ? <CheckIcon sx={{ fontSize: 16 }} /> : String.fromCharCode(65 + idx)}
+                        </Box>
+                        <Typography variant="body2">{opt.text}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {previewExplanation && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography
+                    variant="caption"
+                    fontWeight={600}
+                    color="text.secondary"
+                    sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}
+                  >
+                    Explanation
+                  </Typography>
                   <Box
-                    key={idx}
                     sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1.5,
+                      mt: 1,
                       p: 1.5,
                       borderRadius: 1,
-                      bgcolor: opt.isCorrect ? 'success.light' : 'grey.50',
-                      border: opt.isCorrect ? 1 : 0,
-                      borderColor: 'success.main',
+                      bgcolor: 'info.light',
+                      borderLeft: 3,
+                      borderColor: 'info.main',
+                      display: 'flex',
+                      gap: 1,
                     }}
                   >
-                    <Box
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: opt.isCorrect ? 'success.main' : 'grey.300',
-                        color: opt.isCorrect ? 'white' : 'text.secondary',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {opt.isCorrect ? <CheckIcon sx={{ fontSize: 16 }} /> : String.fromCharCode(65 + idx)}
-                    </Box>
-                    <Typography variant="body2">{opt.text}</Typography>
+                    <TipIcon sx={{ color: 'info.main', fontSize: 18 }} />
+                    <Typography variant="body2" color="text.secondary">
+                      {previewExplanation}
+                    </Typography>
                   </Box>
-                ))}
-              </Box>
-            </Box>
-          )}
-
-          {/* Explanation */}
-          {question.explanation && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                Explanation
-              </Typography>
-              <Box
-                sx={{
-                  mt: 1,
-                  p: 1.5,
-                  borderRadius: 1,
-                  bgcolor: 'info.light',
-                  borderLeft: 3,
-                  borderColor: 'info.main',
-                  display: 'flex',
-                  gap: 1,
-                }}
-              >
-                <TipIcon sx={{ color: 'info.main', fontSize: 18 }} />
-                <Typography variant="body2" color="text.secondary">
-                  {question.explanation}
-                </Typography>
-              </Box>
-            </Box>
-          )}
-
-          {/* Performance Stats */}
-          {question.stats && (
-            <Box>
-              <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                Performance Statistics
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 4, mt: 1 }}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h6" fontWeight={700} color="text.primary">
-                    {question.stats.attempts}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Total Attempts
-                  </Typography>
                 </Box>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h6" fontWeight={700} color="text.primary">
-                    {question.stats.correctRate}%
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Correct Rate
-                  </Typography>
-                </Box>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h6" fontWeight={700} color="text.primary">
-                    {question.stats.avgTime}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Avg. Time
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
+              )}
+            </>
           )}
         </Box>
       </Collapse>

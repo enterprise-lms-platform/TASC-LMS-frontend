@@ -25,6 +25,7 @@ const DEFAULT_CATEGORIES: CategoryOption[] = [
 interface CategoriesPanelProps {
   /** Categories to display. Defaults to [All Questions] when omitted (backward compat until parent integration). */
   categories?: CategoryOption[];
+  selectedCategory: string;
   onCategorySelect: (categoryId: string) => void;
   onAddCategory?: () => void;
 }
