@@ -349,7 +349,10 @@ const QuestionBankPage: React.FC = () => {
         <Toolbar sx={{ minHeight: '72px !important' }} />
 
         <Box sx={{ flex: 1, p: { xs: 2, md: 3 }, overflow: 'auto' }}>
-          <QuestionBankStats />
+          <QuestionBankStats
+            totalQuestions={totalCount}
+            categoryCount={categories.filter((c) => c.id !== 'all' && !c.isAll).length}
+          />
 
           <Grid container spacing={{ xs: 2, md: 3 }}>
             <Grid size={{ xs: 12, lg: 3 }}>
@@ -362,7 +365,11 @@ const QuestionBankPage: React.FC = () => {
                 }}
                 onAddCategory={handleAddCategoryOpen}
               />
-              <TagsCloud selectedTags={selectedTags} onTagToggle={handleTagToggle} />
+              <TagsCloud
+                tags={suggestedTags}
+                selectedTags={selectedTags}
+                onTagToggle={handleTagToggle}
+              />
             </Grid>
 
             <Grid size={{ xs: 12, lg: 9 }}>

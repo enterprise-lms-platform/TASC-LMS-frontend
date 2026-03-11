@@ -1,17 +1,20 @@
 import React from 'react';
 import { Box, Paper, Typography, Chip } from '@mui/material';
 
-const tagsData = [
-  'hooks', 'useState', 'useEffect', 'components', 'props',
-  'state', 'async', 'ES6', 'arrays', 'functions',
-];
-
-interface TagsCloudProps {
+export interface TagsCloudProps {
+  /** Tags to display. When empty, component returns null. */
+  tags?: string[];
   selectedTags: string[];
   onTagToggle: (tag: string) => void;
 }
 
-const TagsCloud: React.FC<TagsCloudProps> = ({ selectedTags, onTagToggle }) => {
+const TagsCloud: React.FC<TagsCloudProps> = ({
+  tags = [],
+  selectedTags,
+  onTagToggle,
+}) => {
+  if (tags.length === 0) return null;
+
   return (
     <Paper
       elevation={0}
@@ -27,7 +30,7 @@ const TagsCloud: React.FC<TagsCloudProps> = ({ selectedTags, onTagToggle }) => {
         Popular Tags
       </Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-        {tagsData.map((tag) => (
+        {tags.map((tag) => (
           <Chip
             key={tag}
             label={tag}
