@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Paper, Typography, Button } from '@mui/material';
-import { Folder as FolderIcon } from '@mui/icons-material';
+import { Folder as FolderIcon, OpenInNew as OpenIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 interface QuestionBank {
   id: string;
@@ -11,20 +12,32 @@ interface QuestionBank {
 }
 
 interface QuestionBankCardProps {
-  banks: QuestionBank[];
-  onSelectBank: (bankId: string) => void;
+  banks?: QuestionBank[];
+  onSelectBank?: (bankId: string) => void;
 }
 
-const QuestionBankCard: React.FC<QuestionBankCardProps> = ({ banks, onSelectBank }) => {
+const QuestionBankCard: React.FC<QuestionBankCardProps> = ({ banks = [], onSelectBank }) => {
+  const navigate = useNavigate();
+
   return (
     <Paper elevation={0} sx={{ borderRadius: 2, border: 1, borderColor: 'grey.200', overflow: 'hidden' }}>
       <Box sx={{ p: 2, px: 3, borderBottom: 1, borderColor: 'grey.200', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography fontWeight={700}>Question Bank</Typography>
-        <Button size="small" sx={{ textTransform: 'none' }}>Browse All</Button>
+        <Button
+          size="small"
+          endIcon={<OpenIcon fontSize="small" />}
+          onClick={() => navigate('/instructor/question-bank')}
+          sx={{ textTransform: 'none' }}
+        >
+          Browse Question Bank
+        </Button>
       </Box>
 
       <Box sx={{ p: 2 }}>
-        {banks.map((bank) => (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          Add questions from your question bank to this quiz.
+        </Typography>
+        {banks.length > 0 && onSelectBank ? banks.map((bank) => (
           <Box
             key={bank.id}
             onClick={() => onSelectBank(bank.id)}
@@ -64,7 +77,7 @@ const QuestionBankCard: React.FC<QuestionBankCardProps> = ({ banks, onSelectBank
               <Typography variant="caption" color="text.secondary">{bank.questionCount} questions</Typography>
             </Box>
           </Box>
-        ))}
+        )) : null}
       </Box>
     </Paper>
   );

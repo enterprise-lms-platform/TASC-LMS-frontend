@@ -10,18 +10,20 @@ import {
 
 interface BulkActionsBarProps {
   selectedCount: number;
-  onMove: () => void;
   onAddToQuiz: () => void;
-  onExport: () => void;
   onDelete: () => void;
+  /** Move to Category - optional (hidden for MVP when omitted) */
+  onMove?: () => void;
+  /** Export - optional (hidden for MVP when omitted) */
+  onExport?: () => void;
 }
 
 const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
   selectedCount,
-  onMove,
   onAddToQuiz,
-  onExport,
   onDelete,
+  onMove,
+  onExport,
 }) => {
   if (selectedCount === 0) return null;
 
@@ -48,15 +50,17 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
       </Box>
 
       <Box sx={{ display: 'flex', gap: 1 }}>
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={<FolderIcon />}
-          onClick={onMove}
-          sx={{ textTransform: 'none', borderColor: 'divider', color: 'text.secondary' }}
-        >
-          Move to Category
-        </Button>
+        {onMove && (
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<FolderIcon />}
+            onClick={onMove}
+            sx={{ textTransform: 'none', borderColor: 'divider', color: 'text.secondary' }}
+          >
+            Move to Category
+          </Button>
+        )}
         <Button
           size="small"
           variant="outlined"
@@ -66,15 +70,17 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
         >
           Add to Quiz
         </Button>
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={<ExportIcon />}
-          onClick={onExport}
-          sx={{ textTransform: 'none', borderColor: 'divider', color: 'text.secondary' }}
-        >
-          Export
-        </Button>
+        {onExport && (
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<ExportIcon />}
+            onClick={onExport}
+            sx={{ textTransform: 'none', borderColor: 'divider', color: 'text.secondary' }}
+          >
+            Export
+          </Button>
+        )}
         <Button
           size="small"
           variant="contained"

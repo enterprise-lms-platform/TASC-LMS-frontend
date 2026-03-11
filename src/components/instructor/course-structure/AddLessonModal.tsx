@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -70,8 +70,17 @@ const defaultFormData: LessonFormData = {
   isFreePreview: false,
 };
 
-const AddLessonModal: React.FC<AddLessonModalProps> = ({ open, moduleTitle, onClose, onSave }) => {
+const AddLessonModal: React.FC<AddLessonModalProps> = ({ open, moduleTitle, onClose, onSave, initialType }) => {
   const [formData, setFormData] = useState<LessonFormData>(defaultFormData);
+
+  useEffect(() => {
+    if (open && initialType) {
+      setFormData((prev) => ({ ...prev, type: initialType }));
+    }
+    if (!open) {
+      setFormData(defaultFormData);
+    }
+  }, [open, initialType]);
 
   const handleChange = (field: keyof LessonFormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

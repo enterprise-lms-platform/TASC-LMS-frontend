@@ -27,10 +27,13 @@ interface SearchFilterBarProps {
   onTypeChange: (type: QuestionType) => void;
   difficultyFilter: Difficulty;
   onDifficultyChange: (difficulty: Difficulty) => void;
-  statusFilter: Status;
-  onStatusChange: (status: Status) => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  /** Status filter - optional (hidden when hideStatusFilter is true or onStatusChange omitted) */
+  statusFilter?: Status;
+  onStatusChange?: (status: Status) => void;
+  /** Hide status filter (e.g. when backend does not support it) */
+  hideStatusFilter?: boolean;
 }
 
 const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
@@ -40,10 +43,11 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
   onTypeChange,
   difficultyFilter,
   onDifficultyChange,
-  statusFilter,
-  onStatusChange,
   viewMode,
   onViewModeChange,
+  statusFilter = '',
+  onStatusChange,
+  hideStatusFilter = false,
 }) => {
   return (
     <Box
@@ -104,18 +108,20 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 120 }}>
-          <Select
-            value={statusFilter}
-            onChange={(e) => onStatusChange(e.target.value as Status)}
-            displayEmpty
-          >
-            <MenuItem value="">All Status</MenuItem>
-            <MenuItem value="active">Active</MenuItem>
-            <MenuItem value="draft">Draft</MenuItem>
-            <MenuItem value="archived">Archived</MenuItem>
-          </Select>
-        </FormControl>
+        {!hideStatusFilter && onStatusChange && (
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <Select
+              value={statusFilter}
+              onChange={(e) => onStatusChange(e.target.value as Status)}
+              displayEmpty
+            >
+              <MenuItem value="">All Status</MenuItem>
+              <MenuItem value="active">Active</MenuItem>
+              <MenuItem value="draft">Draft</MenuItem>
+              <MenuItem value="archived">Archived</MenuItem>
+            </Select>
+          </FormControl>
+        )}
       </Box>
 
       {/* View Toggle */}
