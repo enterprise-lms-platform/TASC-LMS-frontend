@@ -7,7 +7,7 @@ import {
   Star as SuccessIcon,
 } from '@mui/icons-material';
 
-interface StatCard {
+interface StatCardConfig {
   icon: React.ReactNode;
   value: string | number;
   label: string;
@@ -17,35 +17,69 @@ interface StatCard {
   subColor: string;
 }
 
-// Matches learner QuickStats color themes
-const statsData: StatCard[] = [
-  {
-    icon: <TotalIcon />,
-    value: 248,
-    label: 'Total Questions',
-    bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534',
-  },
-  {
-    icon: <CategoryIcon />,
-    value: 8,
-    label: 'Categories',
-    bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46',
-  },
-  {
-    icon: <UsedIcon />,
-    value: 156,
-    label: 'Used in Quizzes',
-    bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412',
-  },
-  {
-    icon: <SuccessIcon />,
-    value: '78%',
-    label: 'Avg. Success Rate',
-    bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534',
-  },
-];
+export interface QuestionBankStatsProps {
+  /** Total number of questions in the bank */
+  totalQuestions?: number;
+  /** Number of categories */
+  categoryCount?: number;
+  /** Number of questions used in quizzes (optional; card hidden when undefined) */
+  usedInQuizzes?: number;
+  /** Average success rate, e.g. "78%" (optional; card hidden when undefined) */
+  avgSuccessRate?: string | number;
+}
 
-const QuestionBankStats: React.FC = () => {
+const QuestionBankStats: React.FC<QuestionBankStatsProps> = ({
+  totalQuestions = 0,
+  categoryCount = 0,
+  usedInQuizzes,
+  avgSuccessRate,
+}) => {
+  const statsData: StatCardConfig[] = [
+    {
+      icon: <TotalIcon />,
+      value: totalQuestions,
+      label: 'Total Questions',
+      bgcolor: '#dcfce7',
+      iconBg: '#4ade80',
+      color: '#14532d',
+      subColor: '#166534',
+    },
+    {
+      icon: <CategoryIcon />,
+      value: categoryCount,
+      label: 'Categories',
+      bgcolor: '#f4f4f5',
+      iconBg: '#a1a1aa',
+      color: '#27272a',
+      subColor: '#3f3f46',
+    },
+    ...(usedInQuizzes !== undefined
+      ? [
+          {
+            icon: <UsedIcon />,
+            value: usedInQuizzes,
+            label: 'Used in Quizzes',
+            bgcolor: '#fff3e0',
+            iconBg: '#ffa424',
+            color: '#7c2d12',
+            subColor: '#9a3412',
+          } as StatCardConfig,
+        ]
+      : []),
+    ...(avgSuccessRate !== undefined
+      ? [
+          {
+            icon: <SuccessIcon />,
+            value: avgSuccessRate,
+            label: 'Avg. Success Rate',
+            bgcolor: '#f0fdf4',
+            iconBg: '#86efac',
+            color: '#14532d',
+            subColor: '#166534',
+          } as StatCardConfig,
+        ]
+      : []),
+  ];
   return (
     <Grid container spacing={2} sx={{ mb: 3 }}>
       {statsData.map((stat) => (
