@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   CssBaseline,
@@ -24,6 +24,7 @@ import {
   IconButton,
   LinearProgress,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import {
   MenuBook as MenuBookIcon,
@@ -34,8 +35,10 @@ import {
   Block as DisableIcon,
   Star as StarIcon,
 } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { courseApi, categoryApi } from '../../services/main.api';
 
 // ─── Styles ────────────────────────────────────────────────
 
@@ -58,38 +61,6 @@ const headerSx = {
   gap: 2,
 };
 
-// ─── Mock Data ─────────────────────────────────────────────
-
-const summaryStats = [
-  { label: 'Total Courses', value: '156', bgcolor: '#fff3e0', color: '#7c2d12' },
-  { label: 'Published', value: '98', bgcolor: '#dcfce7', color: '#14532d' },
-  { label: 'Under Review', value: '12', bgcolor: '#fff7ed', color: '#9a3412' },
-  { label: 'Drafts', value: '46', bgcolor: '#f3f4f6', color: '#374151' },
-];
-
-interface CourseRow {
-  id: number;
-  title: string;
-  category: string;
-  instructor: string;
-  instructorInitials: string;
-  status: 'Published' | 'Draft' | 'Under Review' | 'Archived';
-  enrollments: number;
-  completionRate: number;
-  rating: number;
-}
-
-const mockCourses: CourseRow[] = [
-  { id: 1, title: 'Advanced React Patterns & Performance', category: 'Web Development', instructor: 'Dr. Sarah Chen', instructorInitials: 'SC', status: 'Published', enrollments: 452, completionRate: 72, rating: 4.8 },
-  { id: 2, title: 'Python for Data Science', category: 'Data Science', instructor: 'James Wilson', instructorInitials: 'JW', status: 'Published', enrollments: 386, completionRate: 68, rating: 4.6 },
-  { id: 3, title: 'AWS Solutions Architect Prep', category: 'Cloud Computing', instructor: 'Maria Garcia', instructorInitials: 'MG', status: 'Under Review', enrollments: 0, completionRate: 0, rating: 0 },
-  { id: 4, title: 'TypeScript Mastery: Zero to Hero', category: 'Web Development', instructor: 'Alex Kim', instructorInitials: 'AK', status: 'Published', enrollments: 278, completionRate: 74, rating: 4.7 },
-  { id: 5, title: 'Docker & Kubernetes in Production', category: 'DevOps', instructor: 'Priya Patel', instructorInitials: 'PP', status: 'Draft', enrollments: 0, completionRate: 0, rating: 0 },
-  { id: 6, title: 'Machine Learning Fundamentals', category: 'Artificial Intelligence', instructor: 'Dr. Sarah Chen', instructorInitials: 'SC', status: 'Published', enrollments: 534, completionRate: 61, rating: 4.9 },
-  { id: 7, title: 'Cybersecurity Essentials', category: 'Security', instructor: 'Robert Njoroge', instructorInitials: 'RN', status: 'Archived', enrollments: 198, completionRate: 82, rating: 4.3 },
-  { id: 8, title: 'UX Design Principles', category: 'Design', instructor: 'Amina Osei', instructorInitials: 'AO', status: 'Draft', enrollments: 0, completionRate: 0, rating: 0 },
-];
-
 const statusChipColor = (status: string) => {
   switch (status) {
     case 'Published': return 'success';
@@ -100,6 +71,16 @@ const statusChipColor = (status: string) => {
   }
 };
 
+const getStatsColor = (label: string) => {
+  switch (label) {
+    case 'Total Courses': return { bgcolor: '#fff3e0', color: '#7c2d12' };
+    case 'Published': return { bgcolor: '#dcfce7', color: '#14532d' };
+    case 'Under Review': return { bgcolor: '#fff7ed', color: '#9a3412' };
+    case 'Drafts': return { bgcolor: '#f3f4f6', color: '#374151' };
+    default: return { bgcolor: '#f5f5f5', color: '#666' };
+  }
+};
+
 // ─── Component ─────────────────────────────────────────────
 
 const ManagerCoursesPage: React.FC = () => {
@@ -107,11 +88,66 @@ const ManagerCoursesPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
-  const filteredCourses = mockCourses.filter((c) => {
-    const matchSearch = c.title.toLowerCase().includes(search.toLowerCase()) || c.instructor.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'All' || c.status === statusFilter;
-    return matchSearch && matchStatus;
+  const { data: coursesData, isLoading: coursesLoading } = useQuery({
+    queryKey: ['courses', 'manager'],
+    queryFn: () => courseApi.getAll({ limit: 100 }).then(r => r.data),
   });
+
+  const { data: categoriesData } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoryApi.getAll().then(r => r.data),
+  });
+
+  const courses = (coursesData as any)?.results || (coursesData as any) || [];
+  const categories = (categoriesData as any)?.results || (categoriesData as any) || [];
+
+  const getCategoryName = (categoryId: number) => {
+    const cat = categories.find((c: any) => c.id === categoryId);
+    return cat?.name || 'Uncategorized';
+  };
+
+  const getCourseStatus = (course: any): 'Published' | 'Draft' | 'Under Review' | 'Archived' => {
+    if (course.is_published) return 'Published';
+    if (course.status === 'archived') return 'Archived';
+    if (course.status === 'pending') return 'Under Review';
+    return 'Draft';
+  };
+
+  const getInstructorName = (course: any) => {
+    return course.instructor?.name || course.instructor?.email || 'Unknown Instructor';
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const filteredCourses = useMemo(() => {
+    if (!courses.length) return [];
+    return courses.filter((c: any) => {
+      const title = c.title?.toLowerCase() || '';
+      const instructor = getInstructorName(c).toLowerCase();
+      const matchSearch = search === '' ||
+        title.includes(search.toLowerCase()) ||
+        instructor.includes(search.toLowerCase());
+      const matchStatus = statusFilter === 'All' || getCourseStatus(c) === statusFilter;
+      return matchSearch && matchStatus;
+    });
+  }, [courses, search, statusFilter]);
+
+  const summaryStats = useMemo(() => {
+    if (!courses.length) return [];
+    const published = courses.filter((c: any) => getCourseStatus(c) === 'Published').length;
+    const draft = courses.filter((c: any) => getCourseStatus(c) === 'Draft').length;
+    const underReview = courses.filter((c: any) => getCourseStatus(c) === 'Under Review').length;
+    return [
+      { label: 'Total Courses', value: courses.length.toString(), ...getStatsColor('Total Courses') },
+      { label: 'Published', value: published.toString(), ...getStatsColor('Published') },
+      { label: 'Under Review', value: underReview.toString(), ...getStatsColor('Under Review') },
+      { label: 'Drafts', value: draft.toString(), ...getStatsColor('Drafts') },
+    ];
+  }, [courses]);
+
+  const isLoading = coursesLoading;
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -238,7 +274,23 @@ const ManagerCoursesPage: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredCourses.map((course) => (
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                        <CircularProgress />
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredCourses.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                        <Typography color="text.secondary">No courses found</Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredCourses.map((course: any) => {
+                      const status = getCourseStatus(course);
+                      const instructorName = getInstructorName(course);
+                      return (
                     <TableRow key={course.id} hover sx={{ '&:last-child td': { borderBottom: 0 } }}>
                       {/* Course */}
                       <TableCell>
@@ -259,7 +311,7 @@ const ManagerCoursesPage: React.FC = () => {
                           </Box>
                           <Box sx={{ minWidth: 0 }}>
                             <Typography variant="body2" fontWeight={600} noWrap>{course.title}</Typography>
-                            <Typography variant="caption" color="text.secondary">{course.category}</Typography>
+                            <Typography variant="caption" color="text.secondary">{getCategoryName(course.category)}</Typography>
                           </Box>
                         </Box>
                       </TableCell>
@@ -267,24 +319,24 @@ const ManagerCoursesPage: React.FC = () => {
                       {/* Instructor */}
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Avatar sx={{ width: 30, height: 30, fontSize: '0.75rem', bgcolor: '#ffa424' }}>{course.instructorInitials}</Avatar>
-                          <Typography variant="body2">{course.instructor}</Typography>
+                          <Avatar sx={{ width: 30, height: 30, fontSize: '0.75rem', bgcolor: '#ffa424' }}>{getInitials(instructorName)}</Avatar>
+                          <Typography variant="body2">{instructorName}</Typography>
                         </Box>
                       </TableCell>
 
                       {/* Status */}
                       <TableCell>
                         <Chip
-                          label={course.status}
+                          label={status}
                           size="small"
-                          color={statusChipColor(course.status) as any}
+                          color={statusChipColor(status) as any}
                           sx={{ fontWeight: 600, fontSize: '0.7rem' }}
                         />
                       </TableCell>
 
                       {/* Enrollments */}
                       <TableCell align="center">
-                        <Typography variant="body2" fontWeight={600}>{course.enrollments.toLocaleString()}</Typography>
+                        <Typography variant="body2" fontWeight={600}>{(course.total_enrolled || 0).toLocaleString()}</Typography>
                       </TableCell>
 
                       {/* Completion Rate */}
@@ -292,7 +344,7 @@ const ManagerCoursesPage: React.FC = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 120 }}>
                           <LinearProgress
                             variant="determinate"
-                            value={course.completionRate}
+                            value={course.completion_rate || 0}
                             sx={{
                               flex: 1,
                               height: 6,
@@ -300,16 +352,16 @@ const ManagerCoursesPage: React.FC = () => {
                               bgcolor: 'grey.200',
                               '& .MuiLinearProgress-bar': {
                                 borderRadius: 3,
-                                background: course.completionRate >= 70
+                                background: (course.completion_rate || 0) >= 70
                                   ? 'linear-gradient(90deg, #4ade80, #22c55e)'
-                                  : course.completionRate >= 40
+                                  : (course.completion_rate || 0) >= 40
                                     ? 'linear-gradient(90deg, #fbbf24, #f59e0b)'
                                     : 'linear-gradient(90deg, #f87171, #ef4444)',
                               },
                             }}
                           />
                           <Typography variant="caption" fontWeight={600} sx={{ minWidth: 32 }}>
-                            {course.completionRate}%
+                            {course.completion_rate || 0}%
                           </Typography>
                         </Box>
                       </TableCell>
@@ -341,7 +393,8 @@ const ManagerCoursesPage: React.FC = () => {
                         </Box>
                       </TableCell>
                     </TableRow>
-                  ))}
+                      );
+                    }))}
                 </TableBody>
               </Table>
             </TableContainer>

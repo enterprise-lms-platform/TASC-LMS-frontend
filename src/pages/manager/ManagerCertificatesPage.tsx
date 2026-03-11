@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   CssBaseline,
@@ -22,6 +22,7 @@ import {
   IconButton,
   Avatar,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import {
   EmojiEvents as EmojiEventsIcon,
@@ -31,8 +32,10 @@ import {
   VerifiedUser as VerifiedIcon,
   Schedule as PendingIcon,
 } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { certificateApi, courseApi } from '../../services/main.api';
 
 // ─── Styles ────────────────────────────────────────────────
 
@@ -55,59 +58,84 @@ const headerSx = {
   gap: 2,
 };
 
-// ─── Mock Data ─────────────────────────────────────────────
-
-const kpis = [
-  { label: 'Total Issued', value: '1,248', bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12' },
-  { label: 'This Month', value: '86', bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f' },
-  { label: 'Verification Rate', value: '94%', bgcolor: '#dcfce7', iconBg: '#10b981', color: '#14532d' },
-];
-
-const courses = [
-  'All Courses',
-  'Advanced React Patterns',
-  'Python for Data Science',
-  'AWS Solutions Architect',
-  'TypeScript Mastery',
-  'Docker & Kubernetes',
-];
-
-interface Certificate {
-  id: number;
-  learner: string;
-  initials: string;
-  course: string;
-  certificateId: string;
-  issueDate: string;
-  status: 'Verified' | 'Pending';
-}
-
-const certificates: Certificate[] = [
-  { id: 1, learner: 'Alice Mwangi', initials: 'AM', course: 'Advanced React Patterns', certificateId: 'CERT-2026-001247', issueDate: 'Mar 8, 2026', status: 'Verified' },
-  { id: 2, learner: 'Brian Ochieng', initials: 'BO', course: 'Python for Data Science', certificateId: 'CERT-2026-001246', issueDate: 'Mar 7, 2026', status: 'Verified' },
-  { id: 3, learner: 'Clara Njeri', initials: 'CN', course: 'AWS Solutions Architect', certificateId: 'CERT-2026-001245', issueDate: 'Mar 6, 2026', status: 'Pending' },
-  { id: 4, learner: 'David Kamau', initials: 'DK', course: 'TypeScript Mastery', certificateId: 'CERT-2026-001244', issueDate: 'Mar 5, 2026', status: 'Verified' },
-  { id: 5, learner: 'Esther Wanjiku', initials: 'EW', course: 'Docker & Kubernetes', certificateId: 'CERT-2026-001243', issueDate: 'Mar 4, 2026', status: 'Verified' },
-  { id: 6, learner: 'Francis Otieno', initials: 'FO', course: 'Advanced React Patterns', certificateId: 'CERT-2026-001242', issueDate: 'Mar 3, 2026', status: 'Verified' },
-  { id: 7, learner: 'Grace Akinyi', initials: 'GA', course: 'Python for Data Science', certificateId: 'CERT-2026-001241', issueDate: 'Mar 2, 2026', status: 'Pending' },
-  { id: 8, learner: 'Henry Mutua', initials: 'HM', course: 'AWS Solutions Architect', certificateId: 'CERT-2026-001240', issueDate: 'Mar 1, 2026', status: 'Verified' },
-];
+const getKpiStyle = (label: string) => {
+  switch (label) {
+    case 'Total Issued': return { bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12' };
+    case 'This Month': return { bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f' };
+    case 'Verification Rate': return { bgcolor: '#dcfce7', iconBg: '#10b981', color: '#14532d' };
+    default: return { bgcolor: '#f5f5f5', iconBg: '#666', color: '#666' };
+  }
+};
 
 // ─── Component ─────────────────────────────────────────────
 
 const ManagerCertificatesPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [courseFilter, setCourseFilter] = useState('All Courses');
+  const [courseFilter, setCourseFilter] = useState<number | 'all'>('all');
 
-  const filtered = certificates.filter((cert) => {
-    const matchesSearch =
-      cert.learner.toLowerCase().includes(search.toLowerCase()) ||
-      cert.certificateId.toLowerCase().includes(search.toLowerCase());
-    const matchesCourse =
-      courseFilter === 'All Courses' || cert.course === courseFilter;
-    return matchesSearch && matchesCourse;
+  const { data: certificatesData, isLoading: certsLoading } = useQuery({
+    queryKey: ['certificates'],
+    queryFn: () => certificateApi.getAll().then(r => r.data),
   });
+
+  const { data: coursesData } = useQuery({
+    queryKey: ['courses', 'list'],
+    queryFn: () => courseApi.getAll({ limit: 100 }).then(r => r.data),
+  });
+
+  const certificates = (certificatesData as any)?.results || (certificatesData as any) || [];
+  const courses = (coursesData as any)?.results || (coursesData as any) || [];
+
+  const courseOptions = [{ id: 'all', title: 'All Courses' }, ...courses.map((c: any) => ({ id: c.id, title: c.title }))];
+
+  const getCourseTitle = (courseId: number) => {
+    const course = courses.find((c: any) => c.id === courseId);
+    return course?.title || 'Unknown Course';
+  };
+
+  const getLearnerName = (cert: any) => {
+    return cert.learner?.name || cert.user?.name || 'Unknown';
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const getCertStatus = (cert: any): 'Verified' | 'Pending' => {
+    return cert.is_verified ? 'Verified' : 'Pending';
+  };
+
+  const filtered = useMemo(() => {
+    if (!certificates.length) return [];
+    return certificates.filter((cert: any) => {
+      const learnerName = getLearnerName(cert).toLowerCase();
+      const certId = cert.certificate_id || cert.id?.toString() || '';
+      const matchesSearch = search === '' ||
+        learnerName.includes(search.toLowerCase()) ||
+        certId.includes(search.toLowerCase());
+      const matchesCourse = courseFilter === 'all' || cert.course === courseFilter;
+      return matchesSearch && matchesCourse;
+    });
+  }, [certificates, search, courseFilter]);
+
+  const kpis = useMemo(() => {
+    if (!certificates.length) return [];
+    const thisMonth = certificates.filter((c: any) => {
+      const date = new Date(c.issued_at || c.created_at);
+      const now = new Date();
+      return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+    }).length;
+    const verified = certificates.filter((c: any) => getCertStatus(c) === 'Verified').length;
+    const verificationRate = certificates.length > 0 ? Math.round((verified / certificates.length) * 100) : 0;
+    return [
+      { label: 'Total Issued', value: certificates.length.toString(), ...getKpiStyle('Total Issued') },
+      { label: 'This Month', value: thisMonth.toString(), ...getKpiStyle('This Month') },
+      { label: 'Verification Rate', value: `${verificationRate}%`, ...getKpiStyle('Verification Rate') },
+    ];
+  }, [certificates]);
+
+  const isLoading = certsLoading;
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
