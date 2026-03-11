@@ -265,8 +265,10 @@ export const checkoutLoader = async (
       ? parseInt(searchParams.courseId, 10)
       : null;
 
+    // If no courseId in URL params, still allow page to render —
+    // the checkout page can receive course data via router state
     if (!courseId) {
-      return redirect('/learner/courses');
+      return { course: null };
     }
 
     const course = await queryClient.ensureQueryData({
@@ -280,7 +282,8 @@ export const checkoutLoader = async (
   } catch (error: any) {
     if (error?.status === 401) return redirect('/login');
     if (error?.status === 404) return redirect('/learner/courses');
-    throw error;
+    // Allow page to render with state-based course data on other errors
+    return { course: null };
   }
 };
 

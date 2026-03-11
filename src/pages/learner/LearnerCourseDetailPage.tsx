@@ -63,7 +63,7 @@ const LearnerCourseDetailPage: React.FC = () => {
         { course: Number(courseId) },
         {
           onSuccess: () => {
-            navigate(`/learner/course/${courseId}/player`);
+            navigate(`/learner/course/${courseId}/learn`);
           },
           onError: (err: unknown) => {
             const message =
@@ -74,15 +74,16 @@ const LearnerCourseDetailPage: React.FC = () => {
       );
     } else {
       // No active subscription — send to subscription / checkout
-      navigate('/checkout', {
+      navigate(`/checkout?courseId=${courseId}`, {
         state: {
-          subscription: {
-            id: 'biannual-plan',
-            title: 'Biannual Access Pass',
-            description: 'Unlimited access to all courses for 6 months',
-            price: 99.00,
-            billingPeriod: '6 months',
-            features: ['Unlimited Course Access', 'Certificates Included', 'Downloadable Resources'],
+          course: {
+            id: courseId,
+            title: sampleCourse.title,
+            instructor: 'Instructor',
+            duration: sampleCourse.duration,
+            level: sampleCourse.level,
+            originalPrice: 149.99,
+            currentPrice: 99.00,
           },
         },
       });
