@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box, Toolbar, CssBaseline, Paper, Typography, Grid, Chip,
-  IconButton, Tabs, Tab, Button,
+  IconButton, Tabs, Tab, Button, CircularProgress,
 } from '@mui/material';
 import {
   DateRange as CalendarIcon, AccessTime as TimeIcon, Person as PersonIcon,
-  VideoCall as VideoIcon, Place as LocationIcon, ChevronLeft, ChevronRight,
+  VideoCall as VideoIcon, ChevronLeft, ChevronRight,
   Today as TodayIcon, EventAvailable as CompletedIcon,
   Event as UpcomingIcon,
 } from '@mui/icons-material';
@@ -13,84 +13,8 @@ import '../../styles/LearnerDashboard.css';
 
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
-
-/* ── Static data ── */
-
-/* Same color scheme as Learner Dashboard QuickStats */
-const kpis = [
-  {
-    label: 'This Week',
-    value: '5',
-    icon: <CalendarIcon />,
-    // Green Theme
-    bgcolor: '#dcfce7',
-    iconBg: '#4ade80',
-    color: '#14532d',
-    subColor: '#166534',
-  },
-  {
-    label: 'Upcoming',
-    value: '12',
-    icon: <UpcomingIcon />,
-    // Grey Theme
-    bgcolor: '#f4f4f5',
-    iconBg: '#a1a1aa',
-    color: '#27272a',
-    subColor: '#3f3f46',
-  },
-  {
-    label: 'Completed',
-    value: '28',
-    icon: <CompletedIcon />,
-    // Orange Theme
-    bgcolor: '#fff3e0',
-    iconBg: '#ffa424',
-    color: '#7c2d12',
-    subColor: '#9a3412',
-  },
-  {
-    label: 'Hours Scheduled',
-    value: '18',
-    icon: <TimeIcon />,
-    // Green Theme alt
-    bgcolor: '#f0fdf4',
-    iconBg: '#86efac',
-    color: '#14532d',
-    subColor: '#166534',
-  },
-];
-
-type SessionType = 'live' | 'quiz' | 'assignment' | 'workshop';
-const typeConfig: Record<SessionType, { color: string; bg: string; label: string }> = {
-  live:       { color: '#3b82f6', bg: 'rgba(59,130,246,0.08)', label: 'Live Session' },
-  quiz:       { color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', label: 'Quiz' },
-  assignment: { color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)', label: 'Assignment Due' },
-  workshop:   { color: '#10b981', bg: 'rgba(16,185,129,0.08)', label: 'Workshop' },
-};
-
-interface ScheduleItem {
-  id: string;
-  title: string;
-  course: string;
-  instructor: string;
-  date: string;
-  day: string;
-  time: string;
-  duration: string;
-  type: SessionType;
-  location: string;
-}
-
-const scheduleItems: ScheduleItem[] = [
-  { id: '1', title: 'React Advanced Patterns Q&A', course: 'Advanced React Patterns', instructor: 'Michael Rodriguez', date: 'Feb 16', day: 'Today', time: '2:00 PM', duration: '60 min', type: 'live', location: 'Zoom Meeting' },
-  { id: '2', title: 'Module 9 Quiz: Hooks Deep Dive', course: 'Advanced React Patterns', instructor: 'Michael Rodriguez', date: 'Feb 17', day: 'Tomorrow', time: '10:00 AM', duration: '30 min', type: 'quiz', location: 'Online' },
-  { id: '3', title: 'JavaScript Workshop: Async Patterns', course: 'JavaScript Fundamentals', instructor: 'Sarah Johnson', date: 'Feb 17', day: 'Tomorrow', time: '2:30 PM', duration: '90 min', type: 'workshop', location: 'Zoom Meeting' },
-  { id: '4', title: 'Data Visualization Assignment', course: 'Data Science Fundamentals', instructor: 'Emily Chen', date: 'Feb 18', day: 'Tuesday', time: '11:59 PM', duration: 'Due', type: 'assignment', location: 'Submit Online' },
-  { id: '5', title: 'Data Science Office Hours', course: 'Data Science Fundamentals', instructor: 'Emily Chen', date: 'Feb 19', day: 'Wednesday', time: '3:30 PM', duration: '45 min', type: 'live', location: 'Google Meet' },
-  { id: '6', title: 'Cybersecurity Lab: Pen Testing', course: 'Cybersecurity Essentials', instructor: 'David Wilson', date: 'Feb 20', day: 'Thursday', time: '1:00 PM', duration: '120 min', type: 'workshop', location: 'Virtual Lab' },
-  { id: '7', title: 'Weekly Progress Check-in', course: 'Advanced React Patterns', instructor: 'Michael Rodriguez', date: 'Feb 21', day: 'Friday', time: '4:00 PM', duration: '30 min', type: 'live', location: 'Zoom Meeting' },
-  { id: '8', title: 'React Patterns Final Quiz', course: 'Advanced React Patterns', instructor: 'Michael Rodriguez', date: 'Feb 22', day: 'Saturday', time: '9:00 AM', duration: '45 min', type: 'quiz', location: 'Online' },
-];
+import { useLivestreamSessions } from '../../hooks/useLivestream';
+import type { LivestreamSession } from '../../services/livestream.services';
 
 /* ── Component ── */
 
@@ -98,21 +22,93 @@ const MySchedulePage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
-  const tabLabels = ['All', 'Live Sessions', 'Quizzes', 'Assignments', 'Workshops'];
-  const typeFilterMap: Record<number, SessionType | null> = { 0: null, 1: 'live', 2: 'quiz', 3: 'assignment', 4: 'workshop' };
+  const { data, isLoading } = useLivestreamSessions();
+  const sessions: LivestreamSession[] = data?.results ?? [];
 
-  const filtered = scheduleItems.filter((item) => {
-    const typeFilter = typeFilterMap[activeTab];
-    return typeFilter ? item.type === typeFilter : true;
-  });
+  // Compute KPIs from real data
+  const now = new Date();
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - now.getDay());
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+  const thisWeekCount = sessions.filter(
+    (s) => new Date(s.start_time) >= startOfWeek && new Date(s.start_time) < endOfWeek
+  ).length;
+  const upcomingCount = sessions.filter((s) => s.status === 'scheduled').length;
+  const completedCount = sessions.filter((s) => s.status === 'ended').length;
+  const hoursScheduled = Math.round(
+    sessions.filter((s) => s.status === 'scheduled')
+      .reduce((sum, s) => sum + s.duration_minutes, 0) / 60
+  );
+
+  const kpis = [
+    {
+      label: 'This Week', value: String(thisWeekCount), icon: <CalendarIcon />,
+      bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534',
+    },
+    {
+      label: 'Upcoming', value: String(upcomingCount), icon: <UpcomingIcon />,
+      bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46',
+    },
+    {
+      label: 'Completed', value: String(completedCount), icon: <CompletedIcon />,
+      bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412',
+    },
+    {
+      label: 'Hours Scheduled', value: String(hoursScheduled), icon: <TimeIcon />,
+      bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534',
+    },
+  ];
+
+  const tabLabels = ['All', 'Upcoming', 'Live', 'Completed'];
+
+  const filtered = useMemo(() => {
+    if (activeTab === 0) return sessions;
+    if (activeTab === 1) return sessions.filter((s) => s.status === 'scheduled');
+    if (activeTab === 2) return sessions.filter((s) => s.status === 'live');
+    return sessions.filter((s) => s.status === 'ended');
+  }, [sessions, activeTab]);
 
   // Group by day
-  const grouped = filtered.reduce((acc, item) => {
-    const key = `${item.day} · ${item.date}`;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(item);
-    return acc;
-  }, {} as Record<string, ScheduleItem[]>);
+  const grouped = useMemo(() => {
+    return filtered.reduce((acc, session) => {
+      const d = new Date(session.start_time);
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      let dayLabel: string;
+      if (d.toDateString() === today.toDateString()) {
+        dayLabel = `Today · ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+      } else if (d.toDateString() === tomorrow.toDateString()) {
+        dayLabel = `Tomorrow · ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+      } else {
+        dayLabel = `${d.toLocaleDateString('en-US', { weekday: 'long' })} · ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+      }
+      if (!acc[dayLabel]) acc[dayLabel] = [];
+      acc[dayLabel].push(session);
+      return acc;
+    }, {} as Record<string, LivestreamSession[]>);
+  }, [filtered]);
+
+  const platformLabel = (p: string) => {
+    const map: Record<string, string> = { zoom: 'Zoom', google_meet: 'Google Meet', teams: 'Teams', custom: 'Custom' };
+    return map[p] || p;
+  };
+
+  const statusConfig: Record<string, { color: string; bg: string; label: string }> = {
+    scheduled: { color: '#3b82f6', bg: 'rgba(59,130,246,0.08)', label: 'Upcoming' },
+    live:      { color: '#ef4444', bg: 'rgba(239,68,68,0.08)', label: 'Live Now' },
+    ended:     { color: '#10b981', bg: 'rgba(16,185,129,0.08)', label: 'Completed' },
+    cancelled: { color: '#6b7280', bg: 'rgba(107,114,128,0.08)', label: 'Cancelled' },
+  };
+
+  // Current week range label
+  const weekStart = new Date(startOfWeek);
+  const weekEnd = new Date(endOfWeek);
+  weekEnd.setDate(weekEnd.getDate() - 1);
+  const weekLabel = `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
 
   return (
     <Box className="learner-page" sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -140,7 +136,7 @@ const MySchedulePage: React.FC = () => {
               My Schedule
             </Typography>
             <Typography color="text.disabled" sx={{ fontSize: '0.85rem' }}>
-              Manage your upcoming sessions, quizzes, and assignments
+              Manage your upcoming sessions and classes
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -150,7 +146,7 @@ const MySchedulePage: React.FC = () => {
               startIcon={<TodayIcon />}
               sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.82rem', borderRadius: '50px', bgcolor: 'rgba(255,164,36,0.08)', color: 'primary.dark', px: 2 }}
             >
-              This Week: Feb 16 – 22
+              This Week: {weekLabel}
             </Button>
             <IconButton size="small" sx={{ border: '1px solid rgba(0,0,0,0.06)', borderRadius: '10px' }}><ChevronRight /></IconButton>
           </Box>
@@ -177,55 +173,23 @@ const MySchedulePage: React.FC = () => {
                   textAlign: 'center',
                   transition: 'transform 0.2s',
                   cursor: 'pointer',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                  },
+                  '&:hover': { transform: 'translateY(-4px)' },
                 }}
               >
-                {/* Icon Badge */}
                 <Box
                   sx={{
-                    position: 'absolute',
-                    top: 16,
-                    right: 16,
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    bgcolor: k.iconBg,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    '& svg': { fontSize: 20 },
+                    position: 'absolute', top: 16, right: 16,
+                    width: 40, height: 40, borderRadius: '50%', bgcolor: k.iconBg,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: 'white', '& svg': { fontSize: 20 },
                   }}
                 >
                   {k.icon}
                 </Box>
-
-                {/* Main Stat */}
-                <Typography
-                  variant="h3"
-                  sx={{
-                    fontWeight: 700,
-                    color: k.color,
-                    fontSize: { xs: '2rem', md: '2.5rem' },
-                    lineHeight: 1,
-                    mb: 1,
-                  }}
-                >
+                <Typography variant="h3" sx={{ fontWeight: 700, color: k.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
                   {k.value}
                 </Typography>
-
-                {/* Label */}
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: k.subColor,
-                    fontWeight: 500,
-                    fontSize: '0.875rem',
-                    opacity: 0.8,
-                  }}
-                >
+                <Typography variant="body2" sx={{ color: k.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>
                   {k.label}
                 </Typography>
               </Paper>
@@ -252,7 +216,12 @@ const MySchedulePage: React.FC = () => {
           </Box>
 
           <Box sx={{ p: 3 }}>
-            {Object.keys(grouped).length === 0 ? (
+            {isLoading ? (
+              <Box sx={{ py: 6, textAlign: 'center' }}>
+                <CircularProgress size={36} />
+                <Typography color="text.disabled" sx={{ mt: 2 }}>Loading schedule...</Typography>
+              </Box>
+            ) : Object.keys(grouped).length === 0 ? (
               <Box sx={{ py: 6, textAlign: 'center' }}>
                 <CalendarIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
                 <Typography color="text.disabled">No scheduled items</Typography>
@@ -260,24 +229,21 @@ const MySchedulePage: React.FC = () => {
             ) : (
               Object.entries(grouped).map(([dayLabel, items]) => (
                 <Box key={dayLabel} sx={{ mb: 3 }}>
-                  {/* Day header */}
                   <Typography sx={{ fontWeight: 700, fontSize: '0.82rem', mb: 1.5, color: dayLabel.startsWith('Today') ? 'primary.dark' : 'text.secondary' }}>
                     {dayLabel}
                   </Typography>
 
-                  {/* Session cards */}
-                  {items.map((item) => {
-                    const cfg = typeConfig[item.type];
+                  {items.map((session) => {
+                    const cfg = statusConfig[session.status] || statusConfig.scheduled;
+                    const startTime = new Date(session.start_time);
                     return (
                       <Box
-                        key={item.id}
+                        key={session.id}
                         sx={{
                           display: 'flex',
                           alignItems: { xs: 'flex-start', sm: 'center' },
                           flexDirection: { xs: 'column', sm: 'row' },
-                          gap: 2,
-                          p: 2,
-                          mb: 1,
+                          gap: 2, p: 2, mb: 1,
                           borderRadius: '12px',
                           border: '1px solid rgba(0,0,0,0.04)',
                           cursor: 'pointer',
@@ -287,8 +253,10 @@ const MySchedulePage: React.FC = () => {
                       >
                         {/* Time block */}
                         <Box sx={{ minWidth: 70, textAlign: 'center', flexShrink: 0 }}>
-                          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem' }}>{item.time}</Typography>
-                          <Typography color="text.disabled" sx={{ fontSize: '0.7rem' }}>{item.duration}</Typography>
+                          <Typography sx={{ fontWeight: 700, fontSize: '0.9rem' }}>
+                            {startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                          </Typography>
+                          <Typography color="text.disabled" sx={{ fontSize: '0.7rem' }}>{session.duration_minutes} min</Typography>
                         </Box>
 
                         {/* Type indicator */}
@@ -297,38 +265,32 @@ const MySchedulePage: React.FC = () => {
                         {/* Content */}
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5, flexWrap: 'wrap' }}>
-                            <Typography sx={{ fontWeight: 600, fontSize: '0.88rem' }} noWrap>{item.title}</Typography>
+                            <Typography sx={{ fontWeight: 600, fontSize: '0.88rem' }} noWrap>{session.title}</Typography>
                             <Chip label={cfg.label} size="small" sx={{ height: 20, fontSize: '0.62rem', fontWeight: 600, borderRadius: '50px', bgcolor: cfg.bg, color: cfg.color }} />
                           </Box>
                           <Typography color="text.disabled" sx={{ fontSize: '0.78rem' }}>
-                            {item.course}
+                            {session.course_title || `Course #${session.course}`}
                           </Typography>
                           <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.disabled', fontSize: '0.72rem' }}>
-                              <PersonIcon sx={{ fontSize: 14 }} /> {item.instructor}
+                              <PersonIcon sx={{ fontSize: 14 }} /> {session.instructor_name || `Instructor #${session.instructor}`}
                             </Box>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.disabled', fontSize: '0.72rem' }}>
-                              {item.location.includes('Zoom') || item.location.includes('Meet') ? <VideoIcon sx={{ fontSize: 14 }} /> : <LocationIcon sx={{ fontSize: 14 }} />}
-                              {item.location}
+                              <VideoIcon sx={{ fontSize: 14 }} /> {platformLabel(session.platform)}
                             </Box>
                           </Box>
                         </Box>
 
                         {/* Action */}
-                        {item.type === 'live' && (
+                        {(session.status === 'scheduled' || session.status === 'live') && session.join_url && (
                           <Button
                             size="small"
                             variant="contained"
                             startIcon={<VideoIcon />}
+                            onClick={() => window.open(session.join_url, '_blank')}
                             sx={{
-                              textTransform: 'none',
-                              fontWeight: 600,
-                              fontSize: '0.75rem',
-                              borderRadius: '50px',
-                              boxShadow: 'none',
-                              px: 2,
-                              color: 'white',
-                              flexShrink: 0,
+                              textTransform: 'none', fontWeight: 600, fontSize: '0.75rem',
+                              borderRadius: '50px', boxShadow: 'none', px: 2, color: 'white', flexShrink: 0,
                               '&:hover': { boxShadow: '0 4px 12px rgba(249,115,22,0.3)' },
                             }}
                           >

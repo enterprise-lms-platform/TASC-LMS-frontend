@@ -12,6 +12,9 @@ import {
   Tabs,
   Tab,
   Divider,
+  CircularProgress,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import {
   CalendarMonth as CalendarIcon,
@@ -27,41 +30,20 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
-
-interface Session {
-  id: string;
-  title: string;
-  course: string;
-  date: string;
-  time: string;
-  duration: number;
-  platform: 'zoom' | 'teams' | 'meet';
-  attendees: number;
-  maxAttendees: number;
-  status: 'upcoming' | 'live' | 'completed' | 'cancelled';
-  meetingLink: string;
-}
-
-const sampleSessions: Session[] = [
-  { id: '1', title: 'React Hooks Deep Dive', course: 'Advanced React Patterns', date: '2026-02-23', time: '14:00', duration: 60, platform: 'zoom', attendees: 38, maxAttendees: 50, status: 'upcoming', meetingLink: 'https://zoom.us/j/123' },
-  { id: '2', title: 'State Management Q&A', course: 'Advanced React Patterns', date: '2026-02-25', time: '10:00', duration: 45, platform: 'teams', attendees: 25, maxAttendees: 40, status: 'upcoming', meetingLink: 'https://teams.live/456' },
-  { id: '3', title: 'TypeScript Workshop', course: 'TypeScript Mastery', date: '2026-02-27', time: '15:00', duration: 90, platform: 'meet', attendees: 42, maxAttendees: 50, status: 'upcoming', meetingLink: 'https://meet.google.com/789' },
-  { id: '4', title: 'Node.js Live Coding', course: 'Node.js Backend Dev', date: '2026-03-02', time: '11:00', duration: 60, platform: 'zoom', attendees: 18, maxAttendees: 30, status: 'upcoming', meetingLink: 'https://zoom.us/j/456' },
-  { id: '5', title: 'GraphQL Best Practices', course: 'GraphQL Fundamentals', date: '2026-03-05', time: '16:00', duration: 75, platform: 'zoom', attendees: 31, maxAttendees: 50, status: 'upcoming', meetingLink: 'https://zoom.us/j/789' },
-  { id: '6', title: 'React Hooks Part 1', course: 'Advanced React Patterns', date: '2026-02-20', time: '14:00', duration: 60, platform: 'zoom', attendees: 45, maxAttendees: 50, status: 'completed', meetingLink: '' },
-  { id: '7', title: 'Intro to TypeScript', course: 'TypeScript Mastery', date: '2026-02-18', time: '10:00', duration: 45, platform: 'teams', attendees: 32, maxAttendees: 40, status: 'completed', meetingLink: '' },
-];
+import { useLivestreamSessions, useLivestreamAction } from '../../hooks/useLivestream';
+import type { LivestreamSession } from '../../services/livestream.services';
 
 const platformColors: Record<string, { bg: string; color: string }> = {
   zoom: { bg: '#dbeafe', color: '#2563eb' },
   teams: { bg: '#ede9fe', color: '#7c3aed' },
-  meet: { bg: '#d1fae5', color: '#059669' },
+  google_meet: { bg: '#d1fae5', color: '#059669' },
+  custom: { bg: '#fef3c7', color: '#d97706' },
 };
 
 const statusStyles: Record<string, { bg: string; color: string }> = {
-  upcoming: { bg: '#dbeafe', color: '#2563eb' },
+  scheduled: { bg: '#dbeafe', color: '#2563eb' },
   live: { bg: '#fee2e2', color: '#dc2626' },
-  completed: { bg: '#d1fae5', color: '#059669' },
+  ended: { bg: '#d1fae5', color: '#059669' },
   cancelled: { bg: '#e5e7eb', color: '#6b7280' },
 };
 
@@ -69,16 +51,55 @@ const UpcomingSessionsPage: React.FC = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [tab, setTab] = useState(0);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' });
+
+  const { data, isLoading } = useLivestreamSessions();
+  const actionMutation = useLivestreamAction();
+
+  const sessions: LivestreamSession[] = data?.results ?? [];
 
   const filtered = tab === 0
-    ? sampleSessions.filter((s) => s.status === 'upcoming')
+    ? sessions.filter((s) => s.status === 'scheduled')
     : tab === 1
-    ? sampleSessions.filter((s) => s.status === 'live')
-    : sampleSessions.filter((s) => s.status === 'completed');
+    ? sessions.filter((s) => s.status === 'live')
+    : sessions.filter((s) => s.status === 'ended');
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  const formatTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleStart = (session: LivestreamSession) => {
+    actionMutation.mutate(
+      { id: session.id, data: { action: 'start' } },
+      {
+        onSuccess: () => {
+          setSnackbar({ open: true, message: 'Session started!', severity: 'success' });
+          if (session.start_url) {
+            window.open(session.start_url, '_blank');
+          }
+        },
+        onError: () => setSnackbar({ open: true, message: 'Failed to start session', severity: 'error' }),
+      }
+    );
+  };
+
+  const handleCopyLink = (session: LivestreamSession) => {
+    const url = session.join_url || session.start_url;
+    if (url) {
+      navigator.clipboard.writeText(url);
+      setSnackbar({ open: true, message: 'Link copied to clipboard!', severity: 'success' });
+    }
+  };
+
+  const platformLabel = (p: string) => {
+    const map: Record<string, string> = { zoom: 'Zoom', google_meet: 'Meet', teams: 'Teams', custom: 'Custom' };
+    return map[p] || p;
   };
 
   return (
@@ -130,12 +151,17 @@ const UpcomingSessionsPage: React.FC = () => {
             }}
           >
             <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ px: 2, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-              <Tab label={`Upcoming (${sampleSessions.filter((s) => s.status === 'upcoming').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label="Live Now" sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Past (${sampleSessions.filter((s) => s.status === 'completed').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Upcoming (${sessions.filter((s) => s.status === 'scheduled').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Live (${sessions.filter((s) => s.status === 'live').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Past (${sessions.filter((s) => s.status === 'ended').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
             </Tabs>
 
-            {filtered.length === 0 ? (
+            {isLoading ? (
+              <Box sx={{ p: 6, textAlign: 'center' }}>
+                <CircularProgress size={36} />
+                <Typography color="text.secondary" sx={{ mt: 2 }}>Loading sessions...</Typography>
+              </Box>
+            ) : filtered.length === 0 ? (
               <Box sx={{ p: 6, textAlign: 'center' }}>
                 <VideoIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
                 <Typography color="text.secondary">No sessions found</Typography>
@@ -146,37 +172,44 @@ const UpcomingSessionsPage: React.FC = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2.5, px: 3, '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' } }}>
                     {/* Date badge */}
                     <Box sx={{ textAlign: 'center', minWidth: 60, p: 1, bgcolor: 'grey.50', borderRadius: 1.5, border: 1, borderColor: 'divider' }}>
-                      <Typography variant="caption" color="text.secondary" fontWeight={600}>{formatDate(session.date).split(' ')[0]}</Typography>
-                      <Typography variant="h6" fontWeight={700} color="text.primary" lineHeight={1}>{formatDate(session.date).split(' ')[2]}</Typography>
-                      <Typography variant="caption" color="text.secondary">{formatDate(session.date).split(' ')[1]}</Typography>
+                      <Typography variant="caption" color="text.secondary" fontWeight={600}>{formatDate(session.start_time).split(' ')[0]}</Typography>
+                      <Typography variant="h6" fontWeight={700} color="text.primary" lineHeight={1}>{formatDate(session.start_time).split(' ')[2]}</Typography>
+                      <Typography variant="caption" color="text.secondary">{formatDate(session.start_time).split(' ')[1]}</Typography>
                     </Box>
 
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                         <Typography variant="body1" fontWeight={700} noWrap>{session.title}</Typography>
-                        <Chip label={session.status} size="small" sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, textTransform: 'capitalize', bgcolor: statusStyles[session.status].bg, color: statusStyles[session.status].color }} />
+                        <Chip label={session.status} size="small" sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, textTransform: 'capitalize', bgcolor: (statusStyles[session.status] || statusStyles.scheduled).bg, color: (statusStyles[session.status] || statusStyles.scheduled).color }} />
                       </Box>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>{session.course}</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>{session.course_title || `Course #${session.course}`}</Typography>
                       <Box sx={{ display: 'flex', gap: 2, fontSize: '0.8rem', color: 'text.secondary' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <TimeIcon sx={{ fontSize: 14 }} /> {session.time} ({session.duration}min)
+                          <TimeIcon sx={{ fontSize: 14 }} /> {formatTime(session.start_time)} ({session.duration_minutes}min)
                         </Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <PeopleIcon sx={{ fontSize: 14 }} /> {session.attendees}/{session.maxAttendees}
+                          <PeopleIcon sx={{ fontSize: 14 }} /> {session.max_attendees}
                         </Box>
-                        <Chip label={session.platform} size="small" sx={{ height: 18, fontSize: '0.65rem', fontWeight: 600, textTransform: 'capitalize', bgcolor: platformColors[session.platform].bg, color: platformColors[session.platform].color }} />
+                        <Chip label={platformLabel(session.platform)} size="small" sx={{ height: 18, fontSize: '0.65rem', fontWeight: 600, textTransform: 'capitalize', bgcolor: (platformColors[session.platform] || platformColors.custom).bg, color: (platformColors[session.platform] || platformColors.custom).color }} />
                       </Box>
                     </Box>
 
-                    {session.status === 'upcoming' && (
+                    {session.status === 'scheduled' && (
                       <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button size="small" startIcon={<CopyLinkIcon sx={{ fontSize: 16 }} />} sx={{ textTransform: 'none', fontSize: '0.8rem', color: 'text.secondary' }}>
+                        <Button size="small" startIcon={<CopyLinkIcon sx={{ fontSize: 16 }} />} onClick={() => handleCopyLink(session)} sx={{ textTransform: 'none', fontSize: '0.8rem', color: 'text.secondary' }}>
                           Copy Link
                         </Button>
-                        <Button size="small" startIcon={<EditIcon sx={{ fontSize: 16 }} />} sx={{ textTransform: 'none', fontSize: '0.8rem', color: 'text.secondary' }}>
+                        <Button size="small" startIcon={<EditIcon sx={{ fontSize: 16 }} />} onClick={() => navigate(`/instructor/sessions/schedule?edit=${session.id}`)} sx={{ textTransform: 'none', fontSize: '0.8rem', color: 'text.secondary' }}>
                           Edit
                         </Button>
-                        <Button size="small" variant="contained" startIcon={<StartIcon sx={{ fontSize: 16 }} />} sx={{ textTransform: 'none', fontSize: '0.8rem', bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' } }}>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          startIcon={<StartIcon sx={{ fontSize: 16 }} />}
+                          onClick={() => handleStart(session)}
+                          disabled={actionMutation.isPending}
+                          sx={{ textTransform: 'none', fontSize: '0.8rem', bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' } }}
+                        >
                           Start
                         </Button>
                       </Box>
@@ -189,6 +222,10 @@ const UpcomingSessionsPage: React.FC = () => {
           </Paper>
         </Box>
       </Box>
+
+      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar((s) => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity={snackbar.severity} variant="filled" onClose={() => setSnackbar((s) => ({ ...s, open: false }))}>{snackbar.message}</Alert>
+      </Snackbar>
     </Box>
   );
 };

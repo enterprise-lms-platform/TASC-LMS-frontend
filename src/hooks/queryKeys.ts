@@ -13,6 +13,7 @@ import type { InvoiceParams, TransactionParams, UserSubscriptionParams } from '.
 import type { PublicCourseParams } from '../services/public.services';
 import type { OrganizationListParams } from '../services/organization.services';
 import type { AuditLogFilters } from '../types/types';
+import type { LivestreamListParams, LivestreamAttendanceParams } from '../services/livestream.services';
 
 export const queryKeys = {
   // Auth; Already taken care of in useAuthQueries.ts to avoid circular imports, but shown here for reference:
@@ -136,5 +137,15 @@ export const queryKeys = {
   approvalRequests: {
     all: (params?: ApprovalListParams) => ['approval-requests', params] as const,
     detail: (id: number) => ['approval-requests', 'detail', id] as const,
+  },
+
+  // Livestream
+  livestreams: {
+    all: (params?: LivestreamListParams) => ['livestreams', params] as const,
+    detail: (id: string) => ['livestreams', 'detail', id] as const,
+  },
+  livestreamAttendance: {
+    all: (params?: LivestreamAttendanceParams) => ['livestream-attendance', params] as const,
+    detail: (id: string) => ['livestream-attendance', 'detail', id] as const,
   },
 };

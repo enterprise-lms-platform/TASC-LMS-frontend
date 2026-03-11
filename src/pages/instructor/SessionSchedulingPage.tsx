@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Box, CssBaseline, Toolbar, Paper, Typography, TextField } from '@mui/material';
+import React, { useState, useMemo } from 'react';
+import { Box, CssBaseline, Toolbar, Paper, Typography, TextField, Snackbar, Alert } from '@mui/material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useCreateLivestreamSession, useLivestreamSessions } from '../../hooks/useLivestream';
 
 // Layout
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
@@ -31,12 +32,7 @@ import {
   Notifications as NotificationsIcon,
 } from '@mui/icons-material';
 
-// Sample upcoming sessions
-const sampleUpcomingSessions: UpcomingSession[] = [
-  { id: '1', title: 'React Hooks Deep Dive', date: new Date(2026, 1, 10), time: '2:00 PM', platform: 'zoom' },
-  { id: '2', title: 'State Management Q&A', date: new Date(2026, 1, 12), time: '10:00 AM', platform: 'teams' },
-  { id: '3', title: 'TypeScript Workshop', date: new Date(2026, 1, 15), time: '3:00 PM', platform: 'meet' },
-];
+
 
 // Default notification settings
 const defaultNotificationSettings: NotificationSetting[] = [
@@ -90,22 +86,80 @@ const SessionSchedulingPage: React.FC = () => {
     );
   };
 
+  const createSession = useCreateLivestreamSession();
+  const { data: sessionsData } = useLivestreamSessions();
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' });
+
+  // Map backend sessions to the format expected by the sidebar components
+  const upcomingSessions: UpcomingSession[] = useMemo(() => {
+    if (!sessionsData?.results) return [];
+    
+    return sessionsData.results
+      .filter((s) => s.status === 'scheduled')
+      .slice(0, 5) // Handle only the next 5 sessions for the preview
+      .map((s) => {
+        // Map backend platform to the 3 options supported by the sidebar UI component
+        // Custom falls back to zoom for styling purposes in the sidebar
+        let uiPlatform: 'zoom' | 'teams' | 'meet' = 'zoom';
+        if (s.platform === 'teams') uiPlatform = 'teams';
+        if (s.platform === 'google_meet') uiPlatform = 'meet';
+        
+        const startDate = new Date(s.start_time);
+        return {
+          id: s.id,
+          title: s.title,
+          date: startDate,
+          time: startDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          platform: uiPlatform,
+        };
+      });
+  }, [sessionsData]);
+
   const handleSchedule = () => {
-    console.log('Scheduling session:', {
-      title,
-      description,
-      course,
-      module,
-      platform,
-      meetingLink,
-      date,
-      time,
-      timezone,
-      duration,
-      recurring: recurringEnabled ? { frequency, selectedDays, endType, endDate, occurrences } : null,
-      attendeeType,
-      notificationSettings,
-    });
+    // Compute end_time from date + time + duration
+    const startDateTime = new Date(`${date}T${time}`);
+    const endDateTime = new Date(startDateTime.getTime() + duration * 60 * 1000);
+
+    // Map platform: PlatformSelector uses 'meet' but backend expects 'google_meet'
+    const platformMap: Record<string, string> = {
+      zoom: 'zoom',
+      meet: 'google_meet',
+      teams: 'teams',
+    };
+    const backendPlatform = (platformMap[platform] || 'custom') as 'zoom' | 'google_meet' | 'teams' | 'custom';
+
+    createSession.mutate(
+      {
+        course: parseInt(course) || 1,
+        title,
+        description,
+        start_time: startDateTime.toISOString(),
+        end_time: endDateTime.toISOString(),
+        duration_minutes: duration,
+        timezone,
+        platform: backendPlatform,
+        join_url: meetingLink || undefined,
+        is_recurring: recurringEnabled,
+        recurrence_pattern: recurringEnabled ? frequency : 'none',
+        recurrence_end_date: recurringEnabled && endType === 'date' ? endDate : null,
+        auto_recording: notificationSettings.find((s) => s.key === 'recordingNotification')?.enabled ?? true,
+        waiting_room: true,
+        mute_on_entry: true,
+        allow_chat: true,
+        allow_questions: true,
+        max_attendees: 100,
+      },
+      {
+        onSuccess: () => {
+          setSnackbar({ open: true, message: 'Session scheduled successfully!', severity: 'success' });
+          setTimeout(() => navigate('/instructor/sessions'), 1500);
+        },
+        onError: (error: unknown) => {
+          const msg = error instanceof Error ? error.message : 'Failed to schedule session';
+          setSnackbar({ open: true, message: msg, severity: 'error' });
+        },
+      }
+    );
   };
 
   // Section Card component
@@ -313,12 +367,12 @@ const SessionSchedulingPage: React.FC = () => {
               {/* Calendar Preview */}
               <CalendarPreview
                 selectedDate={date}
-                sessionDates={sampleUpcomingSessions.map((s) => s.date.toISOString().split('T')[0])}
+                sessionDates={upcomingSessions.map((s) => s.date.toISOString().split('T')[0])}
                 onDateChange={setDate}
               />
 
               {/* Upcoming Sessions */}
-              <UpcomingSessionsList sessions={sampleUpcomingSessions} />
+              <UpcomingSessionsList sessions={upcomingSessions} />
 
               {/* Tips Card */}
               <Paper
@@ -343,6 +397,18 @@ const SessionSchedulingPage: React.FC = () => {
             </Box>
           </Box>
         </Box>
+
+        {/* Snackbar */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={4000}
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert severity={snackbar.severity} variant="filled" onClose={() => setSnackbar((s) => ({ ...s, open: false }))}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </Box>
   );
