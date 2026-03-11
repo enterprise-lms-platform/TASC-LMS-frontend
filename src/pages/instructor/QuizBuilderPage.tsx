@@ -1,9 +1,22 @@
-import React, { useState } from 'react';
-import { Box, CssBaseline, Paper, Typography, Toolbar } from '@mui/material';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Box, CssBaseline, Paper, Typography, Toolbar, CircularProgress, Snackbar, Alert } from '@mui/material';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 // Layout components
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+
+// Hooks
+import {
+  useQuizDetail,
+  usePatchQuiz,
+  usePutQuizQuestions,
+  usePartialUpdateSession,
+} from '../../hooks/useCatalogue';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '../../hooks/queryKeys';
+import axios from 'axios';
+import { getErrorMessage } from '../../utils/config';
+import type { QuizQuestion, QuizSettings } from '../../types/types';
 
 // Import all quiz builder components
 import QuizBuilderTopBar from '../../components/instructor/quiz-builder/QuizBuilderTopBar';
@@ -24,17 +37,16 @@ import FillBlankQuestion from '../../components/instructor/quiz-builder/FillBlan
 import QuizSummaryCard from '../../components/instructor/quiz-builder/QuizSummaryCard';
 import QuizSettingsCard from '../../components/instructor/quiz-builder/QuizSettingsCard';
 import QuestionBankCard from '../../components/instructor/quiz-builder/QuestionBankCard';
-import type { QuestionBank } from '../../components/instructor/quiz-builder/QuestionBankCard';
 import QuizTipsCard from '../../components/instructor/quiz-builder/QuizTipsCard';
 
-// Question data interface
+// Question data interface (builder state)
 interface Question {
   id: string;
+  backendId?: number;
   type: QuestionType;
   questionText: string;
   points: number;
   isExpanded: boolean;
-  // Type-specific data
   options?: AnswerOption[];
   allowMultiple?: boolean;
   correctAnswer?: boolean | null;
@@ -48,44 +60,201 @@ interface Question {
   blanks?: string[];
 }
 
-// Sample question banks
-const sampleBanks: QuestionBank[] = [
-  { id: '1', name: 'React Basics', questionCount: 25, iconBg: '#dbeafe', iconColor: '#3b82f6' },
-  { id: '2', name: 'JavaScript Fundamentals', questionCount: 40, iconBg: '#fef3c7', iconColor: '#f59e0b' },
-  { id: '3', name: 'Web Development', questionCount: 35, iconBg: '#d1fae5', iconColor: '#10b981' },
-];
+/** Map API quiz question to builder Question */
+function apiQuestionToBuilder(q: QuizQuestion): Question {
+  const id = `q-${q.id}`;
+  const payload = q.answer_payload ?? {};
+  const base: Question = {
+    id,
+    backendId: q.id,
+    type: q.question_type as QuestionType,
+    questionText: q.question_text,
+    points: q.points ?? 10,
+    isExpanded: false,
+  };
+  switch (q.question_type) {
+    case 'multiple-choice': {
+      type Opt = { id?: string; text?: string; is_correct?: boolean; isCorrect?: boolean };
+      const opts = (payload.options as Opt[] | undefined) ?? [];
+      return {
+        ...base,
+        options: opts.map((o, i) => ({
+          id: o.id ?? `opt-${i}`,
+          text: o.text ?? '',
+          isCorrect: (o as Opt).is_correct ?? (o as Opt).isCorrect ?? false,
+        })),
+        allowMultiple: Boolean(
+          (payload as { allow_multiple?: boolean; allowMultiple?: boolean }).allow_multiple ??
+          (payload as { allow_multiple?: boolean; allowMultiple?: boolean }).allowMultiple
+        ),
+      };
+    }
+    case 'true-false': {
+      const correct = (payload as { correct_answer?: boolean; correctAnswer?: boolean }).correct_answer ??
+        (payload as { correct_answer?: boolean; correctAnswer?: boolean }).correctAnswer;
+      return { ...base, correctAnswer: (correct === true || correct === false ? correct : null) };
+    }
+    case 'short-answer':
+      return {
+        ...base,
+        sampleAnswer: ((payload as { sample_answer?: string; sampleAnswer?: string }).sample_answer ??
+          (payload as { sample_answer?: string; sampleAnswer?: string }).sampleAnswer) ?? '',
+        charLimit: ((payload as { char_limit?: number; charLimit?: number }).char_limit ??
+          (payload as { char_limit?: number; charLimit?: number }).charLimit) ?? 500,
+      };
+    case 'essay':
+      return {
+        ...base,
+        guidelines: ((payload as { guidelines?: string }).guidelines) ?? '',
+        minWords: ((payload as { min_words?: number; minWords?: number }).min_words ??
+          (payload as { min_words?: number; minWords?: number }).minWords) ?? 100,
+        maxWords: ((payload as { max_words?: number; maxWords?: number }).max_words ??
+          (payload as { max_words?: number; maxWords?: number }).maxWords) ?? 500,
+      };
+    case 'matching': {
+      const prs = (payload.pairs as Array<{ id?: string; left?: string; right?: string }> | undefined) ?? [];
+      return {
+        ...base,
+        pairs: prs.map((p, i) => ({
+          id: p.id ?? `pair-${i}`,
+          left: p.left ?? '',
+          right: p.right ?? '',
+        })),
+      };
+    }
+    case 'fill-blank': {
+      const rawBlanks = (payload as { blanks?: string[] }).blanks;
+      const blanks = Array.isArray(rawBlanks) ? (rawBlanks.length > 0 ? rawBlanks : ['']) : [''];
+      return {
+        ...base,
+        textWithBlanks: ((payload as { text_with_blanks?: string; textWithBlanks?: string }).text_with_blanks ??
+          (payload as { text_with_blanks?: string; textWithBlanks?: string }).textWithBlanks) ?? '',
+        blanks,
+      };
+    }
+    default:
+      return base;
+  }
+}
+
+/** Build answer_payload from builder Question */
+function builderQuestionToPayload(q: Question): Record<string, unknown> {
+  switch (q.type) {
+    case 'multiple-choice':
+      return {
+        options: (q.options ?? []).map((o) => ({ id: o.id, text: o.text, is_correct: o.isCorrect })),
+        allow_multiple: q.allowMultiple ?? false,
+      };
+    case 'true-false':
+      return { correct_answer: q.correctAnswer };
+    case 'short-answer':
+      return { sample_answer: q.sampleAnswer ?? '', char_limit: q.charLimit ?? 500 };
+    case 'essay':
+      return {
+        guidelines: q.guidelines ?? '',
+        min_words: q.minWords ?? 100,
+        max_words: q.maxWords ?? 500,
+      };
+    case 'matching':
+      return { pairs: (q.pairs ?? []).map((p) => ({ id: p.id, left: p.left, right: p.right })) };
+    case 'fill-blank':
+      return { text_with_blanks: q.textWithBlanks ?? '', blanks: q.blanks ?? [''] };
+    default:
+      return {};
+  }
+}
+
+/** Build QuizSettings from builder state */
+function buildSettingsPayload(state: {
+  timeLimit: number;
+  passingScore: number;
+  maxAttempts: number;
+  shuffleQuestions: boolean;
+  showCorrectAnswers: boolean;
+  showTimer: boolean;
+  allowBackNavigation: boolean;
+  shuffleAnswers: boolean;
+  showFeedback: string;
+}): QuizSettings {
+  return {
+    time_limit_minutes: state.timeLimit,
+    passing_score_percent: state.passingScore,
+    max_attempts: state.maxAttempts,
+    shuffle_questions: state.shuffleQuestions,
+    show_correct_answers: state.showCorrectAnswers,
+    show_timer: state.showTimer,
+    allow_back_navigation: state.allowBackNavigation,
+    shuffle_answers: state.shuffleAnswers,
+    show_feedback: state.showFeedback,
+  };
+}
 
 const QuizBuilderPage: React.FC = () => {
   const navigate = useNavigate();
+  const { courseId } = useParams<{ courseId: string }>();
   const [searchParams] = useSearchParams();
-  const lessonTitle = searchParams.get('lesson') || '';
+  const sessionIdParam = searchParams.get('sessionId');
+  const sessionId = sessionIdParam ? Number(sessionIdParam) : null;
   const courseTitle = searchParams.get('course') || 'Course';
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
-  // Quiz info state
-  const [quizTitle, setQuizTitle] = useState(lessonTitle ? `${lessonTitle} Quiz` : '');
+  const {
+    data: quizData,
+    isLoading: quizLoading,
+    isError: quizError,
+    error: quizErrorDetail,
+  } = useQuizDetail(sessionId);
+  const queryClient = useQueryClient();
+  const patchQuiz = usePatchQuiz(sessionId ?? 0);
+  const putQuestions = usePutQuizQuestions(sessionId ?? 0);
+  const updateSession = usePartialUpdateSession();
+
+  const [quizTitle, setQuizTitle] = useState('');
   const [quizDescription, setQuizDescription] = useState('');
   const [timeLimit, setTimeLimit] = useState(30);
   const [passingScore, setPassingScore] = useState(70);
   const [maxAttempts, setMaxAttempts] = useState(3);
   const [shuffleQuestions, setShuffleQuestions] = useState(false);
   const [showCorrectAnswers, setShowCorrectAnswers] = useState(true);
-
-  // Quiz settings state
   const [showTimer, setShowTimer] = useState(true);
   const [allowBackNavigation, setAllowBackNavigation] = useState(true);
   const [shuffleAnswers, setShuffleAnswers] = useState(false);
   const [showFeedback, setShowFeedback] = useState<'immediate' | 'after-submit' | 'never'>('after-submit');
-
-  // Questions state
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
-  // Save state
-  const [isSaving] = useState(false);
-  const [lastSaved] = useState<string | null>(null);
+  const isSaving =
+    patchQuiz.isPending || putQuestions.isPending || updateSession.isPending;
+  const lastSaved: string | null = null;
 
-  // Create default question data based on type
-  const createDefaultQuestion = (type: QuestionType): Question => {
+  useEffect(() => {
+    if (quizData && !hasInitialized) {
+      setQuizTitle(quizData.session.title);
+      setQuizDescription(quizData.session.description ?? '');
+      const s = quizData.settings;
+      setTimeLimit(s.time_limit_minutes ?? 30);
+      setPassingScore(s.passing_score_percent ?? 70);
+      setMaxAttempts(s.max_attempts ?? 3);
+      setShuffleQuestions(s.shuffle_questions ?? false);
+      setShowCorrectAnswers(s.show_correct_answers ?? true);
+      setShowTimer(s.show_timer ?? true);
+      setAllowBackNavigation(s.allow_back_navigation ?? true);
+      setShuffleAnswers(s.shuffle_answers ?? false);
+      setShowFeedback(
+        (s.show_feedback as 'immediate' | 'after-submit' | 'never') ?? 'after-submit'
+      );
+      const sorted = [...(quizData.questions ?? [])].sort((a, b) => a.order - b.order);
+      setQuestions(sorted.map(apiQuestionToBuilder));
+      setHasInitialized(true);
+    }
+  }, [quizData, hasInitialized]);
+
+  const createDefaultQuestion = useCallback((type: QuestionType): Question => {
     const baseQuestion = {
       id: `q-${Date.now()}`,
       type,
@@ -126,23 +295,22 @@ const QuizBuilderPage: React.FC = () => {
       default:
         return baseQuestion;
     }
-  };
+  }, []);
 
-  // Add question
   const handleAddQuestion = (type: QuestionType) => {
-    setQuestions([...questions, createDefaultQuestion(type)]);
+    setQuestions((prev) => [...prev, createDefaultQuestion(type)]);
   };
 
   // Update question
   const updateQuestion = (id: string, updates: Partial<Question>) => {
-    setQuestions(questions.map((q) => (q.id === id ? { ...q, ...updates } : q)));
+    setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, ...updates } : q)));
   };
 
   // Duplicate question
   const duplicateQuestion = (id: string) => {
     const question = questions.find((q) => q.id === id);
     if (question) {
-      const newQuestion = { ...question, id: `q-${Date.now()}` };
+      const newQuestion = { ...question, id: `q-${Date.now()}`, backendId: undefined };
       const index = questions.findIndex((q) => q.id === id);
       const newQuestions = [...questions];
       newQuestions.splice(index + 1, 0, newQuestion);
@@ -152,14 +320,112 @@ const QuizBuilderPage: React.FC = () => {
 
   // Delete question
   const deleteQuestion = (id: string) => {
-    setQuestions(questions.filter((q) => q.id !== id));
+    setQuestions((prev) => prev.filter((q) => q.id !== id));
   };
 
-  // Expand/Collapse all
-  const expandAll = () => setQuestions(questions.map((q) => ({ ...q, isExpanded: true })));
-  const collapseAll = () => setQuestions(questions.map((q) => ({ ...q, isExpanded: false })));
+  const expandAll = () =>
+    setQuestions((prev) => prev.map((q) => ({ ...q, isExpanded: true })));
+  const collapseAll = () =>
+    setQuestions((prev) => prev.map((q) => ({ ...q, isExpanded: false })));
 
-  // Calculate totals
+  const saveDraft = async () => {
+    if (!sessionId || !Number.isFinite(sessionId) || sessionId <= 0) return;
+    try {
+      await updateSession.mutateAsync({
+        id: sessionId,
+        data: { title: quizTitle, description: quizDescription },
+      });
+      await patchQuiz.mutateAsync({
+        settings: buildSettingsPayload({
+          timeLimit,
+          passingScore,
+          maxAttempts,
+          shuffleQuestions,
+          showCorrectAnswers,
+          showTimer,
+          allowBackNavigation,
+          shuffleAnswers,
+          showFeedback,
+        }),
+      });
+      const { questions: savedQuestions } = await putQuestions.mutateAsync({
+        questions: questions.map((q, i) => ({
+          ...(q.backendId != null && { id: q.backendId }),
+          order: i,
+          question_type: q.type,
+          question_text: q.questionText,
+          points: q.points,
+          answer_payload: builderQuestionToPayload(q),
+        })),
+      });
+      setQuestions((prev) =>
+        prev.map((q, i) => {
+          const server = savedQuestions?.[i];
+          return server ? { ...q, id: `q-${server.id}`, backendId: server.id } : q;
+        })
+      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.quiz.detail(sessionId) });
+      setSnackbar({ open: true, message: 'Quiz saved as draft.', severity: 'success' });
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: getErrorMessage(err, 'Failed to save quiz. Please try again.'),
+        severity: 'error',
+      });
+    }
+  };
+
+  const publishQuiz = async () => {
+    if (!sessionId || !Number.isFinite(sessionId) || sessionId <= 0) return;
+    try {
+      await updateSession.mutateAsync({
+        id: sessionId,
+        data: { title: quizTitle, description: quizDescription },
+      });
+      await patchQuiz.mutateAsync({
+        settings: buildSettingsPayload({
+          timeLimit,
+          passingScore,
+          maxAttempts,
+          shuffleQuestions,
+          showCorrectAnswers,
+          showTimer,
+          allowBackNavigation,
+          shuffleAnswers,
+          showFeedback,
+        }),
+      });
+      const { questions: savedQuestions } = await putQuestions.mutateAsync({
+        questions: questions.map((q, i) => ({
+          ...(q.backendId != null && { id: q.backendId }),
+          order: i,
+          question_type: q.type,
+          question_text: q.questionText,
+          points: q.points,
+          answer_payload: builderQuestionToPayload(q),
+        })),
+      });
+      setQuestions((prev) =>
+        prev.map((q, i) => {
+          const server = savedQuestions?.[i];
+          return server ? { ...q, id: `q-${server.id}`, backendId: server.id } : q;
+        })
+      );
+      await updateSession.mutateAsync({
+        id: sessionId,
+        data: { status: 'published', title: quizTitle, description: quizDescription },
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.quiz.detail(sessionId) });
+      setSnackbar({ open: true, message: 'Quiz published successfully.', severity: 'success' });
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: getErrorMessage(err, 'Failed to publish quiz. Please try again.'),
+        severity: 'error',
+      });
+    }
+  };
+
   const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
 
   // Render question content based on type
@@ -220,6 +486,66 @@ const QuizBuilderPage: React.FC = () => {
         return null;
     }
   };
+
+  if (!sessionIdParam || sessionId == null || !Number.isFinite(sessionId) || sessionId <= 0) {
+    return (
+      <Box sx={{ display: 'flex', bgcolor: 'grey.100', minHeight: '100vh' }}>
+        <CssBaseline />
+        <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
+        <Box component="main" sx={{ flexGrow: 1, p: 3, pt: 10 }}>
+          <Typography color="error.main" fontWeight={600}>
+            Missing quiz session. Please create a quiz lesson from the course structure first.
+          </Typography>
+          <Typography
+            component="span"
+            color="primary.main"
+            sx={{ cursor: 'pointer', display: 'inline-block', mt: 2, textDecoration: 'underline' }}
+            onClick={() => navigate(courseId ? `/instructor/course/${courseId}/structure` : '/instructor')}
+          >
+            Return to course structure
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
+
+  if (quizLoading && !quizData) {
+    return (
+      <Box sx={{ display: 'flex', bgcolor: 'grey.100', minHeight: '100vh' }}>
+        <CssBaseline />
+        <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
+        <Box component="main" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+          <CircularProgress />
+        </Box>
+      </Box>
+    );
+  }
+
+  if (quizError || !quizData) {
+    const msg =
+      axios.isAxiosError(quizErrorDetail) && quizErrorDetail.response?.status === 404
+        ? 'This session is not a quiz or does not exist. Please return to the course structure.'
+        : 'Failed to load quiz. Please try again.';
+    return (
+      <Box sx={{ display: 'flex', bgcolor: 'grey.100', minHeight: '100vh' }}>
+        <CssBaseline />
+        <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
+        <Box component="main" sx={{ flexGrow: 1, p: 3, pt: 10 }}>
+          <Typography color="error.main" fontWeight={600}>
+            {msg}
+          </Typography>
+          <Typography
+            component="span"
+            color="primary.main"
+            sx={{ cursor: 'pointer', display: 'inline-block', mt: 2, textDecoration: 'underline' }}
+            onClick={() => navigate(courseId ? `/instructor/course/${courseId}/structure` : '/instructor')}
+          >
+            Return to course structure
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.100', minHeight: '100vh' }}>
@@ -348,10 +674,7 @@ const QuizBuilderPage: React.FC = () => {
                 onShowFeedbackChange={setShowFeedback}
               />
 
-              <QuestionBankCard
-                banks={sampleBanks}
-                onSelectBank={(id) => console.log('Selected bank:', id)}
-              />
+              <QuestionBankCard />
 
               <QuizTipsCard />
             </Box>
@@ -362,11 +685,26 @@ const QuizBuilderPage: React.FC = () => {
         <QuizBuilderFooter
           isSaving={isSaving}
           lastSaved={lastSaved}
-          onSaveDraft={() => console.log('Save draft')}
-          onPublish={() => console.log('Publish')}
+          onSaveDraft={saveDraft}
+          onPublish={publishQuiz}
           onCancel={() => navigate(-1)}
         />
       </Box>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
