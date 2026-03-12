@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   CssBaseline,
@@ -18,13 +18,17 @@ import {
   TableRow,
   Chip,
   Avatar,
+  LinearProgress,
 } from '@mui/material';
 import {
   Star as StarIcon,
   School as SchoolIcon,
 } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { submissionApi } from '../../services/learning.services';
+import { courseApi } from '../../services/catalogue.services';
 
 // ── Shared styles ──
 const cardSx = {
@@ -45,47 +49,95 @@ const headerSx = {
   gap: 2,
 };
 
-// ── Grade distribution data ──
-const gradeDistribution = [
-  { grade: 'A', range: '90-100', count: 42, percentage: 26, color: '#16a34a' },
-  { grade: 'B', range: '80-89', count: 48, percentage: 30, color: '#3b82f6' },
-  { grade: 'C', range: '70-79', count: 35, percentage: 22, color: '#ffa424' },
-  { grade: 'D', range: '60-69', count: 22, percentage: 14, color: '#f97316' },
-  { grade: 'F', range: '<60', count: 13, percentage: 8, color: '#ef4444' },
-];
-const maxGradeCount = Math.max(...gradeDistribution.map((g) => g.count));
+// ── Helper functions ──
+const getGradeColor = (score: number): string => {
+  if (score >= 90) return '#16a34a';
+  if (score >= 80) return '#3b82f6';
+  if (score >= 70) return '#ffa424';
+  if (score >= 60) return '#f97316';
+  return '#ef4444';
+};
 
-// ── Mock student grade records ──
-const studentGrades = [
-  { id: 1, name: 'Emily Johnson', initials: 'EJ', course: 'Advanced React Patterns', assignmentsAvg: 88, quizzesAvg: 82, overall: 85, status: 'Pass' },
-  { id: 2, name: 'Marcus Chen', initials: 'MC', course: 'Python for Data Science', assignmentsAvg: 92, quizzesAvg: 95, overall: 93, status: 'Pass' },
-  { id: 3, name: 'Sarah Williams', initials: 'SW', course: 'AWS Solutions Architect', assignmentsAvg: 74, quizzesAvg: 68, overall: 71, status: 'Pass' },
-  { id: 4, name: 'David Kim', initials: 'DK', course: 'TypeScript Mastery', assignmentsAvg: 96, quizzesAvg: 98, overall: 97, status: 'Pass' },
-  { id: 5, name: 'Aisha Patel', initials: 'AP', course: 'Docker & Kubernetes', assignmentsAvg: 45, quizzesAvg: 38, overall: 42, status: 'Fail' },
-  { id: 6, name: 'James Rodriguez', initials: 'JR', course: 'Database Management', assignmentsAvg: 78, quizzesAvg: 82, overall: 80, status: 'Pass' },
-  { id: 7, name: 'Olivia Brown', initials: 'OB', course: 'Cybersecurity Fundamentals', assignmentsAvg: 55, quizzesAvg: 52, overall: 54, status: 'Fail' },
-  { id: 8, name: 'Liam Nguyen', initials: 'LN', course: 'Project Management Pro', assignmentsAvg: 86, quizzesAvg: 90, overall: 88, status: 'Pass' },
-  { id: 9, name: 'Sophia Martinez', initials: 'SM', course: 'Advanced React Patterns', assignmentsAvg: 62, quizzesAvg: 58, overall: 60, status: 'Fail' },
-  { id: 10, name: 'Noah Taylor', initials: 'NT', course: 'Python for Data Science', assignmentsAvg: 80, quizzesAvg: 76, overall: 78, status: 'Pass' },
-];
+const getGradeLetter = (score: number): string => {
+  if (score >= 90) return 'A';
+  if (score >= 80) return 'B';
+  if (score >= 70) return 'C';
+  if (score >= 60) return 'D';
+  return 'F';
+};
 
-const courseOptions = ['All Courses', 'Advanced React Patterns', 'Python for Data Science', 'AWS Solutions Architect', 'TypeScript Mastery', 'Docker & Kubernetes', 'Database Management', 'Cybersecurity Fundamentals', 'Project Management Pro'];
-
-// ── Summary stats ──
-const summaryStats = [
-  { label: 'Class Average', value: '78.4%', color: '#ffa424' },
-  { label: 'Highest', value: '98%', color: '#16a34a' },
-  { label: 'Lowest', value: '42%', color: '#ef4444' },
-  { label: 'Pass Rate', value: '84%', color: '#3b82f6' },
-];
+const getInitials = (name: string): string => {
+  if (!name) return '?';
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+};
 
 const ManagerGradebookPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [courseFilter, setCourseFilter] = useState('All Courses');
+  const [courseFilter, setCourseFilter] = useState('All');
 
-  const filteredStudents = studentGrades.filter((s) => {
-    return courseFilter === 'All Courses' || s.course === courseFilter;
+  const { data: submissionsData, isLoading } = useQuery({
+    queryKey: ['submissions'],
+    queryFn: () => submissionApi.getAll({}).then(r => r.data),
   });
+
+  const { data: coursesData } = useQuery({
+    queryKey: ['courses'],
+    queryFn: () => courseApi.getAll({ page_size: 100 }).then(r => r.data),
+  });
+
+  const submissions = (submissionsData as any)?.results || (submissionsData as any) || [];
+  const courses = (coursesData as any)?.results || (coursesData as any) || [];
+  const courseOptions = ['All', ...courses.map((c: any) => c.title)];
+
+  const filteredSubmissions = useMemo(() => {
+    if (courseFilter === 'All') return submissions;
+    return submissions.filter((s: any) => s.course_name === courseFilter);
+  }, [submissions, courseFilter]);
+
+  const gradeDistribution = useMemo(() => {
+    const grades = { A: 0, B: 0, C: 0, D: 0, F: 0 };
+    let total = 0;
+    let highest = 0;
+    let lowest = 100;
+    let passCount = 0;
+    
+    filteredSubmissions.forEach((s: any) => {
+      const score = Number(s.grade_percentage) || 0;
+      total += score;
+      if (score > highest) highest = score;
+      if (score < lowest) lowest = score;
+      if (score >= 60) passCount++;
+      
+      if (score >= 90) grades.A++;
+      else if (score >= 80) grades.B++;
+      else if (score >= 70) grades.C++;
+      else if (score >= 60) grades.D++;
+      else grades.F++;
+    });
+    
+    const count = filteredSubmissions.length || 1;
+    const dist = [
+      { grade: 'A', range: '90-100', count: grades.A, percentage: Math.round((grades.A / count) * 100), color: '#16a34a' },
+      { grade: 'B', range: '80-89', count: grades.B, percentage: Math.round((grades.B / count) * 100), color: '#3b82f6' },
+      { grade: 'C', range: '70-79', count: grades.C, percentage: Math.round((grades.C / count) * 100), color: '#ffa424' },
+      { grade: 'D', range: '60-69', count: grades.D, percentage: Math.round((grades.D / count) * 100), color: '#f97316' },
+      { grade: 'F', range: '<60', count: grades.F, percentage: Math.round((grades.F / count) * 100), color: '#ef4444' },
+    ];
+    
+    const avg = filteredSubmissions.length > 0 ? Math.round(total / filteredSubmissions.length) : 0;
+    const passRate = filteredSubmissions.length > 0 ? Math.round((passCount / filteredSubmissions.length) * 100) : 0;
+    
+    return { distribution: dist, avg, highest: highest || 0, lowest: lowest || 0, passRate };
+  }, [filteredSubmissions]);
+
+  const maxGradeCount = Math.max(...gradeDistribution.distribution.map((g: any) => g.count), 1);
+
+  const summaryStats = [
+    { label: 'Class Average', value: `${gradeDistribution.avg}%`, color: '#ffa424' },
+    { label: 'Highest', value: `${gradeDistribution.highest}%`, color: '#16a34a' },
+    { label: 'Lowest', value: `${gradeDistribution.lowest}%`, color: '#ef4444' },
+    { label: 'Pass Rate', value: `${gradeDistribution.passRate}%`, color: '#3b82f6' },
+  ];
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -97,6 +149,8 @@ const ManagerGradebookPage: React.FC = () => {
         <Toolbar />
 
         <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+          {isLoading && <LinearProgress sx={{ mb: 2 }} />}
+          
           {/* Page Header */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -127,10 +181,10 @@ const ManagerGradebookPage: React.FC = () => {
                     <SchoolIcon sx={{ fontSize: 20, color: '#ffa424' }} />
                     <Typography fontWeight={700}>Grade Distribution</Typography>
                   </Box>
-                  <Typography variant="body2" color="text.secondary">{gradeDistribution.reduce((sum, g) => sum + g.count, 0)} total students</Typography>
+                  <Typography variant="body2" color="text.secondary">{gradeDistribution.distribution.reduce((sum: number, g: any) => sum + g.count, 0)} total students</Typography>
                 </Box>
                 <Box sx={{ p: 3, display: 'flex', alignItems: 'flex-end', gap: 3, height: 280 }}>
-                  {gradeDistribution.map((g) => (
+                  {gradeDistribution.distribution.map((g: any) => (
                     <Box key={g.grade} sx={{ flex: 1, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
                       <Typography variant="body2" fontWeight={700} sx={{ mb: 0.5, color: g.color }}>
                         {g.count}
@@ -194,7 +248,7 @@ const ManagerGradebookPage: React.FC = () => {
                   <Typography fontWeight={700}>Grade Scale</Typography>
                 </Box>
                 <Box sx={{ p: 2 }}>
-                  {gradeDistribution.map((g) => (
+                  {gradeDistribution.distribution.map((g: any) => (
                     <Box key={g.grade} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 0.75 }}>
                       <Box sx={{ width: 28, height: 28, borderRadius: '8px', bgcolor: `${g.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Typography variant="body2" fontWeight={700} sx={{ color: g.color }}>{g.grade}</Typography>
@@ -211,7 +265,7 @@ const ManagerGradebookPage: React.FC = () => {
               <Paper elevation={0} sx={cardSx}>
                 <Box sx={headerSx}>
                   <Typography fontWeight={700}>Student Grades</Typography>
-                  <Typography variant="body2" color="text.secondary">{filteredStudents.length} students</Typography>
+                  <Typography variant="body2" color="text.secondary">{filteredSubmissions.length} students</Typography>
                 </Box>
                 <TableContainer>
                   <Table>
@@ -226,52 +280,52 @@ const ManagerGradebookPage: React.FC = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {filteredStudents.map((student) => (
+                      {filteredSubmissions.map((student: any) => (
                         <TableRow key={student.id} sx={{ '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' }, '& td': { py: 1.5 } }}>
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                               <Avatar sx={{ width: 34, height: 34, fontSize: '0.75rem', fontWeight: 600, background: 'linear-gradient(135deg, #ffb74d, #f97316)' }}>
-                                {student.initials}
+                                {getInitials(student.student_name)}
                               </Avatar>
-                              <Typography variant="body2" fontWeight={600}>{student.name}</Typography>
+                              <Typography variant="body2" fontWeight={600}>{student.student_name}</Typography>
                             </Box>
                           </TableCell>
                           <TableCell>
-                            <Typography variant="body2" color="text.secondary">{student.course}</Typography>
+                            <Typography variant="body2" color="text.secondary">{student.course_name}</Typography>
                           </TableCell>
                           <TableCell align="center">
-                            <Typography variant="body2" fontWeight={600}>{student.assignmentsAvg}%</Typography>
+                            <Typography variant="body2" fontWeight={600}>-</Typography>
                           </TableCell>
                           <TableCell align="center">
-                            <Typography variant="body2" fontWeight={600}>{student.quizzesAvg}%</Typography>
+                            <Typography variant="body2" fontWeight={600}>-</Typography>
                           </TableCell>
                           <TableCell align="center">
                             <Typography
                               variant="body2"
                               fontWeight={700}
                               sx={{
-                                color: student.overall >= 90 ? '#16a34a' : student.overall >= 70 ? '#3b82f6' : student.overall >= 60 ? '#f59e0b' : '#ef4444',
+                                color: getGradeColor(Number(student.grade_percentage) || 0),
                               }}
                             >
-                              {student.overall}%
+                              {Math.round(Number(student.grade_percentage) || 0)}%
                             </Typography>
                           </TableCell>
                           <TableCell align="center">
                             <Chip
-                              label={student.status}
+                              label={Number(student.grade_percentage) >= 60 ? 'Pass' : 'Fail'}
                               size="small"
                               sx={{
                                 fontWeight: 600,
                                 fontSize: '0.72rem',
                                 height: 24,
-                                bgcolor: student.status === 'Pass' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                                color: student.status === 'Pass' ? '#10b981' : '#ef4444',
+                                bgcolor: Number(student.grade_percentage) >= 60 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                color: Number(student.grade_percentage) >= 60 ? '#10b981' : '#ef4444',
                               }}
                             />
                           </TableCell>
                         </TableRow>
                       ))}
-                      {filteredStudents.length === 0 && (
+                      {filteredSubmissions.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                             <Typography variant="body2" color="text.secondary">No student records found for the selected course.</Typography>

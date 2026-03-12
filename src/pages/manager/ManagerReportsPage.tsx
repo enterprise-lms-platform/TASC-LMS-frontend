@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   CssBaseline,
@@ -16,6 +16,7 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  LinearProgress,
 } from '@mui/material';
 import {
   Description as DescriptionIcon,
@@ -28,8 +29,10 @@ import {
   Download as DownloadIcon,
   PlayArrow as GenerateIcon,
 } from '@mui/icons-material';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { reportsApi } from '../../services/reports.service';
 
 // ─── Styles ────────────────────────────────────────────────
 
@@ -52,47 +55,68 @@ const headerSx = {
   gap: 2,
 };
 
-// ─── Mock Data ─────────────────────────────────────────────
+// ─── Report Types Config ─────────────────────────────────────────────
 
-interface ReportType {
-  icon: React.ReactNode;
-  iconBg: string;
-  title: string;
-  description: string;
-}
+const reportTypeConfig: Record<string, { icon: React.ReactNode; iconBg: string; title: string; description: string }> = {
+  user_activity: { icon: <PeopleIcon />, iconBg: '#3b82f6', title: 'User Activity Report', description: 'Detailed breakdown of user login patterns, session durations, and platform engagement metrics across the organization.' },
+  course_performance: { icon: <CourseIcon />, iconBg: '#10b981', title: 'Course Performance Report', description: 'Comprehensive analysis of course completion rates, learner satisfaction scores, and content effectiveness.' },
+  enrollment: { icon: <EnrollIcon />, iconBg: '#ffa424', title: 'Enrollment Summary', description: 'Overview of enrollment trends, new registrations, drop-off rates, and capacity utilization by course.' },
+  completion: { icon: <AnalyticsIcon />, iconBg: '#8b5cf6', title: 'Completion Analytics', description: 'In-depth analytics on course and module completion, time-to-complete, and learner progress trajectories.' },
+  assessment: { icon: <AssessmentIcon />, iconBg: '#ef4444', title: 'Assessment Results', description: 'Aggregated quiz and assignment scores, pass/fail distributions, and question-level performance analytics.' },
+  revenue: { icon: <RevenueIcon />, iconBg: '#14b8a6', title: 'Revenue Report', description: 'Financial summary including course revenue, subscription income, refund rates, and revenue per learner.' },
+};
 
-const reportTypes: ReportType[] = [
-  { icon: <PeopleIcon />, iconBg: '#3b82f6', title: 'User Activity Report', description: 'Detailed breakdown of user login patterns, session durations, and platform engagement metrics across the organization.' },
-  { icon: <CourseIcon />, iconBg: '#10b981', title: 'Course Performance Report', description: 'Comprehensive analysis of course completion rates, learner satisfaction scores, and content effectiveness.' },
-  { icon: <EnrollIcon />, iconBg: '#ffa424', title: 'Enrollment Summary', description: 'Overview of enrollment trends, new registrations, drop-off rates, and capacity utilization by course.' },
-  { icon: <AnalyticsIcon />, iconBg: '#8b5cf6', title: 'Completion Analytics', description: 'In-depth analytics on course and module completion, time-to-complete, and learner progress trajectories.' },
-  { icon: <AssessmentIcon />, iconBg: '#ef4444', title: 'Assessment Results', description: 'Aggregated quiz and assignment scores, pass/fail distributions, and question-level performance analytics.' },
-  { icon: <RevenueIcon />, iconBg: '#14b8a6', title: 'Revenue Report', description: 'Financial summary including course revenue, subscription income, refund rates, and revenue per learner.' },
-];
+const formatDate = (dateStr: string): string => {
+  if (!dateStr) return '-';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
 
-interface RecentReport {
-  id: number;
-  name: string;
-  type: string;
-  typeColor: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'secondary';
-  generatedBy: string;
-  date: string;
-  size: string;
-  status: 'Ready' | 'Processing';
-}
+const getStatusColor = (status: string): 'success' | 'warning' | 'error' => {
+  if (status === 'ready') return 'success';
+  if (status === 'processing') return 'warning';
+  return 'error';
+};
 
-const recentReports: RecentReport[] = [
-  { id: 1, name: 'Q4 2025 User Activity', type: 'User Activity', typeColor: 'primary', generatedBy: 'Admin User', date: 'Mar 8, 2026', size: '2.4 MB', status: 'Ready' },
-  { id: 2, name: 'February Course Performance', type: 'Course Performance', typeColor: 'success', generatedBy: 'Sarah Chen', date: 'Mar 5, 2026', size: '1.8 MB', status: 'Ready' },
-  { id: 3, name: 'Spring Enrollment Summary', type: 'Enrollment', typeColor: 'warning', generatedBy: 'Admin User', date: 'Mar 3, 2026', size: '956 KB', status: 'Ready' },
-  { id: 4, name: 'Annual Completion Analytics', type: 'Completion', typeColor: 'secondary', generatedBy: 'James Wilson', date: 'Mar 1, 2026', size: '—', status: 'Processing' },
-  { id: 5, name: 'Q1 Assessment Results', type: 'Assessment', typeColor: 'error', generatedBy: 'Admin User', date: 'Feb 28, 2026', size: '3.1 MB', status: 'Ready' },
-];
+const getTypeColor = (type: string): 'primary' | 'success' | 'warning' | 'error' | 'info' | 'secondary' => {
+  const colorMap: Record<string, 'primary' | 'success' | 'warning' | 'error' | 'info' | 'secondary'> = {
+    user_activity: 'primary',
+    course_performance: 'success',
+    enrollment: 'warning',
+    completion: 'secondary',
+    assessment: 'error',
+    revenue: 'info',
+  };
+  return colorMap[type] || 'primary';
+};
 
 // ─── Component ─────────────────────────────────────────────
 
 const ManagerReportsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: reportTypesData } = useQuery({
+    queryKey: ['reportTypes'],
+    queryFn: () => reportsApi.getTypes(),
+  });
+
+  const { data: reportsData, isLoading } = useQuery({
+    queryKey: ['reports'],
+    queryFn: () => reportsApi.getAll({ page_size: 20 }).then(r => r.data),
+  });
+
+  const reports = (reportsData as any)?.results || [];
+  const reportTypesList = reportTypesData?.data || [];
+
+  const generateMutation = useMutation({
+    mutationFn: (reportType: string) => reportsApi.generate({ report_type: reportType }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reports'] }),
+  });
+
+  const handleGenerateReport = (reportType: string) => {
+    generateMutation.mutate(reportType);
+  };
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -113,6 +137,8 @@ const ManagerReportsPage: React.FC = () => {
         <Toolbar />
 
         <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+          {isLoading && <LinearProgress sx={{ mb: 2 }} />}
+          
           {/* Page Header */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
             <Box
@@ -137,8 +163,8 @@ const ManagerReportsPage: React.FC = () => {
 
           {/* Report Type Cards */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
-            {reportTypes.map((report) => (
-              <Grid size={{ xs: 12, sm: 6 }} key={report.title}>
+            {reportTypesList.map((report: any) => (
+              <Grid size={{ xs: 12, sm: 6 }} key={report.id}>
                 <Paper
                   elevation={0}
                   sx={{
@@ -159,7 +185,7 @@ const ManagerReportsPage: React.FC = () => {
                       width: 48,
                       height: 48,
                       borderRadius: '12px',
-                      bgcolor: report.iconBg,
+                      bgcolor: (reportTypeConfig[report.id] || reportTypeConfig.user_activity).iconBg,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -167,10 +193,10 @@ const ManagerReportsPage: React.FC = () => {
                       flexShrink: 0,
                     }}
                   >
-                    {report.icon}
+                    {(reportTypeConfig[report.id] || reportTypeConfig.user_activity).icon}
                   </Box>
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>{report.title}</Typography>
+                    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>{report.name}</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.6 }}>
                       {report.description}
                     </Typography>
@@ -178,6 +204,8 @@ const ManagerReportsPage: React.FC = () => {
                       variant="contained"
                       size="small"
                       startIcon={<GenerateIcon />}
+                      onClick={() => handleGenerateReport(report.id)}
+                      disabled={generateMutation.isPending}
                       sx={{
                         background: 'linear-gradient(135deg, #ffa424, #f97316)',
                         textTransform: 'none',
@@ -215,34 +243,34 @@ const ManagerReportsPage: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {recentReports.map((report) => (
+                  {reports.map((report: any) => (
                     <TableRow key={report.id} hover sx={{ '&:last-child td': { borderBottom: 0 } }}>
                       <TableCell>
                         <Typography variant="body2" fontWeight={600}>{report.name}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Chip label={report.type} size="small" color={report.typeColor} sx={{ fontWeight: 600, fontSize: '0.7rem' }} />
+                        <Chip label={report.report_type.replace('_', ' ')} size="small" color={getTypeColor(report.report_type)} sx={{ fontWeight: 600, fontSize: '0.7rem' }} />
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2">{report.generatedBy}</Typography>
+                        <Typography variant="body2">{report.generated_by}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" color="text.secondary">{report.date}</Typography>
+                        <Typography variant="body2" color="text.secondary">{formatDate(report.generated_at)}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" color="text.secondary">{report.size}</Typography>
+                        <Typography variant="body2" color="text.secondary">{report.file_size || '—'}</Typography>
                       </TableCell>
                       <TableCell>
                         <Chip
                           label={report.status}
                           size="small"
-                          color={report.status === 'Ready' ? 'success' : 'warning'}
-                          variant={report.status === 'Processing' ? 'outlined' : 'filled'}
+                          color={getStatusColor(report.status)}
+                          variant={report.status === 'processing' ? 'outlined' : 'filled'}
                           sx={{ fontWeight: 600, fontSize: '0.7rem' }}
                         />
                       </TableCell>
                       <TableCell align="center">
-                        <Tooltip title={report.status === 'Ready' ? 'Download report' : 'Report is still processing'}>
+                        <Tooltip title={report.status === 'ready' && report.file ? 'Download report' : 'Report is not ready'}>
                           <span>
                             <IconButton
                               size="small"

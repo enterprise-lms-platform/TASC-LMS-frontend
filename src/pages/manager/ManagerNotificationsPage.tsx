@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   CssBaseline,
@@ -8,6 +8,7 @@ import {
   Chip,
   Button,
   Divider,
+  LinearProgress,
 } from '@mui/material';
 import {
   Notifications as NotificationsIcon,
@@ -17,8 +18,10 @@ import {
   School as MilestoneIcon,
   DoneAll as MarkReadIcon,
 } from '@mui/icons-material';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { notificationApi } from '../../services/notifications.service';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -39,63 +42,76 @@ const headerSx = {
 };
 
 // ── Notification Type Config ──
-type NotificationType = 'Approval' | 'Registration' | 'System' | 'Milestone';
+type NotificationType = 'approval' | 'registration' | 'system' | 'milestone';
 
-const typeConfig: Record<NotificationType, { icon: React.ReactNode; bg: string; color: string }> = {
-  Approval: { icon: <ApprovalIcon />, bg: 'rgba(59,130,246,0.1)', color: '#3b82f6' },
-  Registration: { icon: <NewUserIcon />, bg: 'rgba(16,185,129,0.1)', color: '#10b981' },
-  System: { icon: <SystemAlertIcon />, bg: 'rgba(239,68,68,0.1)', color: '#ef4444' },
-  Milestone: { icon: <MilestoneIcon />, bg: 'rgba(245,158,11,0.1)', color: '#f59e0b' },
+const typeConfig: Record<string, { icon: React.ReactNode; bg: string; color: string }> = {
+  approval: { icon: <ApprovalIcon />, bg: 'rgba(59,130,246,0.1)', color: '#3b82f6' },
+  registration: { icon: <NewUserIcon />, bg: 'rgba(16,185,129,0.1)', color: '#10b981' },
+  system: { icon: <SystemAlertIcon />, bg: 'rgba(239,68,68,0.1)', color: '#ef4444' },
+  milestone: { icon: <MilestoneIcon />, bg: 'rgba(245,158,11,0.1)', color: '#f59e0b' },
 };
 
-// ── Mock Notifications ──
-interface Notification {
-  id: number;
-  type: NotificationType;
-  title: string;
-  description: string;
-  timestamp: string;
-  read: boolean;
-}
+const formatType = (type: string): string => {
+  return type.charAt(0).toUpperCase() + type.slice(1);
+};
 
-const initialNotifications: Notification[] = [
-  { id: 1, type: 'Approval', title: 'Course Approval Request', description: 'James Rodriguez submitted "Advanced Kubernetes Networking" for review and publishing approval.', timestamp: '5 minutes ago', read: false },
-  { id: 2, type: 'Registration', title: 'New User Registration', description: 'Rachel Green (rachel.green@acmecorp.com) has registered and is awaiting role assignment.', timestamp: '18 minutes ago', read: false },
-  { id: 3, type: 'System', title: 'Storage Limit Warning', description: 'Organization storage usage has reached 85% of the allocated 500GB quota. Consider upgrading your plan.', timestamp: '1 hour ago', read: false },
-  { id: 4, type: 'Milestone', title: 'Enrollment Milestone Reached', description: 'The course "Python for Data Science" has surpassed 400 total enrollments across the organization.', timestamp: '2 hours ago', read: false },
-  { id: 5, type: 'Approval', title: 'Course Approval Request', description: 'Priya Sharma submitted "DevSecOps Fundamentals" for review and publishing approval.', timestamp: '3 hours ago', read: true },
-  { id: 6, type: 'Registration', title: 'Bulk Registration Complete', description: '42 new users from the engineering_team_q1.csv import have been successfully created and notified.', timestamp: '5 hours ago', read: true },
-  { id: 7, type: 'System', title: 'Scheduled Maintenance', description: 'Platform maintenance is scheduled for March 15, 2026, from 2:00 AM to 4:00 AM UTC. Expect brief downtime.', timestamp: '8 hours ago', read: true },
-  { id: 8, type: 'Milestone', title: 'Completion Milestone', description: 'Over 1,000 course completions have been recorded this quarter, a 24% increase from last quarter.', timestamp: '1 day ago', read: true },
-  { id: 9, type: 'Approval', title: 'Course Update Review', description: 'Emily Chen updated the curriculum for "React Performance Optimization" and submitted changes for approval.', timestamp: '1 day ago', read: true },
-  { id: 10, type: 'Registration', title: 'New User Registration', description: 'Carlos Mendez (carlos.mendez@acmecorp.com) has registered via SSO and was auto-assigned the Learner role.', timestamp: '2 days ago', read: true },
-];
+const formatRelativeTime = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  
+  if (diffMins < 60) return `${diffMins} min ago`;
+  if (diffHours < 24) return `${diffHours} hours ago`;
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
 
 const ManagerNotificationsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [filter, setFilter] = useState<string>('All');
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  
+  const queryClient = useQueryClient();
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const { data: notificationsData, isLoading } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => notificationApi.getAll({ page_size: 50 }).then(r => r.data),
+  });
 
-  const filteredNotifications = notifications.filter((n) => {
-    if (filter === 'All') return true;
-    if (filter === 'Unread') return !n.read;
-    if (filter === 'Approvals') return n.type === 'Approval';
-    if (filter === 'System') return n.type === 'System';
-    return true;
+  const notifications = (notificationsData as any)?.results || [];
+
+  const unreadCount = useMemo(() => 
+    notifications.filter((n: any) => !n.is_read).length,
+    [notifications]
+  );
+
+  const filteredNotifications = useMemo(() => {
+    return notifications.filter((n: any) => {
+      if (filter === 'All') return true;
+      if (filter === 'Unread') return !n.is_read;
+      if (filter === 'Approvals') return n.type === 'approval';
+      if (filter === 'System') return n.type === 'system';
+      return true;
+    });
+  }, [notifications, filter]);
+
+  const markAllReadMutation = useMutation({
+    mutationFn: () => notificationApi.markAllAsRead(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
 
   const handleMarkAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    markAllReadMutation.mutate();
   };
 
-  const filterOptions = [
+  const filterOptions = useMemo(() => [
     { label: 'All', count: notifications.length },
     { label: 'Unread', count: unreadCount },
-    { label: 'Approvals', count: notifications.filter((n) => n.type === 'Approval').length },
-    { label: 'System', count: notifications.filter((n) => n.type === 'System').length },
-  ];
+    { label: 'Approvals', count: notifications.filter((n: any) => n.type === 'approval').length },
+    { label: 'System', count: notifications.filter((n: any) => n.type === 'system').length },
+  ], [notifications, unreadCount]);
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -116,6 +132,8 @@ const ManagerNotificationsPage: React.FC = () => {
         <Toolbar />
 
         <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+          {isLoading && <LinearProgress sx={{ mb: 2 }} />}
+          
           {/* Page Header */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -191,8 +209,8 @@ const ManagerNotificationsPage: React.FC = () => {
               </Typography>
             </Box>
             <Box>
-              {filteredNotifications.map((notification, idx) => {
-                const config = typeConfig[notification.type];
+              {filteredNotifications.map((notification: any, idx: number) => {
+                const config = typeConfig[notification.type] || typeConfig.system;
                 return (
                   <Box key={notification.id}>
                     <Box
@@ -201,7 +219,7 @@ const ManagerNotificationsPage: React.FC = () => {
                         gap: 2,
                         p: 2.5,
                         px: 3,
-                        bgcolor: notification.read ? 'transparent' : 'rgba(255,164,36,0.03)',
+                        bgcolor: notification.is_read ? 'transparent' : 'rgba(255,164,36,0.03)',
                         '&:hover': { bgcolor: 'rgba(255,164,36,0.05)' },
                         transition: 'background 0.15s',
                         cursor: 'pointer',
@@ -209,7 +227,7 @@ const ManagerNotificationsPage: React.FC = () => {
                       }}
                     >
                       {/* Unread Indicator */}
-                      {!notification.read && (
+                      {!notification.is_read && (
                         <Box
                           sx={{
                             position: 'absolute',
@@ -245,11 +263,11 @@ const ManagerNotificationsPage: React.FC = () => {
                       {/* Content */}
                       <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
-                          <Typography variant="body2" fontWeight={notification.read ? 500 : 700}>
+                          <Typography variant="body2" fontWeight={notification.is_read ? 500 : 700}>
                             {notification.title}
                           </Typography>
                           <Chip
-                            label={notification.type}
+                            label={formatType(notification.type)}
                             size="small"
                             sx={{
                               height: 20,
@@ -264,7 +282,7 @@ const ManagerNotificationsPage: React.FC = () => {
                           {notification.description}
                         </Typography>
                         <Typography variant="caption" color="text.disabled">
-                          {notification.timestamp}
+                          {formatRelativeTime(notification.created_at)}
                         </Typography>
                       </Box>
                     </Box>
