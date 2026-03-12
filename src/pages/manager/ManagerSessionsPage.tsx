@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   CssBaseline,
@@ -23,8 +23,10 @@ import {
   TrendingUp as TrendingIcon,
   Schedule as ScheduleIcon,
 } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { sessionApi } from '../../services/main.api';
 
 // ── Shared styles ──
 const cardSx = {
@@ -45,97 +47,15 @@ const headerSx = {
   gap: 2,
 };
 
-// ── KPI data ──
-const kpis = [
-  { label: 'Total Sessions', value: '34', icon: <VideocamIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-  { label: 'This Week', value: '8', icon: <CalendarIcon />, bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f', subColor: '#1e40af' },
-  { label: 'Avg Attendance', value: '82%', icon: <TrendingIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-  { label: 'Total Hours', value: '124', icon: <ScheduleIcon />, bgcolor: '#fef9c3', iconBg: '#facc15', color: '#713f12', subColor: '#854d0e' },
-];
-
-// ── Mock sessions ──
-const mockSessions = [
-  {
-    id: 1,
-    title: 'Advanced React Patterns Workshop',
-    instructor: 'Dr. Sarah Chen',
-    initials: 'SC',
-    date: '2026-03-12',
-    time: '10:00 AM',
-    duration: '2 hours',
-    attendees: 28,
-    maxAttendees: 35,
-    platform: 'Zoom',
-    status: 'Upcoming',
-  },
-  {
-    id: 2,
-    title: 'Python Data Science Masterclass',
-    instructor: 'James Wilson',
-    initials: 'JW',
-    date: '2026-03-11',
-    time: '2:00 PM',
-    duration: '1.5 hours',
-    attendees: 42,
-    maxAttendees: 50,
-    platform: 'Google Meet',
-    status: 'In Progress',
-  },
-  {
-    id: 3,
-    title: 'AWS Cloud Architecture Deep Dive',
-    instructor: 'Maria Garcia',
-    initials: 'MG',
-    date: '2026-03-10',
-    time: '9:00 AM',
-    duration: '2 hours',
-    attendees: 31,
-    maxAttendees: 40,
-    platform: 'Microsoft Teams',
-    status: 'Completed',
-  },
-  {
-    id: 4,
-    title: 'TypeScript Best Practices',
-    instructor: 'Alex Kim',
-    initials: 'AK',
-    date: '2026-03-13',
-    time: '11:00 AM',
-    duration: '1 hour',
-    attendees: 19,
-    maxAttendees: 30,
-    platform: 'Zoom',
-    status: 'Upcoming',
-  },
-  {
-    id: 5,
-    title: 'Docker & Kubernetes Workshop',
-    instructor: 'Priya Patel',
-    initials: 'PP',
-    date: '2026-03-09',
-    time: '3:00 PM',
-    duration: '2 hours',
-    attendees: 36,
-    maxAttendees: 40,
-    platform: 'Google Meet',
-    status: 'Completed',
-  },
-  {
-    id: 6,
-    title: 'Cybersecurity Fundamentals',
-    instructor: 'David Okonkwo',
-    initials: 'DO',
-    date: '2026-03-14',
-    time: '1:00 PM',
-    duration: '1.5 hours',
-    attendees: 0,
-    maxAttendees: 45,
-    platform: 'Microsoft Teams',
-    status: 'Upcoming',
-  },
-];
-
-const instructors = ['All Instructors', 'Dr. Sarah Chen', 'James Wilson', 'Maria Garcia', 'Alex Kim', 'Priya Patel', 'David Okonkwo'];
+const getKpiConfig = (label: string) => {
+  switch (label) {
+    case 'Total Sessions': return { icon: <VideocamIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' };
+    case 'This Week': return { icon: <CalendarIcon />, bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f', subColor: '#1e40af' };
+    case 'Avg Attendance': return { icon: <TrendingIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' };
+    case 'Total Hours': return { icon: <ScheduleIcon />, bgcolor: '#fef9c3', iconBg: '#facc15', color: '#713f12', subColor: '#854d0e' };
+    default: return { icon: <VideocamIcon />, bgcolor: '#f5f5f5', iconBg: '#666', color: '#666', subColor: '#888' };
+  }
+};
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -168,11 +88,56 @@ const ManagerSessionsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [instructorFilter, setInstructorFilter] = useState('All Instructors');
 
-  const filteredSessions = mockSessions.filter((session) => {
-    const matchesStatus = statusFilter === 'All' || session.status === statusFilter;
-    const matchesInstructor = instructorFilter === 'All Instructors' || session.instructor === instructorFilter;
-    return matchesStatus && matchesInstructor;
+  const { data: sessionsData, isLoading: sessionsLoading } = useQuery({
+    queryKey: ['sessions', 'manager'],
+    queryFn: () => sessionApi.getAll({ page_size: 100 }).then(r => r.data),
   });
+
+  const sessions = (sessionsData as any)?.results || (sessionsData as any) || [];
+
+  const getSessionStatus = (session: any): 'Upcoming' | 'In Progress' | 'Completed' => {
+    const now = new Date();
+    const start = new Date(session.start_date || session.created_at);
+    const end = session.end_date ? new Date(session.end_date) : null;
+    if (end && end < now) return 'Completed';
+    if (start > now) return 'Upcoming';
+    return 'In Progress';
+  };
+
+  const filteredSessions = useMemo(() => {
+    if (!sessions.length) return [];
+    return sessions.filter((session: any) => {
+      const status = getSessionStatus(session);
+      const matchesStatus = statusFilter === 'All' || status === statusFilter;
+      const matchesInstructor = instructorFilter === 'All Instructors' || (session.instructor?.name || '').includes(instructorFilter.replace('All Instructors', ''));
+      return matchesStatus && matchesInstructor;
+    });
+  }, [sessions, statusFilter, instructorFilter]);
+
+  const kpis = useMemo(() => {
+    if (!sessions.length) return [];
+    const now = new Date();
+    const thisWeek = sessions.filter((s: any) => {
+      const start = new Date(s.start_date || s.created_at);
+      const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      return start >= now && start <= weekFromNow;
+    }).length;
+    const totalHours = sessions.reduce((acc: number, s: any) => acc + (s.duration || 0), 0);
+    return [
+      { label: 'Total Sessions', value: sessions.length.toString(), ...getKpiConfig('Total Sessions') },
+      { label: 'This Week', value: thisWeek.toString(), ...getKpiConfig('This Week') },
+      { label: 'Avg Attendance', value: '82%', ...getKpiConfig('Avg Attendance') },
+      { label: 'Total Hours', value: totalHours.toString(), ...getKpiConfig('Total Hours') },
+    ];
+  }, [sessions]);
+
+  const isLoading = sessionsLoading;
+
+  const instructorList = useMemo(() => {
+    if (!sessions.length) return ['All Instructors'];
+    const uniqueInstructors = new Set<string>(sessions.map((s: any) => s.instructor?.name || s.instructor?.email || 'Unknown').filter((n: any) => Boolean(n)));
+    return ['All Instructors', ...Array.from(uniqueInstructors)];
+  }, [sessions]);
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -297,7 +262,7 @@ const ManagerSessionsPage: React.FC = () => {
                 <FormControl size="small" sx={{ minWidth: 180 }}>
                   <InputLabel>Instructor</InputLabel>
                   <Select value={instructorFilter} onChange={(e) => setInstructorFilter(e.target.value)} label="Instructor">
-                    {instructors.map((name) => (
+                    {instructorList.map((name: any) => (
                       <MenuItem key={name} value={name}>
                         {name}
                       </MenuItem>

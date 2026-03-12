@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   CssBaseline,
@@ -24,8 +24,10 @@ import {
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
 } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { invoiceApi } from '../../services/main.api';
 
 // ─── Styles ────────────────────────────────────────────────
 
@@ -48,21 +50,27 @@ const headerSx = {
   gap: 2,
 };
 
-// ─── Mock Data ─────────────────────────────────────────────
-
-const billingHistory = [
-  { id: 1, date: 'Mar 1, 2026', description: 'Enterprise Plan - Monthly', amount: '$499.00', status: 'Paid' },
-  { id: 2, date: 'Feb 1, 2026', description: 'Enterprise Plan - Monthly', amount: '$499.00', status: 'Paid' },
-  { id: 3, date: 'Jan 1, 2026', description: 'Enterprise Plan - Monthly', amount: '$499.00', status: 'Paid' },
-  { id: 4, date: 'Dec 1, 2025', description: 'Enterprise Plan - Monthly', amount: '$499.00', status: 'Paid' },
-  { id: 5, date: 'Nov 1, 2025', description: 'Enterprise Plan - Monthly', amount: '$499.00', status: 'Paid' },
-  { id: 6, date: 'Apr 15, 2026', description: 'Enterprise Plan - Monthly (Upcoming)', amount: '$499.00', status: 'Pending' },
-];
-
 // ─── Component ─────────────────────────────────────────────
 
 const ManagerBillingPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const { data: invoicesData } = useQuery({
+    queryKey: ['invoices', 'billing'],
+    queryFn: () => invoiceApi.getAll({}).then(r => r.data),
+  });
+
+  const invoices = (invoicesData as any)?.results || (invoicesData as any) || [];
+
+  const billingHistory = useMemo(() => {
+    return invoices.map((inv: any) => ({
+      id: inv.id,
+      date: inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '-',
+      description: inv.description || 'Invoice',
+      amount: inv.total_amount ? `$${inv.total_amount}` : '$0.00',
+      status: inv.status === 'paid' || inv.status === 'completed' ? 'Paid' : inv.status === 'pending' ? 'Pending' : 'Failed',
+    }));
+  }, [invoices]);
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>

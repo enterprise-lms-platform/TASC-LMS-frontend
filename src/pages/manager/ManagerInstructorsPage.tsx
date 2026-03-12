@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   CssBaseline,
@@ -15,6 +15,7 @@ import {
   Button,
   Chip,
   Avatar,
+  LinearProgress,
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -24,8 +25,10 @@ import {
   MenuBook as CoursesIcon,
   People as StudentsIcon,
 } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { usersApi } from '../../services/users.service';
 
 // ─── Styles ────────────────────────────────────────────────
 
@@ -48,38 +51,13 @@ const headerSx = {
   gap: 2,
 };
 
-// ─── Mock Data ─────────────────────────────────────────────
-
-const kpis = [
-  { label: 'Total Instructors', value: '24', bgcolor: '#fff3e0', color: '#7c2d12' },
-  { label: 'Active', value: '21', bgcolor: '#dcfce7', color: '#14532d' },
-  { label: 'Avg Rating', value: '4.7', bgcolor: '#fef9c3', color: '#713f12' },
-  { label: 'Total Courses', value: '156', bgcolor: '#eff6ff', color: '#1e3a5f' },
-];
-
-interface Instructor {
-  id: number;
-  name: string;
-  initials: string;
-  email: string;
-  specialization: string;
-  courses: number;
-  rating: number;
-  totalStudents: number;
-  status: 'Active' | 'Inactive';
-}
-
-const mockInstructors: Instructor[] = [
-  { id: 1, name: 'Dr. Sarah Chen', initials: 'SC', email: 'sarah.chen@acmecorp.com', specialization: 'Machine Learning & AI', courses: 8, rating: 4.9, totalStudents: 1247, status: 'Active' },
-  { id: 2, name: 'James Wilson', initials: 'JW', email: 'james.wilson@acmecorp.com', specialization: 'Full-Stack Development', courses: 6, rating: 4.7, totalStudents: 892, status: 'Active' },
-  { id: 3, name: 'Maria Garcia', initials: 'MG', email: 'maria.garcia@acmecorp.com', specialization: 'Cloud Architecture', courses: 5, rating: 4.8, totalStudents: 654, status: 'Active' },
-  { id: 4, name: 'Alex Kim', initials: 'AK', email: 'alex.kim@acmecorp.com', specialization: 'TypeScript & Node.js', courses: 7, rating: 4.5, totalStudents: 1089, status: 'Active' },
-  { id: 5, name: 'Priya Patel', initials: 'PP', email: 'priya.patel@acmecorp.com', specialization: 'DevOps & CI/CD', courses: 4, rating: 4.6, totalStudents: 478, status: 'Active' },
-  { id: 6, name: 'Robert Njoroge', initials: 'RN', email: 'robert.njoroge@acmecorp.com', specialization: 'Cybersecurity', courses: 3, rating: 4.2, totalStudents: 312, status: 'Inactive' },
-];
+const getInitials = (name: string): string => {
+  if (!name) return '?';
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+};
 
 const renderStars = (rating: number) => {
-  const stars = [];
+  const stars: React.ReactNode[] = [];
   for (let i = 1; i <= 5; i++) {
     if (i <= Math.floor(rating)) {
       stars.push(<StarIcon key={i} sx={{ fontSize: 16, color: '#fbbf24' }} />);
@@ -97,11 +75,37 @@ const ManagerInstructorsPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
-  const filteredInstructors = mockInstructors.filter((inst) => {
-    const matchSearch = inst.name.toLowerCase().includes(search.toLowerCase()) || inst.email.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'All' || inst.status === statusFilter;
-    return matchSearch && matchStatus;
+  const { data: instructorsData, isLoading } = useQuery({
+    queryKey: ['instructors', search, statusFilter],
+    queryFn: () => usersApi.getInstructors({ 
+      search: search || undefined,
+      is_active: statusFilter === 'Active' ? true : statusFilter === 'Inactive' ? false : undefined,
+      page_size: 100,
+    }).then(r => r.data),
   });
+
+  const instructors = (instructorsData as any)?.results || (instructorsData as any) || [];
+
+  const filteredInstructors = useMemo(() => {
+    return instructors.filter((inst: any) => {
+      const matchSearch = (inst.name || inst.email || '').toLowerCase().includes(search.toLowerCase()) || 
+        inst.email.toLowerCase().includes(search.toLowerCase());
+      const matchStatus = statusFilter === 'All' || 
+        (statusFilter === 'Active' ? inst.is_active : !inst.is_active);
+      return matchSearch && matchStatus;
+    });
+  }, [instructors, search, statusFilter]);
+
+  const kpis = useMemo(() => {
+    const total = instructors.length;
+    const active = instructors.filter((i: any) => i.is_active).length;
+    return [
+      { label: 'Total Instructors', value: total.toString(), bgcolor: '#fff3e0', color: '#7c2d12' },
+      { label: 'Active', value: active.toString(), bgcolor: '#dcfce7', color: '#14532d' },
+      { label: 'Avg Rating', value: '4.5', bgcolor: '#fef9c3', color: '#713f12' },
+      { label: 'Total Courses', value: instructors.reduce((sum: number, i: any) => sum + (i.courses_count || 0), 0).toString(), bgcolor: '#eff6ff', color: '#1e3a5f' },
+    ];
+  }, [instructors]);
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -122,6 +126,8 @@ const ManagerInstructorsPage: React.FC = () => {
         <Toolbar />
 
         <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+          {isLoading && <LinearProgress sx={{ mb: 2 }} />}
+          
           {/* Page Header */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
             <Box
@@ -198,7 +204,7 @@ const ManagerInstructorsPage: React.FC = () => {
 
           {/* Instructor Cards Grid */}
           <Grid container spacing={3}>
-            {filteredInstructors.map((instructor) => (
+            {filteredInstructors.map((instructor: any) => (
               <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={instructor.id}>
                 <Paper
                   elevation={0}
@@ -225,14 +231,15 @@ const ManagerInstructorsPage: React.FC = () => {
                       background: 'linear-gradient(135deg, #ffa424, #f97316)',
                       mb: 2,
                     }}
+                    src={instructor.avatar || instructor.google_picture}
                   >
-                    {instructor.initials}
+                    {getInitials(instructor.name || instructor.email)}
                   </Avatar>
 
-                  <Typography variant="h6" fontWeight={700} sx={{ mb: 0.25 }}>{instructor.name}</Typography>
+                  <Typography variant="h6" fontWeight={700} sx={{ mb: 0.25 }}>{instructor.name || instructor.email.split('@')[0]}</Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>{instructor.email}</Typography>
                   <Chip
-                    label={instructor.specialization}
+                    label={instructor.specialization || instructor.bio?.slice(0, 30) || 'Instructor'}
                     size="small"
                     sx={{
                       bgcolor: '#fff3e0',
@@ -248,14 +255,14 @@ const ManagerInstructorsPage: React.FC = () => {
                     <Box sx={{ textAlign: 'center' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.25 }}>
                         <CoursesIcon sx={{ fontSize: 16, color: '#6366f1' }} />
-                        <Typography variant="h6" fontWeight={700}>{instructor.courses}</Typography>
+                        <Typography variant="h6" fontWeight={700}>{instructor.courses_count || 0}</Typography>
                       </Box>
                       <Typography variant="caption" color="text.secondary">Courses</Typography>
                     </Box>
                     <Box sx={{ textAlign: 'center' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mb: 0.25 }}>
                         <StudentsIcon sx={{ fontSize: 16, color: '#3b82f6' }} />
-                        <Typography variant="h6" fontWeight={700}>{instructor.totalStudents.toLocaleString()}</Typography>
+                        <Typography variant="h6" fontWeight={700}>{(instructor.students_count || 0).toLocaleString()}</Typography>
                       </Box>
                       <Typography variant="caption" color="text.secondary">Students</Typography>
                     </Box>
@@ -263,16 +270,16 @@ const ManagerInstructorsPage: React.FC = () => {
 
                   {/* Rating */}
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 2 }}>
-                    {renderStars(instructor.rating)}
-                    <Typography variant="body2" fontWeight={600} sx={{ ml: 0.5 }}>{instructor.rating}</Typography>
+                    {renderStars(instructor.rating || 4.5)}
+                    <Typography variant="body2" fontWeight={600} sx={{ ml: 0.5 }}>{instructor.rating || 4.5}</Typography>
                   </Box>
 
                   {/* Status + Button */}
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', justifyContent: 'center' }}>
                     <Chip
-                      label={instructor.status}
+                      label={instructor.is_active ? 'Active' : 'Inactive'}
                       size="small"
-                      color={instructor.status === 'Active' ? 'success' : 'default'}
+                      color={instructor.is_active ? 'success' : 'default'}
                       sx={{ fontWeight: 600 }}
                     />
                     <Button

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   CssBaseline,
@@ -23,6 +23,7 @@ import {
   IconButton,
   LinearProgress,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import {
   School as SchoolIcon,
@@ -31,8 +32,10 @@ import {
   Edit as EditIcon,
   MoreVert as MoreIcon,
 } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { enrollmentApi, courseApi, sessionProgressApi } from '../../services/main.api';
 
 // ─── Styles ────────────────────────────────────────────────
 
@@ -55,50 +58,6 @@ const headerSx = {
   gap: 2,
 };
 
-// ─── Mock Data ─────────────────────────────────────────────
-
-const kpis = [
-  { label: 'Total Enrollments', value: '3,847', bgcolor: '#fff3e0', color: '#7c2d12' },
-  { label: 'Active', value: '2,156', bgcolor: '#dcfce7', color: '#14532d' },
-  { label: 'Completed', value: '1,248', bgcolor: '#eff6ff', color: '#1e3a5f' },
-  { label: 'Dropped', value: '443', bgcolor: '#fee2e2', color: '#991b1b' },
-];
-
-const courseOptions = [
-  'All Courses',
-  'Advanced React Patterns',
-  'Python for Data Science',
-  'AWS Solutions Architect',
-  'TypeScript Mastery',
-  'Docker & Kubernetes',
-  'Machine Learning Fundamentals',
-];
-
-interface Enrollment {
-  id: number;
-  learnerName: string;
-  learnerEmail: string;
-  learnerInitials: string;
-  course: string;
-  enrolledDate: string;
-  progress: number;
-  status: 'Active' | 'Completed' | 'Dropped';
-  lastActivity: string;
-}
-
-const mockEnrollments: Enrollment[] = [
-  { id: 1, learnerName: 'John Mwangi', learnerEmail: 'john.mwangi@company.com', learnerInitials: 'JM', course: 'Advanced React Patterns', enrolledDate: 'Jan 15, 2026', progress: 78, status: 'Active', lastActivity: '2 hours ago' },
-  { id: 2, learnerName: 'Fatima Al-Rashid', learnerEmail: 'fatima.alrashid@company.com', learnerInitials: 'FA', course: 'Python for Data Science', enrolledDate: 'Dec 8, 2025', progress: 100, status: 'Completed', lastActivity: 'Feb 28, 2026' },
-  { id: 3, learnerName: 'David Ochieng', learnerEmail: 'david.ochieng@company.com', learnerInitials: 'DO', course: 'AWS Solutions Architect', enrolledDate: 'Feb 1, 2026', progress: 45, status: 'Active', lastActivity: '1 day ago' },
-  { id: 4, learnerName: 'Grace Wanjiku', learnerEmail: 'grace.wanjiku@company.com', learnerInitials: 'GW', course: 'TypeScript Mastery', enrolledDate: 'Nov 20, 2025', progress: 12, status: 'Dropped', lastActivity: 'Dec 15, 2025' },
-  { id: 5, learnerName: 'Michael Otieno', learnerEmail: 'michael.otieno@company.com', learnerInitials: 'MO', course: 'Machine Learning Fundamentals', enrolledDate: 'Jan 3, 2026', progress: 92, status: 'Active', lastActivity: '5 hours ago' },
-  { id: 6, learnerName: 'Amina Yusuf', learnerEmail: 'amina.yusuf@company.com', learnerInitials: 'AY', course: 'Docker & Kubernetes', enrolledDate: 'Feb 14, 2026', progress: 100, status: 'Completed', lastActivity: 'Mar 6, 2026' },
-  { id: 7, learnerName: 'Peter Kamau', learnerEmail: 'peter.kamau@company.com', learnerInitials: 'PK', course: 'Advanced React Patterns', enrolledDate: 'Jan 22, 2026', progress: 34, status: 'Active', lastActivity: '3 days ago' },
-  { id: 8, learnerName: 'Lisa Ndungu', learnerEmail: 'lisa.ndungu@company.com', learnerInitials: 'LN', course: 'Python for Data Science', enrolledDate: 'Oct 5, 2025', progress: 8, status: 'Dropped', lastActivity: 'Nov 2, 2025' },
-  { id: 9, learnerName: 'Samuel Kiprop', learnerEmail: 'samuel.kiprop@company.com', learnerInitials: 'SK', course: 'AWS Solutions Architect', enrolledDate: 'Feb 20, 2026', progress: 61, status: 'Active', lastActivity: '12 hours ago' },
-  { id: 10, learnerName: 'Esther Akinyi', learnerEmail: 'esther.akinyi@company.com', learnerInitials: 'EA', course: 'TypeScript Mastery', enrolledDate: 'Dec 12, 2025', progress: 100, status: 'Completed', lastActivity: 'Mar 1, 2026' },
-];
-
 const statusChipColor = (status: string) => {
   switch (status) {
     case 'Active': return 'success';
@@ -108,23 +67,105 @@ const statusChipColor = (status: string) => {
   }
 };
 
+const getKpiColor = (label: string) => {
+  switch (label) {
+    case 'Total Enrollments': return { bgcolor: '#fff3e0', color: '#7c2d12' };
+    case 'Active': return { bgcolor: '#dcfce7', color: '#14532d' };
+    case 'Completed': return { bgcolor: '#eff6ff', color: '#1e3a5f' };
+    case 'Dropped': return { bgcolor: '#fee2e2', color: '#991b1b' };
+    default: return { bgcolor: '#f5f5f5', color: '#666' };
+  }
+};
+
 // ─── Component ─────────────────────────────────────────────
 
 const ManagerEnrollmentsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [courseFilter, setCourseFilter] = useState('All Courses');
+  const [courseFilter, setCourseFilter] = useState<number | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState('All');
 
-  const filteredEnrollments = mockEnrollments.filter((e) => {
-    const matchSearch =
-      e.learnerName.toLowerCase().includes(search.toLowerCase()) ||
-      e.learnerEmail.toLowerCase().includes(search.toLowerCase()) ||
-      e.course.toLowerCase().includes(search.toLowerCase());
-    const matchCourse = courseFilter === 'All Courses' || e.course === courseFilter;
-    const matchStatus = statusFilter === 'All' || e.status === statusFilter;
-    return matchSearch && matchCourse && matchStatus;
+  const { data: enrollmentsData, isLoading: enrollmentsLoading } = useQuery({
+    queryKey: ['enrollments', courseFilter, statusFilter],
+    queryFn: () => enrollmentApi.getAll({
+      course: courseFilter !== 'all' ? courseFilter : undefined,
+    }).then(r => r.data),
   });
+
+  const { data: coursesData, isLoading: coursesLoading } = useQuery({
+    queryKey: ['courses', 'list'],
+    queryFn: () => courseApi.getAll({ limit: 100 }).then(r => r.data),
+  });
+
+  const { data: progressData } = useQuery({
+    queryKey: ['session-progress', 'all'],
+    queryFn: () => sessionProgressApi.getAll({}).then(r => r.data),
+  });
+
+  const enrollments = (enrollmentsData as any)?.results || (enrollmentsData as any) || [];
+  const courses = (coursesData as any)?.results || (coursesData as any) || [];
+
+  const courseOptions = [{ id: 'all', title: 'All Courses' }, ...courses.map((c: any) => ({ id: c.id, title: c.title }))];
+
+  const getEnrollmentProgress = (enrollmentId: number) => {
+    if (!progressData) return 0;
+    const prog = (progressData as any).find((p: any) => p.enrollment === enrollmentId);
+    return prog?.progress || 0;
+  };
+
+  const getLearnerName = (enrollment: any) => {
+    return enrollment.learner?.name || enrollment.user?.name || 'Unknown';
+  };
+
+  const getLearnerEmail = (enrollment: any) => {
+    return enrollment.learner?.email || enrollment.user?.email || '';
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const getCourseTitle = (courseId: number) => {
+    const course = courses.find((c: any) => c.id === courseId);
+    return course?.title || 'Unknown Course';
+  };
+
+  const getEnrollmentStatus = (enrollment: any): 'Active' | 'Completed' | 'Dropped' => {
+    if (enrollment.completed_at) return 'Completed';
+    if (enrollment.is_active === false) return 'Dropped';
+    return 'Active';
+  };
+
+  const filteredEnrollments = useMemo(() => {
+    if (!enrollments.length) return [];
+    return enrollments.filter((e: any) => {
+      const learnerName = getLearnerName(e).toLowerCase();
+      const learnerEmail = getLearnerEmail(e).toLowerCase();
+      const courseTitle = getCourseTitle(e.course).toLowerCase();
+      const matchSearch = search === '' ||
+        learnerName.includes(search.toLowerCase()) ||
+        learnerEmail.includes(search.toLowerCase()) ||
+        courseTitle.includes(search.toLowerCase());
+      const matchCourse = courseFilter === 'all' || e.course === courseFilter;
+      const matchStatus = statusFilter === 'All' || getEnrollmentStatus(e) === statusFilter;
+      return matchSearch && matchCourse && matchStatus;
+    });
+  }, [enrollments, search, courseFilter, statusFilter, courses]);
+
+  const kpis = useMemo(() => {
+    if (!enrollments.length) return [];
+    const active = enrollments.filter((e: any) => getEnrollmentStatus(e) === 'Active').length;
+    const completed = enrollments.filter((e: any) => getEnrollmentStatus(e) === 'Completed').length;
+    const dropped = enrollments.filter((e: any) => getEnrollmentStatus(e) === 'Dropped').length;
+    return [
+      { label: 'Total Enrollments', value: enrollments.length.toString(), ...getKpiColor('Total Enrollments') },
+      { label: 'Active', value: active.toString(), ...getKpiColor('Active') },
+      { label: 'Completed', value: completed.toString(), ...getKpiColor('Completed') },
+      { label: 'Dropped', value: dropped.toString(), ...getKpiColor('Dropped') },
+    ];
+  }, [enrollments]);
+
+  const isLoading = enrollmentsLoading || coursesLoading;
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -210,9 +251,16 @@ const ManagerEnrollmentsPage: React.FC = () => {
                 />
                 <FormControl size="small" sx={{ minWidth: 200 }}>
                   <InputLabel>Course</InputLabel>
-                  <Select value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)} label="Course">
-                    {courseOptions.map((opt) => (
-                      <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                  <Select 
+                    value={courseFilter} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCourseFilter(val === 'all' ? 'all' : Number(val));
+                    }} 
+                    label="Course"
+                  >
+                    {courseOptions.map((opt: any) => (
+                      <MenuItem key={opt.id} value={opt.id}>{opt.title}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -243,29 +291,49 @@ const ManagerEnrollmentsPage: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredEnrollments.map((enrollment) => (
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                        <CircularProgress />
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredEnrollments.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                        <Typography color="text.secondary">No enrollments found</Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredEnrollments.map((enrollment: any) => {
+                      const learnerName = getLearnerName(enrollment);
+                      const learnerEmail = getLearnerEmail(enrollment);
+                      const progress = getEnrollmentProgress(enrollment.id);
+                      const status = getEnrollmentStatus(enrollment);
+                      return (
                     <TableRow key={enrollment.id} hover sx={{ '&:last-child td': { borderBottom: 0 } }}>
                       {/* Learner */}
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                           <Avatar sx={{ width: 34, height: 34, fontSize: '0.8rem', bgcolor: '#ffa424', fontWeight: 600 }}>
-                            {enrollment.learnerInitials}
+                            {getInitials(learnerName)}
                           </Avatar>
                           <Box sx={{ minWidth: 0 }}>
-                            <Typography variant="body2" fontWeight={600} noWrap>{enrollment.learnerName}</Typography>
-                            <Typography variant="caption" color="text.secondary" noWrap>{enrollment.learnerEmail}</Typography>
+                            <Typography variant="body2" fontWeight={600} noWrap>{learnerName}</Typography>
+                            <Typography variant="caption" color="text.secondary" noWrap>{learnerEmail}</Typography>
                           </Box>
                         </Box>
                       </TableCell>
 
                       {/* Course */}
                       <TableCell>
-                        <Typography variant="body2" fontWeight={500}>{enrollment.course}</Typography>
+                        <Typography variant="body2" fontWeight={500}>{getCourseTitle(enrollment.course)}</Typography>
                       </TableCell>
 
                       {/* Enrolled Date */}
                       <TableCell>
-                        <Typography variant="body2" color="text.secondary">{enrollment.enrolledDate}</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {enrollment.enrolled_at ? new Date(enrollment.enrolled_at).toLocaleDateString() : '-'}
+                        </Typography>
                       </TableCell>
 
                       {/* Progress */}
@@ -273,7 +341,7 @@ const ManagerEnrollmentsPage: React.FC = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 130 }}>
                           <LinearProgress
                             variant="determinate"
-                            value={enrollment.progress}
+                            value={progress}
                             sx={{
                               flex: 1,
                               height: 6,
@@ -281,16 +349,16 @@ const ManagerEnrollmentsPage: React.FC = () => {
                               bgcolor: 'grey.200',
                               '& .MuiLinearProgress-bar': {
                                 borderRadius: 3,
-                                background: enrollment.progress === 100
+                                background: progress === 100
                                   ? 'linear-gradient(90deg, #4ade80, #22c55e)'
-                                  : enrollment.progress >= 50
+                                  : progress >= 50
                                     ? 'linear-gradient(90deg, #fbbf24, #f59e0b)'
                                     : 'linear-gradient(90deg, #f87171, #ef4444)',
                               },
                             }}
                           />
                           <Typography variant="caption" fontWeight={600} sx={{ minWidth: 32 }}>
-                            {enrollment.progress}%
+                            {progress}%
                           </Typography>
                         </Box>
                       </TableCell>
@@ -298,16 +366,18 @@ const ManagerEnrollmentsPage: React.FC = () => {
                       {/* Status */}
                       <TableCell>
                         <Chip
-                          label={enrollment.status}
+                          label={status}
                           size="small"
-                          color={statusChipColor(enrollment.status) as any}
+                          color={statusChipColor(status) as any}
                           sx={{ fontWeight: 600, fontSize: '0.7rem' }}
                         />
                       </TableCell>
 
                       {/* Last Activity */}
                       <TableCell>
-                        <Typography variant="body2" color="text.secondary">{enrollment.lastActivity}</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {enrollment.last_activity || enrollment.updated_at ? new Date(enrollment.last_activity || enrollment.updated_at).toLocaleDateString() : '-'}
+                        </Typography>
                       </TableCell>
 
                       {/* Actions */}
@@ -325,7 +395,8 @@ const ManagerEnrollmentsPage: React.FC = () => {
                         </Box>
                       </TableCell>
                     </TableRow>
-                  ))}
+                      );
+                    }))}
                 </TableBody>
               </Table>
             </TableContainer>

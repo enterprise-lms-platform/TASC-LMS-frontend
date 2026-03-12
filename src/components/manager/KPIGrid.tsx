@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Box, Grid, Paper, Typography } from '@mui/material';
 import {
   People as UsersIcon,
@@ -6,15 +6,40 @@ import {
   School as EnrollmentsIcon,
   TrendingUp as CompletionIcon,
 } from '@mui/icons-material';
-
-const kpiData = [
-  { label: 'Total Users', value: '2,450', icon: <UsersIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-  { label: 'Active Courses', value: '67', icon: <CoursesIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
-  { label: 'Total Enrollments', value: '8,924', icon: <EnrollmentsIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-  { label: 'Completion Rate', value: '68%', icon: <CompletionIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
-];
+import { useQuery } from '@tanstack/react-query';
+import { usersApi } from '../../services/users.service';
+import { courseApi } from '../../services/catalogue.services';
+import { enrollmentApi } from '../../services/learning.services';
 
 const KPIGrid: React.FC = () => {
+  const { data: usersData } = useQuery({
+    queryKey: ['users', 'all'],
+    queryFn: () => usersApi.getAll({ page_size: 1 }).then(r => r.data),
+  });
+  const { data: coursesData } = useQuery({
+    queryKey: ['courses', 'all'],
+    queryFn: () => courseApi.getAll({}).then(r => r.data),
+  });
+  const { data: enrollmentsData } = useQuery({
+    queryKey: ['enrollments', 'all'],
+    queryFn: () => enrollmentApi.getAll({}).then(r => r.data),
+  });
+
+  const totalUsers = (usersData as any)?.count || 0;
+  const courses = (coursesData as any)?.results || (coursesData as any) || [];
+  const activeCourses = courses.filter((c: any) => c.is_published).length;
+  const enrollments = (enrollmentsData as any)?.results || (enrollmentsData as any) || [];
+  const totalEnrollments = enrollments.length;
+  const completedEnrollments = enrollments.filter((e: any) => e.progress_percentage >= 100).length;
+  const completionRate = totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0;
+
+  const kpiData = useMemo(() => [
+    { label: 'Total Users', value: totalUsers.toLocaleString(), icon: <UsersIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+    { label: 'Active Courses', value: activeCourses.toString(), icon: <CoursesIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
+    { label: 'Total Enrollments', value: totalEnrollments.toLocaleString(), icon: <EnrollmentsIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+    { label: 'Completion Rate', value: `${completionRate}%`, icon: <CompletionIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+  ], [totalUsers, activeCourses, totalEnrollments, completionRate]);
+
   return (
     <Box sx={{ mb: 3 }}>
       <Grid container spacing={2}>

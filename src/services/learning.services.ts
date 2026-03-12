@@ -245,3 +245,83 @@ export const submissionApi = {
   delete: (id: number) =>
     apiClient.delete(`${BASE_PATH}/submissions/${id}/`),
 };
+
+// MANAGER-LEVEL QUERIES (for org-wide data)
+
+// Manager enrollments - gets all enrollments in the org
+export interface ManagerEnrollmentParams extends EnrollmentParams {
+  organization?: number;
+  status?: string;
+}
+
+export const managerEnrollmentApi = {
+  // Get all enrollments across org (for manager dashboard)
+  getAllEnrollments: (params?: ManagerEnrollmentParams) =>
+    apiClient.get<Enrollment[]>(`${BASE_PATH}/enrollments/`, { params }),
+};
+
+// Manager session progress - gets all progress across org
+export interface ManagerSessionProgressParams extends SessionProgressParams {
+  organization?: number;
+}
+
+export const managerSessionProgressApi = {
+  // Get all session progress across org
+  getAllProgress: (params?: ManagerSessionProgressParams) =>
+    apiClient.get<SessionProgress[]>(`${BASE_PATH}/session-progress/`, { params }),
+};
+
+// Manager certificates - gets all certificates across org
+export interface ManagerCertificateParams {
+  organization?: number;
+  course?: number;
+}
+
+export const managerCertificateApi = {
+  // Get all certificates across org
+  getAllCertificates: (params?: ManagerCertificateParams) =>
+    apiClient.get<Certificate[]>(`${BASE_PATH}/certificates/`, { params }),
+};
+
+// Manager grade/submission data
+export interface GradeDistribution {
+  grade: string;
+  range: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+export interface StudentGrade {
+  enrollment_id: number;
+  student_id: number;
+  student_name: string;
+  student_email: string;
+  course_id: number;
+  course_name: string;
+  assignment_score?: number;
+  quiz_score?: number;
+  overall_score: number;
+  status: 'pass' | 'fail';
+}
+
+export const managerGradesApi = {
+  // Get grade distribution (placeholder - needs backend)
+  getGradeDistribution: async (_courseId?: number): Promise<GradeDistribution[]> => {
+    // TODO: Replace with actual API call when backend endpoint exists
+    // For now, return mock data structure
+    return [
+      { grade: 'A', range: '90-100', count: 0, percentage: 0, color: '#16a34a' },
+      { grade: 'B', range: '80-89', count: 0, percentage: 0, color: '#3b82f6' },
+      { grade: 'C', range: '70-79', count: 0, percentage: 0, color: '#ffa424' },
+      { grade: 'D', range: '60-69', count: 0, percentage: 0, color: '#f97316' },
+      { grade: 'F', range: '<60', count: 0, percentage: 0, color: '#ef4444' },
+    ];
+  },
+
+  // Get student grades (placeholder - needs backend)
+  getStudentGrades: async (_courseId?: number): Promise<StudentGrade[]> => {
+    // TODO: Replace with actual API call when backend endpoint exists
+    return [];
+  },
+};

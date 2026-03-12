@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   CssBaseline,
@@ -21,15 +21,20 @@ import {
   TableHead,
   TableRow,
   Tooltip,
+  LinearProgress,
 } from '@mui/material';
 import {
   People as PeopleIcon,
   Search as SearchIcon,
   Edit as EditIcon,
   Block as SuspendIcon,
+  Check as ActivateIcon,
 } from '@mui/icons-material';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { usersApi } from '../../services/users.service';
+import type { UserListParams } from '../../services/users.service';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -49,22 +54,44 @@ const headerSx = {
   gap: 2,
 };
 
-// ── Mock Users ──
-const mockUsers = [
-  { id: 1, name: 'Sarah Mitchell', email: 'sarah.mitchell@acmecorp.com', initials: 'SM', role: 'Manager', status: 'Active', joined: 'Jan 12, 2025', lastActive: '2 hours ago' },
-  { id: 2, name: 'James Rodriguez', email: 'james.rodriguez@acmecorp.com', initials: 'JR', role: 'Instructor', status: 'Active', joined: 'Feb 8, 2025', lastActive: '1 hour ago' },
-  { id: 3, name: 'Emily Chen', email: 'emily.chen@acmecorp.com', initials: 'EC', role: 'Learner', status: 'Active', joined: 'Mar 15, 2025', lastActive: '30 minutes ago' },
-  { id: 4, name: 'Michael Thompson', email: 'michael.t@acmecorp.com', initials: 'MT', role: 'Learner', status: 'Suspended', joined: 'Apr 2, 2025', lastActive: '3 days ago' },
-  { id: 5, name: 'Priya Sharma', email: 'priya.sharma@acmecorp.com', initials: 'PS', role: 'Instructor', status: 'Active', joined: 'Jan 28, 2025', lastActive: '5 hours ago' },
-  { id: 6, name: 'David Kim', email: 'david.kim@acmecorp.com', initials: 'DK', role: 'Learner', status: 'Active', joined: 'May 10, 2025', lastActive: '1 day ago' },
-  { id: 7, name: 'Laura Bennett', email: 'laura.bennett@acmecorp.com', initials: 'LB', role: 'Learner', status: 'Suspended', joined: 'Jun 3, 2025', lastActive: '1 week ago' },
-  { id: 8, name: 'Alex Okafor', email: 'alex.okafor@acmecorp.com', initials: 'AO', role: 'Manager', status: 'Active', joined: 'Dec 19, 2024', lastActive: '15 minutes ago' },
-];
-
 const roleColors: Record<string, { bg: string; color: string }> = {
-  Manager: { bg: 'rgba(99,102,241,0.1)', color: '#6366f1' },
-  Instructor: { bg: 'rgba(16,185,129,0.1)', color: '#10b981' },
-  Learner: { bg: 'rgba(59,130,246,0.1)', color: '#3b82f6' },
+  lms_manager: { bg: 'rgba(99,102,241,0.1)', color: '#6366f1' },
+  org_admin: { bg: 'rgba(99,102,241,0.1)', color: '#6366f1' },
+  instructor: { bg: 'rgba(16,185,129,0.1)', color: '#10b981' },
+  learner: { bg: 'rgba(59,130,246,0.1)', color: '#3b82f6' },
+  tasc_admin: { bg: 'rgba(255,164,36,0.1)', color: '#ffa424' },
+};
+
+const formatRole = (role: string): string => {
+  const roleMap: Record<string, string> = {
+    lms_manager: 'Manager',
+    org_admin: 'Org Admin',
+    instructor: 'Instructor',
+    learner: 'Learner',
+    tasc_admin: 'TASC Admin',
+  };
+  return roleMap[role] || role;
+};
+
+const formatDate = (dateStr: string): string => {
+  if (!dateStr) return '-';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const getRelativeTime = (dateStr: string): string => {
+  if (!dateStr) return 'Never';
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  
+  if (diffMins < 60) return `${diffMins} min ago`;
+  if (diffHours < 24) return `${diffHours} hours ago`;
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return formatDate(dateStr);
 };
 
 const ManagerUsersPage: React.FC = () => {
@@ -73,12 +100,53 @@ const ManagerUsersPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [roleFilter, setRoleFilter] = useState('All');
 
-  const filtered = mockUsers.filter((u) => {
+  const queryClient = useQueryClient();
+
+  const params = useMemo((): UserListParams => {
+    const p: UserListParams = { page_size: 100 };
+    if (search) p.search = search;
+    if (statusFilter === 'Active') p.is_active = true;
+    if (statusFilter === 'Suspended') p.is_active = false;
+    if (roleFilter !== 'All') p.role = roleFilter.toLowerCase();
+    return p;
+  }, [search, statusFilter, roleFilter]);
+
+  const { data: usersData, isLoading } = useQuery({
+    queryKey: ['users', params],
+    queryFn: () => usersApi.getAll(params).then(r => r.data),
+  });
+
+  const users = (usersData as any)?.results || (usersData as any) || [];
+
+  const deactivateMutation = useMutation({
+    mutationFn: (id: number) => usersApi.deactivate(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
+  });
+
+  const activateMutation = useMutation({
+    mutationFn: (id: number) => usersApi.activate(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
+  });
+
+  const handleToggleStatus = (user: { id: number; is_active: boolean }) => {
+    if (user.is_active) {
+      deactivateMutation.mutate(user.id);
+    } else {
+      activateMutation.mutate(user.id);
+    }
+  };
+
+  const getInitials = (name: string): string => {
+    if (!name) return '?';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const filtered = users.filter((u: any) => {
     const matchSearch =
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      (u.name || u.email).toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'All' || u.status === statusFilter;
-    const matchRole = roleFilter === 'All' || u.role === roleFilter;
+    const matchStatus = statusFilter === 'All' || (statusFilter === 'Active' ? u.is_active : !u.is_active);
+    const matchRole = roleFilter === 'All' || formatRole(u.role) === roleFilter;
     return matchSearch && matchStatus && matchRole;
   });
 
@@ -101,6 +169,8 @@ const ManagerUsersPage: React.FC = () => {
         <Toolbar />
 
         <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+          {isLoading && <LinearProgress sx={{ mb: 2 }} />}
+          
           {/* Page Header */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
             <Box
@@ -193,7 +263,9 @@ const ManagerUsersPage: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filtered.map((user) => (
+                  {filtered.map((user: any) => {
+                    const isActive = user.is_active;
+                    return (
                     <TableRow
                       key={user.id}
                       sx={{ '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' }, '&:last-child td': { borderBottom: 0 } }}
@@ -209,11 +281,15 @@ const ManagerUsersPage: React.FC = () => {
                               background: 'linear-gradient(135deg, #ffa424, #f97316)',
                             }}
                           >
-                            {user.initials}
+                            {user.avatar || user.google_picture ? (
+                              <img src={user.avatar || user.google_picture} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                            ) : (
+                              getInitials(user.name || user.email)
+                            )}
                           </Avatar>
                           <Box>
                             <Typography variant="body2" fontWeight={600}>
-                              {user.name}
+                              {user.name || user.email.split('@')[0]}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
                               {user.email}
@@ -223,7 +299,7 @@ const ManagerUsersPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={user.role}
+                          label={formatRole(user.role)}
                           size="small"
                           sx={{
                             fontWeight: 600,
@@ -235,24 +311,24 @@ const ManagerUsersPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={user.status}
+                          label={isActive ? 'Active' : 'Suspended'}
                           size="small"
                           sx={{
                             fontWeight: 600,
                             fontSize: '0.75rem',
-                            bgcolor: user.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                            color: user.status === 'Active' ? '#10b981' : '#ef4444',
+                            bgcolor: isActive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                            color: isActive ? '#10b981' : '#ef4444',
                           }}
                         />
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
-                          {user.joined}
+                          {formatDate(user.created_at)}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
-                          {user.lastActive}
+                          {getRelativeTime(user.last_login)}
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
@@ -261,14 +337,19 @@ const ManagerUsersPage: React.FC = () => {
                             <EditIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title={user.status === 'Active' ? 'Suspend user' : 'Reactivate user'}>
-                          <IconButton size="small" sx={{ color: user.status === 'Active' ? 'text.secondary' : '#ef4444' }}>
-                            <SuspendIcon fontSize="small" />
+                        <Tooltip title={isActive ? 'Suspend user' : 'Reactivate user'}>
+                          <IconButton 
+                            size="small" 
+                            sx={{ color: isActive ? 'text.secondary' : '#ef4444' }}
+                            onClick={() => handleToggleStatus({ id: user.id, is_active: isActive })}
+                            disabled={deactivateMutation.isPending || activateMutation.isPending}
+                          >
+                            {isActive ? <SuspendIcon fontSize="small" /> : <ActivateIcon fontSize="small" />}
                           </IconButton>
                         </Tooltip>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )})}
                 </TableBody>
               </Table>
             </TableContainer>
