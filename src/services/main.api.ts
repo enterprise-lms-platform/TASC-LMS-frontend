@@ -15,11 +15,15 @@ export * from './payments.services';
 export * from './public.services';
 export * from './upload.services';
 export * from './organization.services';
+export * from './users.service';
+export * from './notifications.service';
+export * from './reports.service';
 
 // Re-export services as a single object for convenience
 import { authApi, adminApi } from './auth.services';
 import { categoryApi, tagApi, courseApi, sessionApi, courseApprovalApi } from './catalogue.services';
 import { organizationApi } from './organization.services';
+import { usersApi } from './users.service';
 import {
   enrollmentApi,
   sessionProgressApi,
@@ -63,6 +67,9 @@ export const api = {
   // Authentication & Admin
   auth: authApi,
   admin: adminApi,
+
+  // Users (Admin/Manager)
+  users: usersApi,
 
   // Catalogue
   catalogue: {
