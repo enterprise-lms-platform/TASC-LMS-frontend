@@ -14,7 +14,7 @@ const CatalogPagination: React.FC<CatalogPaginationProps> = ({
   onPageChange,
 }) => {
   const getPageNumbers = () => {
-    const pages = [];
+    const pages: number[] = [];
     for (let i = 1; i <= Math.min(totalPages, 5); i++) {
       pages.push(i);
     }

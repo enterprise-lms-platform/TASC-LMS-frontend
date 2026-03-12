@@ -16,7 +16,6 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  CircularProgress,
 } from '@mui/material';
 import {
   CreditCard as CreditCardIcon,
@@ -56,7 +55,7 @@ const headerSx = {
 const ManagerBillingPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const { data: invoicesData, isLoading: invoicesLoading } = useQuery({
+  const { data: invoicesData } = useQuery({
     queryKey: ['invoices', 'billing'],
     queryFn: () => invoiceApi.getAll({}).then(r => r.data),
   });
@@ -72,8 +71,6 @@ const ManagerBillingPage: React.FC = () => {
       status: inv.status === 'paid' || inv.status === 'completed' ? 'Paid' : inv.status === 'pending' ? 'Pending' : 'Failed',
     }));
   }, [invoices]);
-
-  const isLoading = invoicesLoading;
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>

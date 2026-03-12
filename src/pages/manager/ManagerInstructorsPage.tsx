@@ -57,7 +57,7 @@ const getInitials = (name: string): string => {
 };
 
 const renderStars = (rating: number) => {
-  const stars = [];
+  const stars: React.ReactNode[] = [];
   for (let i = 1; i <= 5; i++) {
     if (i <= Math.floor(rating)) {
       stars.push(<StarIcon key={i} sx={{ fontSize: 16, color: '#fbbf24' }} />);

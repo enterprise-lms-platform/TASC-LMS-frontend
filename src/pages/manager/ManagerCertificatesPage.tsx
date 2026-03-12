@@ -22,7 +22,6 @@ import {
   IconButton,
   Avatar,
   Tooltip,
-  CircularProgress,
 } from '@mui/material';
 import {
   EmojiEvents as EmojiEventsIcon,

@@ -307,7 +307,7 @@ export interface StudentGrade {
 
 export const managerGradesApi = {
   // Get grade distribution (placeholder - needs backend)
-  getGradeDistribution: async (courseId?: number): Promise<GradeDistribution[]> => {
+  getGradeDistribution: async (_courseId?: number): Promise<GradeDistribution[]> => {
     // TODO: Replace with actual API call when backend endpoint exists
     // For now, return mock data structure
     return [
@@ -320,7 +320,7 @@ export const managerGradesApi = {
   },
 
   // Get student grades (placeholder - needs backend)
-  getStudentGrades: async (courseId?: number): Promise<StudentGrade[]> => {
+  getStudentGrades: async (_courseId?: number): Promise<StudentGrade[]> => {
     // TODO: Replace with actual API call when backend endpoint exists
     return [];
   },

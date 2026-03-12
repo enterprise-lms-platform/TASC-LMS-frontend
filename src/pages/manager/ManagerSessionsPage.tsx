@@ -13,7 +13,6 @@ import {
   Avatar,
   Chip,
   Button,
-  CircularProgress,
 } from '@mui/material';
 import {
   Videocam as VideocamIcon,
@@ -27,7 +26,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
-import { sessionApi, courseApi } from '../../services/main.api';
+import { sessionApi } from '../../services/main.api';
 
 // ── Shared styles ──
 const cardSx = {
@@ -136,7 +135,7 @@ const ManagerSessionsPage: React.FC = () => {
 
   const instructorList = useMemo(() => {
     if (!sessions.length) return ['All Instructors'];
-    const uniqueInstructors = new Set(sessions.map((s: any) => s.instructor?.name || s.instructor?.email || 'Unknown').filter(Boolean));
+    const uniqueInstructors = new Set<string>(sessions.map((s: any) => s.instructor?.name || s.instructor?.email || 'Unknown').filter((n: any) => Boolean(n)));
     return ['All Instructors', ...Array.from(uniqueInstructors)];
   }, [sessions]);
 
@@ -263,7 +262,7 @@ const ManagerSessionsPage: React.FC = () => {
                 <FormControl size="small" sx={{ minWidth: 180 }}>
                   <InputLabel>Instructor</InputLabel>
                   <Select value={instructorFilter} onChange={(e) => setInstructorFilter(e.target.value)} label="Instructor">
-                    {instructorList.map((name) => (
+                    {instructorList.map((name: any) => (
                       <MenuItem key={name} value={name}>
                         {name}
                       </MenuItem>

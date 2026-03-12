@@ -58,14 +58,6 @@ const getGradeColor = (score: number): string => {
   return '#ef4444';
 };
 
-const getGradeLetter = (score: number): string => {
-  if (score >= 90) return 'A';
-  if (score >= 80) return 'B';
-  if (score >= 70) return 'C';
-  if (score >= 60) return 'D';
-  return 'F';
-};
-
 const getInitials = (name: string): string => {
   if (!name) return '?';
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);

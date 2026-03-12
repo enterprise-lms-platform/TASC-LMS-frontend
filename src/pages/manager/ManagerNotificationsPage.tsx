@@ -42,8 +42,6 @@ const headerSx = {
 };
 
 // ── Notification Type Config ──
-type NotificationType = 'approval' | 'registration' | 'system' | 'milestone';
-
 const typeConfig: Record<string, { icon: React.ReactNode; bg: string; color: string }> = {
   approval: { icon: <ApprovalIcon />, bg: 'rgba(59,130,246,0.1)', color: '#3b82f6' },
   registration: { icon: <NewUserIcon />, bg: 'rgba(16,185,129,0.1)', color: '#10b981' },
