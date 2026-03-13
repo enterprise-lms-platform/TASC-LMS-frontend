@@ -47,6 +47,9 @@ export const queryKeys = {
   quiz: {
     detail: (sessionId: number) => ['quiz', 'detail', sessionId] as const,
   },
+  assignment: {
+    detail: (sessionId: number) => ['assignment', 'detail', sessionId] as const,
+  },
   questionCategories: {
     all: (params?: Record<string, unknown>) => ['question-categories', params] as const,
   },

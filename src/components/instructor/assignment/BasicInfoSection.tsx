@@ -30,13 +30,30 @@ const assignmentTypes: Array<{ type: AssignmentType; icon: React.ReactNode; labe
   { type: 'research', icon: <ResearchIcon />, label: 'Research' },
 ];
 
+export interface ModuleOption {
+  id: number;
+  title: string;
+}
+
+/** When set, title and module are shown read-only (from session context); no title/module/lesson editors. */
+export interface ContextFromSession {
+  title: string;
+  moduleTitle?: string;
+}
+
 interface BasicInfoSectionProps {
   title: string;
   onTitleChange: (value: string) => void;
   module: string;
   onModuleChange: (value: string) => void;
+  /** Optional: real course modules for dropdown. When provided, Lesson dropdown is hidden (backend has no Lesson model). */
+  modules?: ModuleOption[];
   lesson: string;
   onLessonChange: (value: string) => void;
+  /** Hide lesson dropdown when using real modules (backend has no Lesson model) */
+  hideLesson?: boolean;
+  /** When set, show title/module as read-only from session (Configure mode); hide title/module/lesson editors */
+  contextFromSession?: ContextFromSession;
   assignmentType: AssignmentType;
   onTypeChange: (type: AssignmentType) => void;
 }
@@ -46,11 +63,16 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
   onTitleChange,
   module,
   onModuleChange,
+  modules: moduleOptions,
   lesson,
   onLessonChange,
+  hideLesson = false,
+  contextFromSession,
   assignmentType,
   onTypeChange,
 }) => {
+  const readOnly = !!contextFromSession;
+
   return (
     <Paper elevation={0} sx={{ border: 1, borderColor: 'divider', borderRadius: 2, mb: 3, overflow: 'hidden' }}>
       {/* Header */}
@@ -60,55 +82,86 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
           Basic Information
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Define the assignment title, description, and placement
+          {readOnly ? 'Assignment and placement from course structure' : 'Define the assignment title, description, and placement'}
         </Typography>
       </Box>
 
       {/* Content */}
       <Box sx={{ p: 3 }}>
-        {/* Title */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-            Assignment Title <Box component="span" sx={{ color: 'error.main' }}>*</Box>
-          </Typography>
-          <TextField
-            fullWidth
-            placeholder="e.g., Build a Custom React Hook Library"
-            value={title}
-            onChange={(e) => onTitleChange(e.target.value)}
-          />
-          <Typography variant="caption" color="text.secondary">
-            Make it clear and descriptive (max 100 characters)
-          </Typography>
-        </Box>
+        {readOnly ? (
+          /* Read-only context from session (Configure mode) */
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" fontWeight={600} gutterBottom color="text.secondary">
+              Assignment
+            </Typography>
+            <Typography variant="body1" fontWeight={500}>
+              {contextFromSession.title || 'Untitled assignment'}
+            </Typography>
+            {contextFromSession.moduleTitle && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Module: {contextFromSession.moduleTitle}
+              </Typography>
+            )}
+          </Box>
+        ) : (
+          <>
+            {/* Title */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                Assignment Title <Box component="span" sx={{ color: 'error.main' }}>*</Box>
+              </Typography>
+              <TextField
+                fullWidth
+                placeholder="e.g., Build a Custom React Hook Library"
+                value={title}
+                onChange={(e) => onTitleChange(e.target.value)}
+              />
+              <Typography variant="caption" color="text.secondary">
+                Make it clear and descriptive (max 100 characters)
+              </Typography>
+            </Box>
 
-        {/* Module & Lesson */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <FormControl fullWidth>
-              <InputLabel>Course Module *</InputLabel>
-              <Select value={module} onChange={(e) => onModuleChange(e.target.value)} label="Course Module *">
-                <MenuItem value="">Select a module</MenuItem>
-                <MenuItem value="m1">Module 1: Introduction</MenuItem>
-                <MenuItem value="m2">Module 2: React Hooks</MenuItem>
-                <MenuItem value="m3">Module 3: Advanced Patterns</MenuItem>
-                <MenuItem value="m4">Module 4: Custom Hooks</MenuItem>
-                <MenuItem value="m5">Module 5: Final Project</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <FormControl fullWidth>
-              <InputLabel>Lesson (Optional)</InputLabel>
-              <Select value={lesson} onChange={(e) => onLessonChange(e.target.value)} label="Lesson (Optional)">
-                <MenuItem value="">Select a lesson</MenuItem>
-                <MenuItem value="l1">Lesson 1: Introduction to Custom Hooks</MenuItem>
-                <MenuItem value="l2">Lesson 2: Building Your First Hook</MenuItem>
-                <MenuItem value="l3">Lesson 3: Advanced Hook Patterns</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
+            {/* Module & Lesson (Lesson hidden when using real modules - backend has no Lesson model) */}
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              <Grid size={{ xs: 12, sm: hideLesson ? 12 : 6 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Course Module</InputLabel>
+                  <Select value={module} onChange={(e) => onModuleChange(e.target.value)} label="Course Module">
+                    <MenuItem value="">No module</MenuItem>
+                    {moduleOptions && moduleOptions.length > 0
+                      ? moduleOptions.map((m) => (
+                          <MenuItem key={m.id} value={String(m.id)}>
+                            {m.title}
+                          </MenuItem>
+                        ))
+                      : (
+                        <>
+                          <MenuItem value="m1">Module 1: Introduction</MenuItem>
+                          <MenuItem value="m2">Module 2: React Hooks</MenuItem>
+                          <MenuItem value="m3">Module 3: Advanced Patterns</MenuItem>
+                          <MenuItem value="m4">Module 4: Custom Hooks</MenuItem>
+                          <MenuItem value="m5">Module 5: Final Project</MenuItem>
+                        </>
+                      )}
+                  </Select>
+                </FormControl>
+              </Grid>
+              {!hideLesson && (
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>Lesson (Optional)</InputLabel>
+                    <Select value={lesson} onChange={(e) => onLessonChange(e.target.value)} label="Lesson (Optional)">
+                      <MenuItem value="">Select a lesson</MenuItem>
+                      <MenuItem value="l1">Lesson 1: Introduction</MenuItem>
+                      <MenuItem value="l2">Lesson 2</MenuItem>
+                      <MenuItem value="l3">Lesson 3</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              )}
+            </Grid>
+          </>
+        )}
 
         {/* Assignment Type */}
         <Box>

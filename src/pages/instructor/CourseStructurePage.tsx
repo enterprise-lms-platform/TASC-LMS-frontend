@@ -315,7 +315,7 @@ const CourseStructurePage: React.FC = () => {
         navigate(`/instructor/course/${courseId}/quiz/builder?lesson=${lessonParam}&sessionId=${session.id}&course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'assignment':
-        navigate(`/instructor/assignment/create?lesson=${lessonParam}&sessionId=${session.id}&course=${encodeURIComponent(courseTitle)}`);
+        navigate(`/instructor/assignment/create?lesson=${lessonParam}&sessionId=${session.id}&courseId=${id}&course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'live':
         navigate(`/instructor/sessions/schedule?lesson=${lessonParam}&sessionId=${session.id}&course=${encodeURIComponent(courseTitle)}`);
@@ -396,6 +396,48 @@ const CourseStructurePage: React.FC = () => {
       return;
     }
 
+    // Assignment: create session first, then navigate to assignment editor (same pattern as quiz)
+    if (data.type === 'assignment' && id) {
+      try {
+        setSaveStatus('saving');
+        setLessonModalOpen(false);
+
+        const { data: paginatedSessions } = await sessionApi.getAll({ course: id });
+        const freshSessions = paginatedSessions.results;
+        const maxOrder = freshSessions.length > 0
+          ? Math.max(...freshSessions.map((s: Session) => s.order))
+          : -1;
+        const nextOrder = maxOrder + 1;
+
+        const session = await createSession.mutateAsync({
+          course: id,
+          ...(activeModuleId != null && { module: activeModuleId }),
+          title: data.title,
+          description: data.description || undefined,
+          session_type: 'assignment',
+          is_free_preview: data.isFreePreview,
+          order: nextOrder,
+        });
+
+        setActiveModuleId(null);
+        setSaveStatus('saved');
+
+        if (!session?.id) {
+          setSnackError('Session was created but the server did not return an ID. Please refresh and try again.');
+          return;
+        }
+
+        navigate(
+          `/instructor/assignment/create?sessionId=${session.id}&lesson=${lessonParam}&courseId=${id}&course=${encodeURIComponent(courseTitle)}`
+        );
+      } catch (err) {
+        setSaveStatus('saved');
+        const msg = getErrorMessage(err, 'Failed to create assignment session. Please try again.');
+        setSnackError(msg);
+      }
+      return;
+    }
+
     // Quiz: create session first, then navigate to builder
     if (data.type === 'quiz' && id) {
       try {
@@ -449,7 +491,7 @@ const CourseStructurePage: React.FC = () => {
         navigate(`/instructor/course/${courseId}/quiz/builder?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'assignment':
-        navigate(`/instructor/assignment/create?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`);
+        navigate(`/instructor/assignment/create?lesson=${lessonParam}&courseId=${id}&course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'livestream':
         navigate(`/instructor/sessions/schedule?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`);
@@ -472,7 +514,7 @@ const CourseStructurePage: React.FC = () => {
         handleAddLesson(undefined, 'quiz');
         break;
       case 'assignment':
-        navigate(`/instructor/assignment/create?course=${encodeURIComponent(courseTitle)}`);
+        navigate(`/instructor/assignment/create?courseId=${id}&course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'livestream':
         navigate(`/instructor/sessions/schedule?course=${encodeURIComponent(courseTitle)}`);

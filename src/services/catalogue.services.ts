@@ -28,6 +28,8 @@ import type {
   BankQuestionListParams,
   AddFromBankPayload,
   AddFromBankResponse,
+  AssignmentConfig,
+  AssignmentConfigCreateUpdate,
 } from '../types/types';
 
 const BASE_PATH = '/api/v1/catalogue';
@@ -239,6 +241,16 @@ export const sessionApi = {
       `${BASE_PATH}/sessions/${sessionId}/quiz/questions/add-from-bank/`,
       payload
     ),
+
+  // Assignment config (session_type='assignment' only)
+  getAssignment: (sessionId: number) =>
+    apiClient.get<AssignmentConfig>(`${BASE_PATH}/sessions/${sessionId}/assignment/`),
+
+  putAssignment: (sessionId: number, payload: AssignmentConfigCreateUpdate) =>
+    apiClient.put<AssignmentConfig>(`${BASE_PATH}/sessions/${sessionId}/assignment/`, payload),
+
+  patchAssignment: (sessionId: number, payload: Partial<AssignmentConfigCreateUpdate>) =>
+    apiClient.patch<AssignmentConfig>(`${BASE_PATH}/sessions/${sessionId}/assignment/`, payload),
 };
 
 // QUESTION CATEGORIES (instructor-owned)

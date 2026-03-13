@@ -3,27 +3,23 @@ import { Box, Typography } from '@mui/material';
 import {
   Star as PointsIcon,
   FormatListBulleted as CriteriaIcon,
-  Timer as TimeIcon,
   Replay as AttemptsIcon,
 } from '@mui/icons-material';
 
 interface AssignmentSummaryCardProps {
   totalPoints: number;
   criteriaCount: number;
-  estimatedTime: string;
   allowedAttempts: string;
 }
 
 const AssignmentSummaryCard: React.FC<AssignmentSummaryCardProps> = ({
   totalPoints,
   criteriaCount,
-  estimatedTime,
   allowedAttempts,
 }) => {
   const stats = [
     { icon: <PointsIcon />, value: totalPoints, label: 'Total Points' },
     { icon: <CriteriaIcon />, value: criteriaCount, label: 'Criteria' },
-    { icon: <TimeIcon />, value: estimatedTime, label: 'Est. Time' },
     { icon: <AttemptsIcon />, value: allowedAttempts, label: 'Attempts' },
   ];
 

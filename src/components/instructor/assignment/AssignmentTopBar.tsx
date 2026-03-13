@@ -11,7 +11,6 @@ import {
 import {
   Task as TaskIcon,
   ArrowBack as BackIcon,
-  Visibility as PreviewIcon,
   Save as SaveIcon,
   Menu as MenuIcon,
   Book as BookIcon,
@@ -21,14 +20,15 @@ import { DRAWER_WIDTH } from '../Sidebar';
 
 interface AssignmentTopBarProps {
   courseName: string;
-  onPreview: () => void;
+  /** When true, show "Configure Assignment" and focus on settings; when false, show "Create Assignment" */
+  isConfigureMode?: boolean;
   onSave: () => void;
   onMobileMenuToggle: () => void;
 }
 
 const AssignmentTopBar: React.FC<AssignmentTopBarProps> = ({
   courseName,
-  onPreview,
+  isConfigureMode = false,
   onSave,
   onMobileMenuToggle,
 }) => {
@@ -85,10 +85,12 @@ const AssignmentTopBar: React.FC<AssignmentTopBarProps> = ({
             <TaskIcon sx={{ color: 'warning.main', fontSize: 28 }} />
             <Box>
               <Typography variant="h6" fontWeight={700} color="text.primary">
-                Create Assignment
+                {isConfigureMode ? 'Configure Assignment' : 'Create Assignment'}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Design assignments with detailed instructions and grading rubrics
+                {isConfigureMode
+                  ? 'Set instructions, due dates, rubric, and publish'
+                  : 'Design assignments with detailed instructions and grading rubrics'}
               </Typography>
             </Box>
           </Box>
@@ -100,7 +102,7 @@ const AssignmentTopBar: React.FC<AssignmentTopBarProps> = ({
             color="text.primary"
             sx={{ display: { xs: 'block', md: 'none' } }}
           >
-            Assignment
+            {isConfigureMode ? 'Configure Assignment' : 'Assignment'}
           </Typography>
         </Box>
 
@@ -117,28 +119,6 @@ const AssignmentTopBar: React.FC<AssignmentTopBarProps> = ({
               display: { xs: 'none', lg: 'flex' },
             }}
           />
-
-          {/* Preview - icon only on mobile */}
-          <IconButton
-            onClick={onPreview}
-            sx={{ display: { xs: 'flex', sm: 'none' }, color: 'text.secondary' }}
-          >
-            <PreviewIcon />
-          </IconButton>
-          <Button
-            variant="outlined"
-            startIcon={<PreviewIcon />}
-            onClick={onPreview}
-            sx={{
-              display: { xs: 'none', sm: 'flex' },
-              textTransform: 'none',
-              fontWeight: 500,
-              borderColor: 'divider',
-              color: 'text.secondary',
-            }}
-          >
-            Preview
-          </Button>
 
           {/* Save - icon only on mobile */}
           <IconButton
