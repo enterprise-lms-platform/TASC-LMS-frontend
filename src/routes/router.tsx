@@ -60,6 +60,7 @@ import ContentUploadPage from '../pages/instructor/ContentUploadPage';
 import CoursePreviewPage from '../pages/instructor/CoursePreviewPage';
 import QuizBuilderPage from '../pages/instructor/QuizBuilderPage';
 import QuestionBankPage from '../pages/instructor/QuestionBankPage';
+import AssignmentsHubPage from '../pages/instructor/AssignmentsHubPage';
 import AssignmentCreationPage from '../pages/instructor/AssignmentCreationPage';
 import GradingPage from '../pages/instructor/GradingPage';
 import GradebookPage from '../pages/instructor/GradebookPage';
@@ -361,6 +362,11 @@ export const createAppRouter = (queryClient: QueryClient) => {
     {
       path: '/instructor/question-bank',
       element: <ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><QuestionBankPage /></ProtectedRoute>,
+      loader: async () => instructorLoaders.instructorRouteLoader(queryClient),
+    },
+    {
+      path: '/instructor/assignments',
+      element: <ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><AssignmentsHubPage /></ProtectedRoute>,
       loader: async () => instructorLoaders.instructorRouteLoader(queryClient),
     },
     {

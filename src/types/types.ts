@@ -434,6 +434,66 @@ export interface QuizDetailResponse {
   questions: QuizQuestion[];
 }
 
+// Assignment config (session-scoped; GET /sessions/<id>/assignment/)
+export interface AssignmentConfig {
+  id: number;
+  session: number;
+  assignment_type: 'project' | 'essay' | 'code' | 'presentation' | 'research';
+  instructions: string;
+  max_points: number;
+  due_date: string | null;
+  available_from: string | null;
+  allow_late: boolean;
+  late_cutoff_date: string | null;
+  penalty_type: 'percentage' | 'fixed' | 'none';
+  penalty_percent: number;
+  max_attempts: number | null;
+  allowed_file_types: string[];
+  max_file_size_mb: number | null;
+  rubric_criteria: Array<{
+    name: string;
+    description?: string;
+    points?: number;
+    levels?: {
+      excellent: string;
+      good: string;
+      satisfactory: string;
+      needsImprovement: string;
+    };
+  }>;
+  settings: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+// Input for PUT/PATCH /sessions/<id>/assignment/
+export interface AssignmentConfigCreateUpdate {
+  assignment_type?: 'project' | 'essay' | 'code' | 'presentation' | 'research';
+  instructions?: string;
+  max_points?: number;
+  due_date?: string | null;
+  available_from?: string | null;
+  allow_late?: boolean;
+  late_cutoff_date?: string | null;
+  penalty_type?: 'percentage' | 'fixed' | 'none';
+  penalty_percent?: number;
+  max_attempts?: number | null;
+  allowed_file_types?: string[];
+  max_file_size_mb?: number | null;
+  rubric_criteria?: Array<{
+    name: string;
+    description?: string;
+    points?: number;
+    levels?: {
+      excellent: string;
+      good: string;
+      satisfactory: string;
+      needsImprovement: string;
+    };
+  }>;
+  settings?: Record<string, unknown>;
+}
+
 // Question Bank (instructor-owned)
 export interface QuestionCategory {
   id: number;

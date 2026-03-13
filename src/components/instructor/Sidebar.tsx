@@ -76,7 +76,7 @@ const navSections: NavSection[] = [
     items: [
       { text: 'Quiz Builder', icon: <QuizzesIcon />, path: '/instructor/courses', activePatterns: ['/instructor/course/:courseId/quiz/*'] },
       { text: 'Question Bank', icon: <StructureIcon />, path: '/instructor/question-bank' },
-      { text: 'Assignments', icon: <AssignmentsIcon />, path: '/instructor/assignment/create', badge: 12, badgeColor: 'error' },
+      { text: 'Assignments', icon: <AssignmentsIcon />, path: '/instructor/assignments', activePatterns: ['/instructor/assignment/create'] },
       { text: 'Grading', icon: <GradebookIcon />, path: '/instructor/grading', badge: 18, badgeColor: 'error' },
       { text: 'Gradebook', icon: <GradebookIcon />, path: '/instructor/gradebook' },
     ],

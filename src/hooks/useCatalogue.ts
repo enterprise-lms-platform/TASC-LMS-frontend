@@ -19,6 +19,7 @@ import {
 } from '../services/catalogue.services';
 import { queryKeys } from './queryKeys';
 import type {
+  AssignmentConfigCreateUpdate,
   CategoryCreateRequest,
   CourseCreateRequest,
   QuizSettings,
@@ -417,6 +418,39 @@ export const usePutQuizQuestions = (sessionId: number) => {
     }) => sessionApi.putQuizQuestions(sessionId, payload).then((r) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.quiz.detail(sessionId) });
+    },
+  });
+};
+
+// ── Assignment config (session_type='assignment') ──
+
+export const useAssignmentConfig = (sessionId: number | null | undefined) =>
+  useQuery({
+    queryKey: queryKeys.assignment.detail(sessionId ?? 0),
+    queryFn: () => sessionApi.getAssignment(sessionId!).then((r) => r.data),
+    enabled: !!sessionId && sessionId > 0,
+  });
+
+export const usePutAssignmentConfig = (sessionId: number) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AssignmentConfigCreateUpdate) =>
+      sessionApi.putAssignment(sessionId, payload).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.assignment.detail(sessionId) });
+      qc.invalidateQueries({ queryKey: queryKeys.sessions.detail(sessionId) });
+    },
+  });
+};
+
+export const usePatchAssignmentConfig = (sessionId: number) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Partial<AssignmentConfigCreateUpdate>) =>
+      sessionApi.patchAssignment(sessionId, payload).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.assignment.detail(sessionId) });
+      qc.invalidateQueries({ queryKey: queryKeys.sessions.detail(sessionId) });
     },
   });
 };

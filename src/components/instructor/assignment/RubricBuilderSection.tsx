@@ -1,32 +1,10 @@
 import React from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  Grid,
-} from '@mui/material';
-import {
-  TableChart as RubricIcon,
-  Add as AddIcon,
-  Description as EssayIcon,
-  Code as CodeIcon,
-  AccountTree as ProjectIcon,
-} from '@mui/icons-material';
+import { Box, Paper, Typography, Button } from '@mui/material';
+import { TableChart as RubricIcon, Add as AddIcon } from '@mui/icons-material';
 import RubricCriterion from './RubricCriterion';
 import type { RubricCriterionData } from './RubricCriterion';
 
-type RubricTemplate = 'essay' | 'code' | 'project' | 'custom';
-
-const templates: Array<{ type: RubricTemplate; icon: React.ReactNode; name: string; desc: string }> = [
-  { type: 'essay', icon: <EssayIcon />, name: 'Essay Rubric', desc: 'Writing assignments' },
-  { type: 'code', icon: <CodeIcon />, name: 'Code Review', desc: 'Programming projects' },
-  { type: 'project', icon: <ProjectIcon />, name: 'Project Rubric', desc: 'Complex deliverables' },
-];
-
 interface RubricBuilderSectionProps {
-  selectedTemplate: RubricTemplate;
-  onTemplateSelect: (template: RubricTemplate) => void;
   criteria: RubricCriterionData[];
   expandedCriterion: string | null;
   onToggleCriterion: (id: string) => void;
@@ -36,8 +14,6 @@ interface RubricBuilderSectionProps {
 }
 
 const RubricBuilderSection: React.FC<RubricBuilderSectionProps> = ({
-  selectedTemplate,
-  onTemplateSelect,
   criteria,
   expandedCriterion,
   onToggleCriterion,
@@ -69,51 +45,6 @@ const RubricBuilderSection: React.FC<RubricBuilderSectionProps> = ({
 
       {/* Content */}
       <Box sx={{ p: 3 }}>
-        {/* Templates */}
-        <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-          Start with a Template
-        </Typography>
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          {templates.map((t) => (
-            <Grid size={{ xs: 12, sm: 4 }} key={t.type}>
-              <Box
-                onClick={() => onTemplateSelect(t.type)}
-                sx={{
-                  p: 2,
-                  border: 2,
-                  borderColor: selectedTemplate === t.type ? 'primary.main' : 'divider',
-                  borderRadius: 1,
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  bgcolor: selectedTemplate === t.type ? 'rgba(255, 164, 36, 0.05)' : 'transparent',
-                  '&:hover': { borderColor: 'primary.main', transform: 'translateY(-2px)' },
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 1,
-                    bgcolor: selectedTemplate === t.type ? 'primary.light' : 'grey.100',
-                    color: selectedTemplate === t.type ? 'primary.main' : 'text.secondary',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    mx: 'auto',
-                    mb: 1,
-                    fontSize: 24,
-                  }}
-                >
-                  {t.icon}
-                </Box>
-                <Typography variant="body2" fontWeight={600}>{t.name}</Typography>
-                <Typography variant="caption" color="text.secondary">{t.desc}</Typography>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
-
         {/* Criteria List */}
         <Typography variant="subtitle2" fontWeight={600} gutterBottom>
           Criteria ({criteria.length})
@@ -157,4 +88,3 @@ const RubricBuilderSection: React.FC<RubricBuilderSectionProps> = ({
 };
 
 export default RubricBuilderSection;
-export type { RubricTemplate };

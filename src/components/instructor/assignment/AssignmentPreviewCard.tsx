@@ -1,6 +1,5 @@
 import React from 'react';
-import { Box, Paper, Typography, Button } from '@mui/material';
-import { Visibility as PreviewIcon } from '@mui/icons-material';
+import { Box, Paper, Typography } from '@mui/material';
 
 interface PreviewItem {
   icon: React.ReactNode;
@@ -12,10 +11,9 @@ interface PreviewItem {
 
 interface AssignmentPreviewCardProps {
   items: PreviewItem[];
-  onPreview: () => void;
 }
 
-const AssignmentPreviewCard: React.FC<AssignmentPreviewCardProps> = ({ items, onPreview }) => {
+const AssignmentPreviewCard: React.FC<AssignmentPreviewCardProps> = ({ items }) => {
   return (
     <Paper elevation={0} sx={{ border: 1, borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
       {/* Header */}
@@ -25,22 +23,11 @@ const AssignmentPreviewCard: React.FC<AssignmentPreviewCardProps> = ({ items, on
           px: 2.5,
           borderBottom: 1,
           borderColor: 'divider',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
         }}
       >
         <Typography variant="subtitle1" fontWeight={700}>
-          Preview
+          Summary
         </Typography>
-        <Button
-          size="small"
-          startIcon={<PreviewIcon />}
-          onClick={onPreview}
-          sx={{ textTransform: 'none', fontWeight: 500 }}
-        >
-          Full Preview
-        </Button>
       </Box>
 
       {/* Content */}
