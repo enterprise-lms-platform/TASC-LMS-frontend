@@ -102,22 +102,26 @@ const ManagerEnrollmentsPage: React.FC = () => {
     queryFn: () => sessionProgressApi.getAll({}).then(r => r.data),
   });
 
-  const enrollments = (enrollmentsData as any)?.results || (enrollmentsData as any) || [];
-  const courses = (coursesData as any)?.results || (coursesData as any) || [];
+  const enrollments = enrollmentsData?.results ?? [];
+  const courses = coursesData?.results ?? [];
 
-  const courseOptions = [{ id: 'all', title: 'All Courses' }, ...courses.map((c: any) => ({ id: c.id, title: c.title }))];
+  const courseOptions: Array<{ id: number | 'all'; title: string }> = [
+    { id: 'all', title: 'All Courses' },
+    ...courses.map((c) => ({ id: c.id, title: c.title })),
+  ];
 
   const getEnrollmentProgress = (enrollmentId: number) => {
     if (!progressData) return 0;
-    const prog = (progressData as any).find((p: any) => p.enrollment === enrollmentId);
+    const results = (progressData as Record<string, any>)?.results ?? [];
+    const prog = results.find((p: Record<string, any>) => p.enrollment === enrollmentId);
     return prog?.progress || 0;
   };
 
-  const getLearnerName = (enrollment: any) => {
+  const getLearnerName = (enrollment: Record<string, any>) => {
     return enrollment.learner?.name || enrollment.user?.name || 'Unknown';
   };
 
-  const getLearnerEmail = (enrollment: any) => {
+  const getLearnerEmail = (enrollment: Record<string, any>) => {
     return enrollment.learner?.email || enrollment.user?.email || '';
   };
 
@@ -126,11 +130,11 @@ const ManagerEnrollmentsPage: React.FC = () => {
   };
 
   const getCourseTitle = (courseId: number) => {
-    const course = courses.find((c: any) => c.id === courseId);
+    const course = courses.find((c) => c.id === courseId);
     return course?.title || 'Unknown Course';
   };
 
-  const getEnrollmentStatus = (enrollment: any): 'Active' | 'Completed' | 'Dropped' => {
+  const getEnrollmentStatus = (enrollment: Record<string, any>): 'Active' | 'Completed' | 'Dropped' => {
     if (enrollment.completed_at) return 'Completed';
     if (enrollment.is_active === false) return 'Dropped';
     return 'Active';
@@ -138,7 +142,7 @@ const ManagerEnrollmentsPage: React.FC = () => {
 
   const filteredEnrollments = useMemo(() => {
     if (!enrollments.length) return [];
-    return enrollments.filter((e: any) => {
+    return enrollments.filter((e) => {
       const learnerName = getLearnerName(e).toLowerCase();
       const learnerEmail = getLearnerEmail(e).toLowerCase();
       const courseTitle = getCourseTitle(e.course).toLowerCase();
@@ -154,9 +158,9 @@ const ManagerEnrollmentsPage: React.FC = () => {
 
   const kpis = useMemo(() => {
     if (!enrollments.length) return [];
-    const active = enrollments.filter((e: any) => getEnrollmentStatus(e) === 'Active').length;
-    const completed = enrollments.filter((e: any) => getEnrollmentStatus(e) === 'Completed').length;
-    const dropped = enrollments.filter((e: any) => getEnrollmentStatus(e) === 'Dropped').length;
+    const active = enrollments.filter((e) => getEnrollmentStatus(e) === 'Active').length;
+    const completed = enrollments.filter((e) => getEnrollmentStatus(e) === 'Completed').length;
+    const dropped = enrollments.filter((e) => getEnrollmentStatus(e) === 'Dropped').length;
     return [
       { label: 'Total Enrollments', value: enrollments.length.toString(), ...getKpiColor('Total Enrollments') },
       { label: 'Active', value: active.toString(), ...getKpiColor('Active') },
@@ -368,7 +372,7 @@ const ManagerEnrollmentsPage: React.FC = () => {
                         <Chip
                           label={status}
                           size="small"
-                          color={statusChipColor(status) as any}
+                          color={statusChipColor(status) as 'success' | 'info' | 'error' | 'default'}
                           sx={{ fontWeight: 600, fontSize: '0.7rem' }}
                         />
                       </TableCell>

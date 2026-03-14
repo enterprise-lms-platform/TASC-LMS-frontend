@@ -28,7 +28,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
-import { usersApi } from '../../services/users.service';
+import { usersApi } from '../../services/users.services';
 
 // ─── Styles ────────────────────────────────────────────────
 
@@ -84,7 +84,7 @@ const ManagerInstructorsPage: React.FC = () => {
     }).then(r => r.data),
   });
 
-  const instructors = (instructorsData as any)?.results || (instructorsData as any) || [];
+  const instructors = instructorsData?.results ?? [];
 
   const filteredInstructors = useMemo(() => {
     return instructors.filter((inst: any) => {

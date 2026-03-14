@@ -83,17 +83,20 @@ const ManagerCertificatesPage: React.FC = () => {
     queryFn: () => courseApi.getAll({ limit: 100 }).then(r => r.data),
   });
 
-  const certificates = (certificatesData as any)?.results || (certificatesData as any) || [];
-  const courses = (coursesData as any)?.results || (coursesData as any) || [];
+  const certificates = certificatesData?.results ?? [];
+  const courses = coursesData?.results ?? [];
 
-  const courseOptions = [{ id: 'all', title: 'All Courses' }, ...courses.map((c: any) => ({ id: c.id, title: c.title }))];
+  const courseOptions: Array<{ id: number | 'all'; title: string }> = [
+    { id: 'all', title: 'All Courses' },
+    ...courses.map((c) => ({ id: c.id, title: c.title })),
+  ];
 
   const getCourseTitle = (courseId: number) => {
-    const course = courses.find((c: any) => c.id === courseId);
+    const course = courses.find((c) => c.id === courseId);
     return course?.title || 'Unknown Course';
   };
 
-  const getLearnerName = (cert: any) => {
+  const getLearnerName = (cert: Record<string, any>) => {
     return cert.learner?.name || cert.user?.name || 'Unknown';
   };
 
@@ -101,13 +104,13 @@ const ManagerCertificatesPage: React.FC = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const getCertStatus = (cert: any): 'Verified' | 'Pending' => {
+  const getCertStatus = (cert: Record<string, any>): 'Verified' | 'Pending' => {
     return cert.is_verified ? 'Verified' : 'Pending';
   };
 
   const filtered = useMemo(() => {
     if (!certificates.length) return [];
-    return certificates.filter((cert: any) => {
+    return certificates.filter((cert) => {
       const learnerName = getLearnerName(cert).toLowerCase();
       const certId = cert.certificate_id || cert.id?.toString() || '';
       const matchesSearch = search === '' ||
@@ -120,12 +123,12 @@ const ManagerCertificatesPage: React.FC = () => {
 
   const kpis = useMemo(() => {
     if (!certificates.length) return [];
-    const thisMonth = certificates.filter((c: any) => {
+    const thisMonth = certificates.filter((c) => {
       const date = new Date(c.issued_at || c.created_at);
       const now = new Date();
       return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
     }).length;
-    const verified = certificates.filter((c: any) => getCertStatus(c) === 'Verified').length;
+    const verified = certificates.filter((c) => getCertStatus(c) === 'Verified').length;
     const verificationRate = certificates.length > 0 ? Math.round((verified / certificates.length) * 100) : 0;
     return [
       { label: 'Total Issued', value: certificates.length.toString(), ...getKpiStyle('Total Issued') },
@@ -249,8 +252,8 @@ const ManagerCertificatesPage: React.FC = () => {
                     onChange={(e) => setCourseFilter(e.target.value)}
                     sx={{ borderRadius: '10px' }}
                   >
-                    {courses.map((c) => (
-                      <MenuItem key={c} value={c}>{c}</MenuItem>
+                    {courseOptions.map((opt) => (
+                      <MenuItem key={opt.id} value={opt.id}>{opt.title}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -286,7 +289,14 @@ const ManagerCertificatesPage: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filtered.map((cert) => (
+                  {filtered.map((cert) => {
+                    const learnerName = getLearnerName(cert);
+                    const status = getCertStatus(cert);
+                    const certId = cert.certificate_id || cert.id;
+                    const issueDate = cert.issued_at || cert.created_at
+                      ? new Date(cert.issued_at || cert.created_at).toLocaleDateString()
+                      : '—';
+                    return (
                     <TableRow
                       key={cert.id}
                       sx={{
@@ -305,16 +315,16 @@ const ManagerCertificatesPage: React.FC = () => {
                               background: 'linear-gradient(135deg, #ffb74d, #f97316)',
                             }}
                           >
-                            {cert.initials}
+                            {getInitials(learnerName)}
                           </Avatar>
                           <Typography variant="body2" fontWeight={600}>
-                            {cert.learner}
+                            {learnerName}
                           </Typography>
                         </Box>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
-                          {cert.course}
+                          {getCourseTitle(cert.course)}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -322,20 +332,20 @@ const ManagerCertificatesPage: React.FC = () => {
                           variant="body2"
                           sx={{ fontFamily: 'monospace', fontWeight: 500, color: 'text.secondary' }}
                         >
-                          {cert.certificateId}
+                          {certId}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
-                          {cert.issueDate}
+                          {issueDate}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={cert.status}
+                          label={status}
                           size="small"
                           icon={
-                            cert.status === 'Verified'
+                            status === 'Verified'
                               ? <VerifiedIcon sx={{ fontSize: 14 }} />
                               : <PendingIcon sx={{ fontSize: 14 }} />
                           }
@@ -343,10 +353,10 @@ const ManagerCertificatesPage: React.FC = () => {
                             fontWeight: 600,
                             fontSize: '0.7rem',
                             borderRadius: '6px',
-                            bgcolor: cert.status === 'Verified' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
-                            color: cert.status === 'Verified' ? '#059669' : '#d97706',
+                            bgcolor: status === 'Verified' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
+                            color: status === 'Verified' ? '#059669' : '#d97706',
                             '& .MuiChip-icon': {
-                              color: cert.status === 'Verified' ? '#059669' : '#d97706',
+                              color: status === 'Verified' ? '#059669' : '#d97706',
                             },
                           }}
                         />
@@ -376,7 +386,8 @@ const ManagerCertificatesPage: React.FC = () => {
                         </Tooltip>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             </TableContainer>

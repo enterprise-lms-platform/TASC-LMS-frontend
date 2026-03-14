@@ -7,9 +7,10 @@ import {
   TrendingUp as CompletionIcon,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
-import { usersApi } from '../../services/users.service';
+import { usersApi } from '../../services/users.services';
 import { courseApi } from '../../services/catalogue.services';
 import { enrollmentApi } from '../../services/learning.services';
+import type { PaginatedResponse } from '../../types/types';
 
 const KPIGrid: React.FC = () => {
   const { data: usersData } = useQuery({
@@ -25,12 +26,12 @@ const KPIGrid: React.FC = () => {
     queryFn: () => enrollmentApi.getAll({}).then(r => r.data),
   });
 
-  const totalUsers = (usersData as any)?.count || 0;
-  const courses = (coursesData as any)?.results || (coursesData as any) || [];
-  const activeCourses = courses.filter((c: any) => c.is_published).length;
-  const enrollments = (enrollmentsData as any)?.results || (enrollmentsData as any) || [];
-  const totalEnrollments = enrollments.length;
-  const completedEnrollments = enrollments.filter((e: any) => e.progress_percentage >= 100).length;
+  const totalUsers = (usersData as PaginatedResponse<unknown> | undefined)?.count ?? 0;
+  const courseResults = (coursesData as PaginatedResponse<{ is_published: boolean }> | undefined)?.results ?? [];
+  const activeCourses = courseResults.filter(c => c.is_published).length;
+  const enrollmentResults = (enrollmentsData as PaginatedResponse<{ progress_percentage: number }> | undefined)?.results ?? [];
+  const totalEnrollments = enrollmentResults.length;
+  const completedEnrollments = enrollmentResults.filter(e => e.progress_percentage >= 100).length;
   const completionRate = totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0;
 
   const kpiData = useMemo(() => [

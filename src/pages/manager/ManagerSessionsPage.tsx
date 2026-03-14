@@ -93,7 +93,7 @@ const ManagerSessionsPage: React.FC = () => {
     queryFn: () => sessionApi.getAll({ page_size: 100 }).then(r => r.data),
   });
 
-  const sessions = (sessionsData as any)?.results || (sessionsData as any) || [];
+  const sessions = sessionsData?.results ?? [];
 
   const getSessionStatus = (session: any): 'Upcoming' | 'In Progress' | 'Completed' => {
     const now = new Date();

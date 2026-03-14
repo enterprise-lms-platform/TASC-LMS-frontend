@@ -33,8 +33,8 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
-import { usersApi } from '../../services/users.service';
-import type { UserListParams } from '../../services/users.service';
+import { usersApi } from '../../services/users.services';
+import type { UserListParams } from '../../services/users.services';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -116,7 +116,7 @@ const ManagerUsersPage: React.FC = () => {
     queryFn: () => usersApi.getAll(params).then(r => r.data),
   });
 
-  const users = (usersData as any)?.results || (usersData as any) || [];
+  const users = usersData?.results ?? [];
 
   const deactivateMutation = useMutation({
     mutationFn: (id: number) => usersApi.deactivate(id),

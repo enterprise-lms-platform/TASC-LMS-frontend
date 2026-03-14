@@ -77,9 +77,9 @@ const ManagerGradebookPage: React.FC = () => {
     queryFn: () => courseApi.getAll({ page_size: 100 }).then(r => r.data),
   });
 
-  const submissions = (submissionsData as any)?.results || (submissionsData as any) || [];
-  const courses = (coursesData as any)?.results || (coursesData as any) || [];
-  const courseOptions = ['All', ...courses.map((c: any) => c.title)];
+  const submissions = submissionsData?.results ?? [];
+  const courses = coursesData?.results ?? [];
+  const courseOptions = ['All', ...courses.map((c) => c.title)];
 
   const filteredSubmissions = useMemo(() => {
     if (courseFilter === 'All') return submissions;

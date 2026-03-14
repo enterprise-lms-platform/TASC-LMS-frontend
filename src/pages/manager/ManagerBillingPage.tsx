@@ -60,10 +60,10 @@ const ManagerBillingPage: React.FC = () => {
     queryFn: () => invoiceApi.getAll({}).then(r => r.data),
   });
 
-  const invoices = (invoicesData as any)?.results || (invoicesData as any) || [];
+  const invoices = invoicesData?.results ?? [];
 
   const billingHistory = useMemo(() => {
-    return invoices.map((inv: any) => ({
+    return invoices.map((inv) => ({
       id: inv.id,
       date: inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '-',
       description: inv.description || 'Invoice',

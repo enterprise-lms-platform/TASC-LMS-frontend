@@ -81,16 +81,18 @@ export const usersApi = {
       params: { ...params, role: 'instructor' } 
     }),
 
-  // Get instructor stats (would need custom endpoint, fallback to counting)
+  // Get instructor stats (derived client-side until backend endpoint exists)
   getInstructorStats: async (): Promise<InstructorStats> => {
     const response = await apiClient.get<PaginatedResponse<InstructorListItem>>(`${BASE_PATH}/`, {
       params: { role: 'instructor', page_size: 1000 }
     });
     const instructors = response.data.results || [];
+    const ratings = instructors.map(i => i.rating).filter((r): r is number => r != null);
+    const avgRating = ratings.length > 0 ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length : 0;
     return {
       total: instructors.length,
       active: instructors.filter(i => i.is_active).length,
-      avg_rating: 4.5, // Placeholder - needs backend support
+      avg_rating: Math.round(avgRating * 10) / 10,
       total_courses: instructors.reduce((sum, i) => sum + (i.courses_count || 0), 0),
     };
   },

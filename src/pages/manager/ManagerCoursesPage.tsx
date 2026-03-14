@@ -98,22 +98,22 @@ const ManagerCoursesPage: React.FC = () => {
     queryFn: () => categoryApi.getAll().then(r => r.data),
   });
 
-  const courses = (coursesData as any)?.results || (coursesData as any) || [];
-  const categories = (categoriesData as any)?.results || (categoriesData as any) || [];
+  const courses = coursesData?.results ?? [];
+  const categories = categoriesData?.results ?? [];
 
   const getCategoryName = (categoryId: number) => {
-    const cat = categories.find((c: any) => c.id === categoryId);
+    const cat = categories.find((c) => c.id === categoryId);
     return cat?.name || 'Uncategorized';
   };
 
-  const getCourseStatus = (course: any): 'Published' | 'Draft' | 'Under Review' | 'Archived' => {
+  const getCourseStatus = (course: Record<string, any>): 'Published' | 'Draft' | 'Under Review' | 'Archived' => {
     if (course.is_published) return 'Published';
     if (course.status === 'archived') return 'Archived';
     if (course.status === 'pending') return 'Under Review';
     return 'Draft';
   };
 
-  const getInstructorName = (course: any) => {
+  const getInstructorName = (course: Record<string, any>) => {
     return course.instructor?.name || course.instructor?.email || 'Unknown Instructor';
   };
 
@@ -123,7 +123,7 @@ const ManagerCoursesPage: React.FC = () => {
 
   const filteredCourses = useMemo(() => {
     if (!courses.length) return [];
-    return courses.filter((c: any) => {
+    return courses.filter((c) => {
       const title = c.title?.toLowerCase() || '';
       const instructor = getInstructorName(c).toLowerCase();
       const matchSearch = search === '' ||
@@ -136,9 +136,9 @@ const ManagerCoursesPage: React.FC = () => {
 
   const summaryStats = useMemo(() => {
     if (!courses.length) return [];
-    const published = courses.filter((c: any) => getCourseStatus(c) === 'Published').length;
-    const draft = courses.filter((c: any) => getCourseStatus(c) === 'Draft').length;
-    const underReview = courses.filter((c: any) => getCourseStatus(c) === 'Under Review').length;
+    const published = courses.filter((c) => getCourseStatus(c) === 'Published').length;
+    const draft = courses.filter((c) => getCourseStatus(c) === 'Draft').length;
+    const underReview = courses.filter((c) => getCourseStatus(c) === 'Under Review').length;
     return [
       { label: 'Total Courses', value: courses.length.toString(), ...getStatsColor('Total Courses') },
       { label: 'Published', value: published.toString(), ...getStatsColor('Published') },
@@ -329,7 +329,7 @@ const ManagerCoursesPage: React.FC = () => {
                         <Chip
                           label={status}
                           size="small"
-                          color={statusChipColor(status) as any}
+                          color={statusChipColor(status) as 'success' | 'default' | 'warning' | 'error'}
                           sx={{ fontWeight: 600, fontSize: '0.7rem' }}
                         />
                       </TableCell>

@@ -15,16 +15,18 @@ export * from './payments.services';
 export * from './public.services';
 export * from './upload.services';
 export * from './organization.services';
-export * from './users.service';
-export * from './notifications.service';
-export * from './reports.service';
+export * from './users.services';
+export * from './notifications.services';
+export * from './reports.services';
 export * from './livestream.services';
 
 // Re-export services as a single object for convenience
 import { authApi, adminApi } from './auth.services';
 import { categoryApi, tagApi, courseApi, sessionApi, courseApprovalApi } from './catalogue.services';
 import { organizationApi } from './organization.services';
-import { usersApi } from './users.service';
+import { usersApi } from './users.services';
+import { notificationApi } from './notifications.services';
+import { reportsApi } from './reports.services';
 import {
   enrollmentApi,
   sessionProgressApi,
@@ -119,6 +121,12 @@ export const api = {
     session: livestreamApi,
     attendance: livestreamAttendanceApi,
   },
+
+  // Notifications
+  notifications: notificationApi,
+
+  // Reports
+  reports: reportsApi,
 };
 
 export default api;

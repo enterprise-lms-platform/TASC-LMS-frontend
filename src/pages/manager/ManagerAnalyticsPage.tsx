@@ -37,7 +37,7 @@ const monthlyEnrollments = [
   { month: 'Dec', count: 534 },
   { month: 'Jan', count: 498 },
 ];
-const maxEnrollment = Math.max(...monthlyEnrollments.map((d: any) => d.count));
+const maxEnrollment = Math.max(...monthlyEnrollments.map((d) => d.count));
 
 // ── Course performance ──
 const topCourses = [
@@ -113,16 +113,16 @@ const ManagerAnalyticsPage: React.FC = () => {
     queryFn: () => certificateApi.getAll().then(r => r.data),
   });
 
-  const courses = (coursesData as any)?.results || (coursesData as any) || [];
-  const categories = (categoriesData as any)?.results || (categoriesData as any) || [];
-  const enrollments = (enrollmentsData as any)?.results || (enrollmentsData as any) || [];
-  const certificates = (certificatesData as any)?.results || (certificatesData as any) || [];
+  const courses = coursesData?.results ?? [];
+  const categories = categoriesData?.results ?? [];
+  const enrollments = enrollmentsData?.results ?? [];
+  const certificates = certificatesData?.results ?? [];
 
   const kpis = useMemo(() => {
     const totalCourses = courses.length;
-    const activeCourses = courses.filter((c: any) => c.is_published).length;
+    const activeCourses = courses.filter((c) => c.is_published).length;
     const totalEnrollments = enrollments.length;
-    const completedEnrollments = enrollments.filter((e: any) => e.completed_at).length;
+    const completedEnrollments = enrollments.filter((e) => e.completed_at).length;
     const completionRate = totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0;
     const enrollmentRate = totalCourses > 0 ? Math.round((totalEnrollments / totalCourses) * 100) : 0;
     
@@ -135,7 +135,7 @@ const ManagerAnalyticsPage: React.FC = () => {
   }, [courses, enrollments]);
 
   const categoryBreakdown = useMemo(() => {
-    return categories.slice(0, 5).map((cat: any, idx: number) => ({
+    return categories.slice(0, 5).map((cat, idx: number) => ({
       name: cat.name,
       enrollments: '0',
       percentage: Math.round((idx + 1) * 15),

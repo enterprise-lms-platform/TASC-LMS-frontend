@@ -32,7 +32,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
-import { reportsApi } from '../../services/reports.service';
+import { reportsApi } from '../../services/reports.services';
 
 // ─── Styles ────────────────────────────────────────────────
 
@@ -106,7 +106,7 @@ const ManagerReportsPage: React.FC = () => {
     queryFn: () => reportsApi.getAll({ page_size: 20 }).then(r => r.data),
   });
 
-  const reports = (reportsData as any)?.results || [];
+  const reports = reportsData?.results ?? [];
   const reportTypesList = reportTypesData?.data || [];
 
   const generateMutation = useMutation({

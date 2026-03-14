@@ -21,7 +21,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
-import { notificationApi } from '../../services/notifications.service';
+import { notificationApi } from '../../services/notifications.services';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -78,7 +78,7 @@ const ManagerNotificationsPage: React.FC = () => {
     queryFn: () => notificationApi.getAll({ page_size: 50 }).then(r => r.data),
   });
 
-  const notifications = (notificationsData as any)?.results || [];
+  const notifications = notificationsData?.results ?? [];
 
   const unreadCount = useMemo(() => 
     notifications.filter((n: any) => !n.is_read).length,
