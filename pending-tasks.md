@@ -1,6 +1,6 @@
 # TASC LMS Frontend — Pending Tasks
 
-**Last updated:** 16 March 2026
+**Last updated:** 17 March 2026
 **Repo:** `TASC-LMS-frontend`
 
 
@@ -86,18 +86,114 @@ These pages render but show fake data instead of real API responses. Each needs 
 - **Backend dependency:** Discussion endpoints exist and work. No dedicated "session resources/attachments" endpoint.
 - **Blocked?** No for Q&A. Partially for Resources.
 
+### 11. Instructor Messages Page
+- **File:** `src/pages/InstructorMessagesPage.tsx`
+- **What's hardcoded:** `conversations[]` array (6+ mock conversation objects)
+- **What to do:** Wire to a messaging/inbox API if backend supports it, or mark as future feature.
+- **Blocked?** Likely — no messaging API exists
+
+### 12. Instructor Learners Page
+- **File:** `src/pages/instructor/InstructorLearnersPage.tsx`
+- **What's hardcoded:** `sampleLearners[]` (10 mock learner objects)
+- **What to do:** Replace with real enrollment data filtered by instructor's courses.
+- **Blocked?** No — enrollment API exists
+
+### 13. Instructor Notifications Page
+- **File:** `src/pages/instructor/InstructorNotificationsPage.tsx`
+- **What's hardcoded:** `sampleNotifications[]` (10 mock notification objects)
+- **What to do:** Wire to `notificationApi.getAll()` (same pattern as LearnerNotificationsPage).
+- **Blocked?** No — endpoint exists
+
+### 14. Instructor Workshops Page
+- **File:** `src/pages/instructor/WorkshopsPage.tsx`
+- **What's hardcoded:** `sampleWorkshops[]` (6 mock workshop objects)
+- **What to do:** Wire to livestream sessions API filtered by instructor.
+- **Blocked?** No — livestream API exists
+
+### 15. Instructor Workshop Details Page
+- **File:** `src/pages/instructor/WorkshopDetailsPage.tsx`
+- **What's hardcoded:** `sampleParticipants[]` (10 mock participants), `workshopDetail` object
+- **What to do:** Wire to livestream detail + attendance API.
+- **Blocked?** No
+
+### 16. Instructor Course Preview Page
+- **File:** `src/pages/instructor/CoursePreviewPage.tsx`
+- **What's hardcoded:** `sampleModules[]` (2 modules + 6 lessons), `sampleReviews[]` (3 mock reviews)
+- **What to do:** Replace with real course modules/sessions and reviews data.
+- **Blocked?** Partially — no course reviews API exists
+
+### 17. Learner Course Detail Page
+- **File:** `src/pages/learner/LearnerCourseDetailPage.tsx`
+- **What's hardcoded:** `sampleCourse` object (full course details)
+- **What to do:** Wire to `courseApi.getById()` with enrollment status.
+- **Blocked?** No — API exists
+
+### 18. Learner Course Catalog Page — KPIs
+- **File:** `src/pages/learner/LearnerCourseCatalogPage.tsx`
+- **What's hardcoded:** `catalogKpis[]` (4 KPI objects)
+- **What to do:** Compute KPIs from real enrollment/course data.
+- **Blocked?** No
+
+### 19. Learner Checkout Payment Page
+- **File:** `src/pages/learner/CheckoutPaymentPage.tsx`
+- **What's hardcoded:** `paymentMethods[]`, `countryCodes[]`, `sampleCourse` object
+- **What to do:** Wire to real payment methods API and course detail from route params.
+- **Blocked?** No — APIs exist
+
+### 20. Manager Bulk Enroll Page
+- **File:** `src/pages/manager/ManagerBulkEnrollPage.tsx`
+- **What's hardcoded:** `courseOptions[]`, `mockHistory[]`
+- **What to do:** Wire to real course list and bulk enrollment history.
+- **Blocked?** Partially — backend bulk enroll endpoint is a stub
+
+### 21. Manager Recordings Page
+- **File:** `src/pages/manager/ManagerRecordingsPage.tsx`
+- **What's hardcoded:** `mockRecordings[]` (3+ mock recording objects)
+- **What to do:** Wire to livestream recordings API.
+- **Blocked?** No — API exists
+
+### 22. Manager Schedule New Page
+- **File:** `src/pages/manager/ManagerScheduleNewPage.tsx`
+- **What's hardcoded:** `mockCourses[]`, `mockInstructors[]`, `durationOptions[]`, `frequencyOptions[]`
+- **What to do:** Wire courses and instructors dropdowns to real APIs.
+- **Blocked?** No
+
+### 23. Superadmin All Organizations Page
+- **File:** `src/pages/superadmin/AllOrganizationsPage.tsx`
+- **What's hardcoded:** `mockOrganizations[]` (3+ mock orgs)
+- **What to do:** Wire to `organizationApi.getAll()`.
+- **Blocked?** No — API exists
+
+### 24. Superadmin All Users Page
+- **File:** `src/pages/superadmin/AllUsersPage.tsx`
+- **What's hardcoded:** `kpiStats[]` (4 KPIs), `mockUsers[]`
+- **What to do:** Wire to `usersApi.getAll()` and compute KPIs from real data.
+- **Blocked?** No — API exists
+
+### 25. Superadmin Payments Page
+- **File:** `src/pages/superadmin/PaymentsPage.tsx`
+- **What's hardcoded:** `mockTransactions[]` (4+ mock transactions)
+- **What to do:** Wire to `transactionApi.getAll()`.
+- **Blocked?** No — API exists
+
+### 26. Superadmin Security Page
+- **File:** `src/pages/superadmin/SecurityPage.tsx`
+- **What's hardcoded:** `kpis[]` (4 security KPIs), `activeSessions[]` (8 mock sessions)
+- **What to do:** Wire to real active sessions/audit data.
+- **Blocked?** Partially — no dedicated security metrics endpoint
+
 ---
 
 ## HIGH — Service Layer Stubs & TODOs
 
-### 11. Grade Distribution API — Stub
+### 27. Grade Distribution API — Stub
 - **File:** `src/services/learning.services.ts` (lines 309-326)
 - **Issue:** `managerGradesApi.getGradeDistribution()` returns empty hardcoded structure. `managerGradesApi.getStudentGrades()` returns `[]`.
 - **Comment in code:** `// TODO: Replace with actual API call when backend endpoint exists`
 - **What to do:** Wire to real backend endpoint when available.
 - **Blocked?** Yes — backend endpoint does not exist
 
-### 12. Missing Query Parameter Support
+### 28. Missing Query Parameter Support
 - **Files:** Multiple service files have TODO comments about missing backend filter support:
   - `learning.services.ts` line 27: Enrollment filters (`search`, `dateRange`, `courseId`)
   - `learning.services.ts` line 62: Session progress `course` filter
@@ -112,30 +208,30 @@ These pages render but show fake data instead of real API responses. Each needs 
 
 ## MEDIUM — Incomplete UI Features
 
-### 13. Curriculum Builder — Bulk Actions
+### 29. Curriculum Builder — Bulk Actions
 - **File:** `src/components/instructor/course-structure/CurriculumBuilder.tsx` (line 264)
 - **Issue:** "Bulk Actions" button is permanently disabled with no implementation.
 - **What to do:** Implement bulk delete, bulk move, bulk status change for lessons.
 - **Blocked?** No
 
-### 14. Course Publish Flow
+### 30. Course Publish Flow
 - **File:** `src/pages/instructor/CourseStructurePage.tsx` (line 631)
 - **Comment:** `// TODO: implement publish flow`
 - **What to do:** Implement status change from draft to submitted/published, trigger approval workflow.
 - **Blocked?** No — approval API exists
 
-### 15. Learner Assignment Submission UI
+### 31. Learner Assignment Submission UI
 - **File:** `src/pages/learner/LearnerAssignmentsPage.tsx`
 - **What to do:** Wire to real API, implement file upload modal for submissions using existing presign flow, wire Submit button to POST endpoint.
 - **Backend dependency:** Submission endpoints exist.
 - **Blocked?** No
 
-### 16. Learner Certificates — Real Data
+### 32. Learner Certificates — Real Data
 - **File:** `src/pages/learner/LearnerCertificatesPage.tsx`
 - **What to do:** Remove `MOCK_CERTIFICATES` fallback, ensure download button works with real `pdf_url`.
 - **Blocked?** Partially — backend PDF generation unclear
 
-### 17. Report Download
+### 33. Report Download
 - **Files:** `src/pages/manager/ManagerReportsPage.tsx`, `src/pages/finance/FinanceExportPage.tsx`
 - **Issue:** Generate button exists but download not fully implemented. Status comparison bug ("Ready" vs "ready").
 - **What to do:** Fix status comparison, wire download trigger when report status = ready.
@@ -145,17 +241,17 @@ These pages render but show fake data instead of real API responses. Each needs 
 
 ## LOW — Polish & Cleanup
 
-### 18. Instructor Placeholder Page
+### 34. Instructor Placeholder Page
 - **File:** `src/pages/InstructorPlaceholderPage.tsx`
 - **Issue:** Generic "under development" page used for incomplete features.
 - **What to do:** Replace all references with actual implementations as features complete.
 
-### 19. Remove Console Logs
+### 35. Remove Console Logs
 - **File:** `src/pages/instructor/GradebookPage.tsx` (line 317)
 - **Issue:** `onCellClick` handler logs "Grade cell clicked".
 - **What to do:** Remove or replace with actual click handler.
 
-### 20. Unread Count Badge in Sidebar
+### 36. Unread Count Badge in Sidebar
 - **File:** Learner `Sidebar.tsx`
 - **Issue:** No live unread notification count badge.
 - **What to do:** Add `useQuery` for `notificationApi.getUnreadCount()` and display badge on Notifications nav item.
