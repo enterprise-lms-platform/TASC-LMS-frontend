@@ -725,6 +725,7 @@ export interface SessionProgress {
 export interface SessionProgressUpdateRequest {
   is_completed?: boolean;
   time_spent_seconds?: number;
+  notes?: string;
 }
 
 export interface Certificate {

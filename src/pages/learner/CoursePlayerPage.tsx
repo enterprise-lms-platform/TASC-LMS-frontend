@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, useLoaderData } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { sessionProgressApi } from '../../services/learning.services';
 import { queryKeys } from '../../hooks/queryKeys';
 import type { CourseDetail, Session, SessionProgress } from '../../types/types';
 import { useSessionAssetUrl } from '../../hooks/useUpload';
@@ -30,10 +31,7 @@ interface Note { id: number; text: string; timestamp: string; sessionTitle: stri
 interface Question { id: number; author: string; text: string; votes: number; replies: number; time: string; }
 interface Resource { id: number; name: string; type: string; size: string; }
 
-/* ── Sample Data for Notes/Q&A ── */
-const sampleNotes: Note[] = [
-  { id: 1, text: 'Key insight: This is important', timestamp: '5:23', sessionTitle: 'Sample Session' },
-];
+/* ── Sample Data for Q&A ── */
 
 const sampleQuestions: Question[] = [
   { id: 1, author: 'Sarah K.', text: 'How does this work?', votes: 12, replies: 3, time: '2 days ago' },
@@ -82,7 +80,6 @@ const CoursePlayerPage: React.FC = () => {
   const [activeSessionId, setActiveSessionId] = useState<number | null>(allSessions[0]?.id || null);
   const [expandedModules, setExpandedModules] = useState<string[]>(['module-1']);
   const [curriculumOpen, setCurriculumOpen] = useState(true);
-  const [notes, setNotes] = useState<Note[]>(sampleNotes);
   const [newNote, setNewNote] = useState('');
   
   // Real completed sessions array based on backend progress
@@ -161,9 +158,38 @@ const CoursePlayerPage: React.FC = () => {
     });
   };
 
+  // Notes: read from session progress `notes` field (stored as JSON array)
+  const activeProgressRecord = recordedProgress.find(p => p.session === activeSessionId);
+
+  const notes: Note[] = useMemo(() => {
+    if (!activeProgressRecord?.notes) return [];
+    try {
+      return JSON.parse(activeProgressRecord.notes) as Note[];
+    } catch {
+      return [];
+    }
+  }, [activeProgressRecord?.notes]);
+
+  const saveNotesMutation = useMutation({
+    mutationFn: ({ progressId, updatedNotes }: { progressId: number; updatedNotes: Note[] }) =>
+      sessionProgressApi.partialUpdate(progressId, { notes: JSON.stringify(updatedNotes) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessionProgress.all({ course: Number(courseId) }) });
+    },
+  });
+
   const addNote = () => {
     if (!newNote.trim() || !activeSession) return;
-    setNotes(prev => [{ id: Date.now(), text: newNote, timestamp: '0:00', sessionTitle: activeSession.title }, ...prev]);
+    const note: Note = { id: Date.now(), text: newNote, timestamp: '0:00', sessionTitle: activeSession.title };
+    const updatedNotes = [note, ...notes];
+
+    // Optimistic update
+    if (activeProgressRecord) {
+      queryClient.setQueryData(queryKeys.sessionProgress.all({ course: Number(courseId) }), (old: SessionProgress[] = []) =>
+        old.map(p => p.id === activeProgressRecord.id ? { ...p, notes: JSON.stringify(updatedNotes) } : p),
+      );
+      saveNotesMutation.mutate({ progressId: activeProgressRecord.id, updatedNotes });
+    }
     setNewNote('');
   };
 

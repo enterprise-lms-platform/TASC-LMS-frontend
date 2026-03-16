@@ -1,120 +1,110 @@
 import React, { useState } from 'react';
 import {
   Box, Toolbar, CssBaseline, Paper, Typography, Grid, Chip, Avatar,
-  IconButton, Tabs, Tab, Button, Switch, FormControlLabel,
+  IconButton, Tabs, Tab, Button, Switch, FormControlLabel, CircularProgress,
 } from '@mui/material';
 import {
   Notifications as NotifIcon, School as CourseIcon, Payment as PaymentIcon,
   EmojiEvents as AwardIcon, Campaign as AnnouncementIcon,
   MarkEmailRead as ReadIcon, Delete as DeleteIcon,
   NotificationsActive as ActiveIcon, NotificationsOff as MuteIcon,
-  Circle as DotIcon,
+  Circle as DotIcon, AdminPanelSettings as ApprovalIcon,
+  PersonAdd as RegistrationIcon,
 } from '@mui/icons-material';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { notificationApi } from '../../services/notifications.services';
+import type { Notification } from '../../services/notifications.services';
 import '../../styles/LearnerDashboard.css';
 
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
 
-/* ── Static data ── */
+/* ── Type config mapped to backend notification types ── */
 
-/* Same color scheme as Learner Dashboard QuickStats */
-const kpis = [
-  {
-    label: 'Unread',
-    value: '5',
-    icon: <NotifIcon />,
-    // Green Theme
-    bgcolor: '#dcfce7',
-    iconBg: '#4ade80',
-    color: '#14532d',
-    subColor: '#166534',
-  },
-  {
-    label: 'Course Updates',
-    value: '12',
-    icon: <CourseIcon />,
-    // Grey Theme
-    bgcolor: '#f4f4f5',
-    iconBg: '#a1a1aa',
-    color: '#27272a',
-    subColor: '#3f3f46',
-  },
-  {
-    label: 'Achievements',
-    value: '3',
-    icon: <AwardIcon />,
-    // Orange Theme
-    bgcolor: '#fff3e0',
-    iconBg: '#ffa424',
-    color: '#7c2d12',
-    subColor: '#9a3412',
-  },
-  {
-    label: 'Announcements',
-    value: '2',
-    icon: <AnnouncementIcon />,
-    // Green Theme alt
-    bgcolor: '#f0fdf4',
-    iconBg: '#86efac',
-    color: '#14532d',
-    subColor: '#166534',
-  },
-];
+type NotifType = Notification['type'];
 
-type NotifType = 'course' | 'achievement' | 'payment' | 'announcement';
 const typeConfig: Record<NotifType, { color: string; icon: React.ReactElement }> = {
-  course:       { color: '#3b82f6', icon: <CourseIcon sx={{ fontSize: 20 }} /> },
-  achievement:  { color: '#f59e0b', icon: <AwardIcon sx={{ fontSize: 20 }} /> },
-  payment:      { color: '#10b981', icon: <PaymentIcon sx={{ fontSize: 20 }} /> },
-  announcement: { color: '#8b5cf6', icon: <AnnouncementIcon sx={{ fontSize: 20 }} /> },
+  approval:     { color: '#3b82f6', icon: <ApprovalIcon sx={{ fontSize: 20 }} /> },
+  registration: { color: '#10b981', icon: <RegistrationIcon sx={{ fontSize: 20 }} /> },
+  system:       { color: '#8b5cf6', icon: <AnnouncementIcon sx={{ fontSize: 20 }} /> },
+  milestone:    { color: '#f59e0b', icon: <AwardIcon sx={{ fontSize: 20 }} /> },
 };
 
-interface Notification {
-  id: string;
-  type: NotifType;
-  title: string;
-  description: string;
-  time: string;
-  read: boolean;
-}
+/* ── Helpers ── */
 
-const initialNotifications: Notification[] = [
-  { id: '1', type: 'course', title: 'New lesson available', description: 'Module 9: "Advanced Hooks" has been published in Advanced React Patterns', time: '10 minutes ago', read: false },
-  { id: '2', type: 'achievement', title: 'Badge earned!', description: 'You earned the "Quick Learner" badge for completing 3 lessons in one day', time: '2 hours ago', read: false },
-  { id: '3', type: 'course', title: 'Quiz reminder', description: 'You have a pending quiz in Data Science Fundamentals — due tomorrow', time: '5 hours ago', read: false },
-  { id: '4', type: 'announcement', title: 'Platform maintenance', description: 'Scheduled maintenance on Saturday, Feb 22 from 2:00 AM to 4:00 AM EAT', time: '1 day ago', read: false },
-  { id: '5', type: 'payment', title: 'Payment confirmed', description: 'Your subscription payment of $29.99 for Pro Learner plan was successful', time: '2 days ago', read: false },
-  { id: '6', type: 'course', title: 'Certificate ready', description: 'Your certificate for "JavaScript Fundamentals" is ready to download', time: '3 days ago', read: true },
-  { id: '7', type: 'course', title: 'Instructor feedback', description: 'Michael Rodriguez left feedback on your React Patterns assignment', time: '4 days ago', read: true },
-  { id: '8', type: 'announcement', title: 'New feature: Study Groups', description: 'Collaborate with peers in our new Study Groups feature — now available!', time: '5 days ago', read: true },
-  { id: '9', type: 'achievement', title: 'Streak milestone!', description: 'You maintained a 7-day learning streak. Keep it up!', time: '1 week ago', read: true },
-  { id: '10', type: 'course', title: 'Course updated', description: 'Cybersecurity Essentials has been updated with 2 new modules', time: '1 week ago', read: true },
-];
+const formatTime = (iso: string) => {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins} minute${mins > 1 ? 's' : ''} ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+  const weeks = Math.floor(days / 7);
+  return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+};
 
 /* ── Component ── */
 
 const LearnerNotificationsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const queryClient = useQueryClient();
 
-  const tabLabels = ['All', 'Unread', 'Course', 'Achievements', 'Payments', 'Announcements'];
-  const typeFilterMap: Record<number, NotifType | null> = { 0: null, 1: null, 2: 'course', 3: 'achievement', 4: 'payment', 5: 'announcement' };
+  const { data: notifications = [], isLoading } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => notificationApi.getAll(),
+  });
+
+  const markAsReadMutation = useMutation({
+    mutationFn: (id: number) => notificationApi.markAsRead(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+
+  const markAllReadMutation = useMutation({
+    mutationFn: () => notificationApi.markAllAsRead(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+
+  const tabLabels = ['All', 'Unread', 'Approval', 'Registration', 'System', 'Milestone'];
+  const typeFilterMap: Record<number, NotifType | null> = { 0: null, 1: null, 2: 'approval', 3: 'registration', 4: 'system', 5: 'milestone' };
 
   const filtered = notifications.filter((n) => {
-    if (activeTab === 1) return !n.read;
+    if (activeTab === 1) return !n.is_read;
     const typeFilter = typeFilterMap[activeTab];
     return typeFilter ? n.type === typeFilter : true;
   });
 
-  const markAsRead = (id: string) =>
-    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
-  const markAllRead = () =>
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  const deleteNotif = (id: string) =>
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  /* ── KPIs computed from real data ── */
+  const kpis = [
+    {
+      label: 'Unread',
+      value: String(unreadCount),
+      icon: <NotifIcon />,
+      bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534',
+    },
+    {
+      label: 'Approvals',
+      value: String(notifications.filter((n) => n.type === 'approval').length),
+      icon: <ApprovalIcon />,
+      bgcolor: '#dbeafe', iconBg: '#93c5fd', color: '#1e3a8a', subColor: '#1e40af',
+    },
+    {
+      label: 'Milestones',
+      value: String(notifications.filter((n) => n.type === 'milestone').length),
+      icon: <AwardIcon />,
+      bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412',
+    },
+    {
+      label: 'System',
+      value: String(notifications.filter((n) => n.type === 'system').length),
+      icon: <AnnouncementIcon />,
+      bgcolor: '#f3e8ff', iconBg: '#d8b4fe', color: '#581c87', subColor: '#6b21a8',
+    },
+  ];
 
   return (
     <Box className="learner-page" sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -149,8 +139,8 @@ const LearnerNotificationsPage: React.FC = () => {
             <Button
               size="small"
               startIcon={<ReadIcon />}
-              onClick={markAllRead}
-              disabled={unreadCount === 0}
+              onClick={() => markAllReadMutation.mutate()}
+              disabled={unreadCount === 0 || markAllReadMutation.isPending}
               sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.78rem', borderRadius: '50px', color: 'primary.dark' }}
             >
               Mark All Read
@@ -263,14 +253,18 @@ const LearnerNotificationsPage: React.FC = () => {
 
           {/* Notification List */}
           <Box sx={{ px: 1, py: 1 }}>
-            {filtered.length === 0 ? (
+            {isLoading ? (
+              <Box sx={{ py: 6, textAlign: 'center' }}>
+                <CircularProgress size={32} sx={{ color: '#ffa424' }} />
+              </Box>
+            ) : filtered.length === 0 ? (
               <Box sx={{ py: 6, textAlign: 'center' }}>
                 <MuteIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
                 <Typography color="text.disabled">No notifications</Typography>
               </Box>
             ) : (
               filtered.map((notif) => {
-                const config = typeConfig[notif.type];
+                const config = typeConfig[notif.type] || typeConfig.system;
                 return (
                   <Box
                     key={notif.id}
@@ -283,15 +277,17 @@ const LearnerNotificationsPage: React.FC = () => {
                       mb: 0.5,
                       borderRadius: '12px',
                       cursor: 'pointer',
-                      bgcolor: notif.read ? 'transparent' : 'rgba(255,164,36,0.03)',
+                      bgcolor: notif.is_read ? 'transparent' : 'rgba(255,164,36,0.03)',
                       transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                       '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' },
                     }}
-                    onClick={() => markAsRead(notif.id)}
+                    onClick={() => {
+                      if (!notif.is_read) markAsReadMutation.mutate(notif.id);
+                    }}
                   >
                     {/* Unread dot */}
                     <Box sx={{ width: 8, pt: 1.2, flexShrink: 0 }}>
-                      {!notif.read && <DotIcon sx={{ fontSize: 8, color: 'primary.main' }} />}
+                      {!notif.is_read && <DotIcon sx={{ fontSize: 8, color: 'primary.main' }} />}
                     </Box>
 
                     {/* Icon */}
@@ -310,14 +306,14 @@ const LearnerNotificationsPage: React.FC = () => {
 
                     {/* Content */}
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography sx={{ fontWeight: notif.read ? 500 : 600, fontSize: '0.85rem', mb: 0.25 }}>
+                      <Typography sx={{ fontWeight: notif.is_read ? 500 : 600, fontSize: '0.85rem', mb: 0.25 }}>
                         {notif.title}
                       </Typography>
                       <Typography color="text.secondary" sx={{ fontSize: '0.78rem', mb: 0.5, lineHeight: 1.4 }}>
                         {notif.description}
                       </Typography>
                       <Typography color="text.disabled" sx={{ fontSize: '0.72rem' }}>
-                        {notif.time}
+                        {formatTime(notif.created_at)}
                       </Typography>
                     </Box>
 
@@ -336,13 +332,6 @@ const LearnerNotificationsPage: React.FC = () => {
                           textTransform: 'capitalize',
                         }}
                       />
-                      <IconButton
-                        size="small"
-                        onClick={(e) => { e.stopPropagation(); deleteNotif(notif.id); }}
-                        sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}
-                      >
-                        <DeleteIcon sx={{ fontSize: 16 }} />
-                      </IconButton>
                     </Box>
                   </Box>
                 );
