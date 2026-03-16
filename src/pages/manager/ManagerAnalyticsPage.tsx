@@ -114,13 +114,13 @@ const ManagerAnalyticsPage: React.FC = () => {
   });
 
   const courses = coursesData?.results ?? [];
-  const categories = categoriesData?.results ?? [];
-  const enrollments = enrollmentsData?.results ?? [];
-  const certificates = certificatesData?.results ?? [];
+  const categories = categoriesData ?? [];
+  const enrollments = enrollmentsData ?? [];
+  const certificates = certificatesData ?? [];
 
   const kpis = useMemo(() => {
     const totalCourses = courses.length;
-    const activeCourses = courses.filter((c) => c.is_published).length;
+    const activeCourses = courses.filter((c) => c.status === 'published').length;
     const totalEnrollments = enrollments.length;
     const completedEnrollments = enrollments.filter((e) => e.completed_at).length;
     const completionRate = totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0;

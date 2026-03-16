@@ -60,15 +60,15 @@ const ManagerBillingPage: React.FC = () => {
     queryFn: () => invoiceApi.getAll({}).then(r => r.data),
   });
 
-  const invoices = invoicesData?.results ?? [];
+  const invoices = invoicesData ?? [];
 
   const billingHistory = useMemo(() => {
     return invoices.map((inv) => ({
       id: inv.id,
-      date: inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '-',
-      description: inv.description || 'Invoice',
+      date: inv.issue_date ? new Date(inv.issue_date).toLocaleDateString() : '-',
+      description: inv.notes || `Invoice #${inv.invoice_number}`,
       amount: inv.total_amount ? `$${inv.total_amount}` : '$0.00',
-      status: inv.status === 'paid' || inv.status === 'completed' ? 'Paid' : inv.status === 'pending' ? 'Pending' : 'Failed',
+      status: inv.status === 'paid' ? 'Paid' : inv.status === 'pending' ? 'Pending' : 'Failed',
     }));
   }, [invoices]);
 

@@ -95,7 +95,7 @@ const ManagerSessionsPage: React.FC = () => {
 
   const sessions = sessionsData?.results ?? [];
 
-  const getSessionStatus = (session: any): 'Upcoming' | 'In Progress' | 'Completed' => {
+  const getSessionDisplayStatus = (session: any): 'Upcoming' | 'In Progress' | 'Completed' => {
     const now = new Date();
     const start = new Date(session.start_date || session.created_at);
     const end = session.end_date ? new Date(session.end_date) : null;
@@ -104,10 +104,29 @@ const ManagerSessionsPage: React.FC = () => {
     return 'In Progress';
   };
 
+  const getInstructorName = (session: any): string => {
+    return session.instructor?.name || session.instructor?.email || 'Unknown';
+  };
+
+  const getInitials = (name: string): string => {
+    if (!name) return '?';
+    return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const formatSessionDate = (session: any): string => {
+    const date = session.start_date || session.created_at;
+    return date ? new Date(date).toLocaleDateString() : '-';
+  };
+
+  const formatSessionTime = (session: any): string => {
+    const date = session.start_date || session.created_at;
+    return date ? new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+  };
+
   const filteredSessions = useMemo(() => {
     if (!sessions.length) return [];
     return sessions.filter((session: any) => {
-      const status = getSessionStatus(session);
+      const status = getSessionDisplayStatus(session);
       const matchesStatus = statusFilter === 'All' || status === statusFilter;
       const matchesInstructor = instructorFilter === 'All Instructors' || (session.instructor?.name || '').includes(instructorFilter.replace('All Instructors', ''));
       return matchesStatus && matchesInstructor;
@@ -276,8 +295,9 @@ const ManagerSessionsPage: React.FC = () => {
           {/* Session Cards */}
           <Grid container spacing={3}>
             {filteredSessions.map((session) => {
-              const statusColors = getStatusColor(session.status);
-              const platformColors = getPlatformColor(session.platform);
+              const displayStatus = getSessionDisplayStatus(session);
+              const statusColors = getStatusColor(displayStatus);
+              const instructorName = getInstructorName(session);
               return (
                 <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={session.id}>
                   <Paper
@@ -299,7 +319,7 @@ const ManagerSessionsPage: React.FC = () => {
                       sx={{
                         p: 2,
                         px: 3,
-                        background: session.status === 'In Progress'
+                        background: displayStatus === 'In Progress'
                           ? 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02))'
                           : 'linear-gradient(135deg, rgba(255,164,36,0.08), rgba(255,164,36,0.02))',
                         borderBottom: 1,
@@ -311,7 +331,7 @@ const ManagerSessionsPage: React.FC = () => {
                           {session.title}
                         </Typography>
                         <Chip
-                          label={session.status}
+                          label={displayStatus}
                           size="small"
                           sx={{
                             ...statusColors,
@@ -331,10 +351,10 @@ const ManagerSessionsPage: React.FC = () => {
                             fontWeight: 600,
                           }}
                         >
-                          {session.initials}
+                          {getInitials(instructorName)}
                         </Avatar>
                         <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                          {session.instructor}
+                          {instructorName}
                         </Typography>
                       </Box>
                     </Box>
@@ -344,36 +364,24 @@ const ManagerSessionsPage: React.FC = () => {
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <EventIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                         <Typography variant="body2" color="text.secondary">
-                          {session.date}
+                          {formatSessionDate(session)}
                         </Typography>
                         <TimeIcon sx={{ fontSize: 18, color: 'text.secondary', ml: 1 }} />
                         <Typography variant="body2" color="text.secondary">
-                          {session.time}
+                          {formatSessionTime(session)}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <ScheduleIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                         <Typography variant="body2" color="text.secondary">
-                          Duration: {session.duration}
+                          Duration: {session.duration_minutes} min
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <PeopleIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                         <Typography variant="body2" color="text.secondary">
-                          {session.attendees}/{session.maxAttendees} attendees
+                          {session.session_type}
                         </Typography>
-                      </Box>
-                      <Box sx={{ mt: 'auto', pt: 1 }}>
-                        <Chip
-                          label={session.platform}
-                          size="small"
-                          sx={{
-                            ...platformColors,
-                            fontWeight: 600,
-                            fontSize: '0.72rem',
-                            height: 26,
-                          }}
-                        />
                       </Box>
                     </Box>
 

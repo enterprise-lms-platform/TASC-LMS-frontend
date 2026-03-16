@@ -102,7 +102,7 @@ const ManagerEnrollmentsPage: React.FC = () => {
     queryFn: () => sessionProgressApi.getAll({}).then(r => r.data),
   });
 
-  const enrollments = enrollmentsData?.results ?? [];
+  const enrollments = enrollmentsData ?? [];
   const courses = coursesData?.results ?? [];
 
   const courseOptions: Array<{ id: number | 'all'; title: string }> = [

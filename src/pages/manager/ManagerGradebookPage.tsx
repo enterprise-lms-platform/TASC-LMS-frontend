@@ -77,7 +77,7 @@ const ManagerGradebookPage: React.FC = () => {
     queryFn: () => courseApi.getAll({ page_size: 100 }).then(r => r.data),
   });
 
-  const submissions = submissionsData?.results ?? [];
+  const submissions = submissionsData ?? [];
   const courses = coursesData?.results ?? [];
   const courseOptions = ['All', ...courses.map((c) => c.title)];
 

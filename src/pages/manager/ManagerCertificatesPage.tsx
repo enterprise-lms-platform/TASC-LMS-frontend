@@ -83,7 +83,7 @@ const ManagerCertificatesPage: React.FC = () => {
     queryFn: () => courseApi.getAll({ limit: 100 }).then(r => r.data),
   });
 
-  const certificates = certificatesData?.results ?? [];
+  const certificates = certificatesData ?? [];
   const courses = coursesData?.results ?? [];
 
   const courseOptions: Array<{ id: number | 'all'; title: string }> = [
@@ -91,13 +91,8 @@ const ManagerCertificatesPage: React.FC = () => {
     ...courses.map((c) => ({ id: c.id, title: c.title })),
   ];
 
-  const getCourseTitle = (courseId: number) => {
-    const course = courses.find((c) => c.id === courseId);
-    return course?.title || 'Unknown Course';
-  };
-
   const getLearnerName = (cert: Record<string, any>) => {
-    return cert.learner?.name || cert.user?.name || 'Unknown';
+    return cert.user_name || 'Unknown';
   };
 
   const getInitials = (name: string) => {
@@ -105,26 +100,26 @@ const ManagerCertificatesPage: React.FC = () => {
   };
 
   const getCertStatus = (cert: Record<string, any>): 'Verified' | 'Pending' => {
-    return cert.is_verified ? 'Verified' : 'Pending';
+    return cert.is_valid ? 'Verified' : 'Pending';
   };
 
   const filtered = useMemo(() => {
     if (!certificates.length) return [];
     return certificates.filter((cert) => {
       const learnerName = getLearnerName(cert).toLowerCase();
-      const certId = cert.certificate_id || cert.id?.toString() || '';
+      const certId = cert.certificate_number || cert.id?.toString() || '';
       const matchesSearch = search === '' ||
         learnerName.includes(search.toLowerCase()) ||
         certId.includes(search.toLowerCase());
-      const matchesCourse = courseFilter === 'all' || cert.course === courseFilter;
+      const matchesCourse = courseFilter === 'all' || cert.course_title === courses.find(c => c.id === courseFilter)?.title;
       return matchesSearch && matchesCourse;
     });
-  }, [certificates, search, courseFilter]);
+  }, [certificates, search, courseFilter, courses]);
 
   const kpis = useMemo(() => {
     if (!certificates.length) return [];
     const thisMonth = certificates.filter((c) => {
-      const date = new Date(c.issued_at || c.created_at);
+      const date = new Date(c.issued_at);
       const now = new Date();
       return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
     }).length;
@@ -292,9 +287,9 @@ const ManagerCertificatesPage: React.FC = () => {
                   {filtered.map((cert) => {
                     const learnerName = getLearnerName(cert);
                     const status = getCertStatus(cert);
-                    const certId = cert.certificate_id || cert.id;
-                    const issueDate = cert.issued_at || cert.created_at
-                      ? new Date(cert.issued_at || cert.created_at).toLocaleDateString()
+                    const certId = cert.certificate_number || cert.id;
+                    const issueDate = cert.issued_at
+                      ? new Date(cert.issued_at).toLocaleDateString()
                       : '—';
                     return (
                     <TableRow
@@ -324,7 +319,7 @@ const ManagerCertificatesPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
-                          {getCourseTitle(cert.course)}
+                          {cert.course_title}
                         </Typography>
                       </TableCell>
                       <TableCell>

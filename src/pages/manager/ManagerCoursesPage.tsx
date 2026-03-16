@@ -99,7 +99,7 @@ const ManagerCoursesPage: React.FC = () => {
   });
 
   const courses = coursesData?.results ?? [];
-  const categories = categoriesData?.results ?? [];
+  const categories = categoriesData ?? [];
 
   const getCategoryName = (categoryId: number) => {
     const cat = categories.find((c) => c.id === categoryId);
@@ -107,9 +107,9 @@ const ManagerCoursesPage: React.FC = () => {
   };
 
   const getCourseStatus = (course: Record<string, any>): 'Published' | 'Draft' | 'Under Review' | 'Archived' => {
-    if (course.is_published) return 'Published';
+    if (course.status === 'published') return 'Published';
     if (course.status === 'archived') return 'Archived';
-    if (course.status === 'pending') return 'Under Review';
+    if (course.status === 'pending_approval') return 'Under Review';
     return 'Draft';
   };
 
