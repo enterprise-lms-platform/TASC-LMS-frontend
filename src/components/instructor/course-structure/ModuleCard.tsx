@@ -39,6 +39,7 @@ interface ModuleCardProps {
   onDuplicate?: () => void;
   onMore?: () => void;
   onDropModule?: () => void;
+  dragHandleProps?: Record<string, unknown>;
   children?: React.ReactNode;
 }
 
@@ -56,6 +57,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
   onDuplicate,
   onMore,
   onDropModule,
+  dragHandleProps,
   children,
 }) => {
   const statusStyle = statusColors[module.status];
@@ -71,8 +73,8 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
         overflow: 'hidden',
         bgcolor: 'grey.50',
       }}
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => { e.preventDefault(); onDropModule?.(); }}
+      onDragOver={!dragHandleProps ? (e) => e.preventDefault() : undefined}
+      onDrop={!dragHandleProps ? (e) => { e.preventDefault(); onDropModule?.(); } : undefined}
     >
       {/* Module Header */}
       <Box
@@ -88,7 +90,11 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
         }}
       >
         {/* Drag Handle */}
-        <Box sx={{ color: 'grey.400', cursor: 'grab', '&:active': { cursor: 'grabbing' } }}>
+        <Box
+          {...(dragHandleProps ?? {})}
+          onClick={(e) => e.stopPropagation()}
+          sx={{ color: 'grey.400', cursor: 'grab', '&:active': { cursor: 'grabbing' } }}
+        >
           <DragIcon />
         </Box>
 

@@ -18,7 +18,7 @@ import type { ModuleData } from '../../components/instructor/course-structure/Mo
 import type { LessonData } from '../../components/instructor/course-structure/LessonItem';
 import type { SaveStatus } from '../../components/instructor/course-structure/StructureFooter';
 import type { CourseHeaderData } from '../../components/instructor/course-structure/CourseHeaderCard';
-import { useCourse, useSessions, useCreateSession, useModules, useCreateModule, usePartialUpdateSession } from '../../hooks/useCatalogue';
+import { useCourse, useSessions, useCreateSession, useModules, useCreateModule, usePartialUpdateSession, usePartialUpdateModule } from '../../hooks/useCatalogue';
 import { sessionApi } from '../../services/catalogue.services';
 import type { SessionType, Session, Module } from '../../types/types';
 import type { LessonType } from '../../components/instructor/course-structure/LessonItem';
@@ -192,6 +192,7 @@ const CourseStructurePage: React.FC = () => {
   const [snackError, setSnackError] = useState<string | null>(null);
 
   const updateSession = usePartialUpdateSession();
+  const updateModule = usePartialUpdateModule();
 
   const { data: sessions } = useSessions(id ? { course: id } : undefined);
   const createSession = useCreateSession();
@@ -276,6 +277,99 @@ const CourseStructurePage: React.FC = () => {
       });
     } finally {
       setDraggedLessonId(null);
+    }
+  };
+
+  const handleReorderModules = async (activeModuleId: string, overModuleId: string) => {
+    if (activeModuleId === 'ungrouped' || overModuleId === 'ungrouped') return;
+    const sortedModules = [...backendModules].sort((a, b) => a.order - b.order);
+    const oldIndex = sortedModules.findIndex((m) => String(m.id) === activeModuleId);
+    const newIndex = sortedModules.findIndex((m) => String(m.id) === overModuleId);
+    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
+
+    // Move item in array
+    const reordered = [...sortedModules];
+    const [moved] = reordered.splice(oldIndex, 1);
+    reordered.splice(newIndex, 0, moved);
+
+    // Persist new order
+    setSaveStatus('saving');
+    try {
+      await Promise.all(
+        reordered.map((mod, i) =>
+          mod.order !== i ? updateModule.mutateAsync({ id: mod.id, data: { order: i } }) : null
+        ).filter(Boolean)
+      );
+      setSaveStatus('saved');
+    } catch {
+      setSaveStatus('saved');
+      setSnackError('Failed to reorder modules. Please try again.');
+    }
+  };
+
+  const handleReorderLessons = async (
+    lessonId: string,
+    fromModuleId: string,
+    toModuleId: string,
+    overLessonId: string | null,
+  ) => {
+    const sessionId = Number(lessonId);
+    const fromModule = fromModuleId === 'ungrouped' ? null : Number(fromModuleId);
+    const toModule = toModuleId === 'ungrouped' ? null : Number(toModuleId);
+
+    // Get sessions in the target module, sorted by order
+    const targetSessions = backendSessions
+      .filter((s) => s.module === toModule)
+      .sort((a, b) => a.order - b.order);
+
+    // Find the dragged session
+    const draggedSession = backendSessions.find((s) => s.id === sessionId);
+    if (!draggedSession) return;
+
+    // Build new ordered list for target module
+    let reordered: typeof targetSessions;
+    if (fromModule === toModule) {
+      // Reorder within same module
+      const filtered = targetSessions.filter((s) => s.id !== sessionId);
+      const overIndex = overLessonId
+        ? filtered.findIndex((s) => String(s.id) === overLessonId)
+        : filtered.length;
+      reordered = [...filtered];
+      reordered.splice(overIndex === -1 ? reordered.length : overIndex, 0, draggedSession);
+    } else {
+      // Move to different module
+      const overIndex = overLessonId
+        ? targetSessions.findIndex((s) => String(s.id) === overLessonId)
+        : targetSessions.length;
+      reordered = [...targetSessions];
+      reordered.splice(overIndex === -1 ? reordered.length : overIndex, 0, draggedSession);
+    }
+
+    setSaveStatus('saving');
+    try {
+      const updates: Promise<unknown>[] = [];
+
+      // Update module assignment if moved across modules
+      if (fromModule !== toModule) {
+        updates.push(
+          updateSession.mutateAsync({ id: sessionId, data: { module: toModule } })
+        );
+      }
+
+      // Update order for all affected sessions in the target module
+      for (let i = 0; i < reordered.length; i++) {
+        if (reordered[i].order !== i || (reordered[i].id === sessionId && fromModule !== toModule)) {
+          updates.push(
+            updateSession.mutateAsync({ id: reordered[i].id, data: { order: i } })
+          );
+        }
+      }
+
+      await Promise.all(updates);
+      setSaveStatus('saved');
+    } catch {
+      setSaveStatus('saved');
+      setSnackError('Failed to reorder lessons. Please try again.');
     }
   };
 
@@ -632,9 +726,8 @@ const CourseStructurePage: React.FC = () => {
                 onAddLesson={handleAddLesson}
                 onEditLesson={handleEditLesson}
                 onPreviewLesson={handlePreviewLesson}
-                onDragStartLesson={handleDragStartLesson}
-                onDragEndLesson={handleDragEndLesson}
-                onDropModule={handleDropModule}
+                onReorderModules={handleReorderModules}
+                onReorderLessons={handleReorderLessons}
               />
 
               {/* Right: Sidebar Widgets */}

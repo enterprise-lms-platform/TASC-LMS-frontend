@@ -39,6 +39,7 @@ interface LessonItemProps {
   draggable?: boolean;
   onDragStart?: () => void;
   onDragEnd?: () => void;
+  dragHandleProps?: Record<string, unknown>;
 }
 
 const typeConfig: Record<string, { icon: React.ReactNode; bg: string; color: string }> = {
@@ -62,14 +63,15 @@ const LessonItem: React.FC<LessonItemProps> = ({
   draggable = false,
   onDragStart,
   onDragEnd,
+  dragHandleProps,
 }) => {
   const config = typeConfig[lesson.type] || typeConfig['document'];
 
   return (
     <Box
-      draggable={draggable}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
+      draggable={!dragHandleProps && draggable}
+      onDragStart={!dragHandleProps ? onDragStart : undefined}
+      onDragEnd={!dragHandleProps ? onDragEnd : undefined}
       sx={{
         bgcolor: 'white',
         border: 1,
@@ -83,7 +85,10 @@ const LessonItem: React.FC<LessonItemProps> = ({
     >
       <Box sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
         {/* Drag Handle */}
-        <Box sx={{ color: 'grey.400', cursor: 'grab', '&:active': { cursor: 'grabbing' } }}>
+        <Box
+          {...(dragHandleProps ?? {})}
+          sx={{ color: 'grey.400', cursor: 'grab', '&:active': { cursor: 'grabbing' } }}
+        >
           <DragIcon fontSize="small" />
         </Box>
 

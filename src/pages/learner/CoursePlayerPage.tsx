@@ -1,10 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, useLoaderData } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../hooks/queryKeys';
 import type { CourseDetail, Session, SessionProgress } from '../../types/types';
 import { useSessionAssetUrl } from '../../hooks/useUpload';
+import { useQuizDetail } from '../../hooks/useCatalogue';
 import ReactPlayer from 'react-player';
+import QuizPlayer from '../../components/learner/quiz-player/QuizPlayer';
 import {
   Box, Typography, IconButton, Button, Tabs, Tab, LinearProgress,
   Checkbox, Collapse, Drawer, Divider, TextField, Avatar, Chip,
@@ -93,6 +95,35 @@ const CoursePlayerPage: React.FC = () => {
   // Use the presigned URL hook — only triggers if the activeSession needs it and has an ID
   const isPrivateAsset = activeSession?.content_source === 'upload' && !!activeSession?.asset_bucket;
   const { data: assetUrlData, isLoading: isAssetLoading } = useSessionAssetUrl(isPrivateAsset ? activeSessionId || undefined : undefined);
+
+  // Video resume: persist playback position in localStorage
+  const playerRef = useRef<ReactPlayer | null>(null);
+  const seekedRef = useRef(false);
+
+  const storageKey = activeSessionId != null ? `video-pos-${activeSessionId}` : null;
+
+  const handleVideoProgress = useCallback(
+    (state: { playedSeconds: number }) => {
+      if (storageKey && state.playedSeconds > 0) {
+        localStorage.setItem(storageKey, String(Math.floor(state.playedSeconds)));
+      }
+    },
+    [storageKey],
+  );
+
+  const handleVideoReady = useCallback(() => {
+    if (seekedRef.current || !storageKey) return;
+    const saved = localStorage.getItem(storageKey);
+    if (saved && Number(saved) > 2) {
+      playerRef.current?.seekTo(Number(saved), 'seconds');
+    }
+    seekedRef.current = true;
+  }, [storageKey]);
+
+  // Reset seek flag when session changes
+  useEffect(() => {
+    seekedRef.current = false;
+  }, [activeSessionId]);
 
   const toggleModule = (id: string) => {
     setExpandedModules(prev => prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]);
@@ -326,11 +357,15 @@ const CoursePlayerPage: React.FC = () => {
                 <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
                   {/* @ts-ignore ReactPlayer typing issues with React 19 */}
                   {(ReactPlayer as any)({
+                    ref: playerRef,
                     url: (assetUrlData?.url || activeSession?.video_url || '') as string,
                     controls: true,
                     width: "100%",
                     height: "100%",
-                    style: { backgroundColor: '#000' }
+                    style: { backgroundColor: '#000' },
+                    onProgress: handleVideoProgress,
+                    onReady: handleVideoReady,
+                    progressInterval: 3000,
                   })}
                 </Box>
               ) : (
@@ -340,6 +375,13 @@ const CoursePlayerPage: React.FC = () => {
                 </Box>
               )}
             </Box>
+          ) : activeSession?.session_type === 'quiz' ? (
+            /* Quiz Player */
+            <QuizSessionRenderer sessionId={activeSession.id} onComplete={(score, passed) => {
+              if (passed && !completedSessions.includes(activeSession.id)) {
+                toggleComplete(activeSession.id);
+              }
+            }} />
           ) : (
             /* Non-video content placeholder */
             <Box sx={{ width: '100%', pt: '30%', bgcolor: '#f0f2f5', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #e5e7eb' }}>
@@ -534,6 +576,41 @@ const CoursePlayerPage: React.FC = () => {
           </Drawer>
         )}
       </Box>
+    </Box>
+  );
+};
+
+/* ── Quiz wrapper that fetches quiz data for a session ── */
+const QuizSessionRenderer: React.FC<{ sessionId: number; onComplete?: (score: number, passed: boolean) => void }> = ({ sessionId, onComplete }) => {
+  const { data: quiz, isLoading, isError } = useQuizDetail(sessionId);
+
+  if (isLoading) {
+    return (
+      <Box sx={{ width: '100%', py: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <CircularProgress sx={{ color: '#ffa424' }} />
+      </Box>
+    );
+  }
+
+  if (isError || !quiz || !quiz.questions?.length) {
+    return (
+      <Box sx={{ width: '100%', py: 8, textAlign: 'center' }}>
+        <QuizIcon sx={{ fontSize: 48, color: 'grey.300', mb: 1 }} />
+        <Typography variant="body1" color="text.secondary">
+          {isError ? 'Failed to load quiz. Please try again.' : 'This quiz has no questions yet.'}
+        </Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ p: 2, bgcolor: '#f8f9fa', minHeight: 400 }}>
+      <QuizPlayer
+        sessionId={sessionId}
+        settings={quiz.settings}
+        questions={quiz.questions}
+        onComplete={onComplete}
+      />
     </Box>
   );
 };
