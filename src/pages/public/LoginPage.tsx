@@ -256,7 +256,9 @@ const LoginPage = () => {
         <Box sx={loginStyles.leftPanel}>
           <Stack sx={loginStyles.leftPanelContent}>
             <Box sx={loginStyles.logoContainer}>
-              <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 160, height: 160, objectFit: 'contain' }} />
+              <Box component={Link} to="/" sx={{ display: 'inline-block', cursor: 'pointer' }}>
+                <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 160, height: 160, objectFit: 'contain' }} />
+              </Box>
             </Box>
             <Typography sx={loginStyles.tagline}>
               Empower Your Learning Journey
@@ -288,6 +290,22 @@ const LoginPage = () => {
         {/* Right Panel - Login Form */}
         <Box sx={loginStyles.rightPanel}>
           <Box sx={loginStyles.formContainer}>
+            <Button
+              component={Link}
+              to="/"
+              sx={{
+                alignSelf: 'flex-start',
+                color: '#71717a',
+                textTransform: 'none',
+                fontSize: '0.875rem',
+                mb: 1,
+                ml: -1,
+                '&:hover': { color: '#3f3f46', background: 'transparent' },
+              }}
+            >
+              <FontAwesomeIcon icon={faArrowLeft} style={{ marginRight: 8 }} />
+              Back to Home
+            </Button>
             {!showMFA ? (
               <>
                 <Stack sx={loginStyles.formHeader}>
@@ -449,6 +467,16 @@ const LoginPage = () => {
                   >
                     Sign up now
                   </Button>
+                </Box>
+
+                {/* Privacy Policy Link */}
+                <Box sx={{ textAlign: 'center', mt: 1 }}>
+                  <Typography variant="caption" sx={{ color: '#a1a1aa' }}>
+                    By signing in, you agree to our{' '}
+                    <Box component={Link} to="/privacy-policy" sx={{ color: '#ffa424', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+                      Privacy Policy
+                    </Box>
+                  </Typography>
                 </Box>
               </>
             ) : (

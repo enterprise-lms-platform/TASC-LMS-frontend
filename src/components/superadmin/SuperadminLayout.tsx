@@ -32,11 +32,9 @@ const SuperadminLayout: React.FC<SuperadminLayoutProps> = ({
         sx={{
           flexGrow: 1,
           width: { lg: `calc(100% - ${DRAWER_WIDTH}px)` },
-          ml: { lg: `${DRAWER_WIDTH}px` },
           display: 'flex',
           flexDirection: 'column',
           minWidth: 0,
-          maxWidth: '100vw',
         }}
       >
         <TopBar onMenuClick={handleMobileToggle} title={title} subtitle={subtitle} />

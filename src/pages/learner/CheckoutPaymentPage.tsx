@@ -787,7 +787,7 @@ const CheckoutPaymentPage: React.FC = () => {
                   label={
                     <Typography variant="caption" color="text.secondary">
                       I agree to the <a href="#" style={{ color: '#ffa424' }}>Terms of Service</a> and{' '}
-                      <a href="#" style={{ color: '#ffa424' }}>Privacy Policy</a>. I understand that my enrollment will be processed immediately after payment.
+                      <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: '#ffa424' }}>Privacy Policy</a>. I understand that my enrollment will be processed immediately after payment.
                     </Typography>
                   }
                   sx={{ mt: 2, alignItems: 'flex-start' }}

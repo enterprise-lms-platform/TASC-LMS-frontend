@@ -11,7 +11,7 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ open, onClose }) => {
     { label: 'Courses', href: '#courses', icon: 'book-open' },
     { label: 'Pricing', href: '#pricing', icon: 'tag' },
     { label: 'Features', href: '#features', icon: 'star' },
-    { label: 'About', href: '#', icon: 'info-circle' },
+    { label: 'Verify Certificate', href: '/verify-certificate', icon: 'certificate' },
   ];
 
   return (
@@ -95,37 +95,46 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ open, onClose }) => {
         {/* Menu Items */}
         <nav style={{ padding: '16px' }}>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {menuItems.map((item) => (
-              <li key={item.label} style={{ marginBottom: '8px', margin: '0 0 8px 0' }}>
-                <a
-                  href={item.href}
-                  onClick={onClose}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    color: '#52525b',
-                    textDecoration: 'none',
-                    transition: 'all 0.3s',
-                  }}
-                  onMouseEnter={(e) => {
-                    const target = e.currentTarget as HTMLAnchorElement;
-                    target.style.backgroundColor = '#f4f4f5';
-                    target.style.color = '#ffa424';
-                  }}
-                  onMouseLeave={(e) => {
-                    const target = e.currentTarget as HTMLAnchorElement;
-                    target.style.backgroundColor = 'transparent';
-                    target.style.color = '#52525b';
-                  }}
-                >
+            {menuItems.map((item) => {
+              const linkStyle = {
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                color: '#52525b',
+                textDecoration: 'none',
+                transition: 'all 0.3s',
+              };
+              const hoverIn = (e: React.MouseEvent<HTMLElement>) => {
+                e.currentTarget.style.backgroundColor = '#f4f4f5';
+                e.currentTarget.style.color = '#ffa424';
+              };
+              const hoverOut = (e: React.MouseEvent<HTMLElement>) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#52525b';
+              };
+              const content = (
+                <>
                   <i className={`fas fa-${item.icon}`} style={{ fontSize: '1rem', width: '20px' }} />
                   <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{item.label}</span>
-                </a>
-              </li>
-            ))}
+                </>
+              );
+              const isRoute = item.href.startsWith('/');
+              return (
+                <li key={item.label} style={{ marginBottom: '8px', margin: '0 0 8px 0' }}>
+                  {isRoute ? (
+                    <Link to={item.href} onClick={onClose} style={linkStyle} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+                      {content}
+                    </Link>
+                  ) : (
+                    <a href={item.href} onClick={onClose} style={linkStyle} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+                      {content}
+                    </a>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </nav>
 

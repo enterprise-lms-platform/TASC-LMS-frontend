@@ -1,17 +1,20 @@
 @media print {
-  /* Force landscape */
+  /* Force A4 landscape */
   @page {
-    size: landscape;
+    size: A4 landscape;
     margin: 0;
   }
 
-  /* Hide everything */
+  /* Reset page */
   html, body {
     margin: 0 !important;
     padding: 0 !important;
     overflow: hidden !important;
+    width: 297mm !important;
+    height: 210mm !important;
   }
 
+  /* Hide everything */
   body * {
     visibility: hidden !important;
   }
@@ -26,8 +29,8 @@
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
+    width: 297mm !important;
+    height: 210mm !important;
     max-width: none !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -46,10 +49,7 @@
 
   /* Hide UI chrome */
   .MuiDrawer-root,
-  .MuiAppBar-root {
-    display: none !important;
-  }
-
+  .MuiAppBar-root,
   .MuiBackdrop-root {
     display: none !important;
   }

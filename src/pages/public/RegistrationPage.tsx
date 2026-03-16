@@ -584,7 +584,7 @@ const RegistrationPage: React.FC = () => {
                                         }
                                         label={
                                             <Typography variant="body2" color="text.secondary">
-                                                I agree to the <a href="#" style={{color: loginColors.primary[600], textDecoration: 'none'}}>Terms of Service</a> and <a href="#" style={{color: loginColors.primary[600], textDecoration: 'none'}}>Privacy Policy</a> *
+                                                I agree to the <a href="#" style={{color: loginColors.primary[600], textDecoration: 'none'}}>Terms of Service</a> and <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{color: loginColors.primary[600], textDecoration: 'none'}}>Privacy Policy</a> *
                                             </Typography>
                                         }
                                     />

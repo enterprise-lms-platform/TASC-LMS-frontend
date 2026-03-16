@@ -19,11 +19,12 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({ certificate }) 
       sx={{
         position: 'relative',
         width: '100%',
-        maxWidth: 900,
-        aspectRatio: '1.414 / 1',
+        maxWidth: 750,
+        aspectRatio: '1232 / 864',
         overflow: 'hidden',
         borderRadius: { xs: 0, md: '8px' },
         boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+        mx: 'auto',
         '@media print': {
           maxWidth: '100%',
           boxShadow: 'none',
@@ -34,7 +35,7 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({ certificate }) 
       {/* Background template image */}
       <Box
         component="img"
-        src="/certificate/certificate template.webp"
+        src="/certificate/certificate A4beta.webp"
         alt="Certificate template"
         sx={{
           width: '100%',
@@ -54,85 +55,108 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({ certificate }) 
           bottom: 0,
         }}
       >
-        {/* Learner Name */}
+        {/* Learner Name — sits just above the first horizontal line (~35.5% from top) */}
         <Typography
           sx={{
             position: 'absolute',
-            top: '37%',
-            left: '35%',
-            width: '55%',
+            top: '33%',
+            left: '34%',
+            width: '50%',
             textAlign: 'center',
             fontFamily: '"Georgia", "Times New Roman", serif',
             fontWeight: 700,
             fontSize: 'clamp(0.9rem, 2.5vw, 1.6rem)',
             color: '#1a1a2e',
             letterSpacing: '0.02em',
+            '@media print': { fontSize: '24pt' },
           }}
         >
           {certificate.user_name}
         </Typography>
 
-        {/* Course Title */}
+        {/* Course Title — sits just above the second horizontal line (~57.5% from top) */}
         <Typography
           sx={{
             position: 'absolute',
-            top: '52%',
-            left: '35%',
-            width: '55%',
+            top: '55%',
+            left: '32%',
+            width: '52%',
             textAlign: 'center',
             fontWeight: 600,
             fontSize: 'clamp(0.7rem, 1.8vw, 1.1rem)',
             color: '#2d2d44',
             lineHeight: 1.4,
+            '@media print': { fontSize: '16pt' },
           }}
         >
           {certificate.course_title}
         </Typography>
 
-        {/* Date of Award */}
+        {/* Validity value — next to "Validity:" label */}
         <Typography
           sx={{
             position: 'absolute',
-            bottom: '7%',
-            left: '30%',
-            width: '18%',
+            bottom: '15%',
+            left: '57%',
+            width: '14%',
+            textAlign: 'center',
+            fontWeight: 700,
+            fontStyle: 'italic',
+            fontSize: 'clamp(0.4rem, 1vw, 0.7rem)',
+            color: '#333',
+            '@media print': { fontSize: '10pt' },
+          }}
+        >
+          1 Year
+        </Typography>
+
+        {/* Date of Award value — above "Date of Award" label, centered at ~35% horizontal */}
+        <Typography
+          sx={{
+            position: 'absolute',
+            bottom: '8%',
+            left: '32%',
+            width: '16%',
             textAlign: 'center',
             fontWeight: 600,
-            fontSize: 'clamp(0.45rem, 1.1vw, 0.75rem)',
+            fontSize: 'clamp(0.4rem, 1vw, 0.65rem)',
             color: '#333',
+            '@media print': { fontSize: '10pt' },
           }}
         >
           {issuedDate}
         </Typography>
 
-        {/* Certificate Number */}
+        {/* Certificate Number value — above "Certificate Number:" label */}
         <Typography
           sx={{
             position: 'absolute',
-            bottom: '7%',
-            left: '51%',
-            width: '18%',
+            bottom: '8%',
+            left: '52%',
+            width: '16%',
             textAlign: 'center',
             fontWeight: 600,
-            fontSize: 'clamp(0.4rem, 1vw, 0.7rem)',
+            fontSize: 'clamp(0.35rem, 0.9vw, 0.6rem)',
             color: '#333',
             fontFamily: 'monospace',
+            '@media print': { fontSize: '9pt' },
           }}
         >
           {certificate.certificate_number}
         </Typography>
 
-        {/* Managing Director */}
+        {/* Managing Director name — above "MANAGING DIRECTOR" label, centered at ~85% horizontal */}
         <Typography
           sx={{
             position: 'absolute',
-            bottom: '7%',
-            right: '2%',
-            width: '24%',
+            bottom: '8%',
+            right: '5%',
+            width: '16%',
             textAlign: 'center',
             fontWeight: 600,
-            fontSize: 'clamp(0.4rem, 1vw, 0.7rem)',
+            fontSize: 'clamp(0.35rem, 0.9vw, 0.6rem)',
             color: '#333',
+            '@media print': { fontSize: '9pt' },
           }}
         >
           Patrick Kabahanga Mbonyo

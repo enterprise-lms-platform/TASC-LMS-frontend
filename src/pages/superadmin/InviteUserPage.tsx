@@ -23,8 +23,8 @@ const INVITE_ROLES: { value: UserRole; label: string }[] = [
   { value: 'finance', label: 'Finance' },
 ];
 
-// Roles that require an organization assignment
-const ROLES_REQUIRING_ORG: UserRole[] = ['lms_manager', 'instructor'];
+// Roles that suggest an organization assignment (but it's always optional)
+const ROLES_SUGGESTING_ORG: UserRole[] = ['lms_manager', 'instructor'];
 
 const InviteUserPage: React.FC = () => {
   const navigate = useNavigate();
@@ -57,7 +57,7 @@ const InviteUserPage: React.FC = () => {
   // Fetch organizations for the dropdown
   const { data: organizations = [], isLoading: orgsLoading } = useOrganizations({ is_active: true });
 
-  const requiresOrg = ROLES_REQUIRING_ORG.includes(formData.role);
+  const suggestsOrg = ROLES_SUGGESTING_ORG.includes(formData.role);
 
   const validateForm = (): boolean => {
     const newErrors = {
@@ -81,9 +81,7 @@ const InviteUserPage: React.FC = () => {
       newErrors.last_name = 'Last name is required';
     }
 
-    if (requiresOrg && !formData.organization) {
-      newErrors.organization = 'Organisation is required for this role';
-    }
+    // Organisation is always optional
 
     setErrors(newErrors);
     return !Object.values(newErrors).some((error) => error !== '');
@@ -103,7 +101,7 @@ const InviteUserPage: React.FC = () => {
         first_name: formData.first_name,
         last_name: formData.last_name,
         role: formData.role,
-        ...(requiresOrg && formData.organization ? { organization: formData.organization } : {}),
+        ...(formData.organization ? { organization: formData.organization } : {}),
       };
       const response = await adminApi.inviteUser(payload);
       setSnackbar({
@@ -130,15 +128,8 @@ const InviteUserPage: React.FC = () => {
   };
 
   const handleRoleChange = (role: UserRole) => {
-    setFormData({
-      ...formData,
-      role,
-      // Clear org when switching to a role that doesn't need it
-      organization: ROLES_REQUIRING_ORG.includes(role) ? formData.organization : null,
-    });
-    if (!ROLES_REQUIRING_ORG.includes(role)) {
-      setErrors({ ...errors, organization: '' });
-    }
+    setFormData({ ...formData, role });
+    setErrors({ ...errors, organization: '' });
   };
 
   const handleCloseSnackbar = () => {
@@ -212,39 +203,38 @@ const InviteUserPage: React.FC = () => {
             ))}
           </TextField>
 
-          {requiresOrg && (
-            <TextField
-              fullWidth
-              select
-              label="Organisation"
-              value={formData.organization ?? ''}
-              onChange={(e) =>
-                setFormData({ ...formData, organization: e.target.value ? Number(e.target.value) : null })
-              }
-              error={!!errors.organization}
-              helperText={errors.organization || (
-                formData.role === 'lms_manager'
-                  ? 'The manager will be scoped to this organisation only'
-                  : 'The instructor will be assigned to this organisation'
-              )}
-              disabled={isLoading || orgsLoading}
-              sx={{ mb: 4 }}
-            >
-              {orgsLoading ? (
-                <MenuItem disabled>Loading organisations...</MenuItem>
-              ) : organizations.length === 0 ? (
-                <MenuItem disabled>No organisations available</MenuItem>
-              ) : (
-                organizations.map((org) => (
-                  <MenuItem key={org.id} value={org.id}>
-                    {org.name}
-                  </MenuItem>
-                ))
-              )}
-            </TextField>
-          )}
-
-          {!requiresOrg && <Box sx={{ mb: 1 }} />}
+          <TextField
+            fullWidth
+            select
+            label="Organisation (Optional)"
+            value={formData.organization ?? ''}
+            onChange={(e) =>
+              setFormData({ ...formData, organization: e.target.value ? Number(e.target.value) : null })
+            }
+            error={!!errors.organization}
+            helperText={errors.organization || (
+              suggestsOrg
+                ? 'Recommended for this role'
+                : 'Optionally assign to an organisation'
+            )}
+            disabled={isLoading || orgsLoading}
+            sx={{ mb: 4 }}
+          >
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            {orgsLoading ? (
+              <MenuItem disabled>Loading organisations...</MenuItem>
+            ) : organizations.length === 0 ? (
+              <MenuItem disabled>No organisations available</MenuItem>
+            ) : (
+              organizations.map((org) => (
+                <MenuItem key={org.id} value={org.id}>
+                  {org.name}
+                </MenuItem>
+              ))
+            )}
+          </TextField>
 
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button

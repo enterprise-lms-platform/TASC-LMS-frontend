@@ -67,9 +67,9 @@ const Header: React.FC<HeaderProps> = ({ scrolled, onMobileMenuToggle, isMobile 
               <Link to="/for-business" className="nav-link" style={{ color: '#52525b', textDecoration: 'none' }}>
                 For Business
               </Link>
-              <a href="#" className="nav-link" style={{ color: '#52525b', textDecoration: 'none' }}>
-                About
-              </a>
+              <Link to="/verify-certificate" className="nav-link" style={{ color: '#52525b', textDecoration: 'none' }}>
+                Verify Certificate
+              </Link>
             </nav>
           )}
 

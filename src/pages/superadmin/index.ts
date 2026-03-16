@@ -15,6 +15,3 @@ export { default as GatewaySettingsPage } from './GatewaySettingsPage';
 export { default as SystemSettingsPage } from './SystemSettingsPage';
 export { default as IntegrationsPage } from './IntegrationsPage';
 export { default as DataMigrationPage } from './DataMigrationPage';
-export { default as SecurityPage } from './SecurityPage';
-export { default as AnalyticsPage } from './AnalyticsPage';
-export { default as NotificationsPage } from './NotificationsPage';

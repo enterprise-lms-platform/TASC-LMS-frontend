@@ -31,6 +31,8 @@ import RegistrationPage from '../pages/public/RegistrationPage';
 import EmailVerificationPage from '../pages/public/EmailVerificationPage';
 import PasswordResetPage from '../pages/public/PasswordReset';
 import SetPasswordPage from '../pages/public/SetPasswordPage';
+import PrivacyPolicyPage from '../pages/public/PrivacyPolicyPage';
+import CertificateValidationPage from '../pages/public/CertificateValidationPage';
 
 // Learner Pages
 import LearnerDashboard from '../pages/learner/LearnerDashboard';
@@ -218,6 +220,14 @@ export const createAppRouter = (queryClient: QueryClient) => {
     {
       path: '/set-password/:uidb64/:token',
       element: <SetPasswordPage />,
+    },
+    {
+      path: '/privacy-policy',
+      element: <PrivacyPolicyPage />,
+    },
+    {
+      path: '/verify-certificate',
+      element: <CertificateValidationPage />,
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
