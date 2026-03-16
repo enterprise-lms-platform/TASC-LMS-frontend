@@ -16,6 +16,7 @@ import {
   TableHead,
   TableRow,
   IconButton,
+  Tooltip,
 } from '@mui/material';
 import {
   CreditCard as CreditCardIcon,
@@ -69,6 +70,7 @@ const ManagerBillingPage: React.FC = () => {
       description: inv.notes || `Invoice #${inv.invoice_number}`,
       amount: inv.total_amount ? `$${inv.total_amount}` : '$0.00',
       status: inv.status === 'paid' ? 'Paid' : inv.status === 'pending' ? 'Pending' : 'Failed',
+      pdfUrl: inv.invoice_pdf_url || null,
     }));
   }, [invoices]);
 
@@ -407,15 +409,21 @@ const ManagerBillingPage: React.FC = () => {
                             />
                           </TableCell>
                           <TableCell align="right">
-                            <IconButton
-                              size="small"
-                              sx={{
-                                color: 'text.secondary',
-                                '&:hover': { color: '#ffa424', bgcolor: 'rgba(255,164,36,0.08)' },
-                              }}
-                            >
-                              <DownloadIcon fontSize="small" />
-                            </IconButton>
+                            <Tooltip title={entry.pdfUrl ? 'Download Invoice' : 'PDF not available'}>
+                              <span>
+                                <IconButton
+                                  size="small"
+                                  disabled={!entry.pdfUrl}
+                                  onClick={() => entry.pdfUrl && window.open(entry.pdfUrl, '_blank')}
+                                  sx={{
+                                    color: 'text.secondary',
+                                    '&:hover': { color: '#ffa424', bgcolor: 'rgba(255,164,36,0.08)' },
+                                  }}
+                                >
+                                  <DownloadIcon fontSize="small" />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
                           </TableCell>
                         </TableRow>
                       ))}

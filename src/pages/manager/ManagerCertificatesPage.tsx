@@ -357,9 +357,10 @@ const ManagerCertificatesPage: React.FC = () => {
                         />
                       </TableCell>
                       <TableCell align="right">
-                        <Tooltip title="View">
+                        <Tooltip title="Verify">
                           <IconButton
                             size="small"
+                            onClick={() => window.open(`/verify-certificate?cert=${encodeURIComponent(cert.certificate_number || cert.id)}`, '_blank')}
                             sx={{
                               color: 'text.secondary',
                               '&:hover': { color: '#ffa424', bgcolor: 'rgba(255,164,36,0.08)' },
@@ -368,16 +369,20 @@ const ManagerCertificatesPage: React.FC = () => {
                             <ViewIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Download">
-                          <IconButton
-                            size="small"
-                            sx={{
-                              color: 'text.secondary',
-                              '&:hover': { color: '#ffa424', bgcolor: 'rgba(255,164,36,0.08)' },
-                            }}
-                          >
-                            <DownloadIcon fontSize="small" />
-                          </IconButton>
+                        <Tooltip title={cert.pdf_url ? 'Download PDF' : 'PDF not available'}>
+                          <span>
+                            <IconButton
+                              size="small"
+                              disabled={!cert.pdf_url}
+                              onClick={() => cert.pdf_url && window.open(cert.pdf_url, '_blank')}
+                              sx={{
+                                color: 'text.secondary',
+                                '&:hover': { color: '#ffa424', bgcolor: 'rgba(255,164,36,0.08)' },
+                              }}
+                            >
+                              <DownloadIcon fontSize="small" />
+                            </IconButton>
+                          </span>
                         </Tooltip>
                       </TableCell>
                     </TableRow>

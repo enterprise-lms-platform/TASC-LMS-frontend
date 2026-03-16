@@ -252,11 +252,14 @@ const MySchedulePage: React.FC = () => {
                         }}
                       >
                         {/* Time block */}
-                        <Box sx={{ minWidth: 70, textAlign: 'center', flexShrink: 0 }}>
+                        <Box sx={{ minWidth: 80, textAlign: 'center', flexShrink: 0 }}>
                           <Typography sx={{ fontWeight: 700, fontSize: '0.9rem' }}>
                             {startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                           </Typography>
                           <Typography color="text.disabled" sx={{ fontSize: '0.7rem' }}>{session.duration_minutes} min</Typography>
+                          <Typography color="text.disabled" sx={{ fontSize: '0.62rem', mt: 0.25 }}>
+                            {Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop()?.replace(/_/g, ' ')}
+                          </Typography>
                         </Box>
 
                         {/* Type indicator */}

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Box, Container, Typography, Paper, TextField, Button, CircularProgress, Alert, Divider } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faCertificate, faSearch, faCheckCircle, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 import { certificateApi } from '../../services/learning.services';
@@ -8,30 +8,42 @@ import type { Certificate } from '../../types/types';
 
 const CertificateValidationPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [certificateNumber, setCertificateNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Certificate | null>(null);
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
 
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!certificateNumber.trim()) return;
-
+  const doVerify = useCallback(async (certNum: string) => {
+    if (!certNum.trim()) return;
     setLoading(true);
     setError('');
     setResult(null);
     setSearched(true);
-
     try {
-      const { data } = await certificateApi.verify(certificateNumber.trim());
+      const { data } = await certificateApi.verify(certNum.trim());
       setResult(data);
     } catch {
       setError('Certificate not found. Please check the certificate number and try again.');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    doVerify(certificateNumber);
   };
+
+  // Auto-verify if ?cert= query param is present
+  useEffect(() => {
+    const cert = searchParams.get('cert');
+    if (cert) {
+      setCertificateNumber(cert);
+      doVerify(cert);
+    }
+  }, [searchParams, doVerify]);
 
   const issuedDate = result
     ? new Date(result.issued_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
