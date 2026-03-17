@@ -94,7 +94,7 @@ const CoursePlayerPage: React.FC = () => {
   const { data: assetUrlData, isLoading: isAssetLoading } = useSessionAssetUrl(isPrivateAsset ? activeSessionId || undefined : undefined);
 
   // Video resume: persist playback position in localStorage
-  const playerRef = useRef<ReactPlayer | null>(null);
+  const playerRef = useRef<HTMLVideoElement | null>(null);
   const seekedRef = useRef(false);
 
   const storageKey = activeSessionId != null ? `video-pos-${activeSessionId}` : null;
@@ -112,7 +112,7 @@ const CoursePlayerPage: React.FC = () => {
     if (seekedRef.current || !storageKey) return;
     const saved = localStorage.getItem(storageKey);
     if (saved && Number(saved) > 2) {
-      playerRef.current?.seekTo(Number(saved), 'seconds');
+      if (playerRef.current) playerRef.current.currentTime = Number(saved);
     }
     seekedRef.current = true;
   }, [storageKey]);

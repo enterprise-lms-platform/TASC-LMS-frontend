@@ -56,7 +56,7 @@ const QuizzesPage: React.FC = () => {
     queryKey: queryKeys.enrollments.all,
     queryFn: () => enrollmentApi.getAll().then((r) => r.data),
   });
-  const enrollments = enrollmentsRes?.results ?? enrollmentsRes ?? [];
+  const enrollments = enrollmentsRes ?? [];
 
   // Fetch session progress (all quiz-type sessions)
   const { data: progressRes } = useQuery({

@@ -54,7 +54,7 @@ const LearnerNotificationsPage: React.FC = () => {
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications'],
-    queryFn: () => notificationApi.getAll(),
+    queryFn: () => notificationApi.getAll().then((r) => r.data.results ?? []),
   });
 
   const markAsReadMutation = useMutation({
