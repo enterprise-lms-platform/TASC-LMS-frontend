@@ -338,3 +338,34 @@ export const courseApprovalApi = {
       data,
     ),
 };
+
+// COURSE REVIEWS
+
+export interface CourseReview {
+  id: number;
+  user: number;
+  user_name: string;
+  course: number;
+  rating: number;
+  content: string;
+  is_approved: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CourseReviewSummary {
+  average: number;
+  total: number;
+  distribution: number[];
+  reviews: CourseReview[];
+}
+
+export const courseReviewApi = {
+  // Get reviews for a course with summary
+  getSummary: (courseId: number) =>
+    apiClient.get<CourseReviewSummary>(`${BASE_PATH}/courses/${courseId}/reviews/`),
+
+  // Get all reviews (with optional filters)
+  getAll: (params?: { course?: number; rating?: number; page?: number; page_size?: number }) =>
+    apiClient.get<PaginatedResponse<CourseReview>>(`${BASE_PATH}/course-reviews/`, { params }),
+};

@@ -246,6 +246,52 @@ export const submissionApi = {
     apiClient.delete(`${BASE_PATH}/submissions/${id}/`),
 };
 
+// GRADE STATISTICS
+
+export interface GradeDistribution {
+  range: string;
+  label: string;
+  count: number;
+  percentage: number;
+}
+
+export interface GradeStatistics {
+  total_submissions: number;
+  graded: number;
+  pending: number;
+  average_grade: number;
+  distribution: GradeDistribution[];
+}
+
+export interface BulkGradeRequest {
+  grades: {
+    submission_id: number;
+    grade: number;
+    feedback?: string;
+  }[];
+}
+
+export interface BulkGradeResponse {
+  graded: number;
+  results: {
+    submission_id: number;
+    status: string;
+    error?: string;
+  }[];
+}
+
+export const gradeStatisticsApi = {
+  // Get grade distribution for a course
+  getStatistics: (courseId: number) =>
+    apiClient.get<GradeStatistics>(`${BASE_PATH}/submissions/statistics/`, {
+      params: { course: courseId },
+    }),
+
+  // Bulk grade multiple submissions
+  bulkGrade: (data: BulkGradeRequest) =>
+    apiClient.post<BulkGradeResponse>(`${BASE_PATH}/submissions/bulk_grade/`, data),
+};
+
 // MANAGER-LEVEL QUERIES (for org-wide data)
 
 // Manager enrollments - gets all enrollments in the org
@@ -306,22 +352,69 @@ export interface StudentGrade {
 }
 
 export const managerGradesApi = {
-  // Get grade distribution (placeholder - needs backend)
-  getGradeDistribution: async (_courseId?: number): Promise<GradeDistribution[]> => {
-    // TODO: Replace with actual API call when backend endpoint exists
-    // For now, return mock data structure
-    return [
-      { grade: 'A', range: '90-100', count: 0, percentage: 0, color: '#16a34a' },
-      { grade: 'B', range: '80-89', count: 0, percentage: 0, color: '#3b82f6' },
-      { grade: 'C', range: '70-79', count: 0, percentage: 0, color: '#ffa424' },
-      { grade: 'D', range: '60-69', count: 0, percentage: 0, color: '#f97316' },
-      { grade: 'F', range: '<60', count: 0, percentage: 0, color: '#ef4444' },
-    ];
+  // Get grade distribution from statistics endpoint
+  getGradeDistribution: async (courseId: number): Promise<GradeDistribution[]> => {
+    try {
+      const response = await gradeStatisticsApi.getStatistics(courseId);
+      const data = response.data;
+      return data.distribution.map((d) => ({
+        grade: d.label,
+        label: d.label,
+        range: d.range,
+        count: d.count,
+        percentage: d.percentage,
+        color: d.label === 'A' ? '#16a34a' : d.label === 'B' ? '#3b82f6' : d.label === 'C' ? '#ffa424' : d.label === 'D' ? '#f97316' : '#ef4444',
+      }));
+    } catch {
+      return [
+        { grade: 'A', range: '90-100', label: 'A', count: 0, percentage: 0, color: '#16a34a' },
+        { grade: 'B', range: '80-89', label: 'B', count: 0, percentage: 0, color: '#3b82f6' },
+        { grade: 'C', range: '70-79', label: 'C', count: 0, percentage: 0, color: '#ffa424' },
+        { grade: 'D', range: '60-69', label: 'D', count: 0, percentage: 0, color: '#f97316' },
+        { grade: 'F', range: '<60', label: 'F', count: 0, percentage: 0, color: '#ef4444' },
+      ];
+    }
   },
 
-  // Get student grades (placeholder - needs backend)
-  getStudentGrades: async (_courseId?: number): Promise<StudentGrade[]> => {
-    // TODO: Replace with actual API call when backend endpoint exists
-    return [];
+  // Get student grades from submissions
+  getStudentGrades: async (courseId: number): Promise<StudentGrade[]> => {
+    try {
+      const response = await apiClient.get<any>(`${BASE_PATH}/submissions/`, {
+        params: { course: courseId },
+      });
+      
+      const submissions = response.data.results || [];
+      
+      // Group submissions by enrollment
+      const gradesByStudent = new Map<number, StudentGrade>();
+      
+      for (const sub of submissions) {
+        const enrollmentId = sub.enrollment;
+        if (!enrollmentId) continue;
+        
+        if (!gradesByStudent.has(enrollmentId)) {
+          gradesByStudent.set(enrollmentId, {
+            enrollment_id: enrollmentId,
+            student_id: sub.enrollment?.user || 0,
+            student_name: sub.enrollment?.user?.full_name || 'Unknown',
+            student_email: sub.enrollment?.user?.email || '',
+            course_id: courseId,
+            course_name: '',
+            overall_score: 0,
+            status: 'fail',
+          });
+        }
+        
+        const grade = gradesByStudent.get(enrollmentId)!;
+        if (sub.grade !== null && sub.grade !== undefined) {
+          grade.assignment_score = (grade.assignment_score || 0) + sub.grade;
+          grade.overall_score += sub.grade;
+        }
+      }
+      
+      return Array.from(gradesByStudent.values());
+    } catch {
+      return [];
+    }
   },
 };

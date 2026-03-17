@@ -147,3 +147,16 @@ export const uploadApi = {
   uploadBanner: (file: File): Promise<string> =>
     uploadApi.uploadToSpaces(file, 'course-banners'),
 };
+
+// STORAGE QUOTA
+
+export interface StorageQuota {
+  used_bytes: number;
+  total_bytes: number;
+}
+
+export const quotaApi = {
+  // Get storage quota usage
+  getQuota: () =>
+    apiClient.get<StorageQuota>('/api/v1/uploads/quota/'),
+};

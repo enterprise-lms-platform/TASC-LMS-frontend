@@ -15,8 +15,8 @@ export interface OrganizationListParams {
 
 export const organizationApi = {
   getAll: (params?: OrganizationListParams) =>
-    apiClient.get<Organization[]>(`/api/v1/admin/organizations/`, { params }),
+    apiClient.get<Organization[]>(`/api/v1/superadmin/organizations/`, { params }),
 
   getById: (id: number) =>
-    apiClient.get<Organization>(`/api/v1/admin/organizations/${id}/`),
+    apiClient.get<Organization>(`/api/v1/superadmin/organizations/${id}/`),
 };

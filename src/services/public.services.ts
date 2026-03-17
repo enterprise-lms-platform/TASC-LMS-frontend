@@ -56,6 +56,18 @@ export interface PublicCourseParams {
   page_size?: number;
 }
 
+export interface PlatformStats {
+  courses: number;
+  learners: number;
+  instructors: number;
+  certificates: number;
+}
+
+export interface TrustedClient {
+  name: string;
+  logo_url: string;
+}
+
 export const publicCourseApi = {
   // List published courses (no auth required)
   getAll: (params?: PublicCourseParams) =>
@@ -66,4 +78,20 @@ export const publicCourseApi = {
   // Get course details by slug (no auth required)
   getBySlug: (slug: string) =>
     apiClient.get<PublicCourseDetail>(`${PUBLIC_PATH}/courses/${slug}/`),
+};
+
+// PUBLIC STATS
+
+export const publicStatsApi = {
+  // Get platform-wide statistics
+  getStats: () =>
+    apiClient.get<PlatformStats>(`${PUBLIC_PATH}/stats/`),
+};
+
+// TRUSTED CLIENTS
+
+export const publicClientsApi = {
+  // Get trusted client logos for landing page
+  getClients: () =>
+    apiClient.get<TrustedClient[]>(`${PUBLIC_PATH}/clients/`),
 };
