@@ -184,16 +184,89 @@ These pages render but show fake data instead of real API responses. Each needs 
 
 ---
 
+## CRITICAL — Public/Marketing Pages with Hardcoded Data
+
+These render on public-facing pages visible to all visitors. Hardcoded numbers and fake courses hurt credibility.
+
+### 27. Catalogue Courses Grid — Hardcoded Course Listings
+- **File:** `src/components/catalogue/CoursesGrid.tsx` (lines 13-23)
+- **What's hardcoded:** 9 fake courses with titles, instructors, ratings, prices. Also hardcoded "713" total results count.
+- **What to do:** Fetch from `publicCourseApi.getAll()` with pagination. The API exists.
+- **Blocked?** No
+
+### 28. Catalogue Featured Categories — Fake Course Counts
+- **File:** `src/components/catalogue/FeaturedCategories.tsx` (lines 13-22)
+- **What's hardcoded:** 8 categories with fake course counts (e.g., "Web Development: 142 courses")
+- **What to do:** Fetch from `publicCategoryApi.getAll()` and use real course counts.
+- **Blocked?** No — API exists
+
+### 29. Landing Page Stats Banner — Fake Platform Metrics
+- **File:** `src/components/landing/StatsBanner.tsx` (lines 8-13)
+- **What's hardcoded:** "1,000+ Courses", "50,000+ Active Learners", "200+ Instructors", "25,000+ Certificates"
+- **What to do:** Fetch real counts from a public stats endpoint or compute from existing APIs.
+- **Blocked?** Partially — no dedicated `/api/v1/public/stats/` endpoint exists
+
+### 30. Landing Page Categories — Fake Course Counts
+- **File:
+** `src/components/landing/Categories.tsx` (lines 8-17)
+- **What's hardcoded:** 8 categories with fake counts (e.g., "42 courses")
+- **What to do:** Fetch from `publicCategoryApi.getAll()`.
+- **Blocked?** No
+
+### 31. Landing Page Featured Courses — Fake Courses
+- **File:** `src/components/landing/Courses.tsx` (lines 19-52)
+- **What's hardcoded:** 3 featured courses with fake instructors, ratings, prices
+- **What to do:** Fetch from `publicCourseApi.getAll()` with `featured=true` or similar filter.
+- **Blocked?** No
+
+### 32. Landing Page Pricing — Hardcoded Price
+- **File:** `src/components/landing/Pricing.tsx` (lines 137-170)
+- **What's hardcoded:** "$99 / 6 months" price and 6 feature bullet points
+- **What to do:** Fetch from subscription plans API.
+- **Blocked?** No — subscription API exists
+
+### 33. Landing Page Trusted By — Fake Company Names
+- **File:** `src/components/landing/TrustedBy.tsx` (lines 8-14)
+- **What's hardcoded:** 5 fake companies ("Acme Corp", "Global Tech", etc.)
+- **What to do:** Replace with real client logos/names from CMS or API.
+- **Blocked?** Yes — no clients/partners API exists
+
+### 34. Business Page Pricing — Hardcoded Plans
+- **File:** `src/components/business/PricingSection.tsx` (lines 20-76)
+- **What's hardcoded:** 3 B2B pricing tiers (Team $15, Business $20, Enterprise $25) with feature lists
+- **What to do:** Fetch from subscription plans API or a dedicated business pricing endpoint.
+- **Blocked?** Partially — current subscription API is learner-focused
+
+### 35. Business Page Stats — Fake Metrics
+- **File:** `src/components/business/BusinessStatsSection.tsx` (lines 8-13)
+- **What's hardcoded:** "500+ Enterprise Customers", "250K+ Learners", "89% Completion Rate", "4.8 Satisfaction"
+- **What to do:** Fetch real metrics from backend.
+- **Blocked?** Yes — no public business stats endpoint
+
+### 36. Course Reviews Component — Fake Reviews
+- **File:** `src/components/course/CourseReviews.tsx` (lines 8-36)
+- **What's hardcoded:** 3 fake reviews with rating distribution (78%, 15%, etc.), overall 4.8 rating
+- **What to do:** Fetch real reviews from backend.
+- **Blocked?** Yes — no course reviews/ratings API exists
+
+### 37. Business Page FAQ — Static Content
+- **File:** `src/components/business/FaqSection.tsx` (lines 6-31)
+- **What's hardcoded:** 6 FAQ items
+- **What to do:** Move to CMS or API for easy updates without code changes.
+- **Blocked?** Low priority — acceptable as static for now
+
+---
+
 ## HIGH — Service Layer Stubs & TODOs
 
-### 27. Grade Distribution API — Stub
+### 38. Grade Distribution API — Stub
 - **File:** `src/services/learning.services.ts` (lines 309-326)
 - **Issue:** `managerGradesApi.getGradeDistribution()` returns empty hardcoded structure. `managerGradesApi.getStudentGrades()` returns `[]`.
 - **Comment in code:** `// TODO: Replace with actual API call when backend endpoint exists`
 - **What to do:** Wire to real backend endpoint when available.
 - **Blocked?** Yes — backend endpoint does not exist
 
-### 28. Missing Query Parameter Support
+### 39. Missing Query Parameter Support
 - **Files:** Multiple service files have TODO comments about missing backend filter support:
   - `learning.services.ts` line 27: Enrollment filters (`search`, `dateRange`, `courseId`)
   - `learning.services.ts` line 62: Session progress `course` filter
@@ -208,30 +281,30 @@ These pages render but show fake data instead of real API responses. Each needs 
 
 ## MEDIUM — Incomplete UI Features
 
-### 29. Curriculum Builder — Bulk Actions
+### 40. Curriculum Builder — Bulk Actions
 - **File:** `src/components/instructor/course-structure/CurriculumBuilder.tsx` (line 264)
 - **Issue:** "Bulk Actions" button is permanently disabled with no implementation.
 - **What to do:** Implement bulk delete, bulk move, bulk status change for lessons.
 - **Blocked?** No
 
-### 30. Course Publish Flow
+### 41. Course Publish Flow
 - **File:** `src/pages/instructor/CourseStructurePage.tsx` (line 631)
 - **Comment:** `// TODO: implement publish flow`
 - **What to do:** Implement status change from draft to submitted/published, trigger approval workflow.
 - **Blocked?** No — approval API exists
 
-### 31. Learner Assignment Submission UI
+### 42. Learner Assignment Submission UI
 - **File:** `src/pages/learner/LearnerAssignmentsPage.tsx`
 - **What to do:** Wire to real API, implement file upload modal for submissions using existing presign flow, wire Submit button to POST endpoint.
 - **Backend dependency:** Submission endpoints exist.
 - **Blocked?** No
 
-### 32. Learner Certificates — Real Data
+### 43. Learner Certificates — Real Data
 - **File:** `src/pages/learner/LearnerCertificatesPage.tsx`
 - **What to do:** Remove `MOCK_CERTIFICATES` fallback, ensure download button works with real `pdf_url`.
 - **Blocked?** Partially — backend PDF generation unclear
 
-### 33. Report Download
+### 44. Report Download
 - **Files:** `src/pages/manager/ManagerReportsPage.tsx`, `src/pages/finance/FinanceExportPage.tsx`
 - **Issue:** Generate button exists but download not fully implemented. Status comparison bug ("Ready" vs "ready").
 - **What to do:** Fix status comparison, wire download trigger when report status = ready.
@@ -241,17 +314,17 @@ These pages render but show fake data instead of real API responses. Each needs 
 
 ## LOW — Polish & Cleanup
 
-### 34. Instructor Placeholder Page
+### 45. Instructor Placeholder Page
 - **File:** `src/pages/InstructorPlaceholderPage.tsx`
 - **Issue:** Generic "under development" page used for incomplete features.
 - **What to do:** Replace all references with actual implementations as features complete.
 
-### 35. Remove Console Logs
+### 46. Remove Console Logs
 - **File:** `src/pages/instructor/GradebookPage.tsx` (line 317)
 - **Issue:** `onCellClick` handler logs "Grade cell clicked".
 - **What to do:** Remove or replace with actual click handler.
 
-### 36. Unread Count Badge in Sidebar
+### 47. Unread Count Badge in Sidebar
 - **File:** Learner `Sidebar.tsx`
 - **Issue:** No live unread notification count badge.
 - **What to do:** Add `useQuery` for `notificationApi.getUnreadCount()` and display badge on Notifications nav item.
@@ -287,3 +360,6 @@ These pages render but show fake data instead of real API responses. Each needs 
 | `GET /api/v1/uploads/quota/` | Storage usage for instructor | ContentUploadPage |
 | `POST /api/v1/accounts/users/bulk-import/` | CSV user import (currently stub) | ManagerBulkImportPage |
 | Report generation (async) | Generate CSV/PDF reports | ManagerReportsPage |
+| `GET /api/v1/public/stats/` | Platform metrics (course count, learner count, etc.) | StatsBanner.tsx, BusinessStatsSection.tsx |
+| `GET /api/v1/catalogue/courses/{id}/reviews/` | Course reviews and ratings | CourseReviews.tsx, CoursePreviewPage.tsx |
+| `GET /api/v1/public/clients/` | Trusted-by company logos/names | TrustedBy.tsx |
