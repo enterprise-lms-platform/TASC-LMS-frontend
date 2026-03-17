@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box,
   CssBaseline,
@@ -29,6 +30,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import { notificationApi } from '../../services/notifications.services';
 
 interface Notification {
   id: string;
@@ -40,19 +42,6 @@ interface Notification {
   avatar?: string;
   initials: string;
 }
-
-const sampleNotifications: Notification[] = [
-  { id: '1', type: 'submission', title: 'New Assignment Submission', description: 'Sarah Chen submitted "React Hooks Library" for Advanced React Patterns', time: '5 min ago', read: false, initials: 'SC' },
-  { id: '2', type: 'enrollment', title: 'New Enrollment', description: 'James Wilson enrolled in TypeScript Mastery', time: '15 min ago', read: false, initials: 'JW' },
-  { id: '3', type: 'message', title: 'New Message', description: 'Maria Garcia asked a question in Module 3 discussion', time: '1 hour ago', read: false, initials: 'MG' },
-  { id: '4', type: 'grade', title: 'Grade Review Request', description: 'Alex Kim requested a grade review for Quiz 2', time: '2 hours ago', read: false, initials: 'AK' },
-  { id: '5', type: 'submission', title: 'Late Submission', description: 'Priya Patel submitted "State Management" 2 days late', time: '3 hours ago', read: false, initials: 'PP' },
-  { id: '6', type: 'course', title: 'Course Milestone', description: 'Advanced React Patterns reached 450 enrollments!', time: '5 hours ago', read: true, initials: 'AR' },
-  { id: '7', type: 'enrollment', title: 'Bulk Enrollment', description: '12 new learners enrolled via organization invite', time: '1 day ago', read: true, initials: '12' },
-  { id: '8', type: 'message', title: 'Discussion Reply', description: 'Tom Brown replied to your post in "Custom Hooks"', time: '1 day ago', read: true, initials: 'TB' },
-  { id: '9', type: 'submission', title: 'Quiz Completed', description: 'Lisa Wang completed Quiz 3 with a score of 95%', time: '2 days ago', read: true, initials: 'LW' },
-  { id: '10', type: 'grade', title: 'Grading Reminder', description: '8 submissions are pending grading for Module 4', time: '2 days ago', read: true, initials: 'GR' },
-];
 
 const typeIcons: Record<string, React.ReactNode> = {
   submission: <AssignmentIcon sx={{ fontSize: 18 }} />,
@@ -74,9 +63,39 @@ const InstructorNotificationsPage: React.FC = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [tab, setTab] = useState(0);
-  const [notifications, setNotifications] = useState(sampleNotifications);
+
+  const { data: notificationsData, isLoading } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => notificationApi.getAll(),
+  });
+
+  const notifications: Notification[] = notificationsData?.data?.results?.map((n) => ({
+    id: String(n.id),
+    type: (n.type as 'submission' | 'enrollment' | 'message' | 'grade' | 'course') || 'course',
+    title: n.title,
+    description: n.description,
+    time: new Date(n.created_at).toLocaleDateString(),
+    read: !!n.is_read,
+    initials: n.title.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+  })) || [];
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const queryClient = useQueryClient();
+
+  const markAllReadMutation = useMutation({
+    mutationFn: () => notificationApi.markAllAsRead(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+
+  const markAsReadMutation = useMutation({
+    mutationFn: (id: number) => notificationApi.markAsRead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
 
   const filteredNotifications = tab === 0
     ? notifications
@@ -85,11 +104,11 @@ const InstructorNotificationsPage: React.FC = () => {
     : notifications.filter((n) => n.read);
 
   const markAllRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, read: true })));
+    markAllReadMutation.mutate();
   };
 
   const toggleRead = (id: string) => {
-    setNotifications(notifications.map((n) => (n.id === id ? { ...n, read: !n.read } : n)));
+    markAsReadMutation.mutate(parseInt(id));
   };
 
   return (

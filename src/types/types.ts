@@ -1113,6 +1113,8 @@ export interface Organization {
   logo_url?: string | null;
   is_active: boolean;
   created_at: string;
+  courses_count?: number;
+  users_count?: number;
 }
 
 // COURSE APPROVAL TYPES

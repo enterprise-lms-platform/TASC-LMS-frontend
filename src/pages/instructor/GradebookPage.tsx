@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Box, CssBaseline, Toolbar } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,8 +14,10 @@ import StudentGradeDetailPanel from '../../components/instructor/gradebook/Stude
 import ExportDialog from '../../components/instructor/gradebook/ExportDialog';
 import { createDefaultGradingConfig, formatGrade, calculateFinalGrade } from '../../utils/gradingUtils';
 import type { GradingConfig } from '../../utils/gradingUtils';
+import { submissionApi, gradeStatisticsApi, enrollmentApi, managerGradesApi } from '../../services/learning.services';
+import { courseApi } from '../../services/catalogue.services';
 
-// ── Sample Data ──
+// ── Sample Data (fallback) ──
 
 const sampleStudents: GradebookStudent[] = [
   { id: 's1', name: 'Jennifer Smith', initials: 'JS', email: 'jennifer.smith@university.edu' },

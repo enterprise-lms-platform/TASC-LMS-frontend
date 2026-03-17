@@ -1,11 +1,21 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { publicClientsApi } from '../../services/public.services';
 
 interface TrustedByProps {
   isMobile: boolean;
 }
 
 const TrustedBy: React.FC<TrustedByProps> = ({ isMobile }) => {
-  const companies = [
+  const clientsData = useQuery({
+    queryKey: ['publicClients'],
+    queryFn: () => publicClientsApi.getClients(),
+  });
+
+  const companies = clientsData.data?.data?.map((client) => ({
+    name: client.name,
+    logoUrl: client.logo_url,
+  })) || [
     { icon: 'building', name: 'Acme Corp' },
     { icon: 'globe', name: 'Global Tech' },
     { icon: 'rocket', name: 'Innovate' },
@@ -48,7 +58,7 @@ const TrustedBy: React.FC<TrustedByProps> = ({ isMobile }) => {
         >
           {companies.map((company, index) => (
             <div
-              key={index}
+              key={company.name || index}
               className="trusted-logo"
               style={{
                 display: 'flex',
@@ -67,7 +77,15 @@ const TrustedBy: React.FC<TrustedByProps> = ({ isMobile }) => {
                 (e.currentTarget as HTMLDivElement).style.color = '#a1a1aa';
               }}
             >
-              <i className={`fas fa-${company.icon}`} style={{ fontSize: '1.5rem' }} />
+              {company.logoUrl ? (
+                <img 
+                  src={company.logoUrl} 
+                  alt={company.name} 
+                  style={{ height: '32px', objectFit: 'contain' }} 
+                />
+              ) : (
+                <i className="fas fa-building" style={{ fontSize: '1.5rem' }} />
+              )}
               <span>{company.name}</span>
             </div>
           ))}

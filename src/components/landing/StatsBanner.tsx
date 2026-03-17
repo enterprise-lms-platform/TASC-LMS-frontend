@@ -1,15 +1,22 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { publicStatsApi } from '../../services/public.services';
 
 interface StatsBannerProps {
   isMobile: boolean;
 }
 
 const StatsBanner: React.FC<StatsBannerProps> = ({ isMobile }) => {
+  const { data: statsData, isLoading } = useQuery({
+    queryKey: ['publicStats'],
+    queryFn: () => publicStatsApi.getStats(),
+  });
+
   const stats = [
-    { icon: 'book-open', value: '1,000+', label: 'Courses Available' },
-    { icon: 'users', value: '50,000+', label: 'Active Learners' },
-    { icon: 'chalkboard-teacher', value: '200+', label: 'Expert Instructors' },
-    { icon: 'certificate', value: '25,000+', label: 'Certificates Issued' },
+    { icon: 'book-open', value: statsData?.data ? `${statsData.data.courses.toLocaleString()}+` : '...', label: 'Courses Available' },
+    { icon: 'users', value: statsData?.data ? `${statsData.data.learners.toLocaleString()}+` : '...', label: 'Active Learners' },
+    { icon: 'chalkboard-teacher', value: statsData?.data ? `${statsData.data.instructors.toLocaleString()}+` : '...', label: 'Expert Instructors' },
+    { icon: 'certificate', value: statsData?.data ? `${statsData.data.certificates.toLocaleString()}+` : '...', label: 'Certificates Issued' },
   ];
 
   const getGridColumns = () => {
