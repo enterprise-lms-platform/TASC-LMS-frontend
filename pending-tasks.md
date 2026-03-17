@@ -1,6 +1,6 @@
 # TASC LMS Frontend — Pending Tasks
 
-**Last updated:** 17 March 2026 (updated with latest backend endpoint availability)
+**Last updated:** 17 March 2026 (evening — wired CatalogueHero, StorageQuota, Sidebar badge, auth-aware Header)
 **Repo:** `TASC-LMS-frontend`
 
 
@@ -59,12 +59,9 @@ These pages render but show fake data instead of real API responses. Each needs 
 - **Note:** Backend CSV columns are `email,first_name,last_name,role,department,phone_number` — verify this matches the frontend's expected format (`full_name,email_address,user_role,department,manager_email`). May need alignment.
 - **Blocked?** No — backend is ready. Frontend wiring needed.
 
-### 7. Content Upload Page — Storage Quota
+### ~~7. Content Upload Page — Storage Quota~~ — DONE
 - **File:** `src/pages/instructor/ContentUploadPage.tsx`
-- **What's hardcoded:** Storage info shows `used={0} total={10}` (line ~483)
-- **What to do:** Query real storage quota from `GET /api/v1/uploads/quota/` which returns `{ used_bytes, total_bytes }`.
-- **Backend status:** Endpoint now exists (`StorageQuotaView`).
-- **Blocked?** No — backend is ready
+- **Status:** Now fetches from `quotaApi.getQuota()` and converts `used_bytes`/`total_bytes` to GB for StorageInfoCard. Completed 17 Mar 2026.
 
 ### 8. Learner Certificates Page — Mock Fallback
 - **File:** `src/pages/learner/LearnerCertificatesPage.tsx`
@@ -99,11 +96,9 @@ These pages render but show fake data instead of real API responses. Each needs 
 - **What to do:** Replace with real enrollment data filtered by instructor's courses.
 - **Blocked?** No — enrollment API exists
 
-### 13. Instructor Notifications Page
+### ~~13. Instructor Notifications Page~~ — DONE
 - **File:** `src/pages/instructor/InstructorNotificationsPage.tsx`
-- **What's hardcoded:** `sampleNotifications[]` (10 mock notification objects)
-- **What to do:** Wire to `notificationApi.getAll()` (same pattern as LearnerNotificationsPage).
-- **Blocked?** No — endpoint exists
+- **Status:** Already wired to `notificationApi.getAll()` with mark-read and mark-all-read mutations. No hardcoded data remaining.
 
 ### 14. Instructor Workshops Page
 - **File:** `src/pages/instructor/WorkshopsPage.tsx`
@@ -265,12 +260,9 @@ The `CourseLandingPage` at `/course-details` is entirely static. Every child com
 - **Still hardcoded:** `levels[]` counts (Beginner/Intermediate/Advanced with `count: 0`), price range slider.
 - **What to do:** Compute level counts from course data or backend filter aggregation.
 
-### 40. Catalogue Hero — Hardcoded Stats
-- **File:** `src/components/catalogue/CatalogueHero.tsx` (lines 22-27)
-- **What's hardcoded:** `stats[]` with "1,000+ Courses", "200+ Expert Instructors", "50K+ Happy Learners", "4.8 Average Rating"
-- **What to do:** Fetch from `GET /api/v1/public/stats/`.
-- **Backend status:** Endpoint now exists.
-- **Blocked?** No — backend is ready
+### ~~40. Catalogue Hero — Hardcoded Stats~~ — DONE
+- **File:** `src/components/catalogue/CatalogueHero.tsx`
+- **Status:** Now fetches from `publicStatsApi.getStats()` for stats bar + badge chip, and `publicCategoryApi.getAll()` for category dropdown. Removed `console.log` debug. Completed 17 Mar 2026.
 
 ### 41. Catalogue Pagination — Hardcoded Page Count
 - **File:** `src/components/catalogue/Pagination.tsx` (line 8)
@@ -278,15 +270,9 @@ The `CourseLandingPage` at `/course-details` is entirely static. Every child com
 - **What to do:** Compute from total results count in paginated API response.
 - **Blocked?** No
 
-### 42. Public Header — No Auth-Aware State
+### ~~42. Public Header — No Auth-Aware State~~ — DONE
 - **Files:** `src/components/landing/Header.tsx`, `src/components/landing/MobileDrawer.tsx`
-- **Issue:** Header always shows "Log In" / "Start Free Trial" buttons regardless of whether the user is authenticated. When a logged-in user visits `/`, `/courses`, `/course-details`, or `/for-business`, they see login/register buttons instead of their profile avatar, dashboard link, and role-appropriate navigation.
-- **What to do:**
-  - Import `useAuth()` in Header and MobileDrawer
-  - If `isAuthenticated`: show profile avatar/name, "My Dashboard" link (route based on `user.role`), and "Log Out" button
-  - If not authenticated: show current "Log In" / "Start Free Trial" buttons
-  - Also consider showing "My Courses" link for logged-in learners
-- **Blocked?** No — `useAuth()` hook and user context already exist
+- **Status:** Both now use `useAuth()`. Authenticated users see "My Dashboard" (role-based routing) + "Log Out". Unauthenticated users see original "Log In" / "Start Free Trial". Completed 17 Mar 2026.
 
 ---
 
@@ -374,14 +360,12 @@ Multiple pages have `console.log` statements acting as placeholder click handler
 - `src/pages/learner/LearnerCourseDetailPage.tsx:166` — "View instructor profile" stub
 - `src/pages/learner/LearnerCourseDetailPage.tsx:174` — "Write review" stub
 - `src/pages/learner/LearnerCourseCatalogPage.tsx:46,54,58` — enroll/browse/view stubs
-- `src/components/catalogue/CatalogueHero.tsx:106` — "Typing:" on search input (debug log)
+- ~~`src/components/catalogue/CatalogueHero.tsx:106` — "Typing:" on search input (debug log)~~ — removed
 - **What to do:** Replace each with real functionality or remove. The `onEnroll`, `onExport`, `onView` stubs are user-facing dead buttons.
 
-### 53. Unread Count Badge in Sidebar
-- **File:** Learner `Sidebar.tsx`
-- **Issue:** No live unread notification count badge.
-- **What to do:** Add `useQuery` for `notificationApi.getUnreadCount()` and display badge on Notifications nav item.
-- **Blocked?** No — endpoint exists
+### ~~53. Unread Count Badge in Sidebar~~ — DONE
+- **File:** `src/components/instructor/Sidebar.tsx`
+- **Status:** Instructor sidebar now fetches real unread count via `notificationApi.getUnreadCount()` (polls every 60s). Badge shows actual count instead of hardcoded `5`. Completed 17 Mar 2026.
 
 ### 54. Type Safety — `as any` Casts
 Several files use `as any` to work around type mismatches. These should be fixed with proper typing:
@@ -397,6 +381,10 @@ Several files use `as any` to work around type mismatches. These should be fixed
 
 | Item | Date | Commit |
 |------|------|--------|
+| CatalogueHero: wired stats + categories to real APIs, removed console.log | 17 Mar 2026 | — |
+| ContentUploadPage: wired storage quota to `quotaApi.getQuota()` | 17 Mar 2026 | — |
+| Instructor Sidebar: real unread badge via `notificationApi.getUnreadCount()` | 17 Mar 2026 | — |
+| Header + MobileDrawer: auth-aware (My Dashboard / Log Out for logged-in users) | 17 Mar 2026 | — |
 | Wired 6 public/landing components to real APIs (CoursesGrid, StatsBanner, Categories, Courses, TrustedBy, FiltersSidebar) | 17 Mar 2026 | `d42ae05` |
 | Fixed public service types (paginated responses for categories/courses) | 17 Mar 2026 | `d42ae05` |
 | Fix TypeScript build errors (3 files) | 17 Mar 2026 | `28b5fe7` |

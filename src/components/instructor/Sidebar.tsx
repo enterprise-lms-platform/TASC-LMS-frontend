@@ -31,8 +31,10 @@ import {
   Person as ProfileIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation, matchPath } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../contexts/AuthContext';
 import { getUserDisplayName, getUserInitials } from '../../utils/userHelpers';
+import { notificationApi } from '../../services/notifications.services';
 
 // Sidebar width constant — matches learner sidebar
 export const DRAWER_WIDTH = 260;
@@ -52,14 +54,14 @@ interface NavSection {
   items: NavItem[];
 }
 
-// Navigation sections data with routes
-const navSections: NavSection[] = [
+// Build navigation sections (function so badge counts can be injected)
+const buildNavSections = (unreadCount?: number): NavSection[] => [
   {
     title: 'Dashboard',
     items: [
       { text: 'Overview', icon: <DashboardIcon />, path: '/instructor' },
       { text: 'Analytics', icon: <AnalyticsIcon />, path: '/instructor/analytics' },
-      { text: 'Notifications', icon: <NotificationsIcon />, path: '/instructor/notifications', badge: 5, badgeColor: 'primary' },
+      { text: 'Notifications', icon: <NotificationsIcon />, path: '/instructor/notifications', badge: unreadCount || undefined, badgeColor: 'primary' },
     ],
   },
   {
@@ -119,6 +121,14 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+
+  const { data: unreadData } = useQuery({
+    queryKey: ['notificationsUnreadCount'],
+    queryFn: () => notificationApi.getUnreadCount(),
+    refetchInterval: 60000,
+  });
+
+  const navSections = buildNavSections(unreadData?.data?.unread_count);
 
   const handleNavClick = (path?: string) => {
     if (path) {

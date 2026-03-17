@@ -21,8 +21,9 @@ import StorageInfoCard from '../../components/instructor/content-upload/StorageI
 import RecentUploadsCard from '../../components/instructor/content-upload/RecentUploadsCard';
 import type { RecentUploadItem } from '../../components/instructor/content-upload/RecentUploadsCard';
 import UploadFooter from '../../components/instructor/content-upload/UploadFooter';
-import { uploadApi } from '../../services/upload.services';
+import { uploadApi, quotaApi } from '../../services/upload.services';
 import type { SessionAssetUploadResult } from '../../services/upload.services';
+import { useQuery } from '@tanstack/react-query';
 import { usePartialUpdateSession } from '../../hooks/useCatalogue';
 import { getErrorMessage } from '../../utils/config';
 import FeedbackSnackbar from '../../components/common/FeedbackSnackbar';
@@ -82,6 +83,15 @@ const ContentUploadPage: React.FC = () => {
   const [contentSource, setContentSource] = useState<'upload' | 'external'>('upload');
   const [externalVideoUrl, setExternalVideoUrl] = useState('');
   const [externalVideoError, setExternalVideoError] = useState('');
+
+  const { data: quotaData } = useQuery({
+    queryKey: ['storageQuota'],
+    queryFn: () => quotaApi.getQuota(),
+  });
+
+  const bytesToGb = (bytes: number) => bytes / (1024 * 1024 * 1024);
+  const storageUsedGb = quotaData?.data ? bytesToGb(quotaData.data.used_bytes) : 0;
+  const storageTotalGb = quotaData?.data ? bytesToGb(quotaData.data.total_bytes) : 10;
 
   const hasSession = !!(numericCourseId && sessionId);
   const fileType: 'video' | 'document' | 'scorm' = contentType;
@@ -480,7 +490,7 @@ const ContentUploadPage: React.FC = () => {
             {/* Right Column */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <UploadTipsCard contentType={contentType} />
-              <StorageInfoCard used={0} total={10} />  {/* TODO: Replace with real storage quota from backend API when available */}
+              <StorageInfoCard used={storageUsedGb} total={storageTotalGb} />
               <RecentUploadsCard uploads={sampleRecentUploads} />
             </Box>
           </Box>
