@@ -255,18 +255,48 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 - **What to do:** Move to CMS or API for easy updates without code changes.
 - **Blocked?** Low priority — acceptable as static for now
 
+### 38. Course Details Page — Entire Page Hardcoded (`/course-details`)
+The `CourseLandingPage` at `/course-details` is entirely static. Every child component has fake data:
+- **CourseHero.tsx** — Hardcoded title ("Advanced React Patterns"), subtitle, badges ("Bestseller", "Updated Jan 2026"), category, rating (4.8), enrollment count (28,542), instructor name
+- **CoursePricingCard.tsx** — Hardcoded price ($149.99 / $199.99), includes list, "30-Day Money-Back Guarantee", preview image from Unsplash
+- **CourseCurriculum.tsx** — 4 hardcoded modules with fake lessons, durations, types
+- **CourseObjectives.tsx** — 8 hardcoded learning objectives
+- **CourseInstructor.tsx** — Hardcoded instructor "Michael Rodriguez" with fake stats (4.8 rating, 2,847 reviews, 28,542 students, 5 courses)
+- **CourseReviews.tsx** — Already tracked as #36
+- **RelatedCourses.tsx** — 3 hardcoded courses with Unsplash/Pexels images and fake prices
+- **What to do:** This page needs a `courseId` or `slug` URL param. Fetch course detail from `publicCourseApi.getById()` or `courseApi.getById()` and pass data down to all child components. Currently takes no props or params at all.
+- **Blocked?** No — course detail API exists. But the page needs restructuring to accept a course ID.
+
+### 39. Catalogue Filters Sidebar — Hardcoded Filter Options
+- **File:** `src/components/catalogue/FiltersSidebar.tsx` (lines 46-59)
+- **What's hardcoded:** `categories[]` (6 items with fake counts), `levels[]` (3 items with fake counts), price range slider
+- **What to do:** Fetch categories from `publicCategoryApi.getAll()`, compute level counts from course data.
+- **Blocked?** No
+
+### 40. Catalogue Hero — Hardcoded Stats
+- **File:** `src/components/catalogue/CatalogueHero.tsx` (lines 22-27)
+- **What's hardcoded:** `stats[]` with "1,000+ Courses", "200+ Expert Instructors", "50K+ Happy Learners", "4.8 Average Rating"
+- **What to do:** Fetch from public stats endpoint.
+- **Blocked?** Partially — no `/api/v1/public/stats/` endpoint
+
+### 41. Catalogue Pagination — Hardcoded Page Count
+- **File:** `src/components/catalogue/Pagination.tsx` (line 8)
+- **What's hardcoded:** `count={24}` (fixed 24 pages)
+- **What to do:** Compute from total results count in paginated API response.
+- **Blocked?** No
+
 ---
 
 ## HIGH — Service Layer Stubs & TODOs
 
-### 38. Grade Distribution API — Stub
+### 42. Grade Distribution API — Stub
 - **File:** `src/services/learning.services.ts` (lines 309-326)
 - **Issue:** `managerGradesApi.getGradeDistribution()` returns empty hardcoded structure. `managerGradesApi.getStudentGrades()` returns `[]`.
 - **Comment in code:** `// TODO: Replace with actual API call when backend endpoint exists`
 - **What to do:** Wire to real backend endpoint when available.
 - **Blocked?** Yes — backend endpoint does not exist
 
-### 39. Missing Query Parameter Support
+### 43. Missing Query Parameter Support
 - **Files:** Multiple service files have TODO comments about missing backend filter support:
   - `learning.services.ts` line 27: Enrollment filters (`search`, `dateRange`, `courseId`)
   - `learning.services.ts` line 62: Session progress `course` filter
@@ -281,30 +311,30 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 
 ## MEDIUM — Incomplete UI Features
 
-### 40. Curriculum Builder — Bulk Actions
+### 44. Curriculum Builder — Bulk Actions
 - **File:** `src/components/instructor/course-structure/CurriculumBuilder.tsx` (line 264)
 - **Issue:** "Bulk Actions" button is permanently disabled with no implementation.
 - **What to do:** Implement bulk delete, bulk move, bulk status change for lessons.
 - **Blocked?** No
 
-### 41. Course Publish Flow
+### 45. Course Publish Flow
 - **File:** `src/pages/instructor/CourseStructurePage.tsx` (line 631)
 - **Comment:** `// TODO: implement publish flow`
 - **What to do:** Implement status change from draft to submitted/published, trigger approval workflow.
 - **Blocked?** No — approval API exists
 
-### 42. Learner Assignment Submission UI
+### 46. Learner Assignment Submission UI
 - **File:** `src/pages/learner/LearnerAssignmentsPage.tsx`
 - **What to do:** Wire to real API, implement file upload modal for submissions using existing presign flow, wire Submit button to POST endpoint.
 - **Backend dependency:** Submission endpoints exist.
 - **Blocked?** No
 
-### 43. Learner Certificates — Real Data
+### 47. Learner Certificates — Real Data
 - **File:** `src/pages/learner/LearnerCertificatesPage.tsx`
 - **What to do:** Remove `MOCK_CERTIFICATES` fallback, ensure download button works with real `pdf_url`.
 - **Blocked?** Partially — backend PDF generation unclear
 
-### 44. Report Download
+### 48. Report Download
 - **Files:** `src/pages/manager/ManagerReportsPage.tsx`, `src/pages/finance/FinanceExportPage.tsx`
 - **Issue:** Generate button exists but download not fully implemented. Status comparison bug ("Ready" vs "ready").
 - **What to do:** Fix status comparison, wire download trigger when report status = ready.
@@ -314,17 +344,17 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 
 ## LOW — Polish & Cleanup
 
-### 45. Instructor Placeholder Page
+### 49. Instructor Placeholder Page
 - **File:** `src/pages/InstructorPlaceholderPage.tsx`
 - **Issue:** Generic "under development" page used for incomplete features.
 - **What to do:** Replace all references with actual implementations as features complete.
 
-### 46. Remove Console Logs
+### 50. Remove Console Logs
 - **File:** `src/pages/instructor/GradebookPage.tsx` (line 317)
 - **Issue:** `onCellClick` handler logs "Grade cell clicked".
 - **What to do:** Remove or replace with actual click handler.
 
-### 47. Unread Count Badge in Sidebar
+### 51. Unread Count Badge in Sidebar
 - **File:** Learner `Sidebar.tsx`
 - **Issue:** No live unread notification count badge.
 - **What to do:** Add `useQuery` for `notificationApi.getUnreadCount()` and display badge on Notifications nav item.
