@@ -1,6 +1,6 @@
 # TASC LMS Frontend — Pending Tasks
 
-**Last updated:** 17 March 2026 (evening — wired CatalogueHero, StorageQuota, Sidebar badge, auth-aware Header)
+**Last updated:** 17 March 2026 (night — wired CoursePublish, LearnerAssignments, BulkImport, CourseDetailsPage)
 **Repo:** `TASC-LMS-frontend`
 
 
@@ -51,13 +51,9 @@ These pages render but show fake data instead of real API responses. Each needs 
 - **Backend dependency:** No cross-org analytics endpoints exist.
 - **Blocked?** Yes — needs backend aggregation endpoints
 
-### 6. Manager Bulk Import Page
+### ~~6. Manager Bulk Import Page~~ — DONE
 - **File:** `src/pages/manager/ManagerBulkImportPage.tsx`
-- **What's hardcoded:** `columnMappings[]`, `importHistory[]` (lines 46-61)
-- **What to do:** Implement CSV parsing (papaparse), validate schema, POST to backend import endpoint, display per-row success/failure.
-- **Backend status:** `POST /api/v1/superadmin/users/bulk_import/` is now fully implemented with CSV validation, error tracking, and detailed response. Also `GET /api/v1/superadmin/users/csv_template/` returns a downloadable CSV template.
-- **Note:** Backend CSV columns are `email,first_name,last_name,role,department,phone_number` — verify this matches the frontend's expected format (`full_name,email_address,user_role,department,manager_email`). May need alignment.
-- **Blocked?** No — backend is ready. Frontend wiring needed.
+- **Status:** Wired to `bulkImportApi.uploadCsv()` and `bulkImportApi.downloadTemplate()` in `superadmin.services.ts`. Drag-and-drop file upload, real CSV upload via `useMutation`, template download, success/error feedback with error details table. Column mappings updated to match backend (`email,first_name,last_name,role,department,phone_number`). Removed hardcoded import history. Completed 17 Mar 2026.
 
 ### ~~7. Content Upload Page — Storage Quota~~ — DONE
 - **File:** `src/pages/instructor/ContentUploadPage.tsx`
@@ -242,17 +238,10 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 - **What to do:** Move to CMS or API for easy updates without code changes.
 - **Blocked?** Low priority — acceptable as static for now
 
-### 38. Course Details Page — Entire Page Hardcoded (`/course-details`)
-The `CourseLandingPage` at `/course-details` is entirely static. Every child component has fake data:
-- **CourseHero.tsx** — Hardcoded title ("Advanced React Patterns"), subtitle, badges ("Bestseller", "Updated Jan 2026"), category, rating (4.8), enrollment count (28,542), instructor name
-- **CoursePricingCard.tsx** — Hardcoded price ($149.99 / $199.99), includes list, "30-Day Money-Back Guarantee", preview image from Unsplash
-- **CourseCurriculum.tsx** — 4 hardcoded modules with fake lessons, durations, types
-- **CourseObjectives.tsx** — 8 hardcoded learning objectives
-- **CourseInstructor.tsx** — Hardcoded instructor "Michael Rodriguez" with fake stats (4.8 rating, 2,847 reviews, 28,542 students, 5 courses)
-- **CourseReviews.tsx** — Now unblocked (see #36)
-- **RelatedCourses.tsx** — 3 hardcoded courses with Unsplash/Pexels images and fake prices
-- **What to do:** This page needs a `courseId` or `slug` URL param. Fetch course detail from `publicCourseApi.getById(slug)` (supports slug lookup) and pass data down to all child components. Currently takes no props or params at all.
-- **Blocked?** No — course detail API exists, reviews API exists. Page needs restructuring to accept a course ID/slug.
+### 38. Course Details Page — Partially Done (page-level wiring complete)
+- **File:** `src/pages/public/CourseLandingPage.tsx`
+- **Status:** Route changed from `/course-details` to `/course-details/:slug`. Page now fetches via `publicCourseApi.getBySlug(slug)` with loading/error states. Created `CourseDetailContext` to share data with child components. Updated CourseCard and Courses.tsx links to use slug-based URLs. `courseId` prop now passed to CourseReviews. Completed 17 Mar 2026.
+- **Still pending:** Child components (CourseHero, CoursePricingCard, CourseCurriculum, CourseObjectives, CourseInstructor, RelatedCourses) still render hardcoded data. Each needs to consume `useCourseDetail()` context and display real data. This is a separate task per component.
 
 ### 39. Catalogue Filters Sidebar — Partially Done
 - **File:** `src/components/catalogue/FiltersSidebar.tsx`
@@ -321,17 +310,14 @@ The `CourseLandingPage` at `/course-details` is entirely static. Every child com
 - **What to do:** Implement bulk delete, bulk move, bulk status change for lessons.
 - **Blocked?** No
 
-### 48. Course Publish Flow
-- **File:** `src/pages/instructor/CourseStructurePage.tsx` (line 631)
-- **Comment:** `// TODO: implement publish flow`
-- **What to do:** Implement status change from draft to submitted/published, trigger approval workflow.
-- **Blocked?** No — approval API exists
+### ~~48. Course Publish Flow~~ — DONE
+- **File:** `src/pages/instructor/CourseStructurePage.tsx`
+- **Status:** `handlePublish()` now uses `useSubmitCourseForApproval()` hook with confirmation dialog, success snackbar, and error handling via `FeedbackSnackbar`. Completed 17 Mar 2026.
 
-### 49. Learner Assignment Submission UI
+### ~~49. Learner Assignment Submission UI~~ — Partially Done
 - **File:** `src/pages/learner/LearnerAssignmentsPage.tsx`
-- **What to do:** Wire to real API, implement file upload modal for submissions using existing presign flow, wire Submit button to POST endpoint.
-- **Backend dependency:** Submission endpoints exist.
-- **Blocked?** No
+- **Status:** Replaced all hardcoded data (`kpis[]`, `assignments[]`) with real `submissionApi.getAll()` fetch. KPIs computed from live data. Status mapping, grade labels, loading state all wired. Completed 17 Mar 2026.
+- **Still pending:** Submit/Late Submit buttons don't yet open a file upload modal — need file picker + presign upload flow for actual submission creation via `useCreateSubmission()`.
 
 ### 50. Learner Certificates — Real Data
 - **File:** `src/pages/learner/LearnerCertificatesPage.tsx`
@@ -381,6 +367,10 @@ Several files use `as any` to work around type mismatches. These should be fixed
 
 | Item | Date | Commit |
 |------|------|--------|
+| Course publish flow: `handlePublish()` wired to `useSubmitCourseForApproval()` | 17 Mar 2026 | — |
+| Learner assignments: replaced hardcoded data with `submissionApi.getAll()` | 17 Mar 2026 | — |
+| Bulk import: drag-drop CSV upload + template download via `bulkImportApi` | 17 Mar 2026 | — |
+| Course details page: slug route, `publicCourseApi.getBySlug()`, CourseDetailContext | 17 Mar 2026 | — |
 | CatalogueHero: wired stats + categories to real APIs, removed console.log | 17 Mar 2026 | — |
 | ContentUploadPage: wired storage quota to `quotaApi.getQuota()` | 17 Mar 2026 | — |
 | Instructor Sidebar: real unread badge via `notificationApi.getUnreadCount()` | 17 Mar 2026 | — |

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Box, Toolbar, CssBaseline, Paper, Typography, Grid, Chip,
-  Tabs, Tab, Button,
+  Tabs, Tab, Button, CircularProgress,
 } from '@mui/material';
 import {
   Assignment as AssignIcon, CheckCircle as DoneIcon,
@@ -10,55 +10,15 @@ import {
   Schedule as PendingIcon, Lock as LockIcon,
   Description as FileIcon,
 } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
 import '../../styles/LearnerDashboard.css';
 
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
+import { submissionApi } from '../../services/learning.services';
+import type { Submission } from '../../types/types';
 
-/* ── Static data ── */
-
-const kpis = [
-  { 
-    label: 'Total Assignments', 
-    value: '15', 
-    icon: <AssignIcon />, 
-    // Light Blue Theme
-    bgcolor: '#dbeafe',
-    iconBg: '#93c5fd',
-    color: '#1e3a8a',
-    subColor: '#1e40af',
-  },
-  { 
-    label: 'Submitted', 
-    value: '10', 
-    icon: <DoneIcon />, 
-    // Mint Green Theme
-    bgcolor: '#dcfce7',
-    iconBg: '#86efac',
-    color: '#14532d',
-    subColor: '#166534',
-  },
-  { 
-    label: 'Avg. Grade', 
-    value: 'A-', 
-    icon: <ScoreIcon />, 
-    // Warm Peach Theme
-    bgcolor: '#ffedd5',
-    iconBg: '#fdba74',
-    color: '#7c2d12',
-    subColor: '#9a3412',
-  },
-  { 
-    label: 'Pending', 
-    value: '5', 
-    icon: <PendingIcon />, 
-    // Dusty Lavender Theme
-    bgcolor: '#f3e8ff',
-    iconBg: '#d8b4fe',
-    color: '#581c87',
-    subColor: '#6b21a8',
-  },
-];
+/* ── Status mapping ── */
 
 type AssignStatus = 'graded' | 'submitted' | 'pending' | 'overdue' | 'locked';
 const statusStyles: Record<AssignStatus, { bg: string; color: string; label: string }> = {
@@ -69,32 +29,48 @@ const statusStyles: Record<AssignStatus, { bg: string; color: string; label: str
   locked:    { bg: 'rgba(156,163,175,0.08)', color: '#9ca3af', label: 'Locked' },
 };
 
-interface Assignment {
-  id: string;
-  title: string;
-  course: string;
-  type: string;
-  dueDate: string;
-  submittedDate?: string;
-  grade?: string;
-  score?: number;
-  maxScore: number;
-  feedback?: string;
-  status: AssignStatus;
-  attachments?: number;
+function mapSubmissionStatus(s: Submission): AssignStatus {
+  if (s.grade != null) return 'graded';
+  if (s.status === 'submitted' || s.status === 'pending_review') return 'submitted';
+  if (s.status === 'rejected') return 'overdue';
+  return 'pending';
 }
 
-const assignments: Assignment[] = [
-  { id: '1', title: 'Build a Custom Hook Library', course: 'Advanced React Patterns', type: 'Project', dueDate: 'Feb 10', submittedDate: 'Feb 9', grade: 'A', score: 92, maxScore: 100, feedback: 'Excellent use of generics and proper TypeScript typing.', status: 'graded', attachments: 3 },
-  { id: '2', title: 'Data Visualization Dashboard', course: 'Data Science Fundamentals', type: 'Project', dueDate: 'Feb 14', submittedDate: 'Feb 13', grade: 'A-', score: 88, maxScore: 100, feedback: 'Great work! Consider adding more interactivity.', status: 'graded', attachments: 5 },
-  { id: '3', title: 'Network Vulnerability Report', course: 'Cybersecurity Essentials', type: 'Report', dueDate: 'Feb 15', submittedDate: 'Feb 15', status: 'submitted', maxScore: 100, attachments: 2 },
-  { id: '4', title: 'State Management Essay', course: 'Advanced React Patterns', type: 'Essay', dueDate: 'Feb 8', submittedDate: 'Feb 7', grade: 'B+', score: 85, maxScore: 100, status: 'graded' },
-  { id: '5', title: 'Responsive Landing Page', course: 'HTML & CSS Mastery', type: 'Project', dueDate: 'Dec 20', submittedDate: 'Dec 19', grade: 'A+', score: 98, maxScore: 100, feedback: 'Outstanding work! Perfect responsive implementation.', status: 'graded', attachments: 4 },
-  { id: '6', title: 'Machine Learning Model Training', course: 'Data Science Fundamentals', type: 'Lab', dueDate: 'Feb 18', status: 'pending', maxScore: 100 },
-  { id: '7', title: 'Component Architecture Diagram', course: 'Advanced React Patterns', type: 'Diagram', dueDate: 'Feb 20', status: 'pending', maxScore: 50 },
-  { id: '8', title: 'SQL Injection Analysis', course: 'Cybersecurity Essentials', type: 'Report', dueDate: 'Feb 12', status: 'overdue', maxScore: 100 },
-  { id: '9', title: 'User Research Case Study', course: 'UX/UI Design Principles', type: 'Case Study', dueDate: 'Feb 22', status: 'pending', maxScore: 100 },
-  { id: '10', title: 'Threat Modeling Exercise', course: 'Cybersecurity Essentials', type: 'Exercise', dueDate: 'Mar 1', status: 'locked', maxScore: 100 },
+function gradeLabel(grade: number | null | undefined): string | undefined {
+  if (grade == null) return undefined;
+  if (grade >= 90) return 'A';
+  if (grade >= 85) return 'A-';
+  if (grade >= 80) return 'B+';
+  if (grade >= 75) return 'B';
+  if (grade >= 70) return 'B-';
+  if (grade >= 65) return 'C+';
+  if (grade >= 60) return 'C';
+  return 'F';
+}
+
+/* ── KPI config ── */
+
+const kpiConfig = [
+  {
+    label: 'Total Assignments',
+    icon: <AssignIcon />,
+    bgcolor: '#dbeafe', iconBg: '#93c5fd', color: '#1e3a8a', subColor: '#1e40af',
+  },
+  {
+    label: 'Submitted',
+    icon: <DoneIcon />,
+    bgcolor: '#dcfce7', iconBg: '#86efac', color: '#14532d', subColor: '#166534',
+  },
+  {
+    label: 'Avg. Grade',
+    icon: <ScoreIcon />,
+    bgcolor: '#ffedd5', iconBg: '#fdba74', color: '#7c2d12', subColor: '#9a3412',
+  },
+  {
+    label: 'Pending',
+    icon: <PendingIcon />,
+    bgcolor: '#f3e8ff', iconBg: '#d8b4fe', color: '#581c87', subColor: '#6b21a8',
+  },
 ];
 
 /* ── Component ── */
@@ -102,6 +78,49 @@ const assignments: Assignment[] = [
 const LearnerAssignmentsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+
+  const { data: submissionsRaw, isLoading } = useQuery({
+    queryKey: ['learner-submissions'],
+    queryFn: () => submissionApi.getAll().then((r) => r.data),
+  });
+
+  const submissions: Submission[] = Array.isArray(submissionsRaw)
+    ? submissionsRaw
+    : (submissionsRaw as any)?.results ?? [];
+
+  // Derive assignment rows from submissions
+  const assignments = submissions.map((s) => {
+    const status = mapSubmissionStatus(s);
+    const grade = gradeLabel(s.grade);
+    return {
+      id: String(s.id),
+      title: s.assignment_title || s.session_title || `Assignment #${s.assignment}`,
+      course: `Enrollment #${s.enrollment}`,
+      type: 'Assignment',
+      dueDate: new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      submittedDate: s.submitted_at ? new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined,
+      grade,
+      score: s.grade ?? undefined,
+      maxScore: 100,
+      feedback: s.feedback ?? undefined,
+      status,
+      hasFile: !!s.submitted_file_url,
+    };
+  });
+
+  // KPI values
+  const totalCount = assignments.length;
+  const submittedCount = assignments.filter((a) => a.status === 'graded' || a.status === 'submitted').length;
+  const gradedAssignments = assignments.filter((a) => a.score != null);
+  const avgGrade = gradedAssignments.length > 0
+    ? gradeLabel(Math.round(gradedAssignments.reduce((sum, a) => sum + (a.score ?? 0), 0) / gradedAssignments.length)) ?? '—'
+    : '—';
+  const pendingCount = assignments.filter((a) => a.status === 'pending' || a.status === 'overdue').length;
+
+  const kpis = kpiConfig.map((k, i) => ({
+    ...k,
+    value: i === 0 ? String(totalCount) : i === 1 ? String(submittedCount) : i === 2 ? avgGrade : String(pendingCount),
+  }));
 
   const tabLabels = ['All', 'Graded', 'Submitted', 'Pending', 'Overdue', 'Locked'];
   const tabFilter: Record<number, AssignStatus | null> = { 0: null, 1: 'graded', 2: 'submitted', 3: 'pending', 4: 'overdue', 5: 'locked' };
@@ -159,7 +178,6 @@ const LearnerAssignmentsPage: React.FC = () => {
                   },
                 }}
               >
-                {/* Icon Badge */}
                 <Box
                   sx={{
                     position: 'absolute',
@@ -179,7 +197,6 @@ const LearnerAssignmentsPage: React.FC = () => {
                   {k.icon}
                 </Box>
 
-                {/* Main Stat */}
                 <Typography
                   variant="h3"
                   sx={{
@@ -190,10 +207,9 @@ const LearnerAssignmentsPage: React.FC = () => {
                     mb: 1,
                   }}
                 >
-                  {k.value}
+                  {isLoading ? '...' : k.value}
                 </Typography>
 
-                {/* Label */}
                 <Typography
                   variant="body2"
                   sx={{
@@ -219,7 +235,11 @@ const LearnerAssignmentsPage: React.FC = () => {
           </Box>
 
           <Box sx={{ p: 3 }}>
-            {filtered.length === 0 ? (
+            {isLoading ? (
+              <Box sx={{ py: 6, textAlign: 'center' }}>
+                <CircularProgress size={32} />
+              </Box>
+            ) : filtered.length === 0 ? (
               <Box sx={{ py: 6, textAlign: 'center' }}>
                 <AssignIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
                 <Typography color="text.disabled">No assignments found</Typography>
@@ -243,14 +263,14 @@ const LearnerAssignmentsPage: React.FC = () => {
                       </Box>
                       <Typography color="text.disabled" sx={{ fontSize: '0.78rem', mb: 0.5 }}>{a.course}</Typography>
                       <Box sx={{ display: 'flex', gap: 2, color: 'text.disabled', fontSize: '0.72rem', flexWrap: 'wrap' }}>
-                        <span>📅 Due: {a.dueDate}</span>
-                        {a.submittedDate && <span>✅ Submitted: {a.submittedDate}</span>}
-                        {a.attachments && <span>📎 {a.attachments} files</span>}
-                        <span>📊 Max: {a.maxScore} pts</span>
+                        <span>Due: {a.dueDate}</span>
+                        {a.submittedDate && <span>Submitted: {a.submittedDate}</span>}
+                        {a.hasFile && <span>File attached</span>}
+                        <span>Max: {a.maxScore} pts</span>
                       </Box>
                       {a.feedback && (
                         <Typography sx={{ mt: 0.75, fontSize: '0.75rem', color: 'text.secondary', fontStyle: 'italic', bgcolor: 'rgba(0,0,0,0.02)', p: 1, borderRadius: '8px' }}>
-                          💬 "{a.feedback}"
+                          "{a.feedback}"
                         </Typography>
                       )}
                     </Box>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Box,
   CssBaseline,
@@ -14,6 +14,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  LinearProgress,
+  Alert,
 } from '@mui/material';
 import {
   FileUpload as FileUploadIcon,
@@ -21,9 +23,12 @@ import {
   Download as DownloadIcon,
   InsertDriveFile as FileIcon,
   ArrowForward as ArrowIcon,
+  CheckCircle as SuccessIcon,
 } from '@mui/icons-material';
+import { useMutation } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { bulkImportApi } from '../../services/superadmin.services';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -43,25 +48,58 @@ const headerSx = {
   gap: 2,
 };
 
-// ── Column Mapping ──
+// Backend CSV columns
 const columnMappings = [
-  { csvColumn: 'full_name', systemField: 'Name', sampleData: 'Sarah Mitchell' },
-  { csvColumn: 'email_address', systemField: 'Email', sampleData: 'sarah.m@acmecorp.com' },
-  { csvColumn: 'user_role', systemField: 'Role', sampleData: 'Learner' },
+  { csvColumn: 'email', systemField: 'Email', sampleData: 'sarah.m@acmecorp.com' },
+  { csvColumn: 'first_name', systemField: 'First Name', sampleData: 'Sarah' },
+  { csvColumn: 'last_name', systemField: 'Last Name', sampleData: 'Mitchell' },
+  { csvColumn: 'role', systemField: 'Role', sampleData: 'learner' },
   { csvColumn: 'department', systemField: 'Department', sampleData: 'Engineering' },
-  { csvColumn: 'manager_email', systemField: 'Reports To', sampleData: 'alex.o@acmecorp.com' },
-];
-
-// ── Import History ──
-const importHistory = [
-  { fileName: 'engineering_team_q1.csv', records: 156, successful: 152, failed: 4, date: 'Mar 6, 2026', status: 'Completed' },
-  { fileName: 'new_hires_march.csv', records: 42, successful: 42, failed: 0, date: 'Mar 1, 2026', status: 'Completed' },
-  { fileName: 'contractor_batch.csv', records: 28, successful: 0, failed: 28, date: 'Feb 22, 2026', status: 'Failed' },
-  { fileName: 'sales_onboarding.csv', records: 89, successful: 87, failed: 2, date: 'Feb 15, 2026', status: 'Completed' },
+  { csvColumn: 'phone_number', systemField: 'Phone', sampleData: '+1234567890' },
 ];
 
 const ManagerBulkImportPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadMutation = useMutation({
+    mutationFn: (file: File) => bulkImportApi.uploadCsv(file).then((r) => r.data),
+  });
+
+  const handleFileSelect = (file: File) => {
+    if (!file.name.endsWith('.csv')) return;
+    setSelectedFile(file);
+    uploadMutation.reset();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileSelect(file);
+  };
+
+  const handleUpload = () => {
+    if (!selectedFile) return;
+    uploadMutation.mutate(selectedFile);
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      const response = await bulkImportApi.downloadTemplate();
+      const blob = new Blob([response.data], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'user_import_template.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // Silently fail — user can retry
+    }
+  };
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -130,14 +168,28 @@ const ManagerBulkImportPage: React.FC = () => {
                   </Box>
                 </Box>
                 <Box sx={{ p: 3 }}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    hidden
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileSelect(file);
+                    }}
+                  />
                   <Box
+                    onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
                     sx={{
                       border: '2px dashed',
-                      borderColor: 'grey.300',
+                      borderColor: dragOver ? '#ffa424' : 'grey.300',
                       borderRadius: '12px',
                       p: 5,
                       textAlign: 'center',
-                      bgcolor: 'rgba(255,164,36,0.02)',
+                      bgcolor: dragOver ? 'rgba(255,164,36,0.05)' : 'rgba(255,164,36,0.02)',
                       cursor: 'pointer',
                       transition: 'border-color 0.2s, background 0.2s',
                       '&:hover': {
@@ -147,16 +199,65 @@ const ManagerBulkImportPage: React.FC = () => {
                     }}
                   >
                     <CloudUploadIcon sx={{ fontSize: 48, color: '#ffa424', mb: 1.5 }} />
-                    <Typography variant="body1" fontWeight={600} sx={{ mb: 0.5 }}>
-                      Drag and drop your CSV file here
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      or click to browse files
-                    </Typography>
-                    <Typography variant="caption" color="text.disabled">
-                      Accepted format: .csv (max 10MB, up to 5,000 records)
-                    </Typography>
+                    {selectedFile ? (
+                      <>
+                        <Typography variant="body1" fontWeight={600} sx={{ mb: 0.5 }}>
+                          {selectedFile.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {(selectedFile.size / 1024).toFixed(1)} KB — Click or drop to replace
+                        </Typography>
+                      </>
+                    ) : (
+                      <>
+                        <Typography variant="body1" fontWeight={600} sx={{ mb: 0.5 }}>
+                          Drag and drop your CSV file here
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                          or click to browse files
+                        </Typography>
+                        <Typography variant="caption" color="text.disabled">
+                          Accepted format: .csv (max 10MB, up to 5,000 records)
+                        </Typography>
+                      </>
+                    )}
                   </Box>
+
+                  {/* Upload button */}
+                  {selectedFile && !uploadMutation.isSuccess && (
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      onClick={handleUpload}
+                      disabled={uploadMutation.isPending}
+                      sx={{
+                        mt: 2,
+                        bgcolor: '#ffa424',
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        '&:hover': { bgcolor: '#f97316' },
+                      }}
+                    >
+                      {uploadMutation.isPending ? 'Importing...' : 'Import Users'}
+                    </Button>
+                  )}
+
+                  {uploadMutation.isPending && <LinearProgress sx={{ mt: 1 }} />}
+
+                  {uploadMutation.isSuccess && (
+                    <Alert severity="success" icon={<SuccessIcon />} sx={{ mt: 2 }}>
+                      Successfully created {uploadMutation.data?.created ?? 0} users.
+                      {(uploadMutation.data?.errors?.length ?? 0) > 0 && (
+                        <> {uploadMutation.data!.errors.length} row(s) had errors.</>
+                      )}
+                    </Alert>
+                  )}
+
+                  {uploadMutation.isError && (
+                    <Alert severity="error" sx={{ mt: 2 }}>
+                      Import failed. Please check your CSV format and try again.
+                    </Alert>
+                  )}
 
                   <Box sx={{ mt: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -168,6 +269,7 @@ const ManagerBulkImportPage: React.FC = () => {
                     <Button
                       size="small"
                       startIcon={<DownloadIcon />}
+                      onClick={handleDownloadTemplate}
                       sx={{
                         textTransform: 'none',
                         fontWeight: 600,
@@ -184,7 +286,7 @@ const ManagerBulkImportPage: React.FC = () => {
 
             {/* Step 2: Column Mapping */}
             <Grid size={{ xs: 12, lg: 6 }}>
-              <Paper elevation={0} sx={{ ...cardSx, opacity: 0.7 }}>
+              <Paper elevation={0} sx={{ ...cardSx, opacity: selectedFile ? 1 : 0.7 }}>
                 <Box sx={headerSx}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Chip
@@ -192,7 +294,7 @@ const ManagerBulkImportPage: React.FC = () => {
                       size="small"
                       sx={{
                         fontWeight: 700,
-                        bgcolor: 'grey.300',
+                        bgcolor: selectedFile ? '#ffa424' : 'grey.300',
                         color: 'white',
                         width: 28,
                         height: 28,
@@ -201,7 +303,16 @@ const ManagerBulkImportPage: React.FC = () => {
                     />
                     <Typography fontWeight={700}>Column Mapping</Typography>
                   </Box>
-                  <Chip label="Pending Upload" size="small" sx={{ fontWeight: 600, fontSize: '0.7rem', bgcolor: 'grey.100', color: 'text.secondary' }} />
+                  <Chip
+                    label={selectedFile ? 'Ready' : 'Pending Upload'}
+                    size="small"
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: '0.7rem',
+                      bgcolor: selectedFile ? 'rgba(16,185,129,0.1)' : 'grey.100',
+                      color: selectedFile ? '#10b981' : 'text.secondary',
+                    }}
+                  />
                 </Box>
                 <TableContainer>
                   <Table size="small">
@@ -244,91 +355,34 @@ const ManagerBulkImportPage: React.FC = () => {
               </Paper>
             </Grid>
 
-            {/* Step 3: Import History */}
-            <Grid size={{ xs: 12 }}>
-              <Paper elevation={0} sx={cardSx}>
-                <Box sx={headerSx}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Chip
-                      label="3"
-                      size="small"
-                      sx={{
-                        fontWeight: 700,
-                        bgcolor: '#ffa424',
-                        color: 'white',
-                        width: 28,
-                        height: 28,
-                        '& .MuiChip-label': { px: 0 },
-                      }}
-                    />
-                    <Typography fontWeight={700}>Import History</Typography>
+            {/* Import result errors table */}
+            {uploadMutation.isSuccess && (uploadMutation.data?.errors?.length ?? 0) > 0 && (
+              <Grid size={{ xs: 12 }}>
+                <Paper elevation={0} sx={cardSx}>
+                  <Box sx={headerSx}>
+                    <Typography fontWeight={700} color="error.main">Import Errors</Typography>
                   </Box>
-                </Box>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }}>File Name</TableCell>
-                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }} align="center">Records</TableCell>
-                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }} align="center">Successful</TableCell>
-                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }} align="center">Failed</TableCell>
-                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }}>Date</TableCell>
-                        <TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.8rem' }}>Status</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {importHistory.map((entry, idx) => (
-                        <TableRow
-                          key={idx}
-                          sx={{ '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' }, '&:last-child td': { borderBottom: 0 } }}
-                        >
-                          <TableCell>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <FileIcon sx={{ fontSize: 18, color: '#ffa424' }} />
-                              <Typography variant="body2" fontWeight={600}>
-                                {entry.fileName}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2" fontWeight={600}>
-                              {entry.records}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2" fontWeight={600} sx={{ color: '#10b981' }}>
-                              {entry.successful}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2" fontWeight={600} sx={{ color: entry.failed > 0 ? '#ef4444' : 'text.secondary' }}>
-                              {entry.failed}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" color="text.secondary">
-                              {entry.date}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              label={entry.status}
-                              size="small"
-                              sx={{
-                                fontWeight: 600,
-                                fontSize: '0.75rem',
-                                bgcolor: entry.status === 'Completed' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                                color: entry.status === 'Completed' ? '#10b981' : '#ef4444',
-                              }}
-                            />
-                          </TableCell>
+                  <TableContainer>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 700, fontSize: '0.8rem' }}>Row</TableCell>
+                          <TableCell sx={{ fontWeight: 700, fontSize: '0.8rem' }}>Error</TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Paper>
-            </Grid>
+                      </TableHead>
+                      <TableBody>
+                        {uploadMutation.data!.errors.map((err, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell>{err.row}</TableCell>
+                            <TableCell>{err.message}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Paper>
+              </Grid>
+            )}
           </Grid>
         </Box>
       </Box>
