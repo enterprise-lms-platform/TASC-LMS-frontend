@@ -18,7 +18,8 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
     queryFn: () => publicCourseApi.getAll({ featured: true, page_size: 6 }),
   });
 
-  const coursesList = coursesData.data?.data?.results?.map((course) => ({
+  const apiData = coursesData?.data?.data;
+  const coursesList = (apiData?.results || []).map((course: any) => ({
     id: course.id,
     slug: course.slug,
     category: course.category?.name || 'General',
@@ -26,11 +27,11 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
     instructor: course.instructor_name,
     hours: course.duration_hours ? `${course.duration_hours} hours` : 'N/A',
     level: course.level,
-    rating: 0,
-    reviews: '0',
+    rating: course.rating || 0,
+    reviews: String(course.rating_count || 0),
     badge: course.featured ? 'Featured' : undefined,
     image: course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800',
-  })) || [];
+  }));
 
   const handleEnroll = (course: { title: string }) => {
     setSelectedCourse(course);

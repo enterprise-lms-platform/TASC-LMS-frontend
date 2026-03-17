@@ -55,11 +55,12 @@ const FiltersSidebar: React.FC = () => {
     queryFn: () => publicCategoryApi.getAll(),
   });
 
-  const categories: FilterOption[] = categoriesData?.data?.map((cat) => ({
+  const apiData = (categoriesData as any)?.data;
+  const categories: FilterOption[] = (apiData?.results || []).map((cat: any) => ({
     id: cat.id,
     label: cat.name,
     count: 0,
-  })) || [];
+  }));
 
   const levels: FilterOption[] = [
     { label: 'Beginner', count: 0 },

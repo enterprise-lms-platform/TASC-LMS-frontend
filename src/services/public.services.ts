@@ -27,7 +27,7 @@ export const healthApi = {
 export const publicCategoryApi = {
   //  List all active categories (no auth required)
   getAll: () =>
-    apiClient.get<Category[]>(`${PUBLIC_PATH}/categories/`),
+    apiClient.get<{ count: number; results: Category[] }>(`${PUBLIC_PATH}/categories/`),
 
   //  Get category details (no auth required)
   getById: (id: number) =>
@@ -71,7 +71,7 @@ export interface TrustedClient {
 export const publicCourseApi = {
   // List published courses (no auth required)
   getAll: (params?: PublicCourseParams) =>
-    apiClient.get<PaginatedResponse<CourseList>>(`${PUBLIC_PATH}/courses/`, {
+    apiClient.get<{ count: number; results: CourseList[] }>(`${PUBLIC_PATH}/courses/`, {
       params,
     }),
 

@@ -28,14 +28,15 @@ const Categories: React.FC<CategoriesProps> = ({ isMobile }) => {
     queryFn: () => publicCategoryApi.getAll(),
   });
 
-  const categories = categoriesData.data?.data?.slice(0, 8).map((cat, idx) => ({
+  const apiData = categoriesData?.data?.data;
+  const categories = (apiData?.results || []).slice(0, 8).map((cat: any, idx: number) => ({
     id: cat.id,
     slug: cat.slug,
     name: cat.name,
     icon: icons[idx % icons.length],
-    courses: '...',
+    courses: String(cat.courses_count || 0),
     gradient: gradients[idx % gradients.length],
-  })) || [];
+  }));
 
   const getGridColumns = () => {
     if (isMobile) return '1fr';

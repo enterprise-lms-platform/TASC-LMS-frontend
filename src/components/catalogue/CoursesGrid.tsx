@@ -34,7 +34,8 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({ onMobileFilterOpen, category,
     queryFn: () => publicCourseApi.getAll(params),
   });
 
-  const courses: Course[] = coursesData?.data?.results?.map((course) => ({
+  const apiData = (coursesData as any)?.data;
+  const courses: Course[] = (apiData?.results || []).map((course: any) => ({
     id: String(course.id),
     title: course.title,
     category: course.category?.name || 'General',
@@ -42,14 +43,14 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({ onMobileFilterOpen, category,
     instructorInitials: course.instructor_name.split(' ').map(n => n[0]).join('').slice(0, 2),
     duration: course.duration_hours ? `${course.duration_hours} hours` : 'N/A',
     level: course.level,
-    rating: 0,
-    ratingCount: '0',
+    rating: course.rating || 0,
+    ratingCount: String(course.rating_count || 0),
     image: course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800',
     badge: undefined,
     badgeText: undefined,
-  })) || [];
+  }));
 
-  const totalResults = coursesData?.data?.count || 0;
+  const totalResults = apiData?.count || 0;
 
   const handleEnroll = (course: Course) => {
     setSelectedCourse(course);

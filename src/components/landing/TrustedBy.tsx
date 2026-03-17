@@ -12,16 +12,10 @@ const TrustedBy: React.FC<TrustedByProps> = ({ isMobile }) => {
     queryFn: () => publicClientsApi.getClients(),
   });
 
-  const companies = clientsData.data?.data?.map((client) => ({
+  const companies = (clientsData?.data?.data || []).map((client: any) => ({
     name: client.name,
     logoUrl: client.logo_url,
-  })) || [
-    { icon: 'building', name: 'Acme Corp' },
-    { icon: 'globe', name: 'Global Tech' },
-    { icon: 'rocket', name: 'Innovate' },
-    { icon: 'bolt', name: 'Future Dynamics' },
-    { icon: 'star', name: 'NextGen' },
-  ];
+  }));
 
   return (
     <section
