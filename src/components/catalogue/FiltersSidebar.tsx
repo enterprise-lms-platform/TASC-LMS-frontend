@@ -1,4 +1,5 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   Paper,
@@ -19,6 +20,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import StarIcon from '@mui/icons-material/Star';
 import StarHalfIcon from '@mui/icons-material/StarHalf';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
+import { publicCategoryApi } from '../../services/public.services';
 
 const FilterSection: React.FC<{ title: string; children: React.ReactNode; defaultExpanded?: boolean }> = ({
   title,
@@ -41,34 +43,37 @@ const FilterSection: React.FC<{ title: string; children: React.ReactNode; defaul
 interface FilterOption {
   label: string;
   count: number;
+  id?: number;
 }
-
-const categories: FilterOption[] = [
-  { label: 'Web Development', count: 142 },
-  { label: 'Data Science', count: 98 },
-  { label: 'Cybersecurity', count: 67 },
-  { label: 'Business', count: 124 },
-  { label: 'Design', count: 89 },
-  { label: 'Marketing', count: 76 },
-];
-
-const levels: FilterOption[] = [
-  { label: 'Beginner', count: 245 },
-  { label: 'Intermediate', count: 312 },
-  { label: 'Advanced', count: 156 },
-];
-
-const durations: FilterOption[] = [
-  { label: '0-5 hours', count: 145 },
-  { label: '5-20 hours', count: 298 },
-  { label: '20+ hours', count: 270 },
-];
-
-const features: string[] = ['Certificate Included', 'Hands-on Projects', 'Live Sessions', 'Subtitles Available'];
 
 const FiltersSidebar: React.FC = () => {
   const [priceRange, setPriceRange] = React.useState<number[]>([0, 200]);
   const [selectedRating, setSelectedRating] = React.useState<number | null>(null);
+
+  const { data: categoriesData } = useQuery({
+    queryKey: ['publicCategories'],
+    queryFn: () => publicCategoryApi.getAll(),
+  });
+
+  const categories: FilterOption[] = categoriesData?.data?.map((cat) => ({
+    id: cat.id,
+    label: cat.name,
+    count: 0,
+  })) || [];
+
+  const levels: FilterOption[] = [
+    { label: 'Beginner', count: 0 },
+    { label: 'Intermediate', count: 0 },
+    { label: 'Advanced', count: 0 },
+  ];
+
+  const durations: FilterOption[] = [
+    { label: '0-5 hours', count: 0 },
+    { label: '5-20 hours', count: 0 },
+    { label: '20+ hours', count: 0 },
+  ];
+
+  const features: string[] = ['Certificate Included', 'Hands-on Projects', 'Live Sessions', 'Subtitles Available'];
 
   const renderFilterOption = (item: FilterOption) => (
     <FormControlLabel

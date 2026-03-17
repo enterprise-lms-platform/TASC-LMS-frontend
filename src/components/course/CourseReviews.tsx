@@ -1,41 +1,65 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Box, Typography, Stack, LinearProgress, Button, Rating, TextField, InputAdornment, Avatar, Paper } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import SearchIcon from '@mui/icons-material/Search';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import { courseReviewApi } from '../../services/catalogue.services';
 
-const reviews = [
-  {
-    initials: 'JK',
-    name: 'James Kariuki',
-    role: 'Senior Developer at TechCorp',
-    rating: 5,
-    date: '2 weeks ago',
+interface CourseReviewsProps {
+  courseId?: number;
+}
+
+const CourseReviews: React.FC<CourseReviewsProps> = ({ courseId }) => {
+  const { data: reviewData } = useQuery({
+    queryKey: ['courseReviews', courseId],
+    queryFn: () => courseReviewApi.getSummary(courseId!),
+    enabled: !!courseId,
+  });
+
+  const summary = reviewData?.data || { average: 0, total: 0, distribution: [0, 0, 0, 0, 0], reviews: [] };
+
+  const reviews = summary.reviews.map((review) => ({
+    initials: review.user_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+    name: review.user_name,
+    role: 'Student',
+    rating: review.rating,
+    date: new Date(review.created_at).toLocaleDateString(),
     avatarColor: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
-    content: "This is exactly what I was looking for! After years of working with React, I thought I knew most patterns, but this course opened my eyes to so many optimizations and best practices I wasn't aware of. The section on compound components alone was worth the price. Michael explains complex concepts in a way that's easy to understand and immediately applicable. Highly recommended for anyone serious about React development."
-  },
-  {
-    initials: 'AN',
-    name: 'Amina Nakato',
-    role: 'Frontend Engineer at StartupXYZ',
-    rating: 5,
-    date: '1 month ago',
-    avatarColor: 'linear-gradient(135deg, #10b981, #34d399)',
-    content: "The performance optimization module is incredible. I applied the techniques to our production app and we saw a 40% improvement in rendering performance. The instructor clearly knows what he's talking about - you can tell he's actually built these things in the real world. The projects are practical and the code quality is excellent."
-  },
-  {
-    initials: 'PO',
-    name: 'Peter Ochieng',
-    role: 'Lead Developer at Innovate Solutions',
-    rating: 4,
-    date: '1 month ago',
-    avatarColor: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
-    content: "Great course overall. The content is top-notch and Michael is an excellent instructor. I'm giving 4 stars only because I wish there was more content on React Server Components and Next.js integration. That said, the fundamentals covered here are rock solid and I've already recommended this course to my entire team."
-  }
-];
+    content: review.content,
+  }));
 
-const CourseReviews: React.FC = () => {
+  // Fallback to sample reviews if no data
+  const displayReviews = reviews.length > 0 ? reviews : [
+    {
+      initials: 'JK',
+      name: 'James Kariuki',
+      role: 'Senior Developer at TechCorp',
+      rating: 5,
+      date: '2 weeks ago',
+      avatarColor: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
+      content: "This is exactly what I was looking for! After years of working with React, I thought I knew most patterns, but this course opened my eyes to so many optimizations and best practices I wasn't aware of."
+    },
+    {
+      initials: 'AN',
+      name: 'Amina Nakato',
+      role: 'Frontend Engineer at StartupXYZ',
+      rating: 5,
+      date: '1 month ago',
+      avatarColor: 'linear-gradient(135deg, #10b981, #34d399)',
+      content: "The performance optimization module is incredible. I applied the techniques to our production app and we saw a 40% improvement in rendering performance."
+    },
+    {
+      initials: 'PO',
+      name: 'Peter Ochieng',
+      role: 'Lead Developer at Innovate Solutions',
+      rating: 4,
+      date: '1 month ago',
+      avatarColor: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
+      content: "Great course overall. The content is top-notch and the instructor is excellent. I'd recommend this to anyone serious about learning."
+    }
+  ];
   return (
     <Box id="reviews" className="course-section" sx={{ mb: 8, scrollMarginTop: '140px' }}>
       <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: '#18181b' }}>Student Reviews</Typography>
@@ -43,9 +67,9 @@ const CourseReviews: React.FC = () => {
       {/* Summary */}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} sx={{ mb: 4 }}>
         <Box textAlign="center">
-          <Typography variant="h2" sx={{ fontWeight: 800, color: '#f59e0b', lineHeight: 1 }}>4.8</Typography>
-          <Rating value={4.8} readOnly precision={0.1} size="large" sx={{ color: '#f59e0b', my: 1 }} />
-          <Typography variant="body2" color="text.secondary">Course Rating</Typography>
+          <Typography variant="h2" sx={{ fontWeight: 800, color: '#f59e0b', lineHeight: 1 }}>{summary.average > 0 ? summary.average.toFixed(1) : '0.0'}</Typography>
+          <Rating value={summary.average} readOnly precision={0.1} size="large" sx={{ color: '#f59e0b', my: 1 }} />
+          <Typography variant="body2" color="text.secondary">{summary.total} Reviews</Typography>
         </Box>
 
         <Box flex={1} maxWidth={400}>
@@ -57,10 +81,10 @@ const CourseReviews: React.FC = () => {
               </Box>
               <LinearProgress 
                 variant="determinate" 
-                value={[78, 15, 5, 1, 1][i]} 
+                value={summary.distribution.length > 0 ? summary.distribution[5 - star] : 0} 
                 sx={{ flex: 1, height: 8, borderRadius: 1, bgcolor: '#e4e4e7', '& .MuiLinearProgress-bar': { bgcolor: '#f59e0b', transition: 'background-color 0.3s' } }} 
               />
-              <Typography variant="body2" color="text.secondary" width={40} textAlign="right">{[78, 15, 5, 1, 1][i]}%</Typography>
+              <Typography variant="body2" color="text.secondary" width={40} textAlign="right">{summary.distribution.length > 0 ? summary.distribution[5 - star] : 0}%</Typography>
             </Stack>
           ))}
         </Box>
@@ -100,7 +124,7 @@ const CourseReviews: React.FC = () => {
 
       {/* Reviews List */}
       <Stack spacing={3}>
-        {reviews.map((review, i) => (
+        {displayReviews.map((review, i) => (
           <Paper key={i} elevation={0} sx={{ p: 4, border: '1px solid #e4e4e7', borderRadius: 3 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
               <Stack direction="row" spacing={2}>

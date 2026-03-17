@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import EnrollmentModal from '../catalogue/EnrollmentModal';
+import { publicCourseApi } from '../../services/public.services';
 
 interface CoursesProps {
   isMobile: boolean;
@@ -10,6 +12,25 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
   const navigate = useNavigate();
   const [enrollModalOpen, setEnrollModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<{ title: string } | null>(null);
+
+  const coursesData = useQuery({
+    queryKey: ['publicCourses', 'featured'],
+    queryFn: () => publicCourseApi.getAll({ featured: true, page_size: 6 }),
+  });
+
+  const coursesList = coursesData.data?.data?.results?.map((course) => ({
+    id: course.id,
+    slug: course.slug,
+    category: course.category?.name || 'General',
+    title: course.title,
+    instructor: course.instructor_name,
+    hours: course.duration_hours ? `${course.duration_hours} hours` : 'N/A',
+    level: course.level,
+    rating: 0,
+    reviews: '0',
+    badge: course.featured ? 'Featured' : undefined,
+    image: course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800',
+  })) || [];
 
   const handleEnroll = (course: { title: string }) => {
     setSelectedCourse(course);
@@ -129,14 +150,16 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
             gap: '32px',
           }}
         >
-          {courses.map((course, idx) => (
+          {coursesList.map((course, idx) => (
             <div
-              key={idx}
+              key={course.id || idx}
               className="course-card"
+              onClick={() => navigate(`/course-details?slug=${course.slug}`)}
               style={{
                 borderRadius: '16px',
                 overflow: 'hidden',
                 backgroundColor: 'white',
+                cursor: 'pointer',
               }}
             >
               {/* Card Header Image */}

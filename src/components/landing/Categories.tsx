@@ -1,20 +1,41 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { publicCategoryApi } from '../../services/public.services';
 
 interface CategoriesProps {
   isMobile: boolean;
 }
 
+const gradients = [
+  'linear-gradient(135deg, #667eea, #764ba2)',
+  'linear-gradient(135deg, #11998e, #38ef7d)',
+  'linear-gradient(135deg, #eb3349, #f45c43)',
+  'linear-gradient(135deg, #f093fb, #f5576c)',
+  'linear-gradient(135deg, #4facfe, #00f2fe)',
+  'linear-gradient(135deg, #43e97b, #38f9d7)',
+  'linear-gradient(135deg, #fa709a, #fee140)',
+  'linear-gradient(135deg, #a8edea, #fed6e3)',
+];
+
+const icons = ['code', 'chart-line', 'shield-alt', 'briefcase', 'paint-brush', 'bullhorn', 'cloud', 'mobile-alt'];
+
 const Categories: React.FC<CategoriesProps> = ({ isMobile }) => {
-  const categories = [
-    { icon: 'code', name: 'Web Development', courses: 42, gradient: 'linear-gradient(135deg, #667eea, #764ba2)' },
-    { icon: 'chart-line', name: 'Data Science', courses: 28, gradient: 'linear-gradient(135deg, #11998e, #38ef7d)' },
-    { icon: 'shield-alt', name: 'Cybersecurity', courses: 15, gradient: 'linear-gradient(135deg, #eb3349, #f45c43)' },
-    { icon: 'briefcase', name: 'Business', courses: 36, gradient: 'linear-gradient(135deg, #f093fb, #f5576c)' },
-    { icon: 'paint-brush', name: 'Design', courses: 24, gradient: 'linear-gradient(135deg, #4facfe, #00f2fe)' },
-    { icon: 'bullhorn', name: 'Marketing', courses: 18, gradient: 'linear-gradient(135deg, #43e97b, #38f9d7)' },
-    { icon: 'cloud', name: 'Cloud Computing', courses: 21, gradient: 'linear-gradient(135deg, #fa709a, #fee140)' },
-    { icon: 'mobile-alt', name: 'Mobile Development', courses: 19, gradient: 'linear-gradient(135deg, #a8edea, #fed6e3)' },
-  ];
+  const navigate = useNavigate();
+  
+  const categoriesData = useQuery({
+    queryKey: ['publicCategories'],
+    queryFn: () => publicCategoryApi.getAll(),
+  });
+
+  const categories = categoriesData.data?.data?.slice(0, 8).map((cat, idx) => ({
+    id: cat.id,
+    slug: cat.slug,
+    name: cat.name,
+    icon: icons[idx % icons.length],
+    courses: '...',
+    gradient: gradients[idx % gradients.length],
+  })) || [];
 
   const getGridColumns = () => {
     if (isMobile) return '1fr';
@@ -65,7 +86,7 @@ const Categories: React.FC<CategoriesProps> = ({ isMobile }) => {
         >
           {categories.map((category, index) => (
             <a
-              key={index}
+              key={category.id || index}
               href="#"
               className="category-card"
               style={{
@@ -77,6 +98,10 @@ const Categories: React.FC<CategoriesProps> = ({ isMobile }) => {
                 textDecoration: 'none',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                navigate(`/courses?category=${category.slug}`);
               }}
               onMouseEnter={(e) => {
                 const target = e.currentTarget as HTMLAnchorElement;

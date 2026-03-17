@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   Grid,
@@ -35,6 +36,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
+import { organizationApi } from '../../services/organization.services';
 
 interface Organization {
   id: string;
@@ -167,47 +169,69 @@ import KPICard from '../../components/superadmin/KPICard';
 
 // ... (getStatusColor function remains unchanged)
 
-const kpiCards = [
-  {
-    title: 'Total Organizations',
-    value: '142',
-    icon: <OrganizationsIcon />,
-    // Mint Green Theme
-    bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
-  },
-  {
-    title: 'Active',
-    value: '128',
-    icon: <ActiveIcon />,
-    // Soft Grey Theme
-    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#3f3f46', labelColor: '#27272a'
-  },
-  {
-    title: 'Pending Approval',
-    value: '8',
-    icon: <PendingIcon />,
-    // Warm Peach Theme
-    bgColor: '#fff3e0', badgeColor: '#ffb74d', valueColor: '#e65100', labelColor: '#bf360c'
-  },
-  {
-    title: 'Suspended',
-    value: '6',
-    icon: <SuspendedIcon />,
-    // Warm Orange Theme
-    bgColor: '#fff3e0', badgeColor: '#ffb74d', valueColor: '#e65100', labelColor: '#bf360c'
-  },
-];
+// const kpiCards = [
 
 const AllOrganizationsPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const filteredOrganizations = mockOrganizations.filter((org) => {
+  const { data: organizationsData, isLoading } = useQuery({
+    queryKey: ['organizations'],
+    queryFn: () => organizationApi.getAll({ limit: 100 }),
+  });
+
+  const organizations = organizationsData?.data || [];
+
+  const organizationsMapped = organizations.map((org) => ({
+    id: String(org.id),
+    name: org.name,
+    initials: org.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+    bgColor: 'linear-gradient(135deg, #ffb74d, #ffa424)',
+    plan: 'Standard',
+    users: '0',
+    courses: org.courses_count || 0,
+    revenue: '$0',
+    status: org.is_active ? 'active' : 'pending' as const,
+    created: org.created_at ? new Date(org.created_at).toLocaleDateString() : '',
+  }));
+
+  const filteredOrganizations = organizationsMapped.filter((org) => {
     const matchesSearch = org.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || org.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const totalOrgs = organizationsMapped.length;
+  const activeOrgs = organizationsMapped.filter(o => o.status === 'active').length;
+  const pendingOrgs = organizationsMapped.filter(o => o.status === 'pending').length;
+
+  const kpiCards = [
+    {
+      title: 'Total Organizations',
+      value: String(totalOrgs),
+      icon: <OrganizationsIcon />,
+      bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
+    },
+    {
+      title: 'Active',
+      value: String(activeOrgs),
+      icon: <ActiveIcon />,
+      bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#3f3f46', labelColor: '#27272a'
+    },
+    {
+      title: 'Pending Approval',
+      value: String(pendingOrgs),
+      icon: <PendingIcon />,
+      bgColor: '#fff3e0', badgeColor: '#ffb74d', valueColor: '#e65100', labelColor: '#bf360c'
+    },
+    {
+      title: 'Suspended',
+      value: '0',
+      icon: <SuspendedIcon />,
+      bgColor: '#fafafa', badgeColor: '#71717a', valueColor: '#3f3f46', labelColor: '#27272a'
+    },
+  ];
 
   return (
     <SuperadminLayout title="All Organizations" subtitle="Manage organizations on the platform">

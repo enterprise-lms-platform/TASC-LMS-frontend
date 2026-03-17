@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   Paper,
@@ -31,6 +32,7 @@ import {
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import KPICard from '../../components/superadmin/KPICard';
+import { usersApi } from '../../services/users.services';
 
 const kpiStats = [
   {
@@ -192,6 +194,59 @@ const AllUsersPage: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
 
+  const { data: usersData, isLoading } = useQuery({
+    queryKey: ['users', roleFilter, statusFilter, searchQuery],
+    queryFn: () => usersApi.getAll({
+      role: roleFilter === 'All' ? undefined : roleFilter.toLowerCase(),
+      is_active: statusFilter === 'Active' ? true : statusFilter === 'Suspended' ? false : undefined,
+      search: searchQuery || undefined,
+      page_size: 100,
+    }),
+  });
+
+  const users = usersData?.data?.results || [];
+
+  const usersMapped = users.map((user) => ({
+    id: String(user.id),
+    name: user.name || `${user.first_name} ${user.last_name}`.trim(),
+    email: user.email,
+    role: user.role.charAt(0).toUpperCase() + user.role.slice(1),
+    organization: '-',
+    status: user.is_active ? 'active' : 'suspended' as const,
+    lastLogin: user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never',
+    avatarColor: '#ffa424',
+  }));
+
+  const totalUsers = usersMapped.length;
+  const activeUsers = usersMapped.filter(u => u.status === 'active').length;
+
+  const kpiStats = [
+    {
+      title: 'Total Users',
+      value: String(totalUsers),
+      icon: <UsersIcon />,
+      bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412'
+    },
+    {
+      title: 'Active Users',
+      value: String(activeUsers),
+      icon: <UsersIcon />,
+      bgColor: '#dcfce7', badgeColor: '#4ade80', valueColor: '#14532d', labelColor: '#166534'
+    },
+    {
+      title: 'New This Month',
+      value: '0',
+      icon: <PersonAddIcon />,
+      bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
+    },
+    {
+      title: 'Suspended',
+      value: String(totalUsers - activeUsers),
+      icon: <BlockIcon />,
+      bgColor: '#f1f8e9', badgeColor: '#aed581', valueColor: '#558b2f', labelColor: '#33691e'
+    },
+  ];
+
   return (
     <SuperadminLayout title="All Users" subtitle="Manage users across all organizations">
       {/* KPI Stat Cards */}
@@ -306,7 +361,7 @@ const AllUsersPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {mockUsers.map((user) => (
+              {usersMapped.map((user) => (
                 <TableRow
                   key={user.id}
                   sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' }, '&:last-child td': { borderBottom: 0 } }}
