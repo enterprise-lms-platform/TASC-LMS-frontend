@@ -285,18 +285,28 @@ The `CourseLandingPage` at `/course-details` is entirely static. Every child com
 - **What to do:** Compute from total results count in paginated API response.
 - **Blocked?** No
 
+### 42. Public Header — No Auth-Aware State
+- **Files:** `src/components/landing/Header.tsx`, `src/components/landing/MobileDrawer.tsx`
+- **Issue:** Header always shows "Log In" / "Start Free Trial" buttons regardless of whether the user is authenticated. When a logged-in user visits `/`, `/courses`, `/course-details`, or `/for-business`, they see login/register buttons instead of their profile avatar, dashboard link, and role-appropriate navigation.
+- **What to do:**
+  - Import `useAuth()` in Header and MobileDrawer
+  - If `isAuthenticated`: show profile avatar/name, "My Dashboard" link (route based on `user.role`), and "Log Out" button
+  - If not authenticated: show current "Log In" / "Start Free Trial" buttons
+  - Also consider showing "My Courses" link for logged-in learners
+- **Blocked?** No — `useAuth()` hook and user context already exist
+
 ---
 
 ## HIGH — Service Layer Stubs & TODOs
 
-### 42. Grade Distribution API — Stub
+### 43. Grade Distribution API — Stub
 - **File:** `src/services/learning.services.ts` (lines 309-326)
 - **Issue:** `managerGradesApi.getGradeDistribution()` returns empty hardcoded structure. `managerGradesApi.getStudentGrades()` returns `[]`.
 - **Comment in code:** `// TODO: Replace with actual API call when backend endpoint exists`
 - **What to do:** Wire to real backend endpoint when available.
 - **Blocked?** Yes — backend endpoint does not exist
 
-### 43. Missing Query Parameter Support
+### 44. Missing Query Parameter Support
 - **Files:** Multiple service files have TODO comments about missing backend filter support:
   - `learning.services.ts` line 27: Enrollment filters (`search`, `dateRange`, `courseId`)
   - `learning.services.ts` line 62: Session progress `course` filter
@@ -311,30 +321,30 @@ The `CourseLandingPage` at `/course-details` is entirely static. Every child com
 
 ## MEDIUM — Incomplete UI Features
 
-### 44. Curriculum Builder — Bulk Actions
+### 45. Curriculum Builder — Bulk Actions
 - **File:** `src/components/instructor/course-structure/CurriculumBuilder.tsx` (line 264)
 - **Issue:** "Bulk Actions" button is permanently disabled with no implementation.
 - **What to do:** Implement bulk delete, bulk move, bulk status change for lessons.
 - **Blocked?** No
 
-### 45. Course Publish Flow
+### 46. Course Publish Flow
 - **File:** `src/pages/instructor/CourseStructurePage.tsx` (line 631)
 - **Comment:** `// TODO: implement publish flow`
 - **What to do:** Implement status change from draft to submitted/published, trigger approval workflow.
 - **Blocked?** No — approval API exists
 
-### 46. Learner Assignment Submission UI
+### 47. Learner Assignment Submission UI
 - **File:** `src/pages/learner/LearnerAssignmentsPage.tsx`
 - **What to do:** Wire to real API, implement file upload modal for submissions using existing presign flow, wire Submit button to POST endpoint.
 - **Backend dependency:** Submission endpoints exist.
 - **Blocked?** No
 
-### 47. Learner Certificates — Real Data
+### 48. Learner Certificates — Real Data
 - **File:** `src/pages/learner/LearnerCertificatesPage.tsx`
 - **What to do:** Remove `MOCK_CERTIFICATES` fallback, ensure download button works with real `pdf_url`.
 - **Blocked?** Partially — backend PDF generation unclear
 
-### 48. Report Download
+### 49. Report Download
 - **Files:** `src/pages/manager/ManagerReportsPage.tsx`, `src/pages/finance/FinanceExportPage.tsx`
 - **Issue:** Generate button exists but download not fully implemented. Status comparison bug ("Ready" vs "ready").
 - **What to do:** Fix status comparison, wire download trigger when report status = ready.
@@ -344,17 +354,17 @@ The `CourseLandingPage` at `/course-details` is entirely static. Every child com
 
 ## LOW — Polish & Cleanup
 
-### 49. Instructor Placeholder Page
+### 50. Instructor Placeholder Page
 - **File:** `src/pages/InstructorPlaceholderPage.tsx`
 - **Issue:** Generic "under development" page used for incomplete features.
 - **What to do:** Replace all references with actual implementations as features complete.
 
-### 50. Remove Console Logs
+### 51. Remove Console Logs
 - **File:** `src/pages/instructor/GradebookPage.tsx` (line 317)
 - **Issue:** `onCellClick` handler logs "Grade cell clicked".
 - **What to do:** Remove or replace with actual click handler.
 
-### 51. Unread Count Badge in Sidebar
+### 52. Unread Count Badge in Sidebar
 - **File:** Learner `Sidebar.tsx`
 - **Issue:** No live unread notification count badge.
 - **What to do:** Add `useQuery` for `notificationApi.getUnreadCount()` and display badge on Notifications nav item.
