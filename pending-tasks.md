@@ -190,11 +190,9 @@ These pages render but show fake data instead of real API responses. Each needs 
 
 These render on public-facing pages visible to all visitors. Hardcoded numbers and fake courses hurt credibility.
 
-### 27. Catalogue Courses Grid — Hardcoded Course Listings
-- **File:** `src/components/catalogue/CoursesGrid.tsx` (lines 13-23)
-- **What's hardcoded:** 9 fake courses with titles, instructors, ratings, prices. Also hardcoded "713" total results count.
-- **What to do:** Fetch from `publicCourseApi.getAll()` with pagination. The API exists.
-- **Blocked?** No
+### ~~27. Catalogue Courses Grid~~ — DONE
+- **File:** `src/components/catalogue/CoursesGrid.tsx`
+- **Status:** Now fetches from `publicCourseApi.getAll()` with real ratings, rating counts, and paginated total. Completed in `d42ae05`.
 
 ### 28. Catalogue Featured Categories — Fake Course Counts
 - **File:** `src/components/catalogue/FeaturedCategories.tsx` (lines 13-22)
@@ -202,24 +200,17 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 - **What to do:** Fetch from `publicCategoryApi.getAll()` and use real course counts.
 - **Blocked?** No — API exists
 
-### 29. Landing Page Stats Banner — Fake Platform Metrics
-- **File:** `src/components/landing/StatsBanner.tsx` (lines 8-13)
-- **What's hardcoded:** "1,000+ Courses", "50,000+ Active Learners", "200+ Instructors", "25,000+ Certificates"
-- **What to do:** Fetch real counts from `GET /api/v1/public/stats/` which returns `{ courses, learners, instructors, certificates }`.
-- **Backend status:** Endpoint now exists and returns live counts.
-- **Blocked?** No — backend is ready
+### ~~29. Landing Page Stats Banner~~ — DONE
+- **File:** `src/components/landing/StatsBanner.tsx`
+- **Status:** Now fetches from `publicStatsApi.getStats()` and displays real platform metrics. Completed in `d42ae05`.
 
-### 30. Landing Page Categories — Fake Course Counts
-- **File:** `src/components/landing/Categories.tsx` (lines 8-17)
-- **What's hardcoded:** 8 categories with fake counts (e.g., "42 courses")
-- **What to do:** Fetch from `publicCategoryApi.getAll()`.
-- **Blocked?** No
+### ~~30. Landing Page Categories~~ — DONE
+- **File:** `src/components/landing/Categories.tsx`
+- **Status:** Now fetches from `publicCategoryApi.getAll()` with real `courses_count`. Completed in `d42ae05`.
 
-### 31. Landing Page Featured Courses — Fake Courses
-- **File:** `src/components/landing/Courses.tsx` (lines 19-52)
-- **What's hardcoded:** 3 featured courses with fake instructors, ratings, prices
-- **What to do:** Fetch from `publicCourseApi.getAll()` with `featured=true` filter.
-- **Blocked?** No
+### ~~31. Landing Page Featured Courses~~ — DONE
+- **File:** `src/components/landing/Courses.tsx`
+- **Status:** Now fetches from `publicCourseApi.getAll({ featured: true })` with real ratings and review counts. Completed in `d42ae05`.
 
 ### 32. Landing Page Pricing — Hardcoded Price
 - **File:** `src/components/landing/Pricing.tsx` (lines 137-170)
@@ -227,12 +218,9 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 - **What to do:** Fetch from subscription plans API.
 - **Blocked?** No — subscription API exists
 
-### 33. Landing Page Trusted By — Fake Company Names
-- **File:** `src/components/landing/TrustedBy.tsx` (lines 8-14)
-- **What's hardcoded:** 5 fake companies ("Acme Corp", "Global Tech", etc.)
-- **What to do:** Fetch from `GET /api/v1/public/clients/` which returns `[{ name, logo_url }]`.
-- **Backend status:** Endpoint now exists.
-- **Blocked?** No — backend is ready
+### ~~33. Landing Page Trusted By~~ — DONE
+- **File:** `src/components/landing/TrustedBy.tsx`
+- **Status:** Now fetches from `publicClientsApi.getClients()`. Hardcoded fallback companies removed. Completed in `d42ae05`.
 
 ### 34. Business Page Pricing — Hardcoded Plans
 - **File:** `src/components/business/PricingSection.tsx` (lines 20-76)
@@ -271,11 +259,11 @@ The `CourseLandingPage` at `/course-details` is entirely static. Every child com
 - **What to do:** This page needs a `courseId` or `slug` URL param. Fetch course detail from `publicCourseApi.getById(slug)` (supports slug lookup) and pass data down to all child components. Currently takes no props or params at all.
 - **Blocked?** No — course detail API exists, reviews API exists. Page needs restructuring to accept a course ID/slug.
 
-### 39. Catalogue Filters Sidebar — Hardcoded Filter Options
-- **File:** `src/components/catalogue/FiltersSidebar.tsx` (lines 46-59)
-- **What's hardcoded:** `categories[]` (6 items with fake counts), `levels[]` (3 items with fake counts), price range slider
-- **What to do:** Fetch categories from `publicCategoryApi.getAll()`, compute level counts from course data.
-- **Blocked?** No
+### 39. Catalogue Filters Sidebar — Partially Done
+- **File:** `src/components/catalogue/FiltersSidebar.tsx`
+- **Status:** Categories now fetched from `publicCategoryApi.getAll()` (completed in `d42ae05`).
+- **Still hardcoded:** `levels[]` counts (Beginner/Intermediate/Advanced with `count: 0`), price range slider.
+- **What to do:** Compute level counts from course data or backend filter aggregation.
 
 ### 40. Catalogue Hero — Hardcoded Stats
 - **File:** `src/components/catalogue/CatalogueHero.tsx` (lines 22-27)
@@ -409,6 +397,8 @@ Several files use `as any` to work around type mismatches. These should be fixed
 
 | Item | Date | Commit |
 |------|------|--------|
+| Wired 6 public/landing components to real APIs (CoursesGrid, StatsBanner, Categories, Courses, TrustedBy, FiltersSidebar) | 17 Mar 2026 | `d42ae05` |
+| Fixed public service types (paginated responses for categories/courses) | 17 Mar 2026 | `d42ae05` |
 | Fix TypeScript build errors (3 files) | 17 Mar 2026 | `28b5fe7` |
 | Drag-and-drop reordering (modules + lessons) | 16 Mar 2026 | `8ed0df3` |
 | Quiz player (timer, attempts, grading, all 6 types) | 16 Mar 2026 | `8ed0df3` |
