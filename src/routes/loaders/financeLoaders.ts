@@ -8,6 +8,8 @@ import { redirect } from 'react-router-dom';
 import { queryKeys } from '../../hooks/queryKeys';
 import { invoiceApi, transactionApi, subscriptionApi } from '../../services/payments.services';
 
+const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;
+
 /**
  * Finance Dashboard Loader
  * Pre-fetches payment summaries and recent transactions
@@ -33,7 +35,7 @@ export const financeDashboardLoader = async (queryClient: QueryClient) => {
     return { transactions, invoices };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return { transactions: { results: [], count: 0 }, invoices: { results: [], count: 0 } };
   }
@@ -57,7 +59,7 @@ export const financePaymentsLoader = async (
     return { transactions };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { transactions: { results: [], count: 0 } };
   }
 };
@@ -80,7 +82,7 @@ export const financeInvoicesLoader = async (
     return { invoices };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { invoices: { results: [], count: 0 } };
   }
 };
@@ -102,7 +104,7 @@ export const financeSubscriptionsLoader = async (
     return { subscriptions };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { subscriptions: [] };
   }
 };
@@ -123,7 +125,7 @@ export const financeRouteLoader = async (queryClient: QueryClient) => {
     return { transactions };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return {};
   }

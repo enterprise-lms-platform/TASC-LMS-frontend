@@ -10,6 +10,8 @@ import { queryKeys } from '../../hooks/queryKeys';
 import { courseApi } from '../../services/catalogue.services';
 import { enrollmentApi, submissionApi } from '../../services/learning.services';
 
+const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;
+
 /**
  * Instructor Dashboard Loader
  * Pre-fetches instructor's courses and analytics data
@@ -33,7 +35,7 @@ export const instructorDashboardLoader = async (queryClient: QueryClient) => {
     return { courses, enrollments };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner'); // Not an instructor
     return { courses: { results: [], count: 0 }, enrollments: [] };
   }
@@ -58,7 +60,7 @@ export const instructorCoursesLoader = async (
     return { courses };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { courses: { results: [], count: 0 } };
   }
 };
@@ -112,7 +114,7 @@ export const courseStructureLoader = async (
     return { course };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 404 || err.status === 403) {
       return redirect('/instructor/courses');
     }
@@ -144,7 +146,7 @@ export const coursePreviewLoader = async (
     return { course };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 404 || err.status === 403) {
       return redirect('/instructor/courses');
     }
@@ -170,7 +172,7 @@ export const instructorLearnersLoader = async (
     return { enrollments };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { enrollments: [] };
   }
 };
@@ -194,7 +196,7 @@ export const gradingLoader = async (
     return { submissions };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { submissions: [] };
   }
 };
@@ -219,7 +221,7 @@ export const gradebookLoader = async (
     return { enrollments };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { enrollments: [] };
   }
 };
@@ -243,7 +245,7 @@ export const instructorAnalyticsLoader = async (
     return { enrollments };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { enrollments: [] };
   }
 };
@@ -264,7 +266,7 @@ export const instructorRouteLoader = async (queryClient: QueryClient) => {
     return { courses };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return { courses: { results: [], count: 0 } };
   }

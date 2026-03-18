@@ -137,7 +137,7 @@ const CatalogueHero: React.FC<CatalogueHeroProps> = ({ isMobile, onSearch }) => 
               />
             </Box>
             
-            <Box sx={{ width: { xs: '100%', md: 1 }, height: { xs: 1, md: 'auto' }, bgcolor: '#e4e4e7', my: { xs: 0, md: 1.5 } }} />
+            <Box sx={{ width: { xs: '100%', md: '1px' }, height: { xs: '1px', md: 'auto' }, bgcolor: '#e4e4e7', my: { xs: 0, md: 1.5 } }} />
 
             <Box sx={{ display: 'flex', alignItems: 'center', px: 2, py: 2, borderBottom: { xs: '1px solid #e4e4e7', md: 'none' } }}>
               <Select

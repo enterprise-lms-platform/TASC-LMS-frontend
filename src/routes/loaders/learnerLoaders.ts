@@ -9,6 +9,8 @@ import { queryKeys } from '../../hooks/queryKeys';
 import { enrollmentApi, sessionProgressApi, certificateApi } from '../../services/learning.services';
 import { courseApi } from '../../services/catalogue.services';
 
+const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;
+
 /**
  * Learner Dashboard Loader
  * Pre-fetches: enrollments, session progress, certificates
@@ -46,8 +48,7 @@ export const learnerDashboardLoader = async (queryClient: QueryClient) => {
     };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    // Redirect on auth errors
-    if (error?.status === 401) {
+    if (error?.status === 401 && !DEV_BYPASS_AUTH) {
       return redirect('/login');
     }
     // For other errors, return empty data so the page can still render
@@ -71,7 +72,7 @@ export const myCoursesLoader = async (queryClient: QueryClient) => {
     return { enrollments };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { enrollments: [] };
   }
 };
@@ -94,7 +95,7 @@ export const learnerCourseCatalogLoader = async (
     return { courses };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    if (error?.status === 401) return redirect('/login');
+    if (error?.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { courses: [] };
   }
 };
@@ -133,7 +134,10 @@ export const learnerCourseDetailLoader = async (
     return { course, enrollments };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 404 || err.status === 401) {
+    if (err.status === 401 && !DEV_BYPASS_AUTH) {
+      return redirect('/learner/courses');
+    }
+    if (err.status === 404) {
       return redirect('/learner/courses');
     }
     throw error;
@@ -175,7 +179,7 @@ export const coursePlayerLoader = async (
     return { course, progress };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) {
+    if (err.status === 401 && !DEV_BYPASS_AUTH) {
       return redirect('/login');
     }
     if (err.status === 404) {
@@ -201,7 +205,7 @@ export const learnerAssignmentsLoader = async (queryClient: QueryClient) => {
     return { enrollments };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { enrollments: [] };
   }
 };
@@ -227,7 +231,7 @@ export const learnerProgressLoader = async (queryClient: QueryClient) => {
     return { progress, enrollments };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { progress: [], enrollments: [] };
   }
 };
@@ -247,7 +251,7 @@ export const learnerCertificatesLoader = async (queryClient: QueryClient) => {
     return { certificates };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { certificates: [] };
   }
 };
@@ -280,7 +284,7 @@ export const checkoutLoader = async (
     return { course };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    if (error?.status === 401) return redirect('/login');
+    if (error?.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (error?.status === 404) return redirect('/learner/courses');
     // Allow page to render with state-based course data on other errors
     return { course: null };
@@ -298,7 +302,7 @@ export const paymentHistoryLoader = async () => {
     return {};
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return {};
   }
 };
@@ -313,7 +317,7 @@ export const learnerNotificationsLoader = async () => {
     return {};
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return {};
   }
 };

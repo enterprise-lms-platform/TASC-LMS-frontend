@@ -8,6 +8,8 @@ import { redirect } from 'react-router-dom';
 import { queryKeys } from '../../hooks/queryKeys';
 import { categoryApi, courseApi, courseApprovalApi, type CategoryListParams } from '../../services/catalogue.services';
 
+const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;
+
 /**
  * Manager Dashboard Loader
  * Pre-fetches management overview data
@@ -31,7 +33,7 @@ export const managerDashboardLoader = async (queryClient: QueryClient) => {
     return { categories, coursesData };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return { categories: { results: [], count: 0 }, coursesData: { results: [], count: 0 } };
   }
@@ -55,7 +57,7 @@ export const managerCategoriesLoader = async (
     return { categories };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { categories: { results: [], count: 0 } };
   }
 };
@@ -81,7 +83,7 @@ export const managerAnalyticsLoader = async (queryClient: QueryClient) => {
     return { categories, coursesData };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { categories: { results: [], count: 0 }, coursesData: { results: [], count: 0 } };
   }
 };
@@ -101,7 +103,7 @@ export const approvalQueueLoader = async (queryClient: QueryClient) => {
     return { approvalRequests };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return { approvalRequests: { results: [], count: 0 } };
   }
@@ -137,7 +139,7 @@ export const approvalDetailLoader = async (
     return { approvalRequest };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return redirect('/manager/approvals');
   }
@@ -159,7 +161,7 @@ export const managerRouteLoader = async (queryClient: QueryClient) => {
     return { categories };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return {};
   }

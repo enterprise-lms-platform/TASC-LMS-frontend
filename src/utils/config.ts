@@ -5,6 +5,8 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
+const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;
+
 
 // API Configuration
 // In development the Vite proxy forwards /api/* to Django at 127.0.0.1:8000.
@@ -157,7 +159,7 @@ export const createApiClient = (): AxiosInstance => {
             clearTokens();
             processQueue(new Error('No refresh token available'), null);
             isRefreshing = false;
-            if (typeof window !== 'undefined') {
+            if (typeof window !== 'undefined' && !DEV_BYPASS_AUTH) {
               window.location.href = '/login';
             }
             return Promise.reject(error);
@@ -186,7 +188,7 @@ export const createApiClient = (): AxiosInstance => {
           clearTokens();
           processQueue(refreshError as Error, null);
           isRefreshing = false;
-          if (typeof window !== 'undefined') {
+          if (typeof window !== 'undefined' && !DEV_BYPASS_AUTH) {
             window.location.href = '/login';
           }
           return Promise.reject(refreshError);

@@ -9,6 +9,8 @@ import { queryKeys } from '../../hooks/queryKeys';
 import { courseApi, courseApprovalApi } from '../../services/catalogue.services';
 import { auditLogApi } from '../../services/superadmin.services';
 
+const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;
+
 /**
  * Superadmin Dashboard Loader
  * Pre-fetches system metrics and overview data
@@ -35,7 +37,7 @@ export const superadminDashboardLoader = async (queryClient: QueryClient) => {
     return { auditLogs, coursesData };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return { auditLogs: { results: [], count: 0 }, coursesData: { results: [], count: 0 } };
   }
@@ -59,7 +61,7 @@ export const auditLogsLoader = async (
     return { auditLogs };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { auditLogs: { results: [], count: 0 } };
   }
 };
@@ -82,7 +84,7 @@ export const allCoursesLoader = async (
     return { courses };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { courses: { results: [], count: 0 } };
   }
 };
@@ -102,7 +104,7 @@ export const approvalQueueLoader = async (queryClient: QueryClient) => {
     return { approvalRequests };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return { approvalRequests: { results: [], count: 0 } };
   }
@@ -137,7 +139,7 @@ export const approvalDetailLoader = async (
     return { approvalRequest };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return redirect('/superadmin');
   }
@@ -159,7 +161,7 @@ export const superadminRouteLoader = async (queryClient: QueryClient) => {
     return { auditLogs };
   } catch (error: unknown) {
     const err = error as { status?: number };
-    if (err.status === 401) return redirect('/login');
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return {};
   }
