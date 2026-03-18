@@ -18,7 +18,7 @@ interface CoursesGridProps {
   onTotalCountChange?: (count: number) => void;
 }
 
-const CoursesGrid: React.FC<CoursesGridProps> = ({ onMobileFilterOpen, category, level, sortBy = 'popular', page = 1, onTotalCountChange }) => {
+const CoursesGrid: React.FC<CoursesGridProps> = ({ onMobileFilterOpen, category, level, search, sortBy = 'popular', page = 1, onTotalCountChange }) => {
   const [view, setView] = React.useState('grid');
   const [sort, setSort] = React.useState(sortBy);
   const [enrollModalOpen, setEnrollModalOpen] = React.useState(false);
@@ -28,9 +28,10 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({ onMobileFilterOpen, category,
     page_size: 12,
     page,
   };
-  
+
   if (category) params.category = category;
   if (level && level !== 'all_levels') params.level = level as 'beginner' | 'intermediate' | 'advanced';
+  if (search) params.search = search;
   
   const { data: coursesData } = useQuery({
     queryKey: ['publicCourses', params],

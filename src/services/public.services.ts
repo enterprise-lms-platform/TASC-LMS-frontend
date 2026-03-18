@@ -51,6 +51,8 @@ export interface PublicCourseParams {
   category?: number;
   featured?: boolean;
   level?: 'beginner' | 'intermediate' | 'advanced' | 'all_levels';
+  search?: string;
+  ordering?: string;
   page?: number;
   page_size?: number;
 }

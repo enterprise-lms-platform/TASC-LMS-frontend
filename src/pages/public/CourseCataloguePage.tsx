@@ -23,6 +23,8 @@ const CourseCataloguePage: React.FC = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [search, setSearch] = useState('');
+  const [heroCategory, setHeroCategory] = useState<number | undefined>(undefined);
 
   const pageCount = Math.ceil(totalCount / PAGE_SIZE);
 
@@ -51,6 +53,12 @@ const CourseCataloguePage: React.FC = () => {
     window.scrollTo({ top: 400, behavior: 'smooth' });
   };
 
+  const handleSearch = (query: string, category: string) => {
+    setSearch(query);
+    setHeroCategory(category ? Number(category) : undefined);
+    setPage(1);
+  };
+
   return (
     <Box sx={{ width: '100%', bgcolor: '#fafafa', minHeight: '100vh' }}>
       {/* Header */}
@@ -63,7 +71,7 @@ const CourseCataloguePage: React.FC = () => {
       <MobileFilterDrawer open={mobileFiltersOpen} onClose={() => setMobileFiltersOpen(false)} />
 
       {/* Hero Section */}
-      <CatalogueHero isMobile={isMobile} />
+      <CatalogueHero isMobile={isMobile} onSearch={handleSearch} />
 
       {/* Main Content */}
       <Container maxWidth="lg" sx={{ py: { xs: 4, md: 8 } }}>
@@ -75,9 +83,11 @@ const CourseCataloguePage: React.FC = () => {
 
           {/* Grid Content */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <CoursesGrid 
-              onMobileFilterOpen={() => setMobileFiltersOpen(true)} 
+            <CoursesGrid
+              onMobileFilterOpen={() => setMobileFiltersOpen(true)}
               page={page}
+              search={search}
+              category={heroCategory}
               onTotalCountChange={setTotalCount}
             />
             {pageCount > 1 && <Pagination count={pageCount} page={page} onPageChange={handlePageChange} />}
