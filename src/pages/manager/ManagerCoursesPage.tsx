@@ -98,8 +98,8 @@ const ManagerCoursesPage: React.FC = () => {
     queryFn: () => categoryApi.getAll().then(r => r.data),
   });
 
-  const courses = coursesData?.results ?? [];
-  const categories = categoriesData ?? [];
+  const courses = coursesData?.results ?? (Array.isArray(coursesData) ? coursesData : []);
+  const categories = Array.isArray(categoriesData) ? categoriesData : (categoriesData as any)?.results ?? [];
 
   const getCategoryName = (categoryId: number) => {
     const cat = categories.find((c) => c.id === categoryId);

@@ -83,10 +83,13 @@ const ManagerCategoriesPage: React.FC = () => {
   const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
 
+  // Normalise — handle both plain array and paginated { results } response
+  const categoryList: Category[] = Array.isArray(categories) ? categories : (categories as any)?.results ?? [];
+
   // Filtered categories
   const filtered = useMemo(() => {
-    if (!categories) return [];
-    return categories.filter((cat) => {
+    if (!categoryList.length) return [];
+    return categoryList.filter((cat) => {
       const matchesSearch =
         cat.name.toLowerCase().includes(search.toLowerCase()) ||
         (cat.description || '').toLowerCase().includes(search.toLowerCase());
@@ -96,12 +99,12 @@ const ManagerCategoriesPage: React.FC = () => {
         (statusFilter === 'inactive' && !cat.is_active);
       return matchesSearch && matchesStatus;
     });
-  }, [categories, search, statusFilter]);
+  }, [categoryList, search, statusFilter]);
 
   // Get category name by id (for parent display)
   const getCategoryName = (id: number | null | undefined) => {
-    if (!id || !categories) return '—';
-    const cat = categories.find((c) => c.id === id);
+    if (!id || !categoryList.length) return '—';
+    const cat = categoryList.find((c) => c.id === id);
     return cat ? cat.name : '—';
   };
 
@@ -445,7 +448,7 @@ const ManagerCategoriesPage: React.FC = () => {
               sx={{ borderRadius: '10px' }}
             >
               <MenuItem value="">None (Root Category)</MenuItem>
-              {(categories || [])
+              {categoryList
                 .filter((c) => c.id !== editingCategory?.id)
                 .map((c) => (
                   <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
