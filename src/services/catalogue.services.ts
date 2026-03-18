@@ -48,7 +48,7 @@ export const categoryApi = {
 
   // Get all categories
   getAll: (params?: CategoryListParams) =>
-    apiClient.get<Category[]>(`${BASE_PATH}/categories/`, { params }),
+    apiClient.get<PaginatedResponse<Category>>(`${BASE_PATH}/categories/`, { params }),
 
 
   // Get category details by ID
