@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   CssBaseline,
@@ -34,33 +34,9 @@ import {
   School as CourseIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
-
-interface Learner {
-  id: string;
-  name: string;
-  initials: string;
-  email: string;
-  courses: number;
-  avgProgress: number;
-  avgScore: number;
-  lastActive: string;
-  status: 'active' | 'inactive' | 'at-risk';
-  enrolledDate: string;
-}
-
-const sampleLearners: Learner[] = [
-  { id: '1', name: 'Sarah Chen', initials: 'SC', email: 'sarah.chen@email.com', courses: 4, avgProgress: 92, avgScore: 96, lastActive: '2 hours ago', status: 'active', enrolledDate: 'Jan 5, 2026' },
-  { id: '2', name: 'James Wilson', initials: 'JW', email: 'james.w@email.com', courses: 3, avgProgress: 85, avgScore: 94, lastActive: '1 day ago', status: 'active', enrolledDate: 'Jan 12, 2026' },
-  { id: '3', name: 'Maria Garcia', initials: 'MG', email: 'maria.g@email.com', courses: 5, avgProgress: 78, avgScore: 92, lastActive: '3 hours ago', status: 'active', enrolledDate: 'Dec 20, 2025' },
-  { id: '4', name: 'Alex Kim', initials: 'AK', email: 'alex.kim@email.com', courses: 3, avgProgress: 65, avgScore: 88, lastActive: '5 days ago', status: 'at-risk', enrolledDate: 'Jan 18, 2026' },
-  { id: '5', name: 'Priya Patel', initials: 'PP', email: 'priya.p@email.com', courses: 4, avgProgress: 88, avgScore: 89, lastActive: '1 hour ago', status: 'active', enrolledDate: 'Jan 8, 2026' },
-  { id: '6', name: 'Tom Brown', initials: 'TB', email: 'tom.b@email.com', courses: 2, avgProgress: 45, avgScore: 72, lastActive: '2 weeks ago', status: 'inactive', enrolledDate: 'Feb 1, 2026' },
-  { id: '7', name: 'Lisa Wang', initials: 'LW', email: 'lisa.w@email.com', courses: 3, avgProgress: 95, avgScore: 95, lastActive: '30 min ago', status: 'active', enrolledDate: 'Jan 3, 2026' },
-  { id: '8', name: 'Daniel Lee', initials: 'DL', email: 'daniel.l@email.com', courses: 2, avgProgress: 32, avgScore: 68, lastActive: '3 weeks ago', status: 'inactive', enrolledDate: 'Feb 5, 2026' },
-  { id: '9', name: 'Emma Davis', initials: 'ED', email: 'emma.d@email.com', courses: 4, avgProgress: 72, avgScore: 85, lastActive: '2 days ago', status: 'at-risk', enrolledDate: 'Jan 15, 2026' },
-  { id: '10', name: 'Ryan Johnson', initials: 'RJ', email: 'ryan.j@email.com', courses: 3, avgProgress: 81, avgScore: 90, lastActive: '4 hours ago', status: 'active', enrolledDate: 'Jan 22, 2026' },
-];
+import { courseApi, enrollmentApi, submissionApi } from '../../services/main.api';
 
 const statusStyles: Record<string, { bg: string; color: string; label: string }> = {
   active: { bg: '#d1fae5', color: '#059669', label: 'Active' },
@@ -74,18 +50,84 @@ const InstructorLearnersPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState(0);
 
+  const { data: coursesData, isLoading: coursesLoading } = useQuery({
+    queryKey: ['courses', 'instructor'],
+    queryFn: () => courseApi.getAll({ instructor_courses: true, limit: 100 }).then(r => r.data),
+  });
+
+  const { data: enrollmentsData, isLoading: enrollmentsLoading } = useQuery({
+    queryKey: ['enrollments', 'learners'],
+    queryFn: () => enrollmentApi.getAll().then(r => r.data),
+  });
+
+  const { data: submissionsData } = useQuery({
+    queryKey: ['submissions', 'learners'],
+    queryFn: () => submissionApi.getAll().then(r => r.data),
+  });
+
+  const courses = (coursesData?.results ?? []) as Array<{ id: number }>;
+  const enrollments = (enrollmentsData ?? []) as Array<{
+    id: number; user: number; user_name: string; user_email: string;
+    course: number; course_title: string; progress_percentage: number;
+    status: string; enrolled_at: string; last_accessed_at: string;
+  }>;
+  const submissions = (submissionsData ?? []) as Array<{ user: number; enrollment: number; grade: number | null }>;
+
+  const instructorCourseIds = useMemo(() => new Set(courses.map(c => c.id)), [courses]);
+
+  const instructorEnrollments = useMemo(() => {
+    return enrollments.filter(e => instructorCourseIds.has(e.course));
+  }, [enrollments, instructorCourseIds]);
+
+  const learnerStats = useMemo(() => {
+    const stats: Record<number, { name: string; email: string; courses: number; totalProgress: number; totalGrade: number; gradeCount: number; lastActive: string; enrolledAt: string }> = {};
+    instructorEnrollments.forEach(e => {
+      if (!stats[e.user]) {
+        stats[e.user] = { name: e.user_name, email: e.user_email, courses: 0, totalProgress: 0, totalGrade: 0, gradeCount: 0, lastActive: e.last_accessed_at, enrolledAt: e.enrolled_at };
+      }
+      stats[e.user].courses += 1;
+      stats[e.user].totalProgress += e.progress_percentage;
+      stats[e.user].lastActive = e.last_accessed_at > stats[e.user].lastActive ? e.last_accessed_at : stats[e.user].lastActive;
+    });
+    submissions.forEach(s => {
+      const enrollment = instructorEnrollments.find(e => e.id === s.enrollment);
+      if (enrollment && stats[enrollment.user]) {
+        if (s.grade !== null && s.grade !== undefined) {
+          stats[enrollment.user].totalGrade += s.grade;
+          stats[enrollment.user].gradeCount += 1;
+        }
+      }
+    });
+    return Object.entries(stats).map(([userId, s]) => ({
+      id: userId,
+      name: s.name,
+      initials: s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+      email: s.email,
+      courses: s.courses,
+      avgProgress: s.courses > 0 ? Math.round(s.totalProgress / s.courses) : 0,
+      avgScore: s.gradeCount > 0 ? Math.round(s.totalGrade / s.gradeCount) : 0,
+      lastActive: s.lastActive ? timeAgo(s.lastActive) : 'Never',
+      status: s.lastActive && isRecent(s.lastActive) ? 'active' : (s.lastActive && isAtRisk(s.lastActive) ? 'at-risk' : 'inactive') as 'active' | 'inactive' | 'at-risk',
+      enrolledDate: s.enrolledAt ? new Date(s.enrolledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
+    }));
+  }, [instructorEnrollments, submissions]);
+
   const statusFilter = tab === 0 ? null : tab === 1 ? 'active' : tab === 2 ? 'at-risk' : 'inactive';
-  const filtered = sampleLearners.filter((l) => {
+  const filtered = learnerStats.filter((l) => {
     const matchSearch = l.name.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase());
     const matchStatus = !statusFilter || l.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
+  const activeCount = learnerStats.filter(l => l.status === 'active').length;
+  const atRiskCount = learnerStats.filter(l => l.status === 'at-risk').length;
+  const avgScore = learnerStats.length > 0 ? Math.round(learnerStats.reduce((s, l) => s + l.avgScore, 0) / learnerStats.filter(l => l.avgScore > 0).length) || 0 : 0;
+
   const kpis = [
-    { label: 'Total Learners', value: sampleLearners.length, icon: <PeopleIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-    { label: 'Active', value: sampleLearners.filter((l) => l.status === 'active').length, icon: <TrendingUpIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
-    { label: 'At Risk', value: sampleLearners.filter((l) => l.status === 'at-risk').length, icon: <TrendingUpIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-    { label: 'Avg. Score', value: `${Math.round(sampleLearners.reduce((s, l) => s + l.avgScore, 0) / sampleLearners.length)}%`, icon: <CourseIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+    { label: 'Total Learners', value: learnerStats.length, icon: <PeopleIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+    { label: 'Active', value: activeCount, icon: <TrendingUpIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+    { label: 'At Risk', value: atRiskCount, icon: <TrendingUpIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+    { label: 'Avg. Score', value: avgScore > 0 ? `${avgScore}%` : '—', icon: <CourseIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
   ];
 
   return (
@@ -198,10 +240,10 @@ const InstructorLearnersPage: React.FC = () => {
             </Box>
 
             <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ px: 2, borderTop: 1, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-              <Tab label={`All (${sampleLearners.length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Active (${sampleLearners.filter((l) => l.status === 'active').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`At Risk (${sampleLearners.filter((l) => l.status === 'at-risk').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Inactive (${sampleLearners.filter((l) => l.status === 'inactive').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`All (${learnerStats.length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Active (${activeCount})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`At Risk (${atRiskCount})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Inactive (${learnerStats.filter(l => l.status === 'inactive').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
             </Tabs>
 
             <TableContainer>
@@ -269,3 +311,33 @@ const InstructorLearnersPage: React.FC = () => {
 };
 
 export default InstructorLearnersPage;
+
+function timeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Never';
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  return `${Math.floor(diffDays / 30)}mo ago`;
+}
+
+function isRecent(dateString: string): boolean {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return false;
+  const diffDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+  return diffDays <= 7;
+}
+
+function isAtRisk(dateString: string): boolean {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return false;
+  const diffDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+  return diffDays > 7 && diffDays <= 30;
+}

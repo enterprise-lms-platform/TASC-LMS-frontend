@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   CssBaseline,
@@ -48,6 +49,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import { livestreamApi, livestreamAttendanceApi } from '../../services/livestream.services';
 
 interface Participant {
   id: string;
@@ -74,18 +76,6 @@ const sampleParticipants: Participant[] = [
   { id: 'p10', name: 'James Mutua', initials: 'JM', email: 'james.m@company.com', attendance: true, grade: 95, passFail: 'pass', certificateGenerated: true, eligible: true },
 ];
 
-// Workshop detail (would come from route params + API in production)
-const workshopDetail = {
-  id: 'w1',
-  title: 'Leadership Essentials Bootcamp',
-  description: 'Intensive 3-day workshop on leadership fundamentals covering communication, decision-making, and team management.',
-  location: 'TASC Training Center, Nairobi',
-  startDate: '2026-03-05',
-  endDate: '2026-03-07',
-  status: 'upcoming' as const,
-  gradingType: 'score' as 'attendance' | 'pass_fail' | 'score',
-  category: 'Leadership',
-};
 
 const statusStyles: Record<string, { bg: string; color: string }> = {
   upcoming: { bg: '#dbeafe', color: '#2563eb' },
@@ -95,14 +85,66 @@ const statusStyles: Record<string, { bg: string; color: string }> = {
 
 const WorkshopDetailsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { workshopId: _workshopId } = useParams();
-  void _workshopId;
+  const { workshopId } = useParams<{ workshopId: string }>();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [tab, setTab] = useState(0);
-  const [participants, setParticipants] = useState(sampleParticipants);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [workshopDetail, setWorkshopDetail] = useState<{
+    id: string; title: string; description: string; location: string;
+    startDate: string; endDate: string; status: 'upcoming' | 'ongoing' | 'completed';
+    gradingType: 'attendance' | 'pass_fail' | 'score'; category: string;
+  } | null>(null);
   const [search, setSearch] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  const { data: sessionData, isLoading: sessionLoading } = useQuery({
+    queryKey: ['livestream', workshopId],
+    queryFn: () => livestreamApi.getById(workshopId!),
+    enabled: !!workshopId,
+  });
+
+  const { data: attendanceData, isLoading: attendanceLoading } = useQuery({
+    queryKey: ['livestream-attendance', workshopId],
+    queryFn: () => livestreamAttendanceApi.getAll({ session: workshopId }),
+    enabled: !!workshopId,
+  });
+
+  React.useEffect(() => {
+    if (sessionData?.data) {
+      const s = sessionData.data;
+      setWorkshopDetail({
+        id: s.id,
+        title: s.title,
+        description: s.description,
+        location: s.platform === 'custom' ? s.join_url || 'Custom Platform' : s.platform,
+        startDate: s.start_time.split('T')[0],
+        endDate: s.end_time.split('T')[0],
+        status: s.status === 'live' ? 'ongoing' : s.status === 'scheduled' ? 'upcoming' : 'completed',
+        gradingType: 'score',
+        category: s.course_title || 'General',
+      });
+    }
+  }, [sessionData]);
+
+  React.useEffect(() => {
+    if (attendanceData?.data) {
+      const attendees = attendanceData.data.results ?? [];
+      setParticipants(attendees.map((a): Participant => ({
+        id: String(a.id),
+        name: a.learner_name || 'Participant',
+        initials: (a.learner_name || 'P').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+        email: a.learner_email || '',
+        attendance: false,
+        grade: null,
+        passFail: null,
+        certificateGenerated: false,
+        eligible: false,
+      })));
+    } else {
+      setParticipants(sampleParticipants);
+    }
+  }, [attendanceData]);
 
   // Add participant form
   const [newName, setNewName] = useState('');
@@ -197,14 +239,16 @@ const WorkshopDetailsPage: React.FC = () => {
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="h6" fontWeight={700} color="text.primary" noWrap sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <WorkshopsIcon sx={{ color: 'primary.main' }} />
-              {workshopDetail.title}
+              {sessionLoading ? 'Loading...' : (workshopDetail?.title || 'Workshop Details')}
             </Typography>
           </Box>
-          <Chip
-            label={workshopDetail.status}
-            size="small"
-            sx={{ height: 24, fontSize: '0.75rem', fontWeight: 600, textTransform: 'capitalize', bgcolor: statusStyles[workshopDetail.status].bg, color: statusStyles[workshopDetail.status].color }}
-          />
+          {workshopDetail && (
+            <Chip
+              label={workshopDetail.status}
+              size="small"
+              sx={{ height: 24, fontSize: '0.75rem', fontWeight: 600, textTransform: 'capitalize', bgcolor: statusStyles[workshopDetail.status].bg, color: statusStyles[workshopDetail.status].color }}
+            />
+          )}
           <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSave} sx={{ textTransform: 'none', fontWeight: 600, bgcolor: 'primary.main' }}>
             Save
           </Button>
@@ -231,16 +275,16 @@ const WorkshopDetailsPage: React.FC = () => {
           >
             <Box sx={{ p: 2.5, px: 3, display: 'flex', gap: 3, alignItems: 'flex-start', flexWrap: 'wrap' }}>
               <Box sx={{ flex: 1, minWidth: 200 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{workshopDetail.description}</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{workshopDetail?.description || '—'}</Typography>
                 <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', fontSize: '0.85rem', color: 'text.secondary' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><LocationIcon sx={{ fontSize: 16 }} /> {workshopDetail.location}</Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><DateIcon sx={{ fontSize: 16 }} /> {formatDateRange(workshopDetail.startDate, workshopDetail.endDate)}</Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><LocationIcon sx={{ fontSize: 16 }} /> {workshopDetail?.location || '—'}</Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><DateIcon sx={{ fontSize: 16 }} /> {workshopDetail ? formatDateRange(workshopDetail.startDate, workshopDetail.endDate) : '—'}</Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><PeopleIcon sx={{ fontSize: 16 }} /> {participants.length} participants</Box>
                 </Box>
               </Box>
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Chip label={workshopDetail.category} size="small" sx={{ fontWeight: 600 }} />
-                <Chip label={workshopDetail.gradingType === 'attendance' ? 'Attendance Only' : workshopDetail.gradingType === 'pass_fail' ? 'Pass/Fail' : 'Score (0-100)'} size="small" variant="outlined" sx={{ fontWeight: 500 }} />
+                <Chip label={workshopDetail?.category || '—'} size="small" sx={{ fontWeight: 600 }} />
+                <Chip label={workshopDetail?.gradingType === 'attendance' ? 'Attendance Only' : workshopDetail?.gradingType === 'pass_fail' ? 'Pass/Fail' : 'Score (0-100)'} size="small" variant="outlined" sx={{ fontWeight: 500 }} />
               </Box>
             </Box>
 
@@ -323,7 +367,7 @@ const WorkshopDetailsPage: React.FC = () => {
                     )}
                     {tab === 2 && (
                       <TableCell align="center"><Typography variant="caption" fontWeight={600} color="text.secondary">
-                        {workshopDetail.gradingType === 'score' ? 'Score (0-100)' : workshopDetail.gradingType === 'pass_fail' ? 'Result' : 'Attended'}
+                        {workshopDetail?.gradingType === 'score' ? 'Score (0-100)' : workshopDetail?.gradingType === 'pass_fail' ? 'Result' : 'Attended'}
                       </Typography></TableCell>
                     )}
                     {tab === 3 && (
@@ -387,7 +431,7 @@ const WorkshopDetailsPage: React.FC = () => {
                       {/* Grades tab */}
                       {tab === 2 && (
                         <TableCell align="center">
-                          {workshopDetail.gradingType === 'score' && (
+                          {workshopDetail?.gradingType === 'score' && (
                             <TextField
                               type="number"
                               size="small"
@@ -398,7 +442,7 @@ const WorkshopDetailsPage: React.FC = () => {
                               disabled={!p.attendance}
                             />
                           )}
-                          {workshopDetail.gradingType === 'pass_fail' && (
+                          {workshopDetail?.gradingType === 'pass_fail' && (
                             <Select
                               size="small"
                               value={p.passFail ?? ''}
@@ -412,7 +456,7 @@ const WorkshopDetailsPage: React.FC = () => {
                               <MenuItem value="fail">Fail</MenuItem>
                             </Select>
                           )}
-                          {workshopDetail.gradingType === 'attendance' && (
+                          {workshopDetail?.gradingType === 'attendance' && (
                             <Chip
                               label={p.attendance ? 'Present' : 'Absent'}
                               size="small"
