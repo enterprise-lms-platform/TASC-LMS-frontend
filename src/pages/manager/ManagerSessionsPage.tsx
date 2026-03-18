@@ -70,19 +70,6 @@ const getStatusColor = (status: string) => {
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getPlatformColor = (platform: string) => {
-  switch (platform) {
-    case 'Zoom':
-      return { bgcolor: 'rgba(45,140,255,0.1)', color: '#2d8cff' };
-    case 'Google Meet':
-      return { bgcolor: 'rgba(52,168,83,0.1)', color: '#34a853' };
-    case 'Microsoft Teams':
-      return { bgcolor: 'rgba(80,80,186,0.1)', color: '#5050ba' };
-    default:
-      return { bgcolor: 'grey.100', color: 'text.secondary' };
-  }
-};
 
 const ManagerSessionsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);

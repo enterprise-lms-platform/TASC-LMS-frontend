@@ -38,118 +38,7 @@ import { useNavigate } from 'react-router-dom';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import { organizationApi } from '../../services/organization.services';
 
-interface Organization {
-  id: string;
-  name: string;
-  initials: string;
-  bgColor: string;
-  plan: string;
-  users: string;
-  courses: number;
-  revenue: string;
-  status: 'active' | 'pending' | 'suspended';
-  created: string;
-}
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const mockOrganizations: Organization[] = [
-  {
-    id: '1',
-    name: 'Acme Corporation',
-    initials: 'AC',
-    bgColor: 'linear-gradient(135deg, #ffb74d, #ffa424)',
-    plan: 'Enterprise',
-    users: '2,450',
-    courses: 67,
-    revenue: '$42,580',
-    status: 'active',
-    created: 'Jan 15, 2025',
-  },
-  {
-    id: '2',
-    name: 'Global Tech Inc',
-    initials: 'GT',
-    bgColor: 'linear-gradient(135deg, #71717a, #a1a1aa)',
-    plan: 'Enterprise',
-    users: '1,890',
-    courses: 42,
-    revenue: '$38,920',
-    status: 'active',
-    created: 'Feb 03, 2025',
-  },
-  {
-    id: '3',
-    name: 'Innovate Solutions',
-    initials: 'IS',
-    bgColor: 'linear-gradient(135deg, #10b981, #34d399)',
-    plan: 'Professional',
-    users: '956',
-    courses: 28,
-    revenue: '$24,150',
-    status: 'active',
-    created: 'Mar 12, 2025',
-  },
-  {
-    id: '4',
-    name: 'Future Dynamics',
-    initials: 'FD',
-    bgColor: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
-    plan: 'Professional',
-    users: '543',
-    courses: 15,
-    revenue: '$12,870',
-    status: 'pending',
-    created: 'Apr 20, 2025',
-  },
-  {
-    id: '5',
-    name: 'NextGen Partners',
-    initials: 'NP',
-    bgColor: 'linear-gradient(135deg, #3f3f46, #71717a)',
-    plan: 'Enterprise',
-    users: '1,234',
-    courses: 34,
-    revenue: '$28,430',
-    status: 'active',
-    created: 'May 08, 2025',
-  },
-  {
-    id: '6',
-    name: 'Apex Learning Co',
-    initials: 'AL',
-    bgColor: 'linear-gradient(135deg, #ffa424, #ffb74d)',
-    plan: 'Starter',
-    users: '312',
-    courses: 9,
-    revenue: '$6,540',
-    status: 'suspended',
-    created: 'Jun 14, 2025',
-  },
-  {
-    id: '7',
-    name: 'Stellar Education',
-    initials: 'SE',
-    bgColor: 'linear-gradient(135deg, #a1a1aa, #d4d4d8)',
-    plan: 'Professional',
-    users: '728',
-    courses: 21,
-    revenue: '$18,320',
-    status: 'active',
-    created: 'Jul 22, 2025',
-  },
-  {
-    id: '8',
-    name: 'Bright Horizons Ltd',
-    initials: 'BH',
-    bgColor: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
-    plan: 'Starter',
-    users: '195',
-    courses: 7,
-    revenue: '$4,210',
-    status: 'pending',
-    created: 'Aug 30, 2025',
-  },
-];
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -165,12 +54,6 @@ const getStatusColor = (status: string) => {
 };
 
 import KPICard from '../../components/superadmin/KPICard';
-
-// ... (Organization interface and mockOrganizations array remain unchanged)
-
-// ... (getStatusColor function remains unchanged)
-
-// const kpiCards = [
 
 const AllOrganizationsPage: React.FC = () => {
   const navigate = useNavigate();

@@ -84,7 +84,7 @@ const CoursePricingCard: React.FC<CoursePricingCardProps> = ({ course }) => {
       {/* Content */}
       <Box sx={{ p: 3 }}>
         <Stack direction="row" alignItems="baseline" spacing={1} sx={{ mb: 1 }}>
-          <Typography variant="h4" sx={{ fontWeight: 800, color: '#18181b' }}>${formatPrice(course?.discounted_price || course?.price)}</Typography>
+          <Typography variant="h4" sx={{ fontWeight: 800, color: '#18181b' }}>${formatPrice(course?.discounted_price || course?.price || '0')}</Typography>
           {course?.discount_percentage ? (
             <>
               <Typography sx={{ color: '#71717a', fontSize: '1rem', fontWeight: 500, textDecoration: 'line-through' }}>${formatPrice(course.price)}</Typography>

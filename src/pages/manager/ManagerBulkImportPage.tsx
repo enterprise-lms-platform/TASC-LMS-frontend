@@ -85,7 +85,7 @@ const ManagerBulkImportPage: React.FC = () => {
 
   const handleDownloadTemplate = async () => {
     try {
-      const response = await bulkImportApi.getCsvTemplate();
+      const response = await bulkImportApi.downloadTemplate();
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -124,7 +124,7 @@ const ManagerBulkImportPage: React.FC = () => {
     setUploadResult(null);
 
     try {
-      const response = await bulkImportApi.bulkImport(selectedFile);
+      const response = await bulkImportApi.uploadCsv(selectedFile);
       setUploadResult(response.data);
 
       const newEntry: ImportResult = {

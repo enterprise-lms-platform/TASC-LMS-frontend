@@ -60,14 +60,6 @@ export interface Workshop {
   category: string;
 }
 
-const sampleWorkshops: Workshop[] = [
-  { id: 'w1', title: 'Leadership Essentials Bootcamp', description: 'Intensive 3-day workshop on leadership fundamentals', location: 'TASC Training Center, Nairobi', startDate: '2026-03-05', endDate: '2026-03-07', participants: 28, maxParticipants: 35, status: 'upcoming', gradingType: 'pass_fail', category: 'Leadership' },
-  { id: 'w2', title: 'Sales Mastery Workshop', description: 'Advanced selling techniques and negotiation skills', location: 'Hilton Hotel, Conference Room B', startDate: '2026-02-20', endDate: '2026-02-22', participants: 22, maxParticipants: 30, status: 'ongoing', gradingType: 'score', category: 'Sales' },
-  { id: 'w3', title: 'Digital Marketing Fundamentals', description: 'Hands-on workshop covering SEO, SEM, and social media marketing', location: 'TASC Training Center, Nairobi', startDate: '2026-03-15', endDate: '2026-03-16', participants: 15, maxParticipants: 25, status: 'upcoming', gradingType: 'score', category: 'Marketing' },
-  { id: 'w4', title: 'First Aid & Safety Training', description: 'Mandatory safety training for all staff members', location: 'Company HQ, Boardroom', startDate: '2026-02-10', endDate: '2026-02-10', participants: 40, maxParticipants: 40, status: 'completed', gradingType: 'attendance', category: 'Safety' },
-  { id: 'w5', title: 'Team Building & Communication', description: 'Interactive team building exercises and communication skills', location: 'Outdoor Venue, Naivasha', startDate: '2026-02-15', endDate: '2026-02-16', participants: 35, maxParticipants: 40, status: 'completed', gradingType: 'pass_fail', category: 'HR' },
-  { id: 'w6', title: 'Project Management with Agile', description: 'Learn Scrum, Kanban, and agile project management', location: 'TASC Training Center, Nairobi', startDate: '2026-04-01', endDate: '2026-04-03', participants: 8, maxParticipants: 30, status: 'upcoming', gradingType: 'score', category: 'Management' },
-];
 
 const statusStyles: Record<string, { bg: string; color: string }> = {
   upcoming: { bg: '#dbeafe', color: '#2563eb' },
@@ -89,8 +81,7 @@ const WorkshopsPage: React.FC = () => {
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [menuWorkshopId, setMenuWorkshopId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [workshops, setWorkshops] = useState<Workshop[]>(sampleWorkshops);
+  const [localWorkshops, setLocalWorkshops] = useState<Workshop[]>([]);
 
   const { data: livestreamsData } = useQuery({
     queryKey: ['livestreams'],
@@ -111,7 +102,7 @@ const WorkshopsPage: React.FC = () => {
     category: item.course_title || 'General',
   }));
 
-  const displayWorkshops = apiWorkshops.length > 0 ? apiWorkshops : sampleWorkshops;
+  const displayWorkshops = [...apiWorkshops, ...localWorkshops];
 
   // Create form state
   const [newTitle, setNewTitle] = useState('');
@@ -149,7 +140,7 @@ const WorkshopsPage: React.FC = () => {
       gradingType: newGradingType,
       category: 'General',
     };
-    setWorkshops([newWorkshop, ...displayWorkshops]);
+    setLocalWorkshops((prev) => [newWorkshop, ...prev]);
     setCreateOpen(false);
     setNewTitle('');
     setNewDescription('');

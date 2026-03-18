@@ -111,7 +111,7 @@ const ManagerCertificatesPage: React.FC = () => {
       const matchesSearch = search === '' ||
         learnerName.includes(search.toLowerCase()) ||
         certId.includes(search.toLowerCase());
-      const matchesCourse = courseFilter === 'all' || cert.course_title === courses.find(c => c.id === courseFilter)?.title;
+      const matchesCourse = courseFilter === 'all' || cert.course_title === courses.find((c) => c.id === courseFilter)?.title;
       return matchesSearch && matchesCourse;
     });
   }, [certificates, search, courseFilter, courses]);

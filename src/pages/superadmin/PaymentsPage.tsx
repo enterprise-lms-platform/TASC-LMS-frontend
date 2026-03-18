@@ -167,10 +167,6 @@ const getMethodColor = (method: string) => {
 
 import KPICard from '../../components/superadmin/KPICard';
 
-// ... (Transaction interface and mockTransactions array remain unchanged)
-
-// ... (getStatusColor and getMethodColor functions remain unchanged)
-
 const kpiCards = [
   {
     title: 'Total Transactions',
@@ -214,7 +210,7 @@ const PaymentsPage: React.FC = () => {
     queryFn: () => transactionApi.getAll().then((res) => res.data as any),
   });
 
-  const displayTransactions = transactions.length > 0 ? transactions : mockTransactions;
+  const displayTransactions = transactions?.results || transactions || [];
 
   return (
     <SuperadminLayout title="Payments" subtitle="Payment transactions and processing">
