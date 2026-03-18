@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useMemo, useState } from 'react';
 import {
   Box,
   CssBaseline,
@@ -23,6 +22,7 @@ import {
   TableRow,
   Tabs,
   Tab,
+  CircularProgress,
 } from '@mui/material';
 import {
   People as PeopleIcon,
@@ -35,9 +35,10 @@ import {
   School as CourseIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
 import { enrollmentApi } from '../../services/learning.services';
-import { useAuth } from '../../contexts/AuthContext';
+import type { Enrollment } from '../../types/types';
 
 interface Learner {
   id: string;
@@ -46,10 +47,64 @@ interface Learner {
   email: string;
   courses: number;
   avgProgress: number;
-  avgScore: number;
   lastActive: string;
   status: 'active' | 'inactive' | 'at-risk';
   enrolledDate: string;
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  return `${Math.floor(days / 30)}mo ago`;
+}
+
+function deriveLearnerStatus(enrollments: Enrollment[]): 'active' | 'inactive' | 'at-risk' {
+  const hasActive = enrollments.some((e) => e.status === 'active');
+  if (!hasActive) return 'inactive';
+  const latest = enrollments.reduce((a, b) =>
+    new Date(b.last_accessed_at) > new Date(a.last_accessed_at) ? b : a
+  );
+  const daysSince = (Date.now() - new Date(latest.last_accessed_at).getTime()) / 86400000;
+  if (daysSince > 14) return 'inactive';
+  if (daysSince > 5) return 'at-risk';
+  return 'active';
+}
+
+function groupByLearner(enrollments: Enrollment[]): Learner[] {
+  const map = new Map<number, Enrollment[]>();
+  for (const e of enrollments) {
+    const list = map.get(e.user) || [];
+    list.push(e);
+    map.set(e.user, list);
+  }
+  const learners: Learner[] = [];
+  map.forEach((enrs, userId) => {
+    const first = enrs[0];
+    const name = first.user_name || first.user_email;
+    const initials = name.split(' ').map((n) => n[0]?.toUpperCase() || '').join('').slice(0, 2);
+    const avgProgress = Math.round(enrs.reduce((s, e) => s + e.progress_percentage, 0) / enrs.length);
+    const latest = enrs.reduce((a, b) =>
+      new Date(b.last_accessed_at) > new Date(a.last_accessed_at) ? b : a
+    );
+    learners.push({
+      id: String(userId),
+      name,
+      initials,
+      email: first.user_email,
+      courses: enrs.length,
+      avgProgress,
+      lastActive: timeAgo(latest.last_accessed_at),
+      status: deriveLearnerStatus(enrs),
+      enrolledDate: new Date(first.enrolled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    });
+  });
+  return learners;
 }
 
 const statusStyles: Record<string, { bg: string; color: string; label: string }> = {
@@ -60,65 +115,39 @@ const statusStyles: Record<string, { bg: string; color: string; label: string }>
 
 const InstructorLearnersPage: React.FC = () => {
   const navigate = useNavigate();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState(0);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: enrollmentsData, isLoading } = useQuery({
-    queryKey: ['enrollments'],
-    queryFn: () => enrollmentApi.getAll(),
+  const { data: enrollmentsRes, isLoading } = useQuery({
+    queryKey: ['instructor-enrollments'],
+    queryFn: () => enrollmentApi.getAll({ role: 'instructor' }),
   });
 
-  const enrollments = (enrollmentsData as any)?.data?.results || [];
-  
-  const learners: Learner[] = enrollments.map((e: any) => {
-    const progress = e.progress_percent || 0;
-    let status: 'active' | 'inactive' | 'at-risk' = 'inactive';
-    if (progress >= 70) status = 'active';
-    else if (progress > 0) status = 'at-risk';
-    
-    return {
-      id: String(e.id),
-      name: e.user_name || e.user?.first_name ? `${e.user?.first_name || ''} ${e.user?.last_name || ''}`.trim() : 'Unknown',
-      initials: e.user?.first_name ? `${e.user.first_name[0]}${e.user.last_name?.[0] || ''}` : 'UN',
-      email: e.user_email || e.user?.email || 'N/A',
-      courses: 1,
-      avgProgress: progress,
-      avgScore: e.average_grade || 0,
-      lastActive: e.last_accessed ? new Date(e.last_accessed).toLocaleDateString() : 'N/A',
-      status,
-      enrolledDate: e.enrolled_at ? new Date(e.enrolled_at).toLocaleDateString() : 'N/A',
-    };
-  });
+  const rawEnrollments = enrollmentsRes?.data;
+  const enrollments: Enrollment[] = Array.isArray(rawEnrollments)
+    ? rawEnrollments
+    : (rawEnrollments as any)?.results || [];
 
-  const sampleLearners = learners.length > 0 ? learners : [
-    { id: '1', name: 'Sarah Chen', initials: 'SC', email: 'sarah.chen@email.com', courses: 4, avgProgress: 92, avgScore: 96, lastActive: '2 hours ago', status: 'active' as const, enrolledDate: 'Jan 5, 2026' },
-    { id: '2', name: 'James Wilson', initials: 'JW', email: 'james.w@email.com', courses: 3, avgProgress: 85, avgScore: 94, lastActive: '1 day ago', status: 'active' as const, enrolledDate: 'Jan 12, 2026' },
-    { id: '3', name: 'Maria Garcia', initials: 'MG', email: 'maria.g@email.com', courses: 5, avgProgress: 78, avgScore: 92, lastActive: '3 hours ago', status: 'active' as const, enrolledDate: 'Dec 20, 2025' },
-    { id: '4', name: 'Alex Kim', initials: 'AK', email: 'alex.kim@email.com', courses: 3, avgProgress: 65, avgScore: 88, lastActive: '5 days ago', status: 'at-risk' as const, enrolledDate: 'Jan 18, 2026' },
-    { id: '5', name: 'Priya Patel', initials: 'PP', email: 'priya.p@email.com', courses: 4, avgProgress: 88, avgScore: 89, lastActive: '1 hour ago', status: 'active' as const, enrolledDate: 'Jan 8, 2026' },
-    { id: '6', name: 'Tom Brown', initials: 'TB', email: 'tom.b@email.com', courses: 2, avgProgress: 45, avgScore: 72, lastActive: '2 weeks ago', status: 'inactive' as const, enrolledDate: 'Feb 1, 2026' },
-    { id: '7', name: 'Lisa Wang', initials: 'LW', email: 'lisa.w@email.com', courses: 3, avgProgress: 95, avgScore: 95, lastActive: '30 min ago', status: 'active' as const, enrolledDate: 'Jan 3, 2026' },
-    { id: '8', name: 'Daniel Lee', initials: 'DL', email: 'daniel.l@email.com', courses: 2, avgProgress: 32, avgScore: 68, lastActive: '3 weeks ago', status: 'inactive' as const, enrolledDate: 'Feb 5, 2026' },
-    { id: '9', name: 'Emma Davis', initials: 'ED', email: 'emma.d@email.com', courses: 4, avgProgress: 72, avgScore: 85, lastActive: '2 days ago', status: 'at-risk' as const, enrolledDate: 'Jan 15, 2026' },
-    { id: '10', name: 'Ryan Johnson', initials: 'RJ', email: 'ryan.j@email.com', courses: 3, avgProgress: 81, avgScore: 90, lastActive: '4 hours ago', status: 'active' as const, enrolledDate: 'Jan 22, 2026' },
-  ];
+  const learners = useMemo(() => groupByLearner(enrollments), [enrollments]);
 
   const statusFilter = tab === 0 ? null : tab === 1 ? 'active' : tab === 2 ? 'at-risk' : 'inactive';
-  const filtered = sampleLearners.filter((l) => {
+  const filtered = learners.filter((l) => {
     const matchSearch = l.name.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase());
     const matchStatus = !statusFilter || l.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
+  const activeCount = learners.filter((l) => l.status === 'active').length;
+  const atRiskCount = learners.filter((l) => l.status === 'at-risk').length;
+  const inactiveCount = learners.filter((l) => l.status === 'inactive').length;
+  const avgProgress = learners.length ? Math.round(learners.reduce((s, l) => s + l.avgProgress, 0) / learners.length) : 0;
+
   const kpis = [
-    { label: 'Total Learners', value: sampleLearners.length, icon: <PeopleIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-    { label: 'Active', value: sampleLearners.filter((l) => l.status === 'active').length, icon: <TrendingUpIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
-    { label: 'At Risk', value: sampleLearners.filter((l) => l.status === 'at-risk').length, icon: <TrendingUpIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-    { label: 'Avg. Score', value: `${Math.round(sampleLearners.reduce((s, l) => s + l.avgScore, 0) / sampleLearners.length)}%`, icon: <CourseIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+    { label: 'Total Learners', value: learners.length, icon: <PeopleIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+    { label: 'Active', value: activeCount, icon: <TrendingUpIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+    { label: 'At Risk', value: atRiskCount, icon: <TrendingUpIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+    { label: 'Avg. Progress', value: `${avgProgress}%`, icon: <CourseIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
   ];
 
   return (
@@ -154,6 +183,11 @@ const InstructorLearnersPage: React.FC = () => {
         <Toolbar sx={{ minHeight: '72px !important' }} />
 
         <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+          {isLoading && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+              <CircularProgress />
+            </Box>
+          )}
           {/* KPIs */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {kpis.map((kpi) => (
@@ -231,10 +265,10 @@ const InstructorLearnersPage: React.FC = () => {
             </Box>
 
             <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ px: 2, borderTop: 1, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-              <Tab label={`All (${sampleLearners.length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Active (${sampleLearners.filter((l) => l.status === 'active').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`At Risk (${sampleLearners.filter((l) => l.status === 'at-risk').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Inactive (${sampleLearners.filter((l) => l.status === 'inactive').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`All (${learners.length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Active (${activeCount})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`At Risk (${atRiskCount})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Inactive (${inactiveCount})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
             </Tabs>
 
             <TableContainer>
@@ -244,7 +278,6 @@ const InstructorLearnersPage: React.FC = () => {
                     <TableCell><Typography variant="caption" fontWeight={600} color="text.secondary">Learner</Typography></TableCell>
                     <TableCell align="center"><Typography variant="caption" fontWeight={600} color="text.secondary">Courses</Typography></TableCell>
                     <TableCell><Typography variant="caption" fontWeight={600} color="text.secondary">Progress</Typography></TableCell>
-                    <TableCell align="center"><Typography variant="caption" fontWeight={600} color="text.secondary">Avg Score</Typography></TableCell>
                     <TableCell><Typography variant="caption" fontWeight={600} color="text.secondary">Last Active</Typography></TableCell>
                     <TableCell align="center"><Typography variant="caption" fontWeight={600} color="text.secondary">Status</Typography></TableCell>
                     <TableCell align="right"><Typography variant="caption" fontWeight={600} color="text.secondary">Actions</Typography></TableCell>
@@ -270,11 +303,6 @@ const InstructorLearnersPage: React.FC = () => {
                           <LinearProgress variant="determinate" value={learner.avgProgress} sx={{ flex: 1, height: 6, borderRadius: 1, bgcolor: 'grey.100', '& .MuiLinearProgress-bar': { bgcolor: learner.avgProgress > 75 ? '#10b981' : learner.avgProgress > 50 ? '#f59e0b' : '#ef4444' } }} />
                           <Typography variant="caption" fontWeight={600} sx={{ minWidth: 30 }}>{learner.avgProgress}%</Typography>
                         </Box>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography variant="body2" fontWeight={600} sx={{ color: learner.avgScore >= 90 ? '#059669' : learner.avgScore >= 75 ? '#d97706' : '#dc2626' }}>
-                          {learner.avgScore}%
-                        </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="caption" color="text.secondary">{learner.lastActive}</Typography>

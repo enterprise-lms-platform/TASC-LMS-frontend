@@ -30,36 +30,7 @@ const CourseReviews: React.FC<CourseReviewsProps> = ({ courseId }) => {
     content: review.content,
   }));
 
-  // Fallback to sample reviews if no data
-  const displayReviews = reviews.length > 0 ? reviews : [
-    {
-      initials: 'JK',
-      name: 'James Kariuki',
-      role: 'Senior Developer at TechCorp',
-      rating: 5,
-      date: '2 weeks ago',
-      avatarColor: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
-      content: "This is exactly what I was looking for! After years of working with React, I thought I knew most patterns, but this course opened my eyes to so many optimizations and best practices I wasn't aware of."
-    },
-    {
-      initials: 'AN',
-      name: 'Amina Nakato',
-      role: 'Frontend Engineer at StartupXYZ',
-      rating: 5,
-      date: '1 month ago',
-      avatarColor: 'linear-gradient(135deg, #10b981, #34d399)',
-      content: "The performance optimization module is incredible. I applied the techniques to our production app and we saw a 40% improvement in rendering performance."
-    },
-    {
-      initials: 'PO',
-      name: 'Peter Ochieng',
-      role: 'Lead Developer at Innovate Solutions',
-      rating: 4,
-      date: '1 month ago',
-      avatarColor: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
-      content: "Great course overall. The content is top-notch and the instructor is excellent. I'd recommend this to anyone serious about learning."
-    }
-  ];
+  const displayReviews = reviews;
   return (
     <Box id="reviews" className="course-section" sx={{ mb: 8, scrollMarginTop: '140px' }}>
       <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: '#18181b' }}>Student Reviews</Typography>
@@ -123,6 +94,11 @@ const CourseReviews: React.FC<CourseReviewsProps> = ({ courseId }) => {
       </Stack>
 
       {/* Reviews List */}
+      {displayReviews.length === 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+          No reviews yet. Be the first to review this course!
+        </Typography>
+      )}
       <Stack spacing={3}>
         {displayReviews.map((review, i) => (
           <Paper key={i} elevation={0} sx={{ p: 4, border: '1px solid #e4e4e7', borderRadius: 3 }}>

@@ -16,6 +16,7 @@ import {
   Info as InfoIcon,
 } from '@mui/icons-material';
 import type { QuizSettings, QuizQuestion } from '../../../types/types';
+import { quizSubmissionApi } from '../../../services/learning.services';
 
 /* ── Types ── */
 type Answer = string | string[] | boolean | null;
@@ -120,6 +121,7 @@ const gradeQuiz = (
 
 /* ── Component ── */
 const QuizPlayer: React.FC<QuizPlayerProps> = ({
+  sessionId,
   settings,
   questions: rawQuestions,
   previousAttempts = 0,
@@ -178,11 +180,21 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
   }, []);
 
   const handleSubmit = useCallback(() => {
+    // Client-side grading as immediate feedback
     const score = gradeQuiz(questions, attempt.answers);
     const passed = score >= passingScore;
     setAttempt((prev) => ({ ...prev, score, passed, submitted: true }));
     onComplete?.(score, passed);
-  }, [questions, attempt.answers, passingScore, onComplete]);
+
+    // Also submit to backend for server-side grading and record keeping
+    const answers = questions.map((q) => ({
+      question_id: q.id,
+      answer: attempt.answers[q.id] ?? null,
+    }));
+    quizSubmissionApi.submit({ quiz: sessionId, answers }).catch(() => {
+      // Backend submission failed silently — client-side grade is already shown
+    });
+  }, [questions, attempt.answers, passingScore, onComplete, sessionId]);
 
   const handleRetry = useCallback(() => {
     setAttempt({ answers: {}, flagged: new Set(), score: null, passed: null, submitted: false });

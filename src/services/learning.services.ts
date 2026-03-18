@@ -31,6 +31,7 @@ export interface EnrollmentParams {
   courseId?: number;             // Alternative course filter used by some loaders
   page?: number;                // Pagination page number
   dateRange?: string;           // Filter by date range (used by analytics)
+  role?: 'instructor';          // Pass 'instructor' to see enrollments in courses you teach
 }
 
 export const enrollmentApi = {
@@ -417,4 +418,35 @@ export const managerGradesApi = {
       return [];
     }
   },
+};
+
+// QUIZ SUBMISSIONS
+
+export interface QuizAnswerPayload {
+  question_id: number;
+  answer: string | string[] | boolean | null;
+}
+
+export interface QuizSubmissionRequest {
+  quiz: number;  // session ID (quiz is OneToOne with session)
+  answers: QuizAnswerPayload[];
+}
+
+export interface QuizSubmissionResponse {
+  id: number;
+  quiz: number;
+  user: number;
+  score: number;
+  passed: boolean;
+  submitted_at: string;
+  answers: {
+    question_id: number;
+    is_correct: boolean | null;
+    points_earned: number;
+  }[];
+}
+
+export const quizSubmissionApi = {
+  submit: (data: QuizSubmissionRequest) =>
+    apiClient.post<QuizSubmissionResponse>(`${BASE_PATH}/quiz-submissions/`, data),
 };

@@ -32,134 +32,7 @@ import {
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import KPICard from '../../components/superadmin/KPICard';
-import { usersApi } from '../../services/users.services';
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const kpiStats = [
-  {
-    title: 'Total Users',
-    value: '24,587',
-    icon: <UsersIcon />,
-    // Orange Theme
-    bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412'
-  },
-  {
-    title: 'Active Users',
-    value: '21,340',
-    icon: <UsersIcon />,
-    // Green Theme
-    bgColor: '#dcfce7', badgeColor: '#4ade80', valueColor: '#14532d', labelColor: '#166534'
-  },
-  {
-    title: 'New This Month',
-    value: '1,247',
-    icon: <PersonAddIcon />,
-    // Grey Theme
-    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
-  },
-  {
-    title: 'Suspended',
-    value: '89',
-    icon: <BlockIcon />,
-    // Soft Lime Theme
-    bgColor: '#f1f8e9', badgeColor: '#aed581', valueColor: '#558b2f', labelColor: '#33691e'
-  },
-];
-
-interface MockUser {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  organization: string;
-  status: 'active' | 'suspended' | 'pending';
-  lastLogin: string;
-  avatarColor: string;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const mockUsers: MockUser[] = [
-  {
-    id: '1',
-    name: 'John Kamau',
-    email: 'john.kamau@acmecorp.com',
-    role: 'Admin',
-    organization: 'Acme Corporation',
-    status: 'active',
-    lastLogin: '2026-02-15 09:32',
-    avatarColor: '#ffa424',
-  },
-  {
-    id: '2',
-    name: 'Mary Wambui',
-    email: 'mary.wambui@globaltech.com',
-    role: 'Instructor',
-    organization: 'Global Tech Inc',
-    status: 'active',
-    lastLogin: '2026-02-15 08:15',
-    avatarColor: '#10b981',
-  },
-  {
-    id: '3',
-    name: 'Peter Ochieng',
-    email: 'peter.ochieng@innovate.com',
-    role: 'Learner',
-    organization: 'Innovate Solutions',
-    status: 'active',
-    lastLogin: '2026-02-14 17:45',
-    avatarColor: '#f59e0b',
-  },
-  {
-    id: '4',
-    name: 'Grace Akinyi',
-    email: 'grace.akinyi@futuredyn.com',
-    role: 'Manager',
-    organization: 'Future Dynamics',
-    status: 'pending',
-    lastLogin: 'Never',
-    avatarColor: '#71717a',
-  },
-  {
-    id: '5',
-    name: 'David Mwangi',
-    email: 'david.mwangi@acmecorp.com',
-    role: 'Learner',
-    organization: 'Acme Corporation',
-    status: 'active',
-    lastLogin: '2026-02-14 14:22',
-    avatarColor: '#a1a1aa',
-  },
-  {
-    id: '6',
-    name: 'Sarah Nakamura',
-    email: 'sarah.nakamura@globaltech.com',
-    role: 'Finance',
-    organization: 'Global Tech Inc',
-    status: 'active',
-    lastLogin: '2026-02-15 10:05',
-    avatarColor: '#166534',
-  },
-  {
-    id: '7',
-    name: 'James Otieno',
-    email: 'james.otieno@nextgen.com',
-    role: 'Instructor',
-    organization: 'NextGen Partners',
-    status: 'suspended',
-    lastLogin: '2026-01-28 11:30',
-    avatarColor: '#3f3f46',
-  },
-  {
-    id: '8',
-    name: 'Faith Muthoni',
-    email: 'faith.muthoni@innovate.com',
-    role: 'Admin',
-    organization: 'Innovate Solutions',
-    status: 'active',
-    lastLogin: '2026-02-15 07:50',
-    avatarColor: '#4ade80',
-  },
-];
+import { usersApi, userStatsApi } from '../../services/users.services';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -196,7 +69,6 @@ const AllUsersPage: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: usersData, isLoading } = useQuery({
     queryKey: ['users', roleFilter, statusFilter, searchQuery],
     queryFn: () => usersApi.getAll({
@@ -206,6 +78,13 @@ const AllUsersPage: React.FC = () => {
       page_size: 100,
     }),
   });
+
+  const { data: statsData } = useQuery({
+    queryKey: ['userStats'],
+    queryFn: () => userStatsApi.getStats(),
+  });
+
+  const apiStats = statsData?.data;
 
   const users = usersData?.data?.results || [];
 
@@ -220,8 +99,8 @@ const AllUsersPage: React.FC = () => {
     avatarColor: '#ffa424',
   }));
 
-  const totalUsers = usersMapped.length;
-  const activeUsers = usersMapped.filter(u => u.status === 'active').length;
+  const totalUsers = apiStats?.total ?? usersMapped.length;
+  const activeUsers = apiStats?.active ?? usersMapped.filter(u => u.status === 'active').length;
 
   const kpiStats = [
     {
@@ -238,7 +117,7 @@ const AllUsersPage: React.FC = () => {
     },
     {
       title: 'New This Month',
-      value: '0',
+      value: apiStats ? String(apiStats.new_this_month) : '...',
       icon: <PersonAddIcon />,
       bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
     },

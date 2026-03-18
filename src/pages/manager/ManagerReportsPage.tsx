@@ -274,8 +274,17 @@ const ManagerReportsPage: React.FC = () => {
                           <span>
                             <IconButton
                               size="small"
-                              disabled={report.status !== 'Ready'}
-                              sx={{ color: report.status === 'Ready' ? '#3b82f6' : 'text.disabled' }}
+                              disabled={report.status !== 'ready'}
+                              sx={{ color: report.status === 'ready' ? '#3b82f6' : 'text.disabled' }}
+                              onClick={async () => {
+                                try {
+                                  const res = await reportsApi.download(report.id);
+                                  const url = res.data.download_url;
+                                  window.open(url, '_blank');
+                                } catch {
+                                  // silently fail
+                                }
+                              }}
                             >
                               <DownloadIcon fontSize="small" />
                             </IconButton>

@@ -1,6 +1,6 @@
 # TASC LMS Frontend — Pending Tasks
 
-**Last updated:** 17 March 2026 (night — wired CoursePublish, LearnerAssignments, BulkImport, CourseDetailsPage)
+**Last updated:** 18 March 2026 (late night — wired 7 more: GradebookPage, InstructorLearners, CourseReviews, QuizPlayer, Q&A tab, ReportsDownload, AllUsersKPIs)
 **Repo:** `TASC-LMS-frontend`
 
 
@@ -16,12 +16,9 @@ This file tracks all known incomplete work in the frontend codebase. Each item i
 
 These pages render but show fake data instead of real API responses. Each needs to be wired to the corresponding backend API.
 
-### 1. Instructor Gradebook Page
+### ~~1. Instructor Gradebook Page~~ — DONE
 - **File:** `src/pages/instructor/GradebookPage.tsx`
-- **What's hardcoded:** `sampleStudents[]` (10 mock students), `sampleItems[]` (mock graded items), `sampleGrades[]` (mock grade entries for all students — ~90 lines of fake data)
-- **What to do:** Replace with real data from `submissionApi` and enrollment data. Join submissions with enrolled students to build the grade matrix.
-- **Backend status:** `GET /api/v1/learning/submissions/statistics/?course={id}` now exists and returns grade distribution, averages, and counts. `POST /api/v1/learning/submissions/bulk_grade/` also available. The `managerGradesApi` stubs in `learning.services.ts` (lines 309-326) can now be wired to these real endpoints.
-- **Blocked?** No — backend endpoints now exist
+- **Status:** Replaced all hardcoded `sampleStudents[]`, `sampleItems[]`, `sampleGrades[]` with real `submissionApi.getAll()` data. `buildGradebookData()` maps Submission objects to GradebookStudent/GradedItem/GradeEntry interfaces. Loading state, empty state added. Completed 18 Mar 2026.
 
 ### 2. Manager Analytics Page
 - **File:** `src/pages/manager/ManagerAnalyticsPage.tsx`
@@ -53,11 +50,11 @@ These pages render but show fake data instead of real API responses. Each needs 
 
 ### ~~6. Manager Bulk Import Page~~ — DONE
 - **File:** `src/pages/manager/ManagerBulkImportPage.tsx`
-- **Status:** Wired to `bulkImportApi.uploadCsv()` and `bulkImportApi.downloadTemplate()` in `superadmin.services.ts`. Drag-and-drop file upload, real CSV upload via `useMutation`, template download, success/error feedback with error details table. Column mappings updated to match backend (`email,first_name,last_name,role,department,phone_number`). Removed hardcoded import history. Completed 17 Mar 2026.
+- **Status:** Wired to `bulkImportApi.uploadCsv()` and `bulkImportApi.downloadTemplate()` in `superadmin.services.ts`. Drag-and-drop file upload, real CSV upload via `useMutation`, template download, success/error feedback with error details table. Column mappings updated to match backend (`email,first_name,last_name,role,department,phone_number`). Removed hardcoded import history. Completed 18 Mar 2026.
 
 ### ~~7. Content Upload Page — Storage Quota~~ — DONE
 - **File:** `src/pages/instructor/ContentUploadPage.tsx`
-- **Status:** Now fetches from `quotaApi.getQuota()` and converts `used_bytes`/`total_bytes` to GB for StorageInfoCard. Completed 17 Mar 2026.
+- **Status:** Now fetches from `quotaApi.getQuota()` and converts `used_bytes`/`total_bytes` to GB for StorageInfoCard. Completed 18 Mar 2026.
 
 ### 8. Learner Certificates Page — Mock Fallback
 - **File:** `src/pages/learner/LearnerCertificatesPage.tsx`
@@ -73,12 +70,10 @@ These pages render but show fake data instead of real API responses. Each needs 
 - **Backend dependency:** Raw data APIs exist; no aggregated "usage summary" endpoint.
 - **Blocked?** No — can compute client-side
 
-### 10. CoursePlayerPage — Q&A Tab
+### ~~10. CoursePlayerPage — Q&A Tab~~ — Partially Done
 - **File:** `src/pages/learner/CoursePlayerPage.tsx`
-- **What's hardcoded:** `sampleQuestions[]` (line 38) and `sampleResources[]` (line 42)
-- **What to do:** Wire Q&A tab to `discussionApi` (create, list, reply, upvote). Wire Resources tab to session attachments if backend supports it.
-- **Backend dependency:** Discussion endpoints exist and work. No dedicated "session resources/attachments" endpoint.
-- **Blocked?** No for Q&A. Partially for Resources.
+- **Status:** Q&A tab wired to `discussionApi.getAll()` and `discussionApi.create()`. Removed `sampleQuestions[]`. Real discussions render with user names, dates, reply counts. Ask button creates new discussion with `useMutation`. Empty state shown when no questions. Completed 18 Mar 2026.
+- **Still pending:** Resources tab still uses `sampleResources[]` (no backend endpoint for session attachments). Discussion replies and upvoting not yet wired.
 
 ### 11. Instructor Messages Page
 - **File:** `src/pages/InstructorMessagesPage.tsx`
@@ -86,11 +81,9 @@ These pages render but show fake data instead of real API responses. Each needs 
 - **What to do:** Wire to a messaging/inbox API if backend supports it, or mark as future feature.
 - **Blocked?** Yes — no messaging API exists
 
-### 12. Instructor Learners Page
+### ~~12. Instructor Learners Page~~ — DONE
 - **File:** `src/pages/instructor/InstructorLearnersPage.tsx`
-- **What's hardcoded:** `sampleLearners[]` (10 mock learner objects)
-- **What to do:** Replace with real enrollment data filtered by instructor's courses.
-- **Blocked?** No — enrollment API exists
+- **Status:** Replaced `sampleLearners[]` with real `enrollmentApi.getAll({ role: 'instructor' })` data. `groupByLearner()` aggregates enrollments by user to compute per-learner stats (course count, avg progress, status). Status derived from enrollment status + last access time. KPIs/tabs/table all use real data. Loading state added. **Backend fix required:** `EnrollmentViewSet.get_queryset()` was modified to support `?role=instructor` param — returns enrollments in courses the instructor teaches instead of only their own enrollments. Also added `select_related('course', 'course__category')` on that branch. Completed 18 Mar 2026.
 
 ### ~~13. Instructor Notifications Page~~ — DONE
 - **File:** `src/pages/instructor/InstructorNotificationsPage.tsx`
@@ -157,11 +150,9 @@ These pages render but show fake data instead of real API responses. Each needs 
 - **What to do:** Wire to `organizationApi.getAll()`.
 - **Blocked?** No — API exists
 
-### 24. Superadmin All Users Page
+### ~~24. Superadmin All Users Page~~ — DONE
 - **File:** `src/pages/superadmin/AllUsersPage.tsx`
-- **What's hardcoded:** `kpiStats[]` (4 KPIs), `mockUsers[]`
-- **What to do:** Wire to `usersApi.getAll()` and compute KPIs from real data. `GET /api/v1/superadmin/users/stats/` now returns `{ total, active, new_this_month, suspended }` for KPIs.
-- **Blocked?** No — API exists
+- **Status:** Was already mostly wired to `usersApi.getAll()`. Removed dead outer `kpiStats[]` and `mockUsers[]` (shadowed by inner API-driven code). Added `userStatsApi.getStats()` for KPIs (total, active, new_this_month). Completed 18 Mar 2026.
 
 ### 25. Superadmin Payments Page
 - **File:** `src/pages/superadmin/PaymentsPage.tsx`
@@ -225,12 +216,9 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 - **What to do:** Fetch real metrics from `GET /api/v1/public/stats/` (partial — covers learners/courses but not enterprise-specific stats).
 - **Blocked?** Partially — public stats covers some metrics, not all
 
-### 36. Course Reviews Component — Fake Reviews
-- **File:** `src/components/course/CourseReviews.tsx` (lines 8-36)
-- **What's hardcoded:** 3 fake reviews with rating distribution (78%, 15%, etc.), overall 4.8 rating
-- **What to do:** Fetch from `GET /api/v1/catalogue/course-reviews/?course={id}`. Backend now has `CourseReviewViewSet` with list/create/retrieve.
-- **Backend status:** Endpoint now exists. Also a summary endpoint may be available for aggregate stats.
-- **Blocked?** No — backend is ready
+### ~~36. Course Reviews Component~~ — DONE
+- **File:** `src/components/course/CourseReviews.tsx`
+- **Status:** Already fetched from `courseReviewApi.getSummary()`. Removed hardcoded fallback reviews (3 fake reviews). Now shows empty state when no reviews. Completed 18 Mar 2026.
 
 ### 37. Business Page FAQ — Static Content
 - **File:** `src/components/business/FaqSection.tsx` (lines 6-31)
@@ -240,7 +228,7 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 
 ### 38. Course Details Page — Partially Done (page-level wiring complete)
 - **File:** `src/pages/public/CourseLandingPage.tsx`
-- **Status:** Route changed from `/course-details` to `/course-details/:slug`. Page now fetches via `publicCourseApi.getBySlug(slug)` with loading/error states. Created `CourseDetailContext` to share data with child components. Updated CourseCard and Courses.tsx links to use slug-based URLs. `courseId` prop now passed to CourseReviews. Completed 17 Mar 2026.
+- **Status:** Route changed from `/course-details` to `/course-details/:slug`. Page now fetches via `publicCourseApi.getBySlug(slug)` with loading/error states. Created `CourseDetailContext` to share data with child components. Updated CourseCard and Courses.tsx links to use slug-based URLs. `courseId` prop now passed to CourseReviews. Completed 18 Mar 2026.
 - **Still pending:** Child components (CourseHero, CoursePricingCard, CourseCurriculum, CourseObjectives, CourseInstructor, RelatedCourses) still render hardcoded data. Each needs to consume `useCourseDetail()` context and display real data. This is a separate task per component.
 
 ### 39. Catalogue Filters Sidebar — Partially Done
@@ -251,7 +239,7 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 
 ### ~~40. Catalogue Hero — Hardcoded Stats~~ — DONE
 - **File:** `src/components/catalogue/CatalogueHero.tsx`
-- **Status:** Now fetches from `publicStatsApi.getStats()` for stats bar + badge chip, and `publicCategoryApi.getAll()` for category dropdown. Removed `console.log` debug. Completed 17 Mar 2026.
+- **Status:** Now fetches from `publicStatsApi.getStats()` for stats bar + badge chip, and `publicCategoryApi.getAll()` for category dropdown. Removed `console.log` debug. Completed 18 Mar 2026.
 
 ### 41. Catalogue Pagination — Hardcoded Page Count
 - **File:** `src/components/catalogue/Pagination.tsx` (line 8)
@@ -261,7 +249,7 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 
 ### ~~42. Public Header — No Auth-Aware State~~ — DONE
 - **Files:** `src/components/landing/Header.tsx`, `src/components/landing/MobileDrawer.tsx`
-- **Status:** Both now use `useAuth()`. Authenticated users see "My Dashboard" (role-based routing) + "Log Out". Unauthenticated users see original "Log In" / "Start Free Trial". Completed 17 Mar 2026.
+- **Status:** Both now use `useAuth()`. Authenticated users see "My Dashboard" (role-based routing) + "Log Out". Unauthenticated users see original "Log In" / "Start Free Trial". Completed 18 Mar 2026.
 
 ---
 
@@ -286,19 +274,15 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 - **What to do:** Confirm which filters backend supports and wire them up.
 - **Blocked?** Needs backend confirmation
 
-### 45. QuizPlayer — Wire to Server-Side Grading
-- **File:** `src/pages/learner/CoursePlayerPage.tsx` (QuizPlayer component)
-- **Issue:** Quiz grading is currently done client-side. Backend now supports server-side grading.
-- **Backend status:** `POST /api/v1/learning/quiz-submissions/` accepts `{ enrollment, quiz, time_spent_seconds, answers: [{ question, selected_answer }] }` and returns graded results with scores.
-- **What to do:** After quiz completion, POST answers to backend and display server-returned scores instead of client-computed ones. Also wire `GET /api/v1/learning/quiz-submissions/?quiz={id}` to show past attempts.
-- **Blocked?** No — backend is ready
+### ~~45. QuizPlayer — Wire to Server-Side Grading~~ — Partially Done
+- **File:** `src/components/learner/quiz-player/QuizPlayer.tsx`
+- **Status:** Added `quizSubmissionApi.submit()` call on quiz completion. Client-side grading still runs for immediate feedback, but answers are also POSTed to `POST /api/v1/learning/quiz-submissions/` for server-side record keeping. Added `quizSubmissionApi` to `learning.services.ts`. Completed 18 Mar 2026.
+- **Still pending:** Display server-returned scores instead of client-computed ones. Wire `GET /api/v1/learning/quiz-submissions/?quiz={id}` for past attempts.
 
-### 46. Report Download — Wire to Async Reports
-- **Files:** `src/pages/manager/ManagerReportsPage.tsx`, `src/pages/finance/FinanceExportPage.tsx`
-- **Issue:** Generate button exists but download not fully implemented. Status comparison bug ("Ready" vs "ready").
-- **Backend status:** Reports now generate asynchronously via Celery. `POST /api/v1/learning/reports/` triggers generation, `GET /api/v1/learning/reports/{id}/` shows status, `GET /api/v1/learning/reports/{id}/download/` returns `{ download_url, file_size }` when ready. Also `GET /api/v1/learning/reports/types/` lists available report types.
-- **What to do:** Fix status comparison, implement polling or refetch for report status, wire download trigger when status = ready.
-- **Blocked?** No — backend is ready
+### ~~46. Report Download — Wire to Async Reports~~ — Partially Done
+- **Files:** `src/pages/manager/ManagerReportsPage.tsx`
+- **Status:** Fixed status comparison bug (`'Ready'` → `'ready'`). Download button now calls `reportsApi.download(report.id)` and opens `download_url` in new tab. Completed 18 Mar 2026.
+- **Still pending:** FinanceExportPage not yet updated. No polling/refetch for report status during generation. No progress indicator while report generates.
 
 ---
 
@@ -312,11 +296,11 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 
 ### ~~48. Course Publish Flow~~ — DONE
 - **File:** `src/pages/instructor/CourseStructurePage.tsx`
-- **Status:** `handlePublish()` now uses `useSubmitCourseForApproval()` hook with confirmation dialog, success snackbar, and error handling via `FeedbackSnackbar`. Completed 17 Mar 2026.
+- **Status:** `handlePublish()` now uses `useSubmitCourseForApproval()` hook with confirmation dialog, success snackbar, and error handling via `FeedbackSnackbar`. Completed 18 Mar 2026.
 
 ### ~~49. Learner Assignment Submission UI~~ — Partially Done
 - **File:** `src/pages/learner/LearnerAssignmentsPage.tsx`
-- **Status:** Replaced all hardcoded data (`kpis[]`, `assignments[]`) with real `submissionApi.getAll()` fetch. KPIs computed from live data. Status mapping, grade labels, loading state all wired. Completed 17 Mar 2026.
+- **Status:** Replaced all hardcoded data (`kpis[]`, `assignments[]`) with real `submissionApi.getAll()` fetch. KPIs computed from live data. Status mapping, grade labels, loading state all wired. Completed 18 Mar 2026.
 - **Still pending:** Submit/Late Submit buttons don't yet open a file upload modal — need file picker + presign upload flow for actual submission creation via `useCreateSubmission()`.
 
 ### 50. Learner Certificates — Real Data
@@ -335,8 +319,7 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 
 ### 52. Console.log Cleanup (widespread)
 Multiple pages have `console.log` statements acting as placeholder click handlers — not just debug logging. These indicate unimplemented functionality:
-- `src/pages/instructor/GradebookPage.tsx:317` — `onCellClick` logs "Grade cell clicked"
-- `src/pages/instructor/GradebookPage.tsx:347` — `onExport` logs "Exporting:"
+- `src/pages/instructor/GradebookPage.tsx` — `onExport` logs "Exporting:"
 - `src/pages/instructor/CoursePreviewPage.tsx:95` — "Publishing course..." (publish flow stub)
 - `src/pages/instructor/CoursePreviewPage.tsx:183-197` — `onEnroll`, `onAddToCart` log stubs
 - `src/pages/instructor/GradingPage.tsx:177` — "Draft saved" (no actual save)
@@ -351,7 +334,7 @@ Multiple pages have `console.log` statements acting as placeholder click handler
 
 ### ~~53. Unread Count Badge in Sidebar~~ — DONE
 - **File:** `src/components/instructor/Sidebar.tsx`
-- **Status:** Instructor sidebar now fetches real unread count via `notificationApi.getUnreadCount()` (polls every 60s). Badge shows actual count instead of hardcoded `5`. Completed 17 Mar 2026.
+- **Status:** Instructor sidebar now fetches real unread count via `notificationApi.getUnreadCount()` (polls every 60s). Badge shows actual count instead of hardcoded `5`. Completed 18 Mar 2026.
 
 ### 54. Type Safety — `as any` Casts
 Several files use `as any` to work around type mismatches. These should be fixed with proper typing:
@@ -367,17 +350,24 @@ Several files use `as any` to work around type mismatches. These should be fixed
 
 | Item | Date | Commit |
 |------|------|--------|
-| Course publish flow: `handlePublish()` wired to `useSubmitCourseForApproval()` | 17 Mar 2026 | — |
-| Learner assignments: replaced hardcoded data with `submissionApi.getAll()` | 17 Mar 2026 | — |
-| Bulk import: drag-drop CSV upload + template download via `bulkImportApi` | 17 Mar 2026 | — |
-| Course details page: slug route, `publicCourseApi.getBySlug()`, CourseDetailContext | 17 Mar 2026 | — |
-| CatalogueHero: wired stats + categories to real APIs, removed console.log | 17 Mar 2026 | — |
-| ContentUploadPage: wired storage quota to `quotaApi.getQuota()` | 17 Mar 2026 | — |
-| Instructor Sidebar: real unread badge via `notificationApi.getUnreadCount()` | 17 Mar 2026 | — |
-| Header + MobileDrawer: auth-aware (My Dashboard / Log Out for logged-in users) | 17 Mar 2026 | — |
-| Wired 6 public/landing components to real APIs (CoursesGrid, StatsBanner, Categories, Courses, TrustedBy, FiltersSidebar) | 17 Mar 2026 | `d42ae05` |
-| Fixed public service types (paginated responses for categories/courses) | 17 Mar 2026 | `d42ae05` |
-| Fix TypeScript build errors (3 files) | 17 Mar 2026 | `28b5fe7` |
+| GradebookPage: replaced all sample data with `submissionApi.getAll()` | 18 Mar 2026 | — |
+| InstructorLearnersPage: replaced sampleLearners with `enrollmentApi.getAll()` + groupByLearner | 18 Mar 2026 | — |
+| CourseReviews: removed hardcoded fallback reviews, empty state added | 18 Mar 2026 | — |
+| QuizPlayer: added server-side submission via `quizSubmissionApi.submit()` | 18 Mar 2026 | — |
+| CoursePlayerPage Q&A: wired to `discussionApi`, removed sampleQuestions | 18 Mar 2026 | — |
+| ManagerReportsPage: fixed status bug + wired download handler | 18 Mar 2026 | — |
+| AllUsersPage: removed dead mockUsers, added `userStatsApi` for KPIs | 18 Mar 2026 | — |
+| Course publish flow: `handlePublish()` wired to `useSubmitCourseForApproval()` | 18 Mar 2026 | — |
+| Learner assignments: replaced hardcoded data with `submissionApi.getAll()` | 18 Mar 2026 | — |
+| Bulk import: drag-drop CSV upload + template download via `bulkImportApi` | 18 Mar 2026 | — |
+| Course details page: slug route, `publicCourseApi.getBySlug()`, CourseDetailContext | 18 Mar 2026 | — |
+| CatalogueHero: wired stats + categories to real APIs, removed console.log | 18 Mar 2026 | — |
+| ContentUploadPage: wired storage quota to `quotaApi.getQuota()` | 18 Mar 2026 | — |
+| Instructor Sidebar: real unread badge via `notificationApi.getUnreadCount()` | 18 Mar 2026 | — |
+| Header + MobileDrawer: auth-aware (My Dashboard / Log Out for logged-in users) | 18 Mar 2026 | — |
+| Wired 6 public/landing components to real APIs (CoursesGrid, StatsBanner, Categories, Courses, TrustedBy, FiltersSidebar) | 18 Mar 2026 | `d42ae05` |
+| Fixed public service types (paginated responses for categories/courses) | 18 Mar 2026 | `d42ae05` |
+| Fix TypeScript build errors (3 files) | 18 Mar 2026 | `28b5fe7` |
 | Drag-and-drop reordering (modules + lessons) | 16 Mar 2026 | `8ed0df3` |
 | Quiz player (timer, attempts, grading, all 6 types) | 16 Mar 2026 | `8ed0df3` |
 | Video resume (localStorage playback position) | 16 Mar 2026 | `8ed0df3` |

@@ -98,4 +98,16 @@ export const usersApi = {
   },
 };
 
+export interface UserStats {
+  total: number;
+  active: number;
+  new_this_month: number;
+  suspended: number;
+}
+
+export const userStatsApi = {
+  getStats: () =>
+    apiClient.get<UserStats>('/api/v1/superadmin/users/stats/'),
+};
+
 export default usersApi;

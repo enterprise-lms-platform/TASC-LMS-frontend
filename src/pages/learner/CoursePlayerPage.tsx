@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, useLoaderData } from 'react-router-dom';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
-import { sessionProgressApi } from '../../services/learning.services';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { sessionProgressApi, discussionApi } from '../../services/learning.services';
 import { queryKeys } from '../../hooks/queryKeys';
-import type { CourseDetail, Session, SessionProgress } from '../../types/types';
+import type { CourseDetail, Session, SessionProgress, Discussion } from '../../types/types';
 import { useSessionAssetUrl } from '../../hooks/useUpload';
 import { useQuizDetail } from '../../hooks/useCatalogue';
 import ReactPlayer from 'react-player';
@@ -28,14 +28,7 @@ import '../../styles/LearnerDashboard.css';
 
 /* ── Types ── */
 interface Note { id: number; text: string; timestamp: string; sessionTitle: string; }
-interface Question { id: number; author: string; text: string; votes: number; replies: number; time: string; }
 interface Resource { id: number; name: string; type: string; size: string; }
-
-/* ── Sample Data for Q&A ── */
-
-const sampleQuestions: Question[] = [
-  { id: 1, author: 'Sarah K.', text: 'How does this work?', votes: 12, replies: 3, time: '2 days ago' },
-];
 
 const sampleResources: Resource[] = [
   { id: 1, name: 'Lesson Slides.pdf', type: 'PDF', size: '2.4 MB' },
@@ -81,6 +74,27 @@ const CoursePlayerPage: React.FC = () => {
   const [expandedModules, setExpandedModules] = useState<string[]>(['module-1']);
   const [curriculumOpen, setCurriculumOpen] = useState(true);
   const [newNote, setNewNote] = useState('');
+  const [newQuestion, setNewQuestion] = useState('');
+
+  // Q&A discussions
+  const { data: discussionsRes } = useQuery({
+    queryKey: ['discussions', courseId],
+    queryFn: () => discussionApi.getAll({ course: Number(courseId) }),
+    enabled: !!courseId,
+  });
+  const discussions: Discussion[] = (() => {
+    const raw = discussionsRes?.data;
+    if (!raw) return [];
+    return Array.isArray(raw) ? raw : (raw as any).results || [];
+  })();
+
+  const createDiscussion = useMutation({
+    mutationFn: (content: string) => discussionApi.create({ course: Number(courseId), session: activeSessionId, title: content.slice(0, 100), content }),
+    onSuccess: () => {
+      setNewQuestion('');
+      queryClient.invalidateQueries({ queryKey: ['discussions', courseId] });
+    },
+  });
   
   // Real completed sessions array based on backend progress
   const completedSessions = recordedProgress.filter(p => p.is_completed).map(p => p.session);
@@ -534,22 +548,35 @@ const CoursePlayerPage: React.FC = () => {
                   <TextField
                     fullWidth size="small"
                     placeholder="Ask a question about this session..."
+                    value={newQuestion}
+                    onChange={(e) => setNewQuestion(e.target.value)}
                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
                   />
-                  <Button variant="contained" startIcon={<SendIcon />} sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 3, whiteSpace: 'nowrap', color: '#fff' }}>Ask</Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<SendIcon />}
+                    disabled={!newQuestion.trim() || createDiscussion.isPending}
+                    onClick={() => newQuestion.trim() && createDiscussion.mutate(newQuestion.trim())}
+                    sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 3, whiteSpace: 'nowrap', color: '#fff' }}
+                  >
+                    Ask
+                  </Button>
                 </Box>
+                {discussions.length === 0 && (
+                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>No questions yet. Be the first to ask!</Typography>
+                )}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {sampleQuestions.map(q => (
+                  {discussions.map(q => (
                     <Box key={q.id} sx={{ p: 2, bgcolor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', '&:hover': { borderColor: '#ffa424' }, transition: 'border-color 0.2s' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                        <Avatar sx={{ width: 28, height: 28, fontSize: '0.75rem', bgcolor: '#ffa424' }}>{q.author[0]}</Avatar>
-                        <Typography variant="body2" fontWeight={600}>{q.author}</Typography>
-                        <Typography variant="caption" color="text.secondary">· {q.time}</Typography>
+                        <Avatar sx={{ width: 28, height: 28, fontSize: '0.75rem', bgcolor: '#ffa424' }}>{q.user_name?.[0] || '?'}</Avatar>
+                        <Typography variant="body2" fontWeight={600}>{q.user_name}</Typography>
+                        <Typography variant="caption" color="text.secondary">· {new Date(q.created_at).toLocaleDateString()}</Typography>
                       </Box>
-                      <Typography variant="body2" sx={{ mb: 1.5 }}>{q.text}</Typography>
+                      <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{q.title}</Typography>
+                      <Typography variant="body2" sx={{ mb: 1.5 }}>{q.content}</Typography>
                       <Box sx={{ display: 'flex', gap: 2 }}>
-                        <Button size="small" startIcon={<LikeIcon />} sx={{ textTransform: 'none', color: 'text.secondary', fontSize: '0.8rem' }}>{q.votes}</Button>
-                        <Button size="small" sx={{ textTransform: 'none', color: 'text.secondary', fontSize: '0.8rem' }}>{q.replies} replies</Button>
+                        <Button size="small" sx={{ textTransform: 'none', color: 'text.secondary', fontSize: '0.8rem' }}>{q.reply_count} replies</Button>
                       </Box>
                     </Box>
                   ))}
