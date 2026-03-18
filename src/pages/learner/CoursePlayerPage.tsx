@@ -1,9 +1,19 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, useLoaderData } from 'react-router-dom';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { sessionProgressApi, discussionApi } from '../../services/learning.services';
+import { sessionProgressApi, discussionApi, discussionReplyApi } from '../../services/learning.services';
 import { queryKeys } from '../../hooks/queryKeys';
-import type { CourseDetail, Session, SessionProgress, Discussion, Question, DiscussionReply } from '../../types/types';
+import type { CourseDetail, Session, SessionProgress, Discussion, DiscussionReply } from '../../types/types';
+
+interface QuestionItem {
+  id: number;
+  author: string;
+  user_name: string;
+  title: string;
+  content: string;
+  reply_count: number;
+  created_at: string;
+}
 import { useSessionAssetUrl } from '../../hooks/useUpload';
 import { useQuizDetail } from '../../hooks/useCatalogue';
 import ReactPlayer from 'react-player';
@@ -121,13 +131,14 @@ const CoursePlayerPage: React.FC = () => {
   const discussions = (discussionsData ?? []) as Discussion[];
   const replies = (repliesData ?? []) as DiscussionReply[];
 
-  const questions: Question[] = discussions.map((d) => ({
+  const questions: QuestionItem[] = discussions.map((d) => ({
     id: d.id,
     author: d.user_name || 'Learner',
-    text: d.content,
-    votes: 0,
-    replies: d.reply_count,
-    time: timeAgo(d.created_at),
+    user_name: d.user_name || 'Learner',
+    title: d.title,
+    content: d.content,
+    reply_count: d.reply_count,
+    created_at: d.created_at,
   }));
 
   // Video resume: persist playback position in localStorage
@@ -576,15 +587,6 @@ const CoursePlayerPage: React.FC = () => {
                     onKeyDown={(e) => e.key === 'Enter' && handleAskQuestion()}
                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
                   />
-                  <Button
-                    variant="contained"
-                    startIcon={<SendIcon />}
-                    disabled={!newQuestion.trim() || createDiscussion.isPending}
-                    onClick={() => newQuestion.trim() && createDiscussion.mutate(newQuestion.trim())}
-                    sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 3, whiteSpace: 'nowrap', color: '#fff' }}
-                  >
-                    Ask
-                  </Button>
                   <Button
                     variant="contained"
                     startIcon={<SendIcon />}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { livestreamApi } from '../../services/livestream.services';
 import {
@@ -104,7 +104,7 @@ const WorkshopsPage: React.FC = () => {
 
   const { data: sessionsData, isLoading } = useQuery({
     queryKey: ['livestreams', 'workshops'],
-    queryFn: () => livestreamApi.getAll({ limit: 100 }).then(r => r.data),
+    queryFn: () => livestreamApi.getAll({ page_size: 100 }).then(r => r.data),
   });
 
   const sessions = sessionsData?.results ?? [];
@@ -149,7 +149,7 @@ const WorkshopsPage: React.FC = () => {
   const [newGradingType, setNewGradingType] = useState<'attendance' | 'pass_fail' | 'score'>('attendance');
 
   const statusFilter = tab === 0 ? null : tab === 1 ? 'upcoming' : tab === 2 ? 'ongoing' : 'completed';
-  const filtered = displayWorkshops.filter((w) => {
+  const filtered = allWorkshops.filter((w) => {
     const matchSearch = w.title.toLowerCase().includes(search.toLowerCase()) || w.location.toLowerCase().includes(search.toLowerCase()) || w.category.toLowerCase().includes(search.toLowerCase());
     const matchStatus = !statusFilter || w.status === statusFilter;
     return matchSearch && matchStatus;

@@ -34,6 +34,55 @@ import KPICard from '../../components/superadmin/KPICard';
 import { transactionApi } from '../../services/main.api';
 import type { Transaction } from '../../types/types';
 
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'completed':
+    case 'Completed':
+      return { bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
+    case 'pending':
+    case 'Pending':
+      return { bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
+    case 'failed':
+    case 'Failed':
+      return { bgcolor: 'rgba(113, 113, 122, 0.1)', color: '#71717a' };
+    case 'cancelled':
+    case 'Cancelled':
+      return { bgcolor: 'rgba(156, 163, 175, 0.1)', color: '#71717a' };
+    default:
+      return { bgcolor: 'grey.100', color: 'text.secondary' };
+  }
+};
+
+const getMethodColor = (method: string) => {
+  const m = method.toLowerCase();
+  if (m.includes('card') || m.includes('credit') || m.includes('debit')) {
+    return { bgcolor: 'rgba(113, 113, 122, 0.1)', color: '#71717a' };
+  }
+  if (m.includes('mpesa') || m.includes('m-pesa')) {
+    return { bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
+  }
+  if (m.includes('mtn') || m.includes('momo')) {
+    return { bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
+  }
+  if (m.includes('bank')) {
+    return { bgcolor: 'rgba(255, 164, 36, 0.1)', color: '#e65100' };
+  }
+  return { bgcolor: 'grey.100', color: 'text.secondary' };
+};
+
+const formatMethod = (method: string) => {
+  const m = method.toLowerCase();
+  if (m.includes('card') || m.includes('credit') || m.includes('debit')) return 'Card';
+  if (m.includes('mpesa') || m.includes('m-pesa')) return 'M-Pesa';
+  if (m.includes('mtn') || m.includes('momo')) return 'MTN MoMo';
+  if (m.includes('bank')) return 'Bank Transfer';
+  return method.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+};
+
+const formatStatus = (status: string) => {
+  return status.charAt(0).toUpperCase() + status.slice(1);
+};
+
 const PaymentsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Box, Toolbar, CssBaseline, Typography, Grid, Stack, Link, Paper } from '@mui/material';
-import { ChevronRight, MenuBook, School, CheckCircle, PlayCircle, Star } from '@mui/icons-material';
+import { ChevronRight, MenuBook, School, CheckCircle, PlayCircle, Star, People } from '@mui/icons-material';
 import { enrollmentApi, certificateApi } from '../../services/learning.services';
 import '../../styles/LearnerDashboard.css';
 
