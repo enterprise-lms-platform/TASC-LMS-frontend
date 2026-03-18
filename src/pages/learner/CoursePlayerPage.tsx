@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLoaderData } from 'react-router-dom';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { sessionProgressApi, discussionApi } from '../../services/learning.services';
 import { queryKeys } from '../../hooks/queryKeys';
-import type { CourseDetail, Session, SessionProgress, Discussion } from '../../types/types';
+import type { CourseDetail, Session, SessionProgress, Discussion, Question, DiscussionReply } from '../../types/types';
 import { useSessionAssetUrl } from '../../hooks/useUpload';
 import { useQuizDetail } from '../../hooks/useCatalogue';
 import ReactPlayer from 'react-player';
@@ -75,27 +75,9 @@ const CoursePlayerPage: React.FC = () => {
   const [curriculumOpen, setCurriculumOpen] = useState(true);
   const [newNote, setNewNote] = useState('');
   const [newQuestion, setNewQuestion] = useState('');
+  const [expandedQuestionId, setExpandedQuestionId] = useState<number | null>(null);
+  const [questionText, setQuestionText] = useState('');
 
-  // Q&A discussions
-  const { data: discussionsRes } = useQuery({
-    queryKey: ['discussions', courseId],
-    queryFn: () => discussionApi.getAll({ course: Number(courseId) }),
-    enabled: !!courseId,
-  });
-  const discussions: Discussion[] = (() => {
-    const raw = discussionsRes?.data;
-    if (!raw) return [];
-    return Array.isArray(raw) ? raw : (raw as any).results || [];
-  })();
-
-  const createDiscussion = useMutation({
-    mutationFn: (content: string) => discussionApi.create({ course: Number(courseId), session: activeSessionId, title: content.slice(0, 100), content }),
-    onSuccess: () => {
-      setNewQuestion('');
-      queryClient.invalidateQueries({ queryKey: ['discussions', courseId] });
-    },
-  });
-  
   // Real completed sessions array based on backend progress
   const completedSessions = recordedProgress.filter(p => p.is_completed).map(p => p.session);
   const progressPercent = totalSessions > 0 ? Math.round((completedSessions.length / totalSessions) * 100) : 0;

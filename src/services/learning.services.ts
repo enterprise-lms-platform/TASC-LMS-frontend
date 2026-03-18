@@ -279,15 +279,12 @@ export interface QuizSubmissionCreateRequest {
 }
 
 export const quizSubmissionApi = {
-  // List all quiz submissions
   getAll: (params?: { quiz?: number; enrollment?: number; page?: number; page_size?: number }) =>
     apiClient.get<QuizSubmission[]>(`${BASE_PATH}/quiz-submissions/`, { params }),
 
-  // Submit quiz answers (auto-grades)
   create: (data: QuizSubmissionCreateRequest) =>
     apiClient.post<QuizSubmission>(`${BASE_PATH}/quiz-submissions/`, data),
 
-  // Get quiz submission by ID
   getById: (id: number) =>
     apiClient.get<QuizSubmission>(`${BASE_PATH}/quiz-submissions/${id}/`),
 };
@@ -296,199 +293,84 @@ export const quizSubmissionApi = {
 
 export interface GradeDistribution {
   range: string;
-  label: string;
   count: number;
   percentage: number;
 }
 
-export interface GradeStatistics {
+export interface GradeStatisticsResponse {
   total_submissions: number;
-  graded: number;
-  pending: number;
-  average_grade: number;
+  average_score: number;
+  pass_count: number;
+  fail_count: number;
   distribution: GradeDistribution[];
 }
 
-export interface BulkGradeRequest {
-  grades: {
-    submission_id: number;
-    grade: number;
-    feedback?: string;
-  }[];
-}
-
-export interface BulkGradeResponse {
-  graded: number;
-  results: {
-    submission_id: number;
-    status: string;
-    error?: string;
-  }[];
-}
-
 export const gradeStatisticsApi = {
-  // Get grade distribution for a course
-  getStatistics: (courseId: number) =>
-    apiClient.get<GradeStatistics>(`${BASE_PATH}/submissions/statistics/`, {
-      params: { course: courseId },
+  getStatistics: (courseId?: number) =>
+    apiClient.get<GradeStatisticsResponse>(`${BASE_PATH}/submissions/statistics/`, {
+      params: courseId ? { course: courseId } : undefined,
     }),
-
-  // Bulk grade multiple submissions
-  bulkGrade: (data: BulkGradeRequest) =>
-    apiClient.post<BulkGradeResponse>(`${BASE_PATH}/submissions/bulk_grade/`, data),
 };
 
-// MANAGER-LEVEL QUERIES (for org-wide data)
-
-// Manager enrollments - gets all enrollments in the org
-export interface ManagerEnrollmentParams extends EnrollmentParams {
-  organization?: number;
-  status?: string;
-}
-
+// MANAGER ENROLLMENT API
 export const managerEnrollmentApi = {
-  // Get all enrollments across org (for manager dashboard)
-  getAllEnrollments: (params?: ManagerEnrollmentParams) =>
-    apiClient.get<Enrollment[]>(`${BASE_PATH}/enrollments/`, { params }),
+  getAll: (params?: { course?: number; user?: number; is_active?: boolean; page?: number; page_size?: number }) =>
+    apiClient.get(`${BASE_PATH}/enrollments/`, { params }),
+
+  enroll: (data: { user: number; course: number }) =>
+    apiClient.post(`${BASE_PATH}/enrollments/`, data),
+
+  unenroll: (id: number) =>
+    apiClient.delete(`${BASE_PATH}/enrollments/${id}/`),
 };
 
-// Manager session progress - gets all progress across org
-export interface ManagerSessionProgressParams extends SessionProgressParams {
-  organization?: number;
-}
-
+// MANAGER SESSION PROGRESS API
 export const managerSessionProgressApi = {
-  // Get all session progress across org
-  getAllProgress: (params?: ManagerSessionProgressParams) =>
-    apiClient.get<SessionProgress[]>(`${BASE_PATH}/session-progress/`, { params }),
+  getAll: (params?: { enrollment?: number; session?: number; page?: number; page_size?: number }) =>
+    apiClient.get(`${BASE_PATH}/session-progress/`, { params }),
+
+  update: (id: number, data: Record<string, unknown>) =>
+    apiClient.patch(`${BASE_PATH}/session-progress/${id}/`, data),
 };
 
-// Manager certificates - gets all certificates across org
-export interface ManagerCertificateParams {
-  organization?: number;
-  course?: number;
-}
-
+// MANAGER CERTIFICATE API
 export const managerCertificateApi = {
-  // Get all certificates across org
-  getAllCertificates: (params?: ManagerCertificateParams) =>
-    apiClient.get<Certificate[]>(`${BASE_PATH}/certificates/`, { params }),
+  getAll: (params?: { enrollment?: number; course?: number; is_verified?: boolean; page?: number; page_size?: number }) =>
+    apiClient.get(`${BASE_PATH}/certificates/`, { params }),
+
+  issue: (data: { enrollment: number }) =>
+    apiClient.post(`${BASE_PATH}/certificates/`, data),
+
+  revoke: (id: number) =>
+    apiClient.delete(`${BASE_PATH}/certificates/${id}/`),
 };
 
-// Manager grade/submission data
-export interface GradeDistribution {
-  grade: string;
-  range: string;
-  count: number;
-  percentage: number;
-  color: string;
-}
-
+// MANAGER GRADES API
 export interface StudentGrade {
-  enrollment_id: number;
-  student_id: number;
-  student_name: string;
-  student_email: string;
-  course_id: number;
-  course_name: string;
-  assignment_score?: number;
-  quiz_score?: number;
-  overall_score: number;
-  status: 'pass' | 'fail';
+  id: number;
+  user: number;
+  user_name: string;
+  user_email: string;
+  enrollment: number;
+  assignment_title: string;
+  submission_date: string;
+  grade?: number | null;
+  max_grade: number;
+  status: string;
+  feedback?: string | null;
 }
 
 export const managerGradesApi = {
-  // Get grade distribution from statistics endpoint
-  getGradeDistribution: async (courseId: number): Promise<GradeDistribution[]> => {
-    try {
-      const response = await gradeStatisticsApi.getStatistics(courseId);
-      const data = response.data;
-      return data.distribution.map((d) => ({
-        grade: d.label,
-        label: d.label,
-        range: d.range,
-        count: d.count,
-        percentage: d.percentage,
-        color: d.label === 'A' ? '#16a34a' : d.label === 'B' ? '#3b82f6' : d.label === 'C' ? '#ffa424' : d.label === 'D' ? '#f97316' : '#ef4444',
-      }));
-    } catch {
-      return [
-        { grade: 'A', range: '90-100', label: 'A', count: 0, percentage: 0, color: '#16a34a' },
-        { grade: 'B', range: '80-89', label: 'B', count: 0, percentage: 0, color: '#3b82f6' },
-        { grade: 'C', range: '70-79', label: 'C', count: 0, percentage: 0, color: '#ffa424' },
-        { grade: 'D', range: '60-69', label: 'D', count: 0, percentage: 0, color: '#f97316' },
-        { grade: 'F', range: '<60', label: 'F', count: 0, percentage: 0, color: '#ef4444' },
-      ];
-    }
-  },
+  getStudentGrades: (courseId: number) =>
+    apiClient.get<StudentGrade[]>(`${BASE_PATH}/submissions/`, {
+      params: { course: courseId },
+    }),
 
-  // Get student grades from submissions
-  getStudentGrades: async (courseId: number): Promise<StudentGrade[]> => {
-    try {
-      const response = await apiClient.get<Submission[]>(`${BASE_PATH}/submissions/`, {
-        params: { course: courseId },
-      });
+  gradeSubmission: (id: number, data: { grade: number; feedback?: string }) =>
+    apiClient.patch(`${BASE_PATH}/submissions/${id}/`, data),
 
-      const submissions = (Array.isArray(response.data) ? response.data : (response.data as any)?.results ?? []) as Submission[];
-
-      const gradesByStudent = new Map<number, StudentGrade>();
-
-      for (const sub of submissions) {
-        if (!sub.enrollment) continue;
-
-        if (!gradesByStudent.has(sub.enrollment)) {
-          gradesByStudent.set(sub.enrollment, {
-            enrollment_id: sub.enrollment,
-            student_id: sub.user,
-            student_name: sub.user_name || 'Unknown',
-            student_email: sub.user_email || '',
-            course_id: courseId,
-            course_name: sub.session_title || '',
-            overall_score: 0,
-            status: 'fail',
-          });
-        }
-
-        const grade = gradesByStudent.get(sub.enrollment)!;
-        if (sub.grade !== null && sub.grade !== undefined) {
-          grade.overall_score = Math.max(grade.overall_score, sub.grade);
-        }
-      }
-
-      return Array.from(gradesByStudent.values());
-    } catch {
-      return [];
-    }
-  },
+  bulkGrade: (data: Array<{ id: number; grade: number; feedback?: string }>) =>
+    apiClient.post(`${BASE_PATH}/submissions/bulk_grade/`, { submissions: data }),
 };
 
-// QUIZ SUBMISSIONS
-
-export interface QuizAnswerPayload {
-  question_id: number;
-  answer: string | string[] | boolean | null;
-}
-
-export interface QuizSubmissionRequest {
-  quiz: number;  // session ID (quiz is OneToOne with session)
-  answers: QuizAnswerPayload[];
-}
-
-export interface QuizSubmissionResponse {
-  id: number;
-  quiz: number;
-  user: number;
-  score: number;
-  passed: boolean;
-  submitted_at: string;
-  answers: {
-    question_id: number;
-    is_correct: boolean | null;
-    points_earned: number;
-  }[];
-}
-
-export const quizSubmissionApi = {
-  submit: (data: QuizSubmissionRequest) =>
-    apiClient.post<QuizSubmissionResponse>(`${BASE_PATH}/quiz-submissions/`, data),
-};
+

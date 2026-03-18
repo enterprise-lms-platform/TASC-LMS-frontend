@@ -1,7 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   Grid,
@@ -34,119 +32,7 @@ import {
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import KPICard from '../../components/superadmin/KPICard';
 import { transactionApi } from '../../services/main.api';
-
 import type { Transaction } from '../../types/types';
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'Completed':
-      return { bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
-    case 'Pending':
-      return { bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
-    case 'Failed':
-      return { bgcolor: 'rgba(113, 113, 122, 0.1)', color: '#71717a' };
-    case 'Cancelled':
-      return { bgcolor: 'rgba(156, 163, 175, 0.1)', color: '#71717a' };
-    default:
-      return { bgcolor: 'grey.100', color: 'text.secondary' };
-  }
-};
-
-const getMethodColor = (method: string) => {
-  switch (method) {
-    case 'Card':
-      return { bgcolor: 'rgba(113, 113, 122, 0.1)', color: '#71717a' };
-    case 'M-Pesa':
-      return { bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
-    case 'MTN MoMo':
-      return { bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
-    case 'Bank Transfer':
-      return { bgcolor: 'rgba(255, 164, 36, 0.1)', color: '#e65100' };
-    default:
-      return { bgcolor: 'grey.100', color: 'text.secondary' };
-  }
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'completed':
-    case 'Completed':
-      return { bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
-    case 'pending':
-    case 'Pending':
-      return { bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
-    case 'failed':
-    case 'Failed':
-      return { bgcolor: 'rgba(113, 113, 122, 0.1)', color: '#71717a' };
-    case 'cancelled':
-    case 'Cancelled':
-      return { bgcolor: 'rgba(156, 163, 175, 0.1)', color: '#71717a' };
-    default:
-      return { bgcolor: 'grey.100', color: 'text.secondary' };
-  }
-};
-
-const getMethodColor = (method: string) => {
-  const m = method.toLowerCase();
-  if (m.includes('card') || m.includes('credit') || m.includes('debit')) {
-    return { bgcolor: 'rgba(113, 113, 122, 0.1)', color: '#71717a' };
-  }
-  if (m.includes('mpesa') || m.includes('m-pesa')) {
-    return { bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
-  }
-  if (m.includes('mtn') || m.includes('momo')) {
-    return { bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
-  }
-  if (m.includes('bank')) {
-    return { bgcolor: 'rgba(255, 164, 36, 0.1)', color: '#e65100' };
-  }
-  return { bgcolor: 'grey.100', color: 'text.secondary' };
-};
-
-const formatMethod = (method: string) => {
-  const m = method.toLowerCase();
-  if (m.includes('card') || m.includes('credit') || m.includes('debit')) return 'Card';
-  if (m.includes('mpesa') || m.includes('m-pesa')) return 'M-Pesa';
-  if (m.includes('mtn') || m.includes('momo')) return 'MTN MoMo';
-  if (m.includes('bank')) return 'Bank Transfer';
-  return method.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-};
-
-const formatStatus = (status: string) => {
-  return status.charAt(0).toUpperCase() + status.slice(1);
-};
-import KPICard from '../../components/superadmin/KPICard';
-
-const kpiCards = [
-  {
-    title: 'Total Transactions',
-    value: '8,456',
-    icon: <ReceiptIcon />,
-    // Light Amber Theme
-    bgColor: '#fff8e1', badgeColor: '#ffd54f', valueColor: '#f57f17', labelColor: '#ff6f00'
-  },
-  {
-    title: 'Completed',
-    value: '$1.2M',
-    icon: <CompletedIcon />,
-    // Mint Green Theme
-    bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
-  },
-  {
-    title: 'Pending',
-    value: '$45,200',
-    icon: <PendingIcon />,
-    // Grey Theme
-    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
-  },
-  {
-    title: 'Failed',
-    value: '23',
-    icon: <FailedIcon />,
-    // Orange Theme
-    bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412'
-  },
-];
 
 const PaymentsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -155,16 +41,6 @@ const PaymentsPage: React.FC = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  const { data: transactionsData, isLoading } = useQuery({
-    queryKey: ['transactions', statusFilter, methodFilter, dateFrom, dateTo],
-    queryFn: () => transactionApi.getAll({
-      status: statusFilter === 'All' ? undefined : statusFilter.toLowerCase(),
-      limit: 100,
-    }),
-  });
-
-  const transactions = (transactionsData?.data ?? []) as Transaction[];
-=======
   const { data: transactionsData, isLoading } = useQuery({
     queryKey: ['transactions', statusFilter, methodFilter, dateFrom, dateTo],
     queryFn: () => transactionApi.getAll({
@@ -215,7 +91,7 @@ const PaymentsPage: React.FC = () => {
       const matchesSearch = !searchQuery ||
         tx.user_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         tx.transaction_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tx.user_email?.toLowerCase().includes(searchQuery.toLowerCase());
+        tx.organization_name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'All' || tx.status.toLowerCase() === statusFilter.toLowerCase();
       const matchesMethod = methodFilter === 'All' || tx.payment_method?.toLowerCase().includes(methodFilter.toLowerCase());
       const txDate = new Date(tx.created_at);
@@ -224,7 +100,6 @@ const PaymentsPage: React.FC = () => {
       return matchesSearch && matchesStatus && matchesMethod && matchesDateFrom && matchesDateTo;
     });
   }, [transactions, searchQuery, statusFilter, methodFilter, dateFrom, dateTo]);
->>>>>>> feature/Updates
 
   return (
     <SuperadminLayout title="Payments" subtitle="Payment transactions and processing">
@@ -354,7 +229,7 @@ const PaymentsPage: React.FC = () => {
                         {tx.user_name}
                       </Typography>
                       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        {tx.user_email ?? tx.organization_name}
+                        {tx.organization_name}
                       </Typography>
                     </Box>
                   </TableCell>

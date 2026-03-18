@@ -1,4 +1,3 @@
-import React, { useState, useMemo } from 'react';
 import React, { useMemo, useState } from 'react';
 import {
   Box,
@@ -37,84 +36,45 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
 import { courseApi, enrollmentApi, submissionApi } from '../../services/main.api';
-import { enrollmentApi } from '../../services/learning.services';
 import type { Enrollment } from '../../types/types';
-
-interface Learner {
-  id: string;
-  name: string;
-  initials: string;
-  email: string;
-  courses: number;
-  avgProgress: number;
-  lastActive: string;
-  status: 'active' | 'inactive' | 'at-risk';
-  enrolledDate: string;
-}
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${mins} min ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)}w ago`;
-  return `${Math.floor(days / 30)}mo ago`;
-}
-
-function deriveLearnerStatus(enrollments: Enrollment[]): 'active' | 'inactive' | 'at-risk' {
-  const hasActive = enrollments.some((e) => e.status === 'active');
-  if (!hasActive) return 'inactive';
-  const latest = enrollments.reduce((a, b) =>
-    new Date(b.last_accessed_at) > new Date(a.last_accessed_at) ? b : a
-  );
-  const daysSince = (Date.now() - new Date(latest.last_accessed_at).getTime()) / 86400000;
-  if (daysSince > 14) return 'inactive';
-  if (daysSince > 5) return 'at-risk';
-  return 'active';
-}
-
-function groupByLearner(enrollments: Enrollment[]): Learner[] {
-  const map = new Map<number, Enrollment[]>();
-  for (const e of enrollments) {
-    const list = map.get(e.user) || [];
-    list.push(e);
-    map.set(e.user, list);
-  }
-  const learners: Learner[] = [];
-  map.forEach((enrs, userId) => {
-    const first = enrs[0];
-    const name = first.user_name || first.user_email;
-    const initials = name.split(' ').map((n) => n[0]?.toUpperCase() || '').join('').slice(0, 2);
-    const avgProgress = Math.round(enrs.reduce((s, e) => s + e.progress_percentage, 0) / enrs.length);
-    const latest = enrs.reduce((a, b) =>
-      new Date(b.last_accessed_at) > new Date(a.last_accessed_at) ? b : a
-    );
-    learners.push({
-      id: String(userId),
-      name,
-      initials,
-      email: first.user_email,
-      courses: enrs.length,
-      avgProgress,
-      lastActive: timeAgo(latest.last_accessed_at),
-      status: deriveLearnerStatus(enrs),
-      enrolledDate: new Date(first.enrolled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    });
-  });
-  return learners;
-}
 
 const statusStyles: Record<string, { bg: string; color: string; label: string }> = {
   active: { bg: '#d1fae5', color: '#059669', label: 'Active' },
   'at-risk': { bg: '#fef3c7', color: '#d97706', label: 'At Risk' },
   inactive: { bg: '#fee2e2', color: '#dc2626', label: 'Inactive' },
 };
+
+function timeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Never';
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  return `${Math.floor(diffDays / 30)}mo ago`;
+}
+
+function isRecent(dateString: string): boolean {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return false;
+  const diffDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+  return diffDays <= 7;
+}
+
+function isAtRisk(dateString: string): boolean {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return false;
+  const diffDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+  return diffDays > 7 && diffDays <= 30;
+}
 
 const InstructorLearnersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -143,29 +103,9 @@ const InstructorLearnersPage: React.FC = () => {
     course: number; course_title: string; progress_percentage: number;
     status: string; enrolled_at: string; last_accessed_at: string;
   }>;
-=======
-  const { data: coursesData, isLoading: coursesLoading } = useQuery({
-    queryKey: ['courses', 'instructor'],
-    queryFn: () => courseApi.getAll({ instructor_courses: true, limit: 100 }).then(r => r.data),
-  });
-
-  const { data: enrollmentsData, isLoading: enrollmentsLoading } = useQuery({
-    queryKey: ['enrollments', 'learners'],
-    queryFn: () => enrollmentApi.getAll().then(r => r.data),
-  });
-
-  const { data: submissionsData } = useQuery({
-    queryKey: ['submissions', 'learners'],
-    queryFn: () => submissionApi.getAll().then(r => r.data),
-  });
-
-  const courses = (coursesData?.results ?? []) as Array<{ id: number }>;
-  const enrollments = (enrollmentsData ?? []) as Array<{
-    id: number; user: number; user_name: string; user_email: string;
-    course: number; course_title: string; progress_percentage: number;
-    status: string; enrolled_at: string; last_accessed_at: string;
-  }>;
   const submissions = (submissionsData ?? []) as Array<{ user: number; enrollment: number; grade: number | null }>;
+
+  const isLoading = coursesLoading || enrollmentsLoading;
 
   const instructorCourseIds = useMemo(() => new Set(courses.map(c => c.id)), [courses]);
 
@@ -208,7 +148,6 @@ const InstructorLearnersPage: React.FC = () => {
 
   const statusFilter = tab === 0 ? null : tab === 1 ? 'active' : tab === 2 ? 'at-risk' : 'inactive';
   const filtered = learnerStats.filter((l) => {
->>>>>>> feature/Updates
     const matchSearch = l.name.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase());
     const matchStatus = !statusFilter || l.status === statusFilter;
     return matchSearch && matchStatus;
@@ -218,17 +157,11 @@ const InstructorLearnersPage: React.FC = () => {
   const atRiskCount = learnerStats.filter(l => l.status === 'at-risk').length;
   const avgScore = learnerStats.length > 0 ? Math.round(learnerStats.reduce((s, l) => s + l.avgScore, 0) / learnerStats.filter(l => l.avgScore > 0).length) || 0 : 0;
 
-  const activeCount = learners.filter((l) => l.status === 'active').length;
-  const atRiskCount = learners.filter((l) => l.status === 'at-risk').length;
-  const inactiveCount = learners.filter((l) => l.status === 'inactive').length;
-  const avgProgress = learners.length ? Math.round(learners.reduce((s, l) => s + l.avgProgress, 0) / learners.length) : 0;
-
   const kpis = [
     { label: 'Total Learners', value: learnerStats.length, icon: <PeopleIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
     { label: 'Active', value: activeCount, icon: <TrendingUpIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
     { label: 'At Risk', value: atRiskCount, icon: <TrendingUpIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
     { label: 'Avg. Score', value: avgScore > 0 ? `${avgScore}%` : '—', icon: <CourseIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
->>>>>>> feature/Updates
   ];
 
   return (
@@ -269,7 +202,6 @@ const InstructorLearnersPage: React.FC = () => {
               <CircularProgress />
             </Box>
           )}
-          {/* KPIs */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {kpis.map((kpi) => (
               <Grid size={{ xs: 6, md: 3 }} key={kpi.label}>
@@ -321,7 +253,6 @@ const InstructorLearnersPage: React.FC = () => {
             ))}
           </Grid>
 
-          {/* Table */}
           <Paper
             elevation={0}
             sx={{
@@ -411,33 +342,3 @@ const InstructorLearnersPage: React.FC = () => {
 };
 
 export default InstructorLearnersPage;
-
-function timeAgo(dateString: string): string {
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'Never';
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} min ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-  return `${Math.floor(diffDays / 30)}mo ago`;
-}
-
-function isRecent(dateString: string): boolean {
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return false;
-  const diffDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
-  return diffDays <= 7;
-}
-
-function isAtRisk(dateString: string): boolean {
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return false;
-  const diffDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
-  return diffDays > 7 && diffDays <= 30;
-}
