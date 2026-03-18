@@ -102,8 +102,8 @@ const ManagerEnrollmentsPage: React.FC = () => {
     queryFn: () => sessionProgressApi.getAll({}).then(r => r.data),
   });
 
-  const enrollments = enrollmentsData ?? [];
-  const courses = coursesData?.results ?? [];
+  const enrollments = Array.isArray(enrollmentsData) ? enrollmentsData : (enrollmentsData as any)?.results ?? [];
+  const courses = coursesData?.results ?? (Array.isArray(coursesData) ? coursesData : []);
 
   const courseOptions: Array<{ id: number | 'all'; title: string }> = [
     { id: 'all', title: 'All Courses' },
@@ -189,7 +189,7 @@ const ManagerEnrollmentsPage: React.FC = () => {
       >
         <Toolbar />
 
-        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400 }}>
           {/* Page Header */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
             <Box

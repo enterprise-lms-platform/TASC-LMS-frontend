@@ -129,7 +129,7 @@ const ManagerNotificationsPage: React.FC = () => {
       >
         <Toolbar />
 
-        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400 }}>
           {isLoading && <LinearProgress sx={{ mb: 2 }} />}
           
           {/* Page Header */}

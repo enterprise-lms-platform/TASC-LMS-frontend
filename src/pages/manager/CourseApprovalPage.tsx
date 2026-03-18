@@ -120,7 +120,7 @@ const CourseApprovalPage: React.FC = () => {
       <Box component="main" sx={{ flexGrow: 1, width: { lg: `calc(100% - ${drawerWidth}px)` }, minHeight: '100vh' }}>
         <Toolbar sx={{ minHeight: '72px !important' }} />
 
-        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400 }}>
           {isLoading && <LinearProgress sx={{ mb: 3 }} />}
 
           {isError && (

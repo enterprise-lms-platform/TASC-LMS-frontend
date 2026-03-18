@@ -16,6 +16,12 @@ import {
   Chip,
   Avatar,
   LinearProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
+  CircularProgress,
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -24,6 +30,8 @@ import {
   StarBorder as StarBorderIcon,
   MenuBook as CoursesIcon,
   People as StudentsIcon,
+  Email as EmailIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
@@ -74,6 +82,7 @@ const ManagerInstructorsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [profileId, setProfileId] = useState<number | null>(null);
 
   const { data: instructorsData, isLoading } = useQuery({
     queryKey: ['instructors', search, statusFilter],
@@ -84,7 +93,14 @@ const ManagerInstructorsPage: React.FC = () => {
     }).then(r => r.data),
   });
 
-  const instructors = instructorsData?.results ?? [];
+  const instructors = instructorsData?.results ?? (Array.isArray(instructorsData) ? instructorsData : []);
+
+  const { data: profileDataRaw, isLoading: profileLoading } = useQuery({
+    queryKey: ['user', profileId],
+    queryFn: () => usersApi.getById(profileId!).then(r => r.data),
+    enabled: !!profileId,
+  });
+  const profileData = profileDataRaw as any;
 
   const filteredInstructors = useMemo(() => {
     return instructors.filter((inst: any) => {
@@ -125,7 +141,7 @@ const ManagerInstructorsPage: React.FC = () => {
       >
         <Toolbar />
 
-        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400 }}>
           {isLoading && <LinearProgress sx={{ mb: 2 }} />}
           
           {/* Page Header */}
@@ -285,6 +301,7 @@ const ManagerInstructorsPage: React.FC = () => {
                     <Button
                       variant="outlined"
                       size="small"
+                      onClick={() => setProfileId(instructor.id)}
                       sx={{
                         textTransform: 'none',
                         borderColor: '#ffa424',
@@ -303,6 +320,113 @@ const ManagerInstructorsPage: React.FC = () => {
           </Grid>
         </Box>
       </Box>
+
+      {/* ─── Instructor Profile Dialog ──────────────────────────── */}
+      <Dialog
+        open={!!profileId}
+        onClose={() => setProfileId(null)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '16px' } }}
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 700 }}>
+          Instructor Profile
+          <Button onClick={() => setProfileId(null)} sx={{ minWidth: 'auto', color: 'text.secondary' }}>
+            <CloseIcon />
+          </Button>
+        </DialogTitle>
+        <DialogContent>
+          {profileLoading ? (
+            <Box sx={{ py: 6, textAlign: 'center' }}>
+              <CircularProgress size={36} sx={{ color: '#ffa424' }} />
+            </Box>
+          ) : profileData ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, pt: 1 }}>
+              <Avatar
+                sx={{
+                  width: 88,
+                  height: 88,
+                  fontSize: '2rem',
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #ffa424, #f97316)',
+                }}
+                src={profileData.avatar || profileData.google_picture}
+              >
+                {getInitials(profileData.name || profileData.email)}
+              </Avatar>
+
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h6" fontWeight={700}>
+                  {profileData.name || profileData.email.split('@')[0]}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mt: 0.5 }}>
+                  <EmailIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                  <Typography variant="body2" color="text.secondary">{profileData.email}</Typography>
+                </Box>
+              </Box>
+
+              <Chip
+                label={profileData.is_active ? 'Active' : 'Inactive'}
+                size="small"
+                color={profileData.is_active ? 'success' : 'default'}
+                sx={{ fontWeight: 600 }}
+              />
+
+              <Divider sx={{ width: '100%', my: 1 }} />
+
+              <Grid container spacing={2} sx={{ width: '100%' }}>
+                <Grid size={{ xs: 6 }}>
+                  <Paper elevation={0} sx={{ p: 2, borderRadius: '12px', bgcolor: '#eff6ff', textAlign: 'center' }}>
+                    <Typography variant="h5" fontWeight={700} color="#1e3a5f">{profileData.courses_count || 0}</Typography>
+                    <Typography variant="caption" color="text.secondary">Courses</Typography>
+                  </Paper>
+                </Grid>
+                <Grid size={{ xs: 6 }}>
+                  <Paper elevation={0} sx={{ p: 2, borderRadius: '12px', bgcolor: '#dcfce7', textAlign: 'center' }}>
+                    <Typography variant="h5" fontWeight={700} color="#14532d">{profileData.students_count || 0}</Typography>
+                    <Typography variant="caption" color="text.secondary">Students</Typography>
+                  </Paper>
+                </Grid>
+              </Grid>
+
+              {profileData.bio && (
+                <Box sx={{ width: '100%', mt: 1 }}>
+                  <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>Bio</Typography>
+                  <Typography variant="body2" color="text.secondary">{profileData.bio}</Typography>
+                </Box>
+              )}
+
+              {profileData.phone_number && (
+                <Box sx={{ width: '100%' }}>
+                  <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>Phone</Typography>
+                  <Typography variant="body2" color="text.secondary">{profileData.phone_number}</Typography>
+                </Box>
+              )}
+
+              {profileData.date_joined && (
+                <Box sx={{ width: '100%' }}>
+                  <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>Joined</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {new Date(profileData.date_joined).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          ) : (
+            <Typography color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+              Could not load instructor profile.
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setProfileId(null)}
+            sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -83,7 +83,7 @@ const ManagerCertificatesPage: React.FC = () => {
     queryFn: () => courseApi.getAll({ limit: 100 }).then(r => r.data),
   });
 
-  const certificates = certificatesData ?? [];
+  const certificates = Array.isArray(certificatesData) ? certificatesData : (certificatesData as any)?.results ?? [];
   const courses = coursesData?.results ?? [];
 
   const courseOptions: Array<{ id: number | 'all'; title: string }> = [
@@ -150,7 +150,7 @@ const ManagerCertificatesPage: React.FC = () => {
       >
         <Toolbar />
 
-        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400 }}>
           {/* ── Page Header ── */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
             <Box

@@ -77,8 +77,8 @@ const ManagerGradebookPage: React.FC = () => {
     queryFn: () => courseApi.getAll({ page_size: 100 }).then(r => r.data),
   });
 
-  const submissions = submissionsData ?? [];
-  const courses = coursesData?.results ?? [];
+  const submissions = Array.isArray(submissionsData) ? submissionsData : (submissionsData as any)?.results ?? [];
+  const courses = coursesData?.results ?? (Array.isArray(coursesData) ? coursesData : []);
   const courseOptions = ['All', ...courses.map((c) => c.title)];
 
   const filteredSubmissions = useMemo(() => {
@@ -140,7 +140,7 @@ const ManagerGradebookPage: React.FC = () => {
       <Box component="main" sx={{ flexGrow: 1, width: { lg: `calc(100% - ${DRAWER_WIDTH}px)` }, minHeight: '100vh', minWidth: 0, maxWidth: '100vw' }}>
         <Toolbar />
 
-        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400 }}>
           {isLoading && <LinearProgress sx={{ mb: 2 }} />}
           
           {/* Page Header */}

@@ -61,7 +61,7 @@ const ManagerBillingPage: React.FC = () => {
     queryFn: () => invoiceApi.getAll({}).then(r => r.data),
   });
 
-  const invoices = invoicesData ?? [];
+  const invoices = Array.isArray(invoicesData) ? invoicesData : (invoicesData as any)?.results ?? [];
 
   const billingHistory = useMemo(() => {
     return invoices.map((inv) => ({
@@ -92,7 +92,7 @@ const ManagerBillingPage: React.FC = () => {
       >
         <Toolbar />
 
-        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400 }}>
           {/* ── Page Header ── */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
             <Box

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -122,12 +122,25 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
-  const handleNavItemClick = (path?: string) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const SCROLL_KEY = 'superadmin_sidebar_scroll';
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const saved = sessionStorage.getItem(SCROLL_KEY);
+    if (saved) el.scrollTop = Number(saved);
+    const onScroll = () => sessionStorage.setItem(SCROLL_KEY, String(el.scrollTop));
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const handleNavItemClick = useCallback((path?: string) => {
     if (path) {
       navigate(path);
       onMobileClose();
     }
-  };
+  }, [navigate, onMobileClose]);
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -168,7 +181,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
       />
 
       {/* Navigation Sections */}
-      <Box className="sa-scrollbar" sx={{ flex: 1, overflowY: 'auto', py: 0.5 }}>
+      <Box ref={scrollRef} className="sa-scrollbar" sx={{ flex: 1, overflowY: 'auto', py: 0.5 }}>
         {navSections.map((section, sIdx) => (
           <Box key={section.title} sx={{ mb: sIdx < navSections.length - 1 ? 0.5 : 0 }}>
             <Typography

@@ -113,11 +113,11 @@ const ManagerAnalyticsPage: React.FC = () => {
     queryFn: () => certificateApi.getAll().then(r => r.data),
   });
 
-  const courses = coursesData?.results ?? [];
-  const categories = categoriesData ?? [];
-  const enrollments = enrollmentsData ?? [];
+  const courses = coursesData?.results ?? (Array.isArray(coursesData) ? coursesData : []);
+  const categories = Array.isArray(categoriesData) ? categoriesData : (categoriesData as any)?.results ?? [];
+  const enrollments = Array.isArray(enrollmentsData) ? enrollmentsData : (enrollmentsData as any)?.results ?? [];
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const certificates = certificatesData ?? [];
+  const certificates = Array.isArray(certificatesData) ? certificatesData : (certificatesData as any)?.results ?? [];
 
   const kpis = useMemo(() => {
     const totalCourses = courses.length;
@@ -155,7 +155,7 @@ const ManagerAnalyticsPage: React.FC = () => {
       <Box component="main" sx={{ flexGrow: 1, width: { lg: `calc(100% - ${DRAWER_WIDTH}px)` }, minWidth: 0, maxWidth: '100vw' }}>
         <Toolbar />
 
-        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+        <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400 }}>
           {isLoading && <LinearProgress sx={{ mb: 2 }} />}
           {/* Page Header */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>

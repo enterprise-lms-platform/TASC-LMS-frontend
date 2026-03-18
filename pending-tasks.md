@@ -367,6 +367,7 @@ Several files use `as any` to work around type mismatches. These should be fixed
 | Header + MobileDrawer: auth-aware (My Dashboard / Log Out for logged-in users) | 18 Mar 2026 | — |
 | Wired 6 public/landing components to real APIs (CoursesGrid, StatsBanner, Categories, Courses, TrustedBy, FiltersSidebar) | 18 Mar 2026 | `d42ae05` |
 | Fixed public service types (paginated responses for categories/courses) | 18 Mar 2026 | `d42ae05` |
+| Dev auth bypass: skip 401→login redirects in all loaders + axios interceptor | 17 Mar 2026 | `87ae8b5` |
 | Fix TypeScript build errors (3 files) | 18 Mar 2026 | `28b5fe7` |
 | Drag-and-drop reordering (modules + lessons) | 16 Mar 2026 | `8ed0df3` |
 | Quiz player (timer, attempts, grading, all 6 types) | 16 Mar 2026 | `8ed0df3` |

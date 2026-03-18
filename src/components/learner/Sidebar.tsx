@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -98,12 +98,25 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
   const location = useLocation();
   const { user } = useAuth();
 
-  const handleNavClick = (path: string) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const SCROLL_KEY = 'learner_sidebar_scroll';
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const saved = sessionStorage.getItem(SCROLL_KEY);
+    if (saved) el.scrollTop = Number(saved);
+    const onScroll = () => sessionStorage.setItem(SCROLL_KEY, String(el.scrollTop));
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const handleNavClick = useCallback((path: string) => {
     navigate(path);
     if (onMobileClose) {
       onMobileClose();
     }
-  };
+  }, [navigate, onMobileClose]);
 
   const userName = user?.name || `${user?.first_name} ${user?.last_name}` || 'Emma Chen';
   const userInitials = (user?.first_name && user?.last_name) ? `${user.first_name[0]}${user.last_name[0]}` : 'EC';
@@ -171,7 +184,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
       </Box>
 
       {/* Navigation Sections */}
-      <Box className="ld-scrollbar" sx={{ flex: 1, overflowY: 'auto', py: 0.5 }}>
+      <Box ref={scrollRef} className="ld-scrollbar" sx={{ flex: 1, overflowY: 'auto', py: 0.5 }}>
         {navSections.map((section) => (
           <Box key={section.title}>
             <List disablePadding>
