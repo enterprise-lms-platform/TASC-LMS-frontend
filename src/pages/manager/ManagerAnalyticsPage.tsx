@@ -116,6 +116,7 @@ const ManagerAnalyticsPage: React.FC = () => {
   const courses = coursesData?.results ?? [];
   const categories = categoriesData ?? [];
   const enrollments = enrollmentsData ?? [];
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const certificates = certificatesData ?? [];
 
   const kpis = useMemo(() => {

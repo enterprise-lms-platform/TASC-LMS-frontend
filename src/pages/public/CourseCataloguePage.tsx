@@ -14,11 +14,17 @@ import FeaturedCategories from '../../components/catalogue/FeaturedCategories';
 import CatalogueCtaBanner from '../../components/catalogue/CatalogueCtaBanner';
 import MobileFilterDrawer from '../../components/catalogue/MobileFilterDrawer';
 
+const PAGE_SIZE = 12;
+
 const CourseCataloguePage: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const pageCount = Math.ceil(totalCount / PAGE_SIZE);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -39,6 +45,11 @@ const CourseCataloguePage: React.FC = () => {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    window.scrollTo({ top: 400, behavior: 'smooth' });
+  };
 
   return (
     <Box sx={{ width: '100%', bgcolor: '#fafafa', minHeight: '100vh' }}>
@@ -64,8 +75,12 @@ const CourseCataloguePage: React.FC = () => {
 
           {/* Grid Content */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <CoursesGrid onMobileFilterOpen={() => setMobileFiltersOpen(true)} />
-            <Pagination />
+            <CoursesGrid 
+              onMobileFilterOpen={() => setMobileFiltersOpen(true)} 
+              page={page}
+              onTotalCountChange={setTotalCount}
+            />
+            {pageCount > 1 && <Pagination count={pageCount} page={page} onPageChange={handlePageChange} />}
           </Box>
         </Stack>
       </Container>

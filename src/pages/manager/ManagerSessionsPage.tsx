@@ -70,6 +70,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getPlatformColor = (platform: string) => {
   switch (platform) {
     case 'Zoom':
@@ -88,7 +89,7 @@ const ManagerSessionsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [instructorFilter, setInstructorFilter] = useState('All Instructors');
 
-  const { data: sessionsData, isLoading: sessionsLoading } = useQuery({
+  const { data: sessionsData } = useQuery({
     queryKey: ['sessions', 'manager'],
     queryFn: () => sessionApi.getAll({ page_size: 100 }).then(r => r.data),
   });
@@ -149,8 +150,6 @@ const ManagerSessionsPage: React.FC = () => {
       { label: 'Total Hours', value: totalHours.toString(), ...getKpiConfig('Total Hours') },
     ];
   }, [sessions]);
-
-  const isLoading = sessionsLoading;
 
   const instructorList = useMemo(() => {
     if (!sessions.length) return ['All Instructors'];

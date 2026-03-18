@@ -73,7 +73,7 @@ const ManagerCertificatesPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [courseFilter, setCourseFilter] = useState<number | 'all'>('all');
 
-  const { data: certificatesData, isLoading: certsLoading } = useQuery({
+  const { data: certificatesData } = useQuery({
     queryKey: ['certificates'],
     queryFn: () => certificateApi.getAll().then(r => r.data),
   });
@@ -131,8 +131,6 @@ const ManagerCertificatesPage: React.FC = () => {
       { label: 'Verification Rate', value: `${verificationRate}%`, ...getKpiStyle('Verification Rate') },
     ];
   }, [certificates]);
-
-  const isLoading = certsLoading;
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
