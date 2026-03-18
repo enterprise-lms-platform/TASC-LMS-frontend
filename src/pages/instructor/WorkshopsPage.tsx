@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { livestreamApi } from '../../services/livestream.services';
 import {
   Box,
   CssBaseline,
@@ -87,7 +89,29 @@ const WorkshopsPage: React.FC = () => {
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [menuWorkshopId, setMenuWorkshopId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [workshops, setWorkshops] = useState(sampleWorkshops);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [workshops, setWorkshops] = useState<Workshop[]>(sampleWorkshops);
+
+  const { data: livestreamsData } = useQuery({
+    queryKey: ['livestreams'],
+    queryFn: () => livestreamApi.getAll(),
+  });
+
+  const apiWorkshops: Workshop[] = (livestreamsData?.data?.results || []).map((item: any) => ({
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    location: item.join_url || item.platform || 'TASC Training Center',
+    startDate: item.start_time,
+    endDate: item.end_time,
+    participants: item.attendance_count || 0,
+    maxParticipants: item.max_attendees || 30,
+    status: item.status === 'live' ? 'ongoing' : item.status === 'ended' ? 'completed' : 'upcoming',
+    gradingType: 'score',
+    category: item.course_title || 'General',
+  }));
+
+  const displayWorkshops = apiWorkshops.length > 0 ? apiWorkshops : sampleWorkshops;
 
   // Create form state
   const [newTitle, setNewTitle] = useState('');
@@ -98,7 +122,7 @@ const WorkshopsPage: React.FC = () => {
   const [newGradingType, setNewGradingType] = useState<'attendance' | 'pass_fail' | 'score'>('attendance');
 
   const statusFilter = tab === 0 ? null : tab === 1 ? 'upcoming' : tab === 2 ? 'ongoing' : 'completed';
-  const filtered = workshops.filter((w) => {
+  const filtered = displayWorkshops.filter((w) => {
     const matchSearch = w.title.toLowerCase().includes(search.toLowerCase()) || w.location.toLowerCase().includes(search.toLowerCase()) || w.category.toLowerCase().includes(search.toLowerCase());
     const matchStatus = !statusFilter || w.status === statusFilter;
     return matchSearch && matchStatus;
@@ -125,7 +149,7 @@ const WorkshopsPage: React.FC = () => {
       gradingType: newGradingType,
       category: 'General',
     };
-    setWorkshops([newWorkshop, ...workshops]);
+    setWorkshops([newWorkshop, ...displayWorkshops]);
     setCreateOpen(false);
     setNewTitle('');
     setNewDescription('');
@@ -185,10 +209,10 @@ const WorkshopsPage: React.FC = () => {
           {/* KPIs */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {[
-              { label: 'Total Workshops', value: workshops.length, icon: <WorkshopsIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-              { label: 'Upcoming', value: workshops.filter((w) => w.status === 'upcoming').length, icon: <DateIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
-              { label: 'Ongoing', value: workshops.filter((w) => w.status === 'ongoing').length, icon: <EditIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-              { label: 'Total Participants', value: workshops.reduce((s, w) => s + w.participants, 0), icon: <PeopleIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+              { label: 'Total Workshops', value: displayWorkshops.length, icon: <WorkshopsIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+              { label: 'Upcoming', value: displayWorkshops.filter((w) => w.status === 'upcoming').length, icon: <DateIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+              { label: 'Ongoing', value: displayWorkshops.filter((w) => w.status === 'ongoing').length, icon: <EditIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+              { label: 'Total Participants', value: displayWorkshops.reduce((s, w) => s + w.participants, 0), icon: <PeopleIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
             ].map((kpi) => (
               <Grid size={{ xs: 6, md: 3 }} key={kpi.label}>
                 <Paper
@@ -264,10 +288,10 @@ const WorkshopsPage: React.FC = () => {
               <Typography variant="body2" color="text.secondary">{filtered.length} workshops</Typography>
             </Box>
             <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ px: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-              <Tab label={`All (${workshops.length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Upcoming (${workshops.filter((w) => w.status === 'upcoming').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Ongoing (${workshops.filter((w) => w.status === 'ongoing').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Completed (${workshops.filter((w) => w.status === 'completed').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`All (${displayWorkshops.length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Upcoming (${displayWorkshops.filter((w) => w.status === 'upcoming').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Ongoing (${displayWorkshops.filter((w) => w.status === 'ongoing').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Completed (${displayWorkshops.filter((w) => w.status === 'completed').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
             </Tabs>
           </Paper>
 

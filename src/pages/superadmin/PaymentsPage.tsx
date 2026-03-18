@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   Grid,
@@ -29,6 +30,7 @@ import {
 
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
+import { transactionApi } from '../../services/payments.services';
 
 interface Transaction {
   id: string;
@@ -207,6 +209,13 @@ const PaymentsPage: React.FC = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: () => transactionApi.getAll().then((res) => res.data as any),
+  });
+
+  const displayTransactions = transactions.length > 0 ? transactions : mockTransactions;
+
   return (
     <SuperadminLayout title="Payments" subtitle="Payment transactions and processing">
       {/* KPI Cards */}
@@ -322,7 +331,7 @@ const PaymentsPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {mockTransactions.map((tx) => (
+              {displayTransactions.map((tx: any) => (
                 <TableRow
                   key={tx.id}
                   sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' }, '&:last-child td': { borderBottom: 0 } }}

@@ -7,7 +7,6 @@ import type {
   Tag,
   CourseList,
   PublicCourseDetail,
-  PaginatedResponse,
   HealthCheckResponse,
 } from '../types/types';
 

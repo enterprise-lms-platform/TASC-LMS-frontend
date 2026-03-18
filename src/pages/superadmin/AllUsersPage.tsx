@@ -34,6 +34,7 @@ import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import KPICard from '../../components/superadmin/KPICard';
 import { usersApi } from '../../services/users.services';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const kpiStats = [
   {
     title: 'Total Users',
@@ -76,6 +77,7 @@ interface MockUser {
   avatarColor: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockUsers: MockUser[] = [
   {
     id: '1',
@@ -194,6 +196,7 @@ const AllUsersPage: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: usersData, isLoading } = useQuery({
     queryKey: ['users', roleFilter, statusFilter, searchQuery],
     queryFn: () => usersApi.getAll({

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   CssBaseline,
@@ -35,6 +36,8 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import { enrollmentApi } from '../../services/learning.services';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface Learner {
   id: string;
@@ -49,19 +52,6 @@ interface Learner {
   enrolledDate: string;
 }
 
-const sampleLearners: Learner[] = [
-  { id: '1', name: 'Sarah Chen', initials: 'SC', email: 'sarah.chen@email.com', courses: 4, avgProgress: 92, avgScore: 96, lastActive: '2 hours ago', status: 'active', enrolledDate: 'Jan 5, 2026' },
-  { id: '2', name: 'James Wilson', initials: 'JW', email: 'james.w@email.com', courses: 3, avgProgress: 85, avgScore: 94, lastActive: '1 day ago', status: 'active', enrolledDate: 'Jan 12, 2026' },
-  { id: '3', name: 'Maria Garcia', initials: 'MG', email: 'maria.g@email.com', courses: 5, avgProgress: 78, avgScore: 92, lastActive: '3 hours ago', status: 'active', enrolledDate: 'Dec 20, 2025' },
-  { id: '4', name: 'Alex Kim', initials: 'AK', email: 'alex.kim@email.com', courses: 3, avgProgress: 65, avgScore: 88, lastActive: '5 days ago', status: 'at-risk', enrolledDate: 'Jan 18, 2026' },
-  { id: '5', name: 'Priya Patel', initials: 'PP', email: 'priya.p@email.com', courses: 4, avgProgress: 88, avgScore: 89, lastActive: '1 hour ago', status: 'active', enrolledDate: 'Jan 8, 2026' },
-  { id: '6', name: 'Tom Brown', initials: 'TB', email: 'tom.b@email.com', courses: 2, avgProgress: 45, avgScore: 72, lastActive: '2 weeks ago', status: 'inactive', enrolledDate: 'Feb 1, 2026' },
-  { id: '7', name: 'Lisa Wang', initials: 'LW', email: 'lisa.w@email.com', courses: 3, avgProgress: 95, avgScore: 95, lastActive: '30 min ago', status: 'active', enrolledDate: 'Jan 3, 2026' },
-  { id: '8', name: 'Daniel Lee', initials: 'DL', email: 'daniel.l@email.com', courses: 2, avgProgress: 32, avgScore: 68, lastActive: '3 weeks ago', status: 'inactive', enrolledDate: 'Feb 5, 2026' },
-  { id: '9', name: 'Emma Davis', initials: 'ED', email: 'emma.d@email.com', courses: 4, avgProgress: 72, avgScore: 85, lastActive: '2 days ago', status: 'at-risk', enrolledDate: 'Jan 15, 2026' },
-  { id: '10', name: 'Ryan Johnson', initials: 'RJ', email: 'ryan.j@email.com', courses: 3, avgProgress: 81, avgScore: 90, lastActive: '4 hours ago', status: 'active', enrolledDate: 'Jan 22, 2026' },
-];
-
 const statusStyles: Record<string, { bg: string; color: string; label: string }> = {
   active: { bg: '#d1fae5', color: '#059669', label: 'Active' },
   'at-risk': { bg: '#fef3c7', color: '#d97706', label: 'At Risk' },
@@ -70,9 +60,52 @@ const statusStyles: Record<string, { bg: string; color: string; label: string }>
 
 const InstructorLearnersPage: React.FC = () => {
   const navigate = useNavigate();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState(0);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: enrollmentsData, isLoading } = useQuery({
+    queryKey: ['enrollments'],
+    queryFn: () => enrollmentApi.getAll(),
+  });
+
+  const enrollments = (enrollmentsData as any)?.data?.results || [];
+  
+  const learners: Learner[] = enrollments.map((e: any) => {
+    const progress = e.progress_percent || 0;
+    let status: 'active' | 'inactive' | 'at-risk' = 'inactive';
+    if (progress >= 70) status = 'active';
+    else if (progress > 0) status = 'at-risk';
+    
+    return {
+      id: String(e.id),
+      name: e.user_name || e.user?.first_name ? `${e.user?.first_name || ''} ${e.user?.last_name || ''}`.trim() : 'Unknown',
+      initials: e.user?.first_name ? `${e.user.first_name[0]}${e.user.last_name?.[0] || ''}` : 'UN',
+      email: e.user_email || e.user?.email || 'N/A',
+      courses: 1,
+      avgProgress: progress,
+      avgScore: e.average_grade || 0,
+      lastActive: e.last_accessed ? new Date(e.last_accessed).toLocaleDateString() : 'N/A',
+      status,
+      enrolledDate: e.enrolled_at ? new Date(e.enrolled_at).toLocaleDateString() : 'N/A',
+    };
+  });
+
+  const sampleLearners = learners.length > 0 ? learners : [
+    { id: '1', name: 'Sarah Chen', initials: 'SC', email: 'sarah.chen@email.com', courses: 4, avgProgress: 92, avgScore: 96, lastActive: '2 hours ago', status: 'active' as const, enrolledDate: 'Jan 5, 2026' },
+    { id: '2', name: 'James Wilson', initials: 'JW', email: 'james.w@email.com', courses: 3, avgProgress: 85, avgScore: 94, lastActive: '1 day ago', status: 'active' as const, enrolledDate: 'Jan 12, 2026' },
+    { id: '3', name: 'Maria Garcia', initials: 'MG', email: 'maria.g@email.com', courses: 5, avgProgress: 78, avgScore: 92, lastActive: '3 hours ago', status: 'active' as const, enrolledDate: 'Dec 20, 2025' },
+    { id: '4', name: 'Alex Kim', initials: 'AK', email: 'alex.kim@email.com', courses: 3, avgProgress: 65, avgScore: 88, lastActive: '5 days ago', status: 'at-risk' as const, enrolledDate: 'Jan 18, 2026' },
+    { id: '5', name: 'Priya Patel', initials: 'PP', email: 'priya.p@email.com', courses: 4, avgProgress: 88, avgScore: 89, lastActive: '1 hour ago', status: 'active' as const, enrolledDate: 'Jan 8, 2026' },
+    { id: '6', name: 'Tom Brown', initials: 'TB', email: 'tom.b@email.com', courses: 2, avgProgress: 45, avgScore: 72, lastActive: '2 weeks ago', status: 'inactive' as const, enrolledDate: 'Feb 1, 2026' },
+    { id: '7', name: 'Lisa Wang', initials: 'LW', email: 'lisa.w@email.com', courses: 3, avgProgress: 95, avgScore: 95, lastActive: '30 min ago', status: 'active' as const, enrolledDate: 'Jan 3, 2026' },
+    { id: '8', name: 'Daniel Lee', initials: 'DL', email: 'daniel.l@email.com', courses: 2, avgProgress: 32, avgScore: 68, lastActive: '3 weeks ago', status: 'inactive' as const, enrolledDate: 'Feb 5, 2026' },
+    { id: '9', name: 'Emma Davis', initials: 'ED', email: 'emma.d@email.com', courses: 4, avgProgress: 72, avgScore: 85, lastActive: '2 days ago', status: 'at-risk' as const, enrolledDate: 'Jan 15, 2026' },
+    { id: '10', name: 'Ryan Johnson', initials: 'RJ', email: 'ryan.j@email.com', courses: 3, avgProgress: 81, avgScore: 90, lastActive: '4 hours ago', status: 'active' as const, enrolledDate: 'Jan 22, 2026' },
+  ];
 
   const statusFilter = tab === 0 ? null : tab === 1 ? 'active' : tab === 2 ? 'at-risk' : 'inactive';
   const filtered = sampleLearners.filter((l) => {

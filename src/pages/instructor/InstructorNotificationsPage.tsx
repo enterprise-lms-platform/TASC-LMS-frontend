@@ -64,7 +64,7 @@ const InstructorNotificationsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [tab, setTab] = useState(0);
 
-  const { data: notificationsData, isLoading } = useQuery({
+  const { data: notificationsData } = useQuery({
     queryKey: ['notifications'],
     queryFn: () => notificationApi.getAll(),
   });

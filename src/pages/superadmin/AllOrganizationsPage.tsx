@@ -51,6 +51,7 @@ interface Organization {
   created: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockOrganizations: Organization[] = [
   {
     id: '1',
@@ -176,7 +177,7 @@ const AllOrganizationsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const { data: organizationsData, isLoading } = useQuery({
+  const { data: organizationsData } = useQuery({
     queryKey: ['organizations'],
     queryFn: () => organizationApi.getAll({ limit: 100 }),
   });
