@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Box, CssBaseline, Toolbar, CircularProgress, Typography } from '@mui/material';
+import { Box, CssBaseline, Toolbar, Typography, Select, MenuItem, FormControl, InputLabel, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
@@ -85,8 +85,83 @@ const GradebookPage: React.FC = () => {
     () => buildGradebookData(submissions),
     [submissions],
   );
+  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
 
-  // Filter students by search
+  const { data: coursesData, isLoading: coursesLoading } = useQuery({
+    queryKey: ['courses', 'instructor'],
+    queryFn: () => courseApi.getAll({ instructor_courses: true, limit: 100 }).then(r => r.data),
+  });
+
+  const courses = coursesData?.results ?? [];
+
+  const { data: submissionsData, isLoading: submissionsLoading } = useQuery({
+    queryKey: ['submissions', 'gradebook', selectedCourseId],
+    queryFn: () => submissionApi.getAll({ course: selectedCourseId ?? undefined, limit: 500 }).then(r => r.data),
+    enabled: selectedCourseId !== null,
+  });
+
+  const { data: statsData } = useQuery({
+    queryKey: ['submissions', 'statistics', selectedCourseId],
+    queryFn: () => gradeStatisticsApi.getStatistics(selectedCourseId!).then(r => r.data),
+    enabled: selectedCourseId !== null,
+  });
+
+  const submissions = (Array.isArray(submissionsData) ? submissionsData : []) as Array<{
+    id: number; assignment: number; assignment_title: string; session: number; session_title: string;
+    enrollment: number; user: number; user_name: string; user_email: string;
+    status: string; submitted_at: string; grade?: number | null; feedback?: string | null;
+  }>;
+
+  const selectedCourse = courses.find(c => c.id === selectedCourseId);
+
+  const realStudents = useMemo((): GradebookStudent[] => {
+    const seen = new Map<number, GradebookStudent>();
+    submissions.forEach(s => {
+      if (!seen.has(s.enrollment)) {
+        const parts = s.user_name.split(' ');
+        seen.set(s.enrollment, {
+          id: String(s.enrollment),
+          name: s.user_name,
+          initials: parts.map(p => p[0]).join('').slice(0, 2).toUpperCase(),
+          email: s.user_email,
+        });
+      }
+    });
+    return Array.from(seen.values());
+  }, [submissions]);
+
+  const realItems = useMemo((): GradedItem[] => {
+    const seen = new Map<number, GradedItem>();
+    submissions.forEach(s => {
+      if (!seen.has(s.assignment)) {
+        const isQuiz = s.session_title?.toLowerCase().includes('quiz') || s.assignment_title?.toLowerCase().includes('quiz');
+        const isProject = s.assignment_title?.toLowerCase().includes('project') || s.session_title?.toLowerCase().includes('project');
+        seen.set(s.assignment, {
+          id: String(s.assignment),
+          title: s.assignment_title || s.session_title || 'Assessment',
+          type: isQuiz ? 'quiz' : isProject ? 'project' : 'assignment',
+          categoryId: isQuiz ? 'quizzes' : isProject ? 'projects' : 'assignments',
+          maxScore: 100,
+          dueDate: new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        });
+      }
+    });
+    return Array.from(seen.values());
+  }, [submissions]);
+
+  const realGrades = useMemo((): GradeEntry[] => {
+    return submissions.map(s => ({
+      studentId: String(s.enrollment),
+      itemId: String(s.assignment),
+      earned: s.grade ?? null,
+      status: (s.status === 'graded' ? 'graded' : s.status === 'submitted' ? 'submitted' : 'pending') as GradeEntry['status'],
+    }));
+  }, [submissions]);
+
+  const students = realStudents.length > 0 ? realStudents : sampleStudents;
+  const gradedItems = realItems.length > 0 ? realItems : sampleItems;
+  const grades = realGrades.length > 0 ? realGrades : sampleGrades;
+
   const filteredStudents = useMemo(
     () =>
       allStudents.filter((s) =>
@@ -95,7 +170,6 @@ const GradebookPage: React.FC = () => {
     [searchQuery, allStudents],
   );
 
-  // Compute summary stats
   const summaryStats = useMemo(() => {
     const studentFinalGrades = allStudents.map((student) => {
       const studentGrades = allGrades.filter((g) => g.studentId === student.id && g.earned !== null);
@@ -126,19 +200,17 @@ const GradebookPage: React.FC = () => {
     };
   }, [gradingConfig, allStudents, allItems, allGrades]);
 
-  // Grade distribution
   const distribution = useMemo(() => {
+    if (statsData?.distribution) {
+      const dist: Record<string, number> = {};
+      statsData.distribution.forEach(d => {
+        dist[d.label] = d.count;
+      });
+      return dist;
+    }
     const dist: Record<string, number> = {};
-
-    if (gradingConfig.gradingScale === 'pass_fail') {
-      dist['Pass'] = 0;
-      dist['Fail'] = 0;
-    } else if (gradingConfig.gradingScale === 'letter') {
-      dist['A'] = 0;
-      dist['B'] = 0;
-      dist['C'] = 0;
-      dist['D'] = 0;
-      dist['F'] = 0;
+    if (gradingConfig.gradingScale === 'letter') {
+      ['A', 'B', 'C', 'D', 'F'].forEach(g => { dist[g] = 0; });
     }
 
     allStudents.forEach((student) => {
@@ -154,12 +226,10 @@ const GradebookPage: React.FC = () => {
           possible: catItems.reduce((s, i) => s + i.maxScore, 0),
         };
       }).filter((cg) => cg.possible > 0);
-
       const finalPct = calculateFinalGrade(categoryGrades, gradingConfig);
       const grade = formatGrade(finalPct, gradingConfig);
       dist[grade] = (dist[grade] || 0) + 1;
     });
-
     return dist;
   }, [gradingConfig, allStudents, allItems, allGrades]);
 

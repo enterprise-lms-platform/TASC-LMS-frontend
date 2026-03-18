@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   CssBaseline,
@@ -13,6 +14,7 @@ import {
   IconButton,
   Tooltip,
   InputAdornment,
+  Chip,
 } from '@mui/material';
 import {
   VideoLibrary as VideoLibraryIcon,
@@ -29,6 +31,7 @@ import {
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { livestreamApi } from '../../services/livestream.services';
 
 // ── Shared styles ──
 const cardSx = {
@@ -49,101 +52,20 @@ const headerSx = {
   gap: 2,
 };
 
-// ── Mock recordings ──
-const mockRecordings = [
-  {
-    id: 1,
-    title: 'Advanced React Patterns - Session 4',
-    instructor: 'Dr. Sarah Chen',
-    course: 'Advanced React Patterns',
-    dateRecorded: '2026-03-08',
-    duration: '1h 48m',
-    views: 142,
-    fileSize: '1.2 GB',
-  },
-  {
-    id: 2,
-    title: 'Python ML Fundamentals - Week 3',
-    instructor: 'James Wilson',
-    course: 'Python for Data Science',
-    dateRecorded: '2026-03-07',
-    duration: '2h 05m',
-    views: 98,
-    fileSize: '1.8 GB',
-  },
-  {
-    id: 3,
-    title: 'AWS Solutions Architect - Lab Session',
-    instructor: 'Maria Garcia',
-    course: 'AWS Solutions Architect',
-    dateRecorded: '2026-03-06',
-    duration: '1h 32m',
-    views: 76,
-    fileSize: '980 MB',
-  },
-  {
-    id: 4,
-    title: 'TypeScript Generics Deep Dive',
-    instructor: 'Alex Kim',
-    course: 'TypeScript Mastery',
-    dateRecorded: '2026-03-05',
-    duration: '1h 15m',
-    views: 203,
-    fileSize: '840 MB',
-  },
-  {
-    id: 5,
-    title: 'Kubernetes Cluster Management',
-    instructor: 'Priya Patel',
-    course: 'Docker & Kubernetes',
-    dateRecorded: '2026-03-04',
-    duration: '2h 20m',
-    views: 64,
-    fileSize: '2.1 GB',
-  },
-  {
-    id: 6,
-    title: 'Network Security Essentials',
-    instructor: 'David Okonkwo',
-    course: 'Cybersecurity Fundamentals',
-    dateRecorded: '2026-03-03',
-    duration: '1h 40m',
-    views: 118,
-    fileSize: '1.4 GB',
-  },
-  {
-    id: 7,
-    title: 'React Native Mobile Development',
-    instructor: 'Dr. Sarah Chen',
-    course: 'Mobile App Development',
-    dateRecorded: '2026-03-02',
-    duration: '1h 55m',
-    views: 87,
-    fileSize: '1.6 GB',
-  },
-  {
-    id: 8,
-    title: 'Data Visualization with D3.js',
-    instructor: 'James Wilson',
-    course: 'Data Visualization',
-    dateRecorded: '2026-03-01',
-    duration: '1h 28m',
-    views: 156,
-    fileSize: '1.1 GB',
-  },
-];
+function formatDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s > 0 ? `${s}s` : ''}`.trim();
+  return `${s}s`;
+}
 
-const courseOptions = [
-  'All Courses',
-  'Advanced React Patterns',
-  'Python for Data Science',
-  'AWS Solutions Architect',
-  'TypeScript Mastery',
-  'Docker & Kubernetes',
-  'Cybersecurity Fundamentals',
-  'Mobile App Development',
-  'Data Visualization',
-];
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(0)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
 
 const ManagerRecordingsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -152,16 +74,46 @@ const ManagerRecordingsPage: React.FC = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  const filteredRecordings = mockRecordings.filter((recording) => {
-    const matchesSearch =
-      searchQuery === '' ||
-      recording.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      recording.instructor.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCourse = courseFilter === 'All Courses' || recording.course === courseFilter;
-    const matchesDateFrom = dateFrom === '' || recording.dateRecorded >= dateFrom;
-    const matchesDateTo = dateTo === '' || recording.dateRecorded <= dateTo;
-    return matchesSearch && matchesCourse && matchesDateFrom && matchesDateTo;
+  const { data: sessionsData, isLoading } = useQuery({
+    queryKey: ['livestreams', 'recordings'],
+    queryFn: () => livestreamApi.getAll({ limit: 100 }).then(r => r.data),
   });
+
+  const sessions = sessionsData?.results ?? [];
+
+  const recordings = useMemo(() => {
+    return sessions
+      .filter(s => s.recording_url && s.status === 'ended')
+      .map(s => ({
+        id: s.id,
+        title: s.title,
+        instructor: s.instructor_name || 'Instructor',
+        course: s.course_title || '—',
+        dateRecorded: s.end_time?.split('T')[0] || '',
+        duration: formatDuration(s.duration_minutes * 60),
+        views: 0,
+        fileSize: formatFileSize(0),
+        recordingUrl: s.recording_url,
+      }));
+  }, [sessions]);
+
+  const uniqueCourses = useMemo(() => {
+    const courses = new Set(recordings.map(r => r.course).filter(Boolean));
+    return Array.from(courses).sort();
+  }, [recordings]);
+
+  const filteredRecordings = useMemo(() => {
+    return recordings.filter((recording) => {
+      const matchesSearch =
+        !searchQuery ||
+        recording.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        recording.instructor.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCourse = courseFilter === 'All Courses' || recording.course === courseFilter;
+      const matchesDateFrom = !dateFrom || recording.dateRecorded >= dateFrom;
+      const matchesDateTo = !dateTo || recording.dateRecorded <= dateTo;
+      return matchesSearch && matchesCourse && matchesDateFrom && matchesDateTo;
+    });
+  }, [recordings, searchQuery, courseFilter, dateFrom, dateTo]);
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -231,10 +183,9 @@ const ManagerRecordingsPage: React.FC = () => {
               <FormControl size="small" sx={{ minWidth: 200 }}>
                 <InputLabel>Course</InputLabel>
                 <Select value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)} label="Course">
-                  {courseOptions.map((course) => (
-                    <MenuItem key={course} value={course}>
-                      {course}
-                    </MenuItem>
+                  <MenuItem value="All Courses">All Courses</MenuItem>
+                  {uniqueCourses.map((course) => (
+                    <MenuItem key={course} value={course}>{course}</MenuItem>
                   ))}
                 </Select>
               </FormControl>

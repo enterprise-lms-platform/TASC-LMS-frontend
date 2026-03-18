@@ -53,16 +53,4 @@ const WhatYouLearn: React.FC<WhatYouLearnProps> = ({ learnings }) => {
   );
 };
 
-// Sample data
-export const sampleLearnings = [
-  'Advanced React patterns like Render Props and HOCs',
-  'Custom hooks for reusable logic and state management',
-  'Performance optimization techniques',
-  'Testing strategies for complex React applications',
-  'State management with Context API and Redux',
-  'Server-side rendering with Next.js',
-  'Building accessible and responsive components',
-  'React architecture and best practices',
-];
-
 export default WhatYouLearn;

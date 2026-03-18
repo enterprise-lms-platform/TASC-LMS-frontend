@@ -45,6 +45,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import { livestreamApi } from '../../services/main.api';
 
 export interface Workshop {
   id: string;
@@ -59,6 +60,24 @@ export interface Workshop {
   gradingType: 'attendance' | 'pass_fail' | 'score';
   category: string;
 }
+
+const getWorkshopStatus = (startTime: string, endTime: string): Workshop['status'] => {
+  const now = new Date();
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  if (now < start) return 'upcoming';
+  if (now >= start && now <= end) return 'ongoing';
+  return 'completed';
+};
+
+const getWorkshopStatus = (startTime: string, endTime: string): Workshop['status'] => {
+  const now = new Date();
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  if (now < start) return 'upcoming';
+  if (now >= start && now <= end) return 'ongoing';
+  return 'completed';
+};
 
 
 const statusStyles: Record<string, { bg: string; color: string }> = {
@@ -81,30 +100,47 @@ const WorkshopsPage: React.FC = () => {
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [menuWorkshopId, setMenuWorkshopId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [localWorkshops, setLocalWorkshops] = useState<Workshop[]>([]);
+  const [workshops, setWorkshops] = useState<Workshop[]>([]);
 
-  const { data: livestreamsData } = useQuery({
-    queryKey: ['livestreams'],
-    queryFn: () => livestreamApi.getAll(),
+  const { data: sessionsData, isLoading } = useQuery({
+    queryKey: ['livestreams', 'workshops'],
+    queryFn: () => livestreamApi.getAll({ limit: 100 }).then(r => r.data),
   });
 
-  const apiWorkshops: Workshop[] = (livestreamsData?.data?.results || []).map((item: any) => ({
-    id: item.id,
-    title: item.title,
-    description: item.description,
-    location: item.join_url || item.platform || 'TASC Training Center',
-    startDate: item.start_time,
-    endDate: item.end_time,
-    participants: item.attendance_count || 0,
-    maxParticipants: item.max_attendees || 30,
-    status: item.status === 'live' ? 'ongoing' : item.status === 'ended' ? 'completed' : 'upcoming',
-    gradingType: 'score',
-    category: item.course_title || 'General',
-  }));
+  const sessions = sessionsData?.results ?? [];
 
-  const displayWorkshops = [...apiWorkshops, ...localWorkshops];
+  const workshopSessions = useMemo(() => {
+    return sessions.map((s): Workshop => ({
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      location: s.platform === 'custom' ? s.join_url || 'Custom Platform' : s.platform,
+      startDate: s.start_time.split('T')[0],
+      endDate: s.end_time.split('T')[0],
+      participants: 0,
+      maxParticipants: s.max_attendees,
+      status: s.status === 'live' ? 'ongoing' : s.status === 'scheduled' ? 'upcoming' : 'completed',
+      gradingType: 'score',
+      category: s.course_title || 'General',
+    }));
+  }, [sessions]);
 
-  // Create form state
+  const allWorkshops = useMemo(() => {
+    const apiWorkshops = workshopSessions;
+    const localWorkshops = workshops.filter(w => !apiWorkshops.some(a => a.id === w.id));
+    return [...apiWorkshops, ...localWorkshops];
+  }, [workshopSessions, workshops]);
+
+  const filtered = allWorkshops.filter((w) => {
+    const matchSearch = w.title.toLowerCase().includes(search.toLowerCase()) || w.location.toLowerCase().includes(search.toLowerCase()) || w.category.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = statusFilter === null || w.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  const upcomingCount = allWorkshops.filter(w => w.status === 'upcoming').length;
+  const ongoingCount = allWorkshops.filter(w => w.status === 'ongoing').length;
+  const totalParticipants = allWorkshops.reduce((s, w) => s + w.participants, 0);
+
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [newLocation, setNewLocation] = useState('');
@@ -200,10 +236,10 @@ const WorkshopsPage: React.FC = () => {
           {/* KPIs */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {[
-              { label: 'Total Workshops', value: displayWorkshops.length, icon: <WorkshopsIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-              { label: 'Upcoming', value: displayWorkshops.filter((w) => w.status === 'upcoming').length, icon: <DateIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
-              { label: 'Ongoing', value: displayWorkshops.filter((w) => w.status === 'ongoing').length, icon: <EditIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-              { label: 'Total Participants', value: displayWorkshops.reduce((s, w) => s + w.participants, 0), icon: <PeopleIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+              { label: 'Total Workshops', value: allWorkshops.length, icon: <WorkshopsIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+              { label: 'Upcoming', value: upcomingCount, icon: <DateIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+              { label: 'Ongoing', value: ongoingCount, icon: <EditIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+              { label: 'Total Participants', value: totalParticipants, icon: <PeopleIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
             ].map((kpi) => (
               <Grid size={{ xs: 6, md: 3 }} key={kpi.label}>
                 <Paper
@@ -279,10 +315,10 @@ const WorkshopsPage: React.FC = () => {
               <Typography variant="body2" color="text.secondary">{filtered.length} workshops</Typography>
             </Box>
             <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ px: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-              <Tab label={`All (${displayWorkshops.length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Upcoming (${displayWorkshops.filter((w) => w.status === 'upcoming').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Ongoing (${displayWorkshops.filter((w) => w.status === 'ongoing').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Completed (${displayWorkshops.filter((w) => w.status === 'completed').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`All (${allWorkshops.length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Upcoming (${upcomingCount})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Ongoing (${ongoingCount})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Completed (${allWorkshops.filter((w) => w.status === 'completed').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
             </Tabs>
           </Paper>
 

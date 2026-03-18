@@ -1,3 +1,4 @@
+import React, { useState, useMemo } from 'react';
 import React, { useMemo, useState } from 'react';
 import {
   Box,
@@ -36,7 +37,9 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import { courseApi, enrollmentApi, submissionApi } from '../../services/main.api';
 import { enrollmentApi } from '../../services/learning.services';
 import type { Enrollment } from '../../types/types';
 
@@ -119,24 +122,101 @@ const InstructorLearnersPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState(0);
 
-  const { data: enrollmentsRes, isLoading } = useQuery({
-    queryKey: ['instructor-enrollments'],
-    queryFn: () => enrollmentApi.getAll({ role: 'instructor' }),
+  const { data: coursesData, isLoading: coursesLoading } = useQuery({
+    queryKey: ['courses', 'instructor'],
+    queryFn: () => courseApi.getAll({ instructor_courses: true, limit: 100 }).then(r => r.data),
   });
 
-  const rawEnrollments = enrollmentsRes?.data;
-  const enrollments: Enrollment[] = Array.isArray(rawEnrollments)
-    ? rawEnrollments
-    : (rawEnrollments as any)?.results || [];
+  const { data: enrollmentsData, isLoading: enrollmentsLoading } = useQuery({
+    queryKey: ['enrollments', 'learners'],
+    queryFn: () => enrollmentApi.getAll().then(r => r.data),
+  });
 
-  const learners = useMemo(() => groupByLearner(enrollments), [enrollments]);
+  const { data: submissionsData } = useQuery({
+    queryKey: ['submissions', 'learners'],
+    queryFn: () => submissionApi.getAll().then(r => r.data),
+  });
+
+  const courses = (coursesData?.results ?? []) as Array<{ id: number }>;
+  const enrollments = (enrollmentsData ?? []) as Array<{
+    id: number; user: number; user_name: string; user_email: string;
+    course: number; course_title: string; progress_percentage: number;
+    status: string; enrolled_at: string; last_accessed_at: string;
+  }>;
+=======
+  const { data: coursesData, isLoading: coursesLoading } = useQuery({
+    queryKey: ['courses', 'instructor'],
+    queryFn: () => courseApi.getAll({ instructor_courses: true, limit: 100 }).then(r => r.data),
+  });
+
+  const { data: enrollmentsData, isLoading: enrollmentsLoading } = useQuery({
+    queryKey: ['enrollments', 'learners'],
+    queryFn: () => enrollmentApi.getAll().then(r => r.data),
+  });
+
+  const { data: submissionsData } = useQuery({
+    queryKey: ['submissions', 'learners'],
+    queryFn: () => submissionApi.getAll().then(r => r.data),
+  });
+
+  const courses = (coursesData?.results ?? []) as Array<{ id: number }>;
+  const enrollments = (enrollmentsData ?? []) as Array<{
+    id: number; user: number; user_name: string; user_email: string;
+    course: number; course_title: string; progress_percentage: number;
+    status: string; enrolled_at: string; last_accessed_at: string;
+  }>;
+  const submissions = (submissionsData ?? []) as Array<{ user: number; enrollment: number; grade: number | null }>;
+
+  const instructorCourseIds = useMemo(() => new Set(courses.map(c => c.id)), [courses]);
+
+  const instructorEnrollments = useMemo(() => {
+    return enrollments.filter(e => instructorCourseIds.has(e.course));
+  }, [enrollments, instructorCourseIds]);
+
+  const learnerStats = useMemo(() => {
+    const stats: Record<number, { name: string; email: string; courses: number; totalProgress: number; totalGrade: number; gradeCount: number; lastActive: string; enrolledAt: string }> = {};
+    instructorEnrollments.forEach(e => {
+      if (!stats[e.user]) {
+        stats[e.user] = { name: e.user_name, email: e.user_email, courses: 0, totalProgress: 0, totalGrade: 0, gradeCount: 0, lastActive: e.last_accessed_at, enrolledAt: e.enrolled_at };
+      }
+      stats[e.user].courses += 1;
+      stats[e.user].totalProgress += e.progress_percentage;
+      stats[e.user].lastActive = e.last_accessed_at > stats[e.user].lastActive ? e.last_accessed_at : stats[e.user].lastActive;
+    });
+    submissions.forEach(s => {
+      const enrollment = instructorEnrollments.find(e => e.id === s.enrollment);
+      if (enrollment && stats[enrollment.user]) {
+        if (s.grade !== null && s.grade !== undefined) {
+          stats[enrollment.user].totalGrade += s.grade;
+          stats[enrollment.user].gradeCount += 1;
+        }
+      }
+    });
+    return Object.entries(stats).map(([userId, s]) => ({
+      id: userId,
+      name: s.name,
+      initials: s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+      email: s.email,
+      courses: s.courses,
+      avgProgress: s.courses > 0 ? Math.round(s.totalProgress / s.courses) : 0,
+      avgScore: s.gradeCount > 0 ? Math.round(s.totalGrade / s.gradeCount) : 0,
+      lastActive: s.lastActive ? timeAgo(s.lastActive) : 'Never',
+      status: s.lastActive && isRecent(s.lastActive) ? 'active' : (s.lastActive && isAtRisk(s.lastActive) ? 'at-risk' : 'inactive') as 'active' | 'inactive' | 'at-risk',
+      enrolledDate: s.enrolledAt ? new Date(s.enrolledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
+    }));
+  }, [instructorEnrollments, submissions]);
 
   const statusFilter = tab === 0 ? null : tab === 1 ? 'active' : tab === 2 ? 'at-risk' : 'inactive';
-  const filtered = learners.filter((l) => {
+  const filtered = learnerStats.filter((l) => {
+>>>>>>> feature/Updates
     const matchSearch = l.name.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase());
     const matchStatus = !statusFilter || l.status === statusFilter;
     return matchSearch && matchStatus;
   });
+
+  const activeCount = learnerStats.filter(l => l.status === 'active').length;
+  const atRiskCount = learnerStats.filter(l => l.status === 'at-risk').length;
+  const avgScore = learnerStats.length > 0 ? Math.round(learnerStats.reduce((s, l) => s + l.avgScore, 0) / learnerStats.filter(l => l.avgScore > 0).length) || 0 : 0;
 
   const activeCount = learners.filter((l) => l.status === 'active').length;
   const atRiskCount = learners.filter((l) => l.status === 'at-risk').length;
@@ -144,10 +224,11 @@ const InstructorLearnersPage: React.FC = () => {
   const avgProgress = learners.length ? Math.round(learners.reduce((s, l) => s + l.avgProgress, 0) / learners.length) : 0;
 
   const kpis = [
-    { label: 'Total Learners', value: learners.length, icon: <PeopleIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+    { label: 'Total Learners', value: learnerStats.length, icon: <PeopleIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
     { label: 'Active', value: activeCount, icon: <TrendingUpIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
     { label: 'At Risk', value: atRiskCount, icon: <TrendingUpIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-    { label: 'Avg. Progress', value: `${avgProgress}%`, icon: <CourseIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+    { label: 'Avg. Score', value: avgScore > 0 ? `${avgScore}%` : '—', icon: <CourseIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+>>>>>>> feature/Updates
   ];
 
   return (
@@ -265,10 +346,10 @@ const InstructorLearnersPage: React.FC = () => {
             </Box>
 
             <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ px: 2, borderTop: 1, borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-              <Tab label={`All (${learners.length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`All (${learnerStats.length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
               <Tab label={`Active (${activeCount})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
               <Tab label={`At Risk (${atRiskCount})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Inactive (${inactiveCount})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Inactive (${learnerStats.filter(l => l.status === 'inactive').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
             </Tabs>
 
             <TableContainer>
@@ -330,3 +411,33 @@ const InstructorLearnersPage: React.FC = () => {
 };
 
 export default InstructorLearnersPage;
+
+function timeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Never';
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  return `${Math.floor(diffDays / 30)}mo ago`;
+}
+
+function isRecent(dateString: string): boolean {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return false;
+  const diffDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+  return diffDays <= 7;
+}
+
+function isAtRisk(dateString: string): boolean {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return false;
+  const diffDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+  return diffDays > 7 && diffDays <= 30;
+}

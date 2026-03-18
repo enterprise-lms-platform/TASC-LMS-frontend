@@ -12,7 +12,7 @@ export interface Review {
   content: string;
 }
 
-interface RatingDistribution {
+export interface RatingDistribution {
   stars: number;
   percentage: number;
 }
@@ -171,44 +171,5 @@ const CourseReviews: React.FC<CourseReviewsProps> = ({
     </Box>
   );
 };
-
-// Sample data
-export const sampleRatingDistribution: RatingDistribution[] = [
-  { stars: 5, percentage: 75 },
-  { stars: 4, percentage: 18 },
-  { stars: 3, percentage: 5 },
-  { stars: 2, percentage: 1 },
-  { stars: 1, percentage: 1 },
-];
-
-export const sampleReviews: Review[] = [
-  {
-    id: '1',
-    reviewerName: 'Sarah Chen',
-    reviewerInitials: 'SC',
-    reviewerAvatar: '/avatars/female face (10).jpg',
-    rating: 5,
-    date: '2 weeks ago',
-    content: 'This course transformed how I approach React development. The advanced patterns taught here are exactly what senior developers use in production. The projects were challenging but incredibly rewarding.',
-  },
-  {
-    id: '2',
-    reviewerName: 'David Wilson',
-    reviewerInitials: 'DW',
-    reviewerAvatar: '/avatars/male face (17).jpg',
-    rating: 5,
-    date: '1 month ago',
-    content: 'Michael does an excellent job explaining complex concepts. The custom hooks section alone was worth the price of the course. Highly recommend for anyone wanting to level up their React skills.',
-  },
-  {
-    id: '3',
-    reviewerName: 'Amanda Peters',
-    reviewerInitials: 'AP',
-    reviewerAvatar: '/avatars/female face (11).jpg',
-    rating: 4,
-    date: '1 month ago',
-    content: 'Great content overall. The only reason for 4 stars is that I wish there were more practice exercises. But the video content and explanations are top-notch.',
-  },
-];
 
 export default CourseReviews;

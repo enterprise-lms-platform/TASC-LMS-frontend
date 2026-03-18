@@ -91,8 +91,8 @@ const generateInvoiceData = (state: any): InvoiceData => {
       type: state?.paymentMethod || 'M-Pesa',
       maskedNumber: '+254 *** *** 4521',
     },
-    transactionId: `TXN-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${Math.floor(Math.random() * 9000) + 1000}`,
-    receiptNumber: `${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${Math.floor(Math.random() * 90) + 10}XY${Math.floor(Math.random() * 9)}MP`,
+    transactionId: state?.transactionId || `TXN-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(Math.floor(now.getTime() % 10000)).padStart(4, '0')}`,
+    receiptNumber: state?.receiptNumber || `RCP-${String(now.getFullYear())}-${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getTime() % 100000).padStart(5, '0')}`,
   };
 };
 

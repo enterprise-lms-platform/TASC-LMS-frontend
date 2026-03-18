@@ -247,6 +247,51 @@ export const submissionApi = {
     apiClient.delete(`${BASE_PATH}/submissions/${id}/`),
 };
 
+// QUIZ SUBMISSIONS
+
+export interface QuizSubmissionAnswer {
+  question: number;
+  selected_answer: Record<string, unknown>;
+  is_correct?: boolean | null;
+  points_awarded?: number | null;
+}
+
+export interface QuizSubmission {
+  id: number;
+  enrollment: number;
+  quiz: number;
+  quiz_title?: string;
+  course_title?: string;
+  attempt_number: number;
+  score?: number | null;
+  max_score: number;
+  passed: boolean;
+  time_spent_seconds: number;
+  submitted_at: string;
+  answers: QuizSubmissionAnswer[];
+}
+
+export interface QuizSubmissionCreateRequest {
+  enrollment: number;
+  quiz: number;
+  time_spent_seconds?: number;
+  answers: { question: number; selected_answer: Record<string, unknown> }[];
+}
+
+export const quizSubmissionApi = {
+  // List all quiz submissions
+  getAll: (params?: { quiz?: number; enrollment?: number; page?: number; page_size?: number }) =>
+    apiClient.get<QuizSubmission[]>(`${BASE_PATH}/quiz-submissions/`, { params }),
+
+  // Submit quiz answers (auto-grades)
+  create: (data: QuizSubmissionCreateRequest) =>
+    apiClient.post<QuizSubmission>(`${BASE_PATH}/quiz-submissions/`, data),
+
+  // Get quiz submission by ID
+  getById: (id: number) =>
+    apiClient.get<QuizSubmission>(`${BASE_PATH}/quiz-submissions/${id}/`),
+};
+
 // GRADE STATISTICS
 
 export interface GradeDistribution {
@@ -380,39 +425,36 @@ export const managerGradesApi = {
   // Get student grades from submissions
   getStudentGrades: async (courseId: number): Promise<StudentGrade[]> => {
     try {
-      const response = await apiClient.get<any>(`${BASE_PATH}/submissions/`, {
+      const response = await apiClient.get<Submission[]>(`${BASE_PATH}/submissions/`, {
         params: { course: courseId },
       });
-      
-      const submissions = response.data.results || [];
-      
-      // Group submissions by enrollment
+
+      const submissions = (Array.isArray(response.data) ? response.data : (response.data as any)?.results ?? []) as Submission[];
+
       const gradesByStudent = new Map<number, StudentGrade>();
-      
+
       for (const sub of submissions) {
-        const enrollmentId = sub.enrollment;
-        if (!enrollmentId) continue;
-        
-        if (!gradesByStudent.has(enrollmentId)) {
-          gradesByStudent.set(enrollmentId, {
-            enrollment_id: enrollmentId,
-            student_id: sub.enrollment?.user || 0,
-            student_name: sub.enrollment?.user?.full_name || 'Unknown',
-            student_email: sub.enrollment?.user?.email || '',
+        if (!sub.enrollment) continue;
+
+        if (!gradesByStudent.has(sub.enrollment)) {
+          gradesByStudent.set(sub.enrollment, {
+            enrollment_id: sub.enrollment,
+            student_id: sub.user,
+            student_name: sub.user_name || 'Unknown',
+            student_email: sub.user_email || '',
             course_id: courseId,
-            course_name: '',
+            course_name: sub.session_title || '',
             overall_score: 0,
             status: 'fail',
           });
         }
-        
-        const grade = gradesByStudent.get(enrollmentId)!;
+
+        const grade = gradesByStudent.get(sub.enrollment)!;
         if (sub.grade !== null && sub.grade !== undefined) {
-          grade.assignment_score = (grade.assignment_score || 0) + sub.grade;
-          grade.overall_score += sub.grade;
+          grade.overall_score = Math.max(grade.overall_score, sub.grade);
         }
       }
-      
+
       return Array.from(gradesByStudent.values());
     } catch {
       return [];

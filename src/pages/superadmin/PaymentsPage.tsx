@@ -1,3 +1,5 @@
+import React, { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -19,6 +21,7 @@ import {
   Chip,
   IconButton,
   InputAdornment,
+  LinearProgress,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -27,113 +30,12 @@ import {
   CheckCircle as CompletedIcon,
   HourglassEmpty as PendingIcon,
   ErrorOutline as FailedIcon,
-
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
-import { transactionApi } from '../../services/payments.services';
+import KPICard from '../../components/superadmin/KPICard';
+import { transactionApi } from '../../services/main.api';
 
-interface Transaction {
-  id: string;
-  userName: string;
-  userEmail: string;
-  amount: string;
-  method: 'Card' | 'M-Pesa' | 'MTN MoMo' | 'Bank Transfer';
-  status: 'Completed' | 'Pending' | 'Failed' | 'Cancelled';
-  date: string;
-}
-
-const mockTransactions: Transaction[] = [
-  {
-    id: 'FLW-8472-TX',
-    userName: 'James Mwangi',
-    userEmail: 'james.mwangi@gmail.com',
-    amount: '$1,250.00',
-    method: 'M-Pesa',
-    status: 'Completed',
-    date: '2026-02-14',
-  },
-  {
-    id: 'FLW-8471-TX',
-    userName: 'Sarah Okonkwo',
-    userEmail: 'sarah.okonkwo@techcorp.ng',
-    amount: '$3,400.00',
-    method: 'Card',
-    status: 'Completed',
-    date: '2026-02-14',
-  },
-  {
-    id: 'FLW-8470-TX',
-    userName: 'David Kamau',
-    userEmail: 'david.kamau@innovate.ke',
-    amount: '$780.00',
-    method: 'MTN MoMo',
-    status: 'Pending',
-    date: '2026-02-13',
-  },
-  {
-    id: 'FLW-8469-TX',
-    userName: 'Amina Hassan',
-    userEmail: 'amina.hassan@edulearn.ug',
-    amount: '$2,150.00',
-    method: 'Bank Transfer',
-    status: 'Completed',
-    date: '2026-02-13',
-  },
-  {
-    id: 'FLW-8468-TX',
-    userName: 'Peter Ndegwa',
-    userEmail: 'peter.ndegwa@safaricom.co.ke',
-    amount: '$450.00',
-    method: 'M-Pesa',
-    status: 'Failed',
-    date: '2026-02-12',
-  },
-  {
-    id: 'FLW-8467-TX',
-    userName: 'Grace Achieng',
-    userEmail: 'grace.achieng@globaltech.com',
-    amount: '$5,600.00',
-    method: 'Card',
-    status: 'Completed',
-    date: '2026-02-12',
-  },
-  {
-    id: 'FLW-8466-TX',
-    userName: 'Emmanuel Okello',
-    userEmail: 'emmanuel.okello@futuredyn.ug',
-    amount: '$920.00',
-    method: 'MTN MoMo',
-    status: 'Cancelled',
-    date: '2026-02-11',
-  },
-  {
-    id: 'FLW-8465-TX',
-    userName: 'Linda Njeri',
-    userEmail: 'linda.njeri@acmecorp.ke',
-    amount: '$1,800.00',
-    method: 'M-Pesa',
-    status: 'Completed',
-    date: '2026-02-11',
-  },
-  {
-    id: 'FLW-8464-TX',
-    userName: 'Robert Otieno',
-    userEmail: 'robert.otieno@nextgen.ng',
-    amount: '$340.00',
-    method: 'Bank Transfer',
-    status: 'Pending',
-    date: '2026-02-10',
-  },
-  {
-    id: 'FLW-8463-TX',
-    userName: 'Faith Wambui',
-    userEmail: 'faith.wambui@learnhub.ke',
-    amount: '$2,890.00',
-    method: 'Card',
-    status: 'Completed',
-    date: '2026-02-10',
-  },
-];
+import type { Transaction } from '../../types/types';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -165,6 +67,54 @@ const getMethodColor = (method: string) => {
   }
 };
 
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'completed':
+    case 'Completed':
+      return { bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
+    case 'pending':
+    case 'Pending':
+      return { bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
+    case 'failed':
+    case 'Failed':
+      return { bgcolor: 'rgba(113, 113, 122, 0.1)', color: '#71717a' };
+    case 'cancelled':
+    case 'Cancelled':
+      return { bgcolor: 'rgba(156, 163, 175, 0.1)', color: '#71717a' };
+    default:
+      return { bgcolor: 'grey.100', color: 'text.secondary' };
+  }
+};
+
+const getMethodColor = (method: string) => {
+  const m = method.toLowerCase();
+  if (m.includes('card') || m.includes('credit') || m.includes('debit')) {
+    return { bgcolor: 'rgba(113, 113, 122, 0.1)', color: '#71717a' };
+  }
+  if (m.includes('mpesa') || m.includes('m-pesa')) {
+    return { bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
+  }
+  if (m.includes('mtn') || m.includes('momo')) {
+    return { bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
+  }
+  if (m.includes('bank')) {
+    return { bgcolor: 'rgba(255, 164, 36, 0.1)', color: '#e65100' };
+  }
+  return { bgcolor: 'grey.100', color: 'text.secondary' };
+};
+
+const formatMethod = (method: string) => {
+  const m = method.toLowerCase();
+  if (m.includes('card') || m.includes('credit') || m.includes('debit')) return 'Card';
+  if (m.includes('mpesa') || m.includes('m-pesa')) return 'M-Pesa';
+  if (m.includes('mtn') || m.includes('momo')) return 'MTN MoMo';
+  if (m.includes('bank')) return 'Bank Transfer';
+  return method.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+};
+
+const formatStatus = (status: string) => {
+  return status.charAt(0).toUpperCase() + status.slice(1);
+};
 import KPICard from '../../components/superadmin/KPICard';
 
 const kpiCards = [
@@ -205,18 +155,82 @@ const PaymentsPage: React.FC = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  const { data: transactions = [] } = useQuery({
-    queryKey: ['transactions'],
-    queryFn: () => transactionApi.getAll().then((res) => res.data as any),
+  const { data: transactionsData, isLoading } = useQuery({
+    queryKey: ['transactions', statusFilter, methodFilter, dateFrom, dateTo],
+    queryFn: () => transactionApi.getAll({
+      status: statusFilter === 'All' ? undefined : statusFilter.toLowerCase(),
+      limit: 100,
+    }),
   });
 
-  const displayTransactions = transactions?.results || transactions || [];
+  const transactions = (transactionsData?.data ?? []) as Transaction[];
+=======
+  const { data: transactionsData, isLoading } = useQuery({
+    queryKey: ['transactions', statusFilter, methodFilter, dateFrom, dateTo],
+    queryFn: () => transactionApi.getAll({
+      status: statusFilter === 'All' ? undefined : statusFilter.toLowerCase(),
+      limit: 100,
+    }),
+  });
+
+  const transactions = (transactionsData?.data ?? []) as Transaction[];
+
+  const kpis = useMemo(() => {
+    const completed = transactions.filter(t => t.status === 'completed');
+    const pending = transactions.filter(t => t.status === 'pending');
+    const failed = transactions.filter(t => t.status === 'failed');
+    const totalRevenue = completed.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    const pendingRevenue = pending.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+    return [
+      {
+        title: 'Total Transactions',
+        value: transactions.length.toLocaleString(),
+        icon: <ReceiptIcon />,
+        bgColor: '#fff8e1', badgeColor: '#ffd54f', valueColor: '#f57f17', labelColor: '#ff6f00'
+      },
+      {
+        title: 'Completed',
+        value: `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+        icon: <CompletedIcon />,
+        bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
+      },
+      {
+        title: 'Pending',
+        value: `$${pendingRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+        icon: <PendingIcon />,
+        bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
+      },
+      {
+        title: 'Failed',
+        value: failed.length.toLocaleString(),
+        icon: <FailedIcon />,
+        bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412'
+      },
+    ];
+  }, [transactions]);
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(tx => {
+      const matchesSearch = !searchQuery ||
+        tx.user_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tx.transaction_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tx.user_email?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'All' || tx.status.toLowerCase() === statusFilter.toLowerCase();
+      const matchesMethod = methodFilter === 'All' || tx.payment_method?.toLowerCase().includes(methodFilter.toLowerCase());
+      const txDate = new Date(tx.created_at);
+      const matchesDateFrom = !dateFrom || txDate >= new Date(dateFrom);
+      const matchesDateTo = !dateTo || txDate <= new Date(dateTo + 'T23:59:59');
+      return matchesSearch && matchesStatus && matchesMethod && matchesDateFrom && matchesDateTo;
+    });
+  }, [transactions, searchQuery, statusFilter, methodFilter, dateFrom, dateTo]);
+>>>>>>> feature/Updates
 
   return (
     <SuperadminLayout title="Payments" subtitle="Payment transactions and processing">
-      {/* KPI Cards */}
+      {isLoading && <LinearProgress sx={{ mb: 2 }} />}
       <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
-        {kpiCards.map((card, index) => (
+        {kpis.map((card, index) => (
           <Grid size={{ xs: 12, sm: 6, md: 3 }} key={card.title}>
             <KPICard
               title={card.title}
@@ -232,7 +246,6 @@ const PaymentsPage: React.FC = () => {
         ))}
       </Grid>
 
-      {/* Transactions Table */}
       <Paper
         elevation={0}
         sx={{
@@ -240,7 +253,6 @@ const PaymentsPage: React.FC = () => {
           borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)'
         }}
       >
-        {/* Filter Row */}
         <Box
           sx={{
             display: 'flex',
@@ -290,10 +302,10 @@ const PaymentsPage: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <MenuItem value="All">All</MenuItem>
-              <MenuItem value="Completed">Completed</MenuItem>
-              <MenuItem value="Pending">Pending</MenuItem>
-              <MenuItem value="Failed">Failed</MenuItem>
-              <MenuItem value="Cancelled">Cancelled</MenuItem>
+              <MenuItem value="completed">Completed</MenuItem>
+              <MenuItem value="pending">Pending</MenuItem>
+              <MenuItem value="failed">Failed</MenuItem>
+              <MenuItem value="cancelled">Cancelled</MenuItem>
             </Select>
           </FormControl>
           <FormControl size="small" sx={{ minWidth: 160 }}>
@@ -304,15 +316,14 @@ const PaymentsPage: React.FC = () => {
               onChange={(e) => setMethodFilter(e.target.value)}
             >
               <MenuItem value="All">All</MenuItem>
-              <MenuItem value="Card">Card</MenuItem>
-              <MenuItem value="M-Pesa">M-Pesa</MenuItem>
-              <MenuItem value="MTN MoMo">MTN MoMo</MenuItem>
-              <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
+              <MenuItem value="card">Card</MenuItem>
+              <MenuItem value="mpesa">M-Pesa</MenuItem>
+              <MenuItem value="mtn">MTN MoMo</MenuItem>
+              <MenuItem value="bank">Bank Transfer</MenuItem>
             </Select>
           </FormControl>
         </Box>
 
-        {/* Table */}
         <TableContainer sx={{ width: '100%', overflowX: 'auto' }}>
           <Table>
             <TableHead>
@@ -327,37 +338,37 @@ const PaymentsPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {displayTransactions.map((tx: any) => (
+              {filteredTransactions.length > 0 ? filteredTransactions.map((tx) => (
                 <TableRow
                   key={tx.id}
                   sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' }, '&:last-child td': { borderBottom: 0 } }}
                 >
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 500, fontFamily: 'monospace' }}>
-                      {tx.id}
+                      {tx.transaction_id}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Box>
                       <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {tx.userName}
+                        {tx.user_name}
                       </Typography>
                       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        {tx.userEmail}
+                        {tx.user_email ?? tx.organization_name}
                       </Typography>
                     </Box>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {tx.amount}
+                      ${parseFloat(tx.amount).toFixed(2)}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={tx.method}
+                      label={formatMethod(tx.payment_method ?? '')}
                       size="small"
                       sx={{
-                        ...getMethodColor(tx.method),
+                        ...getMethodColor(tx.payment_method ?? ''),
                         fontWeight: 500,
                         fontSize: '0.75rem',
                       }}
@@ -365,7 +376,7 @@ const PaymentsPage: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={tx.status}
+                      label={formatStatus(tx.status)}
                       size="small"
                       sx={{
                         ...getStatusColor(tx.status),
@@ -376,7 +387,7 @@ const PaymentsPage: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      {tx.date}
+                      {new Date(tx.created_at).toLocaleDateString()}
                     </Typography>
                   </TableCell>
                   <TableCell align="right">
@@ -392,7 +403,13 @@ const PaymentsPage: React.FC = () => {
                     </IconButton>
                   </TableCell>
                 </TableRow>
-              ))}
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={7} sx={{ textAlign: 'center', py: 4 }}>
+                    <Typography color="text.secondary">No transactions found</Typography>
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </TableContainer>
