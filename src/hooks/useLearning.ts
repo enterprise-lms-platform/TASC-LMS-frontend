@@ -24,7 +24,10 @@ import type {
 export const useEnrollments = () =>
   useQuery({
     queryKey: queryKeys.enrollments.all,
-    queryFn: () => enrollmentApi.getAll().then((r) => r.data),
+    queryFn: () => enrollmentApi.getAll().then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
   });
 
 export const useEnrollment = (id: number) =>
@@ -62,7 +65,10 @@ export const useGenerateCertificate = () => {
 export const useSessionProgressList = (params?: SessionProgressParams) =>
   useQuery({
     queryKey: queryKeys.sessionProgress.all(params),
-    queryFn: () => sessionProgressApi.getAll(params).then((r) => r.data),
+    queryFn: () => sessionProgressApi.getAll(params).then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
   });
 
 export const useSessionProgress = (id: number) =>
@@ -149,7 +155,10 @@ export const useMarkSessionCompleted = () => {
 export const useCertificates = () =>
   useQuery({
     queryKey: queryKeys.certificates.all,
-    queryFn: () => certificateApi.getAll().then((r) => r.data),
+    queryFn: () => certificateApi.getAll().then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
   });
 
 export const useCertificate = (id: number) =>
@@ -171,7 +180,10 @@ export const useVerifyCertificate = (certificateNumber: string) =>
 export const useDiscussions = (params?: DiscussionParams) =>
   useQuery({
     queryKey: queryKeys.discussions.all(params),
-    queryFn: () => discussionApi.getAll(params).then((r) => r.data),
+    queryFn: () => discussionApi.getAll(params).then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
   });
 
 export const useDiscussion = (id: number) =>
@@ -253,7 +265,10 @@ export const useDeleteDiscussion = () => {
 export const useDiscussionReplies = (params?: DiscussionReplyParams) =>
   useQuery({
     queryKey: queryKeys.discussionReplies.all(params),
-    queryFn: () => discussionReplyApi.getAll(params).then((r) => r.data),
+    queryFn: () => discussionReplyApi.getAll(params).then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
   });
 
 export const useDiscussionReply = (id: number) =>

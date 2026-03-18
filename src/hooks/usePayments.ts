@@ -26,7 +26,10 @@ import type {
 export const useInvoices = (params?: InvoiceParams) =>
   useQuery({
     queryKey: queryKeys.invoices.all(params),
-    queryFn: () => invoiceApi.getAll(params).then((r) => r.data),
+    queryFn: () => invoiceApi.getAll(params).then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
   });
 
 export const useInvoice = (id: number) =>
@@ -102,7 +105,10 @@ export const usePayInvoice = () => {
 export const useTransactions = (params?: TransactionParams) =>
   useQuery({
     queryKey: queryKeys.transactions.all(params),
-    queryFn: () => transactionApi.getAll(params).then((r) => r.data),
+    queryFn: () => transactionApi.getAll(params).then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
   });
 
 export const useTransaction = (id: number) =>
@@ -117,7 +123,10 @@ export const useTransaction = (id: number) =>
 export const usePaymentMethods = () =>
   useQuery({
     queryKey: queryKeys.paymentMethods.all,
-    queryFn: () => paymentMethodApi.getAll().then((r) => r.data),
+    queryFn: () => paymentMethodApi.getAll().then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
   });
 
 export const usePaymentMethod = (id: number) =>
@@ -208,7 +217,10 @@ export const useSetDefaultPaymentMethod = () => {
 export const useSubscriptions = () =>
   useQuery({
     queryKey: queryKeys.subscriptions.all,
-    queryFn: () => subscriptionApi.getAll().then((r) => r.data),
+    queryFn: () => subscriptionApi.getAll().then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
   });
 
 export const useSubscription = (id: number) =>
@@ -229,7 +241,10 @@ export const useMySubscription = () =>
 export const useUserSubscriptions = (params?: UserSubscriptionParams) =>
   useQuery({
     queryKey: queryKeys.userSubscriptions.all(params),
-    queryFn: () => userSubscriptionApi.getAll(params).then((r) => r.data),
+    queryFn: () => userSubscriptionApi.getAll(params).then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
   });
 
 export const useUserSubscription = (id: number) =>

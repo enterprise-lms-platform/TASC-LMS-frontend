@@ -91,7 +91,10 @@ export const useDeleteCategory = () => {
 export const useTags = () =>
   useQuery({
     queryKey: queryKeys.tags.all,
-    queryFn: () => tagApi.getAll().then((r) => r.data),
+    queryFn: () => tagApi.getAll().then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
   });
 
 export const useTag = (id: number) =>
@@ -328,7 +331,10 @@ export const useDeleteSession = () => {
 export const useApprovalRequests = (params?: ApprovalListParams) =>
   useQuery({
     queryKey: queryKeys.approvalRequests.all(params),
-    queryFn: () => courseApprovalApi.getAll(params).then((r) => r.data),
+    queryFn: () => courseApprovalApi.getAll(params).then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
   });
 
 export const useApprovalRequest = (id: number) =>
@@ -508,7 +514,10 @@ export const useDeleteQuestionCategory = () => {
 export const useBankQuestions = (params?: BankQuestionListParams) =>
   useQuery({
     queryKey: queryKeys.bankQuestions.list(params),
-    queryFn: () => bankQuestionApi.list(params).then((r) => r.data),
+    queryFn: () => bankQuestionApi.list(params).then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
   });
 
 export const useBankQuestion = (id: number | null | undefined) =>
