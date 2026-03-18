@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   CssBaseline,
@@ -30,6 +31,7 @@ import {
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { courseApi } from '../../services/main.api';
 
 // ─── Styles ────────────────────────────────────────────────
 
@@ -52,19 +54,13 @@ const headerSx = {
   gap: 2,
 };
 
-// ─── Mock Data ─────────────────────────────────────────────
+// ─── Styles ────────────────────────────────────────────────
 
-const courseOptions = [
-  'Select a course...',
-  'Advanced React Patterns',
-  'Python for Data Science',
-  'AWS Solutions Architect',
-  'TypeScript Mastery',
-  'Docker & Kubernetes',
-  'Machine Learning Fundamentals',
-  'Cybersecurity Essentials',
-  'UX Design Principles',
-];
+const cardSx = {
+  borderRadius: '1rem',
+  overflow: 'hidden',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
+};
 
 interface BulkEnrollmentHistory {
   id: number;
@@ -96,11 +92,18 @@ const statusChipColor = (status: string) => {
 
 const ManagerBulkEnrollPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState('Select a course...');
+  const [selectedCourse, setSelectedCourse] = useState('');
   const [learnerMethod, setLearnerMethod] = useState('csv');
   const [sendNotification, setSendNotification] = useState(true);
   const [setStartDate, setSetStartDate] = useState(false);
   const [grantCertificate, setGrantCertificate] = useState(true);
+
+  const { data: coursesData } = useQuery({
+    queryKey: ['courses', 'bulk-enroll'],
+    queryFn: () => courseApi.getAll({ limit: 100 }).then(r => r.data),
+  });
+
+  const courses = coursesData?.results ?? [];
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -180,9 +183,10 @@ const ManagerBulkEnrollPage: React.FC = () => {
                       onChange={(e) => setSelectedCourse(e.target.value)}
                       label="Course"
                     >
-                      {courseOptions.map((opt) => (
-                        <MenuItem key={opt} value={opt} disabled={opt === 'Select a course...'}>
-                          {opt}
+                      {!selectedCourse && <MenuItem value="" disabled>Select a course...</MenuItem>}
+                      {courses.map((c) => (
+                        <MenuItem key={c.id} value={c.id.toString()}>
+                          {c.title}
                         </MenuItem>
                       ))}
                     </Select>

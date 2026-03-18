@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   CssBaseline,
@@ -25,6 +26,8 @@ import {
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { courseApi } from '../../services/main.api';
+import { usersApi } from '../../services/users.services';
 
 // ── Shared styles ──
 const cardSx = {
@@ -45,27 +48,6 @@ const headerSx = {
   gap: 2,
 };
 
-// ── Mock data for dropdowns ──
-const mockCourses = [
-  { id: 1, name: 'Advanced React Patterns' },
-  { id: 2, name: 'Python for Data Science' },
-  { id: 3, name: 'AWS Solutions Architect' },
-  { id: 4, name: 'TypeScript Mastery' },
-  { id: 5, name: 'Docker & Kubernetes' },
-  { id: 6, name: 'Cybersecurity Fundamentals' },
-  { id: 7, name: 'Mobile App Development' },
-  { id: 8, name: 'Data Visualization' },
-];
-
-const mockInstructors = [
-  { id: 1, name: 'Dr. Sarah Chen' },
-  { id: 2, name: 'James Wilson' },
-  { id: 3, name: 'Maria Garcia' },
-  { id: 4, name: 'Alex Kim' },
-  { id: 5, name: 'Priya Patel' },
-  { id: 6, name: 'David Okonkwo' },
-];
-
 const durationOptions = [
   { value: '30', label: '30 minutes' },
   { value: '60', label: '1 hour' },
@@ -82,6 +64,19 @@ const frequencyOptions = [
 
 const ManagerScheduleNewPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const { data: coursesData } = useQuery({
+    queryKey: ['courses', 'schedule'],
+    queryFn: () => courseApi.getAll({ limit: 100 }).then(r => r.data),
+  });
+
+  const { data: usersData } = useQuery({
+    queryKey: ['users', 'instructors'],
+    queryFn: () => usersApi.getAll({ role: 'instructor', page_size: 100 }),
+  });
+
+  const courses = coursesData?.results ?? [];
+  const instructors = usersData?.data?.results ?? [];
 
   // ── Form state ──
   const [sessionTitle, setSessionTitle] = useState('');
@@ -183,9 +178,9 @@ const ManagerScheduleNewPage: React.FC = () => {
                   <FormControl fullWidth>
                     <InputLabel>Course</InputLabel>
                     <Select value={course} onChange={(e) => setCourse(e.target.value)} label="Course">
-                      {mockCourses.map((c) => (
+                      {courses.map((c) => (
                         <MenuItem key={c.id} value={c.id.toString()}>
-                          {c.name}
+                          {c.title}
                         </MenuItem>
                       ))}
                     </Select>
@@ -197,9 +192,9 @@ const ManagerScheduleNewPage: React.FC = () => {
                   <FormControl fullWidth>
                     <InputLabel>Instructor</InputLabel>
                     <Select value={instructor} onChange={(e) => setInstructor(e.target.value)} label="Instructor">
-                      {mockInstructors.map((inst) => (
+                      {instructors.map((inst) => (
                         <MenuItem key={inst.id} value={inst.id.toString()}>
-                          {inst.name}
+                          {inst.name || `${inst.first_name} ${inst.last_name}`.trim()}
                         </MenuItem>
                       ))}
                     </Select>

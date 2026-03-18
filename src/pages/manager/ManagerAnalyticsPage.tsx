@@ -11,8 +11,6 @@ import {
   FormControl,
   InputLabel,
   LinearProgress,
-  Avatar,
-  Chip,
 } from '@mui/material';
 import {
   People as UsersIcon,
@@ -27,8 +25,8 @@ import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
 import { courseApi, categoryApi, enrollmentApi, certificateApi } from '../../services/main.api';
 
-// ── Monthly Enrollment data ──
-const monthlyEnrollments = [
+// ── Chart placeholders (time-series data requires backend aggregation endpoints) ──
+const getMonthlyEnrollments = () => [
   { month: 'Jul', count: 312 },
   { month: 'Aug', count: 428 },
   { month: 'Sep', count: 386 },
@@ -37,19 +35,10 @@ const monthlyEnrollments = [
   { month: 'Dec', count: 534 },
   { month: 'Jan', count: 498 },
 ];
+const monthlyEnrollments = getMonthlyEnrollments();
 const maxEnrollment = Math.max(...monthlyEnrollments.map((d) => d.count));
 
-// ── Course performance ──
-const topCourses = [
-  { name: 'Advanced React Patterns', enrollments: 452, completion: 72, avgScore: 84, rating: 4.8 },
-  { name: 'Python for Data Science', enrollments: 386, completion: 68, avgScore: 79, rating: 4.6 },
-  { name: 'AWS Solutions Architect', enrollments: 321, completion: 58, avgScore: 82, rating: 4.9 },
-  { name: 'TypeScript Mastery', enrollments: 278, completion: 74, avgScore: 88, rating: 4.7 },
-  { name: 'Docker & Kubernetes', enrollments: 234, completion: 61, avgScore: 76, rating: 4.5 },
-];
-
-// ── Weekly engagement ──
-const weeklyEngagement = [
+const getWeeklyEngagement = () => [
   { day: 'Mon', hours: 342 },
   { day: 'Tue', hours: 428 },
   { day: 'Wed', hours: 386 },
@@ -58,26 +47,10 @@ const weeklyEngagement = [
   { day: 'Sat', hours: 198 },
   { day: 'Sun', hours: 156 },
 ];
+const weeklyEngagement = getWeeklyEngagement();
 const maxHours = Math.max(...weeklyEngagement.map((d) => d.hours));
 
-// ── Instructor performance ──
-const instructorPerformance = [
-  { name: 'Dr. Sarah Chen', initials: 'SC', courses: 8, avgRating: 4.9, completionRate: 76 },
-  { name: 'James Wilson', initials: 'JW', courses: 6, avgRating: 4.7, completionRate: 72 },
-  { name: 'Maria Garcia', initials: 'MG', courses: 5, avgRating: 4.8, completionRate: 68 },
-  { name: 'Alex Kim', initials: 'AK', courses: 7, avgRating: 4.5, completionRate: 64 },
-  { name: 'Priya Patel', initials: 'PP', courses: 4, avgRating: 4.6, completionRate: 71 },
-];
-
-// ── Learning metrics ──
-const learningMetrics = [
-  { label: 'Avg. Session Duration', value: '42 min', change: '+8%', positive: true },
-  { label: 'Quiz Pass Rate', value: '76.3%', change: '+3.2%', positive: true },
-  { label: 'Assignment Submission', value: '89.1%', change: '+5%', positive: true },
-  { label: 'Certificate Issued', value: '1,248', change: '+18%', positive: true },
-  { label: 'Active This Week', value: '1,892', change: '-2%', positive: false },
-  { label: 'Avg. Courses / User', value: '2.4', change: '+0.3', positive: true },
-];
+// ── Top courses (requires course-revenue join - compute from enrollments) ──
 
 // ── Shared Paper style ──
 const cardSx = {
@@ -113,10 +86,10 @@ const ManagerAnalyticsPage: React.FC = () => {
     queryFn: () => certificateApi.getAll().then(r => r.data),
   });
 
-  const courses = coursesData?.results ?? [];
-  const categories = categoriesData ?? [];
-  const enrollments = enrollmentsData ?? [];
-  const certificates = certificatesData ?? [];
+  const courses = (coursesData?.results ?? []) as Array<{ id: number; status: string }>;
+  const categories = (categoriesData ?? []) as Array<{ name: string }>;
+  const enrollments = (enrollmentsData ?? []) as Array<{ course: number; course_title: string; completed_at: string | null | undefined }>;
+  const certificates = (certificatesData ?? []) as Array<{ id: number }>;
 
   const kpis = useMemo(() => {
     const totalCourses = courses.length;
@@ -142,6 +115,43 @@ const ManagerAnalyticsPage: React.FC = () => {
       color: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'][idx],
     }));
   }, [categories]);
+
+  const topCourses = useMemo(() => {
+    const courseStats: Record<string, { enrollments: number; completed: number }> = {};
+    enrollments.forEach((e) => {
+      const key = e.course_title || `Course ${e.course}`;
+      if (!courseStats[key]) {
+        courseStats[key] = { enrollments: 0, completed: 0 };
+      }
+      courseStats[key].enrollments += 1;
+      if (e.completed_at) {
+        courseStats[key].completed += 1;
+      }
+    });
+    
+    return Object.entries(courseStats)
+      .map(([name, stats]) => ({
+        name,
+        enrollments: stats.enrollments,
+        completion: stats.enrollments > 0 ? Math.round((stats.completed / stats.enrollments) * 100) : 0,
+        avgScore: 0,
+        rating: 0,
+      }))
+      .sort((a, b) => b.enrollments - a.enrollments)
+      .slice(0, 5);
+  }, [enrollments]);
+
+  const learningMetrics = useMemo(() => {
+    const totalEnrollments = enrollments.length;
+    const completedEnrollments = enrollments.filter((e) => e.completed_at).length;
+    const certificatesCount = certificates.length;
+    
+    return [
+      { label: 'Total Enrollments', value: totalEnrollments.toLocaleString(), change: '+0%', positive: true },
+      { label: 'Completed', value: completedEnrollments.toLocaleString(), change: '+0%', positive: true },
+      { label: 'Certificates Issued', value: certificatesCount.toLocaleString(), change: '+0%', positive: true },
+    ];
+  }, [enrollments, certificates]);
 
   const isLoading = coursesLoading;
 
@@ -319,20 +329,7 @@ const ManagerAnalyticsPage: React.FC = () => {
                       }}
                     >
                       <Typography variant="body2" color="text.secondary">{metric.label}</Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="body2" fontWeight={700}>{metric.value}</Typography>
-                        <Chip
-                          label={metric.change}
-                          size="small"
-                          sx={{
-                            height: 22,
-                            fontSize: '0.7rem',
-                            fontWeight: 600,
-                            bgcolor: metric.positive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                            color: metric.positive ? '#10b981' : '#ef4444',
-                          }}
-                        />
-                      </Box>
+                      <Typography variant="body2" fontWeight={700}>{metric.value}</Typography>
                     </Box>
                   ))}
                 </Box>
@@ -389,7 +386,7 @@ const ManagerAnalyticsPage: React.FC = () => {
             <Grid size={{ xs: 12, lg: 6 }}>
               <Paper elevation={0} sx={cardSx}>
                 <Box sx={headerSx}>
-                  <Typography fontWeight={700}>Weekly User Engagement</Typography>
+                  <Typography fontWeight={700}>Weekly User Engagement (Placeholder)</Typography>
                 </Box>
                 <Box sx={{ p: 3, display: 'flex', alignItems: 'flex-end', gap: 2, height: 220 }}>
                   {weeklyEngagement.map((d) => (
@@ -413,52 +410,37 @@ const ManagerAnalyticsPage: React.FC = () => {
                     </Box>
                   ))}
                 </Box>
+                <Box sx={{ p: 2, px: 3, bgcolor: 'grey.50', borderTop: 1, borderColor: 'divider' }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Note: Weekly engagement data requires time-tracking endpoints. Showing placeholder data.
+                  </Typography>
+                </Box>
               </Paper>
             </Grid>
 
-            {/* ── Instructor Performance ── */}
+            {/* ── Quick Stats ── */}
             <Grid size={{ xs: 12, lg: 6 }}>
               <Paper elevation={0} sx={cardSx}>
                 <Box sx={headerSx}>
-                  <Typography fontWeight={700}>Instructor Performance</Typography>
+                  <Typography fontWeight={700}>Organization Overview</Typography>
                 </Box>
-                <Box sx={{ overflow: 'auto' }}>
-                  {instructorPerformance.map((instructor, i) => (
-                    <Box
-                      key={instructor.name}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        p: 2,
-                        px: 3,
-                        borderBottom: i < instructorPerformance.length - 1 ? 1 : 0,
-                        borderColor: 'divider',
-                        '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' },
-                      }}
-                    >
-                      <Avatar sx={{ width: 36, height: 36, fontSize: '0.75rem', bgcolor: 'primary.main' }}>{instructor.initials}</Avatar>
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="body2" fontWeight={600} noWrap>{instructor.name}</Typography>
-                        <Typography variant="caption" color="text.secondary">{instructor.courses} courses</Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 50 }}>
-                        <StarIcon sx={{ fontSize: 16, color: '#f59e0b' }} />
-                        <Typography variant="body2" fontWeight={600}>{instructor.avgRating}</Typography>
-                      </Box>
-                      <Chip
-                        label={`${instructor.completionRate}% completion`}
-                        size="small"
-                        sx={{
-                          height: 22,
-                          fontSize: '0.7rem',
-                          fontWeight: 600,
-                          bgcolor: instructor.completionRate >= 70 ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
-                          color: instructor.completionRate >= 70 ? '#10b981' : '#f59e0b',
-                        }}
-                      />
-                    </Box>
-                  ))}
+                <Box sx={{ p: 0 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, px: 3, borderBottom: 1, borderColor: 'divider' }}>
+                    <Typography variant="body2" color="text.secondary">Total Enrollments</Typography>
+                    <Typography variant="body2" fontWeight={700}>{kpis[0]?.value || '0'}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, px: 3, borderBottom: 1, borderColor: 'divider' }}>
+                    <Typography variant="body2" color="text.secondary">Active Courses</Typography>
+                    <Typography variant="body2" fontWeight={700}>{kpis[1]?.value || '0'}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, px: 3, borderBottom: 1, borderColor: 'divider' }}>
+                    <Typography variant="body2" color="text.secondary">Enrollment Rate</Typography>
+                    <Typography variant="body2" fontWeight={700}>{kpis[2]?.value || '0%'}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, px: 3 }}>
+                    <Typography variant="body2" color="text.secondary">Completion Rate</Typography>
+                    <Typography variant="body2" fontWeight={700}>{kpis[3]?.value || '0%'}</Typography>
+                  </Box>
                 </Box>
               </Paper>
             </Grid>
