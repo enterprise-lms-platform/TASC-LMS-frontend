@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Box, CssBaseline, Toolbar } from '@mui/material';
+import { Box, CssBaseline, Toolbar, Typography, Select, MenuItem, FormControl, InputLabel, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
@@ -14,130 +14,8 @@ import StudentGradeDetailPanel from '../../components/instructor/gradebook/Stude
 import ExportDialog from '../../components/instructor/gradebook/ExportDialog';
 import { createDefaultGradingConfig, formatGrade, calculateFinalGrade } from '../../utils/gradingUtils';
 import type { GradingConfig } from '../../utils/gradingUtils';
-import { submissionApi, gradeStatisticsApi, enrollmentApi, managerGradesApi } from '../../services/learning.services';
+import { submissionApi, gradeStatisticsApi } from '../../services/learning.services';
 import { courseApi } from '../../services/catalogue.services';
-
-// ── Sample Data (fallback) ──
-
-const sampleStudents: GradebookStudent[] = [
-  { id: 's1', name: 'Jennifer Smith', initials: 'JS', email: 'jennifer.smith@university.edu' },
-  { id: 's2', name: 'Michael Chen', initials: 'MC', email: 'michael.chen@university.edu' },
-  { id: 's3', name: 'Emma Wilson', initials: 'EW', email: 'emma.wilson@university.edu' },
-  { id: 's4', name: 'David Johnson', initials: 'DJ', email: 'david.johnson@university.edu' },
-  { id: 's5', name: 'Sarah Brown', initials: 'SB', email: 'sarah.brown@university.edu' },
-  { id: 's6', name: 'James Taylor', initials: 'JT', email: 'james.taylor@university.edu' },
-  { id: 's7', name: 'Olivia Davis', initials: 'OD', email: 'olivia.davis@university.edu' },
-  { id: 's8', name: 'Daniel Martinez', initials: 'DM', email: 'daniel.martinez@university.edu' },
-  { id: 's9', name: 'Sophia Anderson', initials: 'SA', email: 'sophia.anderson@university.edu' },
-  { id: 's10', name: 'Liam Thomas', initials: 'LT', email: 'liam.thomas@university.edu' },
-];
-
-const sampleItems: GradedItem[] = [
-  // Assignments
-  { id: 'a1', title: 'Hook Library', type: 'assignment', categoryId: 'assignments', maxScore: 100, dueDate: 'Feb 10' },
-  { id: 'a2', title: 'State Patterns', type: 'assignment', categoryId: 'assignments', maxScore: 100, dueDate: 'Feb 17' },
-  { id: 'a3', title: 'HOC Essay', type: 'assignment', categoryId: 'assignments', maxScore: 50, dueDate: 'Feb 24' },
-  // Quizzes
-  { id: 'q1', title: 'Module 1 Quiz', type: 'quiz', categoryId: 'quizzes', maxScore: 30, dueDate: 'Feb 5' },
-  { id: 'q2', title: 'Module 2 Quiz', type: 'quiz', categoryId: 'quizzes', maxScore: 30, dueDate: 'Feb 12' },
-  { id: 'q3', title: 'Midterm Quiz', type: 'quiz', categoryId: 'quizzes', maxScore: 50, dueDate: 'Feb 19' },
-  // Projects
-  { id: 'p1', title: 'Final Project', type: 'project', categoryId: 'projects', maxScore: 200, dueDate: 'Mar 1' },
-  { id: 'p2', title: 'Code Review', type: 'project', categoryId: 'projects', maxScore: 50, dueDate: 'Feb 20' },
-];
-
-const sampleGrades: GradeEntry[] = [
-  // Jennifer Smith - strong student
-  { studentId: 's1', itemId: 'a1', earned: 92, status: 'graded' },
-  { studentId: 's1', itemId: 'a2', earned: 88, status: 'graded' },
-  { studentId: 's1', itemId: 'a3', earned: 45, status: 'graded' },
-  { studentId: 's1', itemId: 'q1', earned: 28, status: 'graded' },
-  { studentId: 's1', itemId: 'q2', earned: 27, status: 'graded' },
-  { studentId: 's1', itemId: 'q3', earned: 44, status: 'graded' },
-  { studentId: 's1', itemId: 'p1', earned: 185, status: 'graded' },
-  { studentId: 's1', itemId: 'p2', earned: 46, status: 'graded' },
-  // Michael Chen - good student
-  { studentId: 's2', itemId: 'a1', earned: 85, status: 'graded' },
-  { studentId: 's2', itemId: 'a2', earned: 78, status: 'graded' },
-  { studentId: 's2', itemId: 'a3', earned: 40, status: 'graded' },
-  { studentId: 's2', itemId: 'q1', earned: 25, status: 'graded' },
-  { studentId: 's2', itemId: 'q2', earned: 22, status: 'graded' },
-  { studentId: 's2', itemId: 'q3', earned: 38, status: 'graded' },
-  { studentId: 's2', itemId: 'p1', earned: null, status: 'submitted' },
-  { studentId: 's2', itemId: 'p2', earned: 42, status: 'graded' },
-  // Emma Wilson - average student
-  { studentId: 's3', itemId: 'a1', earned: 75, status: 'graded' },
-  { studentId: 's3', itemId: 'a2', earned: 70, status: 'graded' },
-  { studentId: 's3', itemId: 'a3', earned: 35, status: 'graded' },
-  { studentId: 's3', itemId: 'q1', earned: 22, status: 'graded' },
-  { studentId: 's3', itemId: 'q2', earned: 20, status: 'graded' },
-  { studentId: 's3', itemId: 'q3', earned: 35, status: 'graded' },
-  { studentId: 's3', itemId: 'p1', earned: null, status: 'pending' },
-  { studentId: 's3', itemId: 'p2', earned: 38, status: 'graded' },
-  // David Johnson - struggling
-  { studentId: 's4', itemId: 'a1', earned: 62, status: 'graded' },
-  { studentId: 's4', itemId: 'a2', earned: 58, status: 'graded' },
-  { studentId: 's4', itemId: 'a3', earned: null, status: 'missing' },
-  { studentId: 's4', itemId: 'q1', earned: 18, status: 'graded' },
-  { studentId: 's4', itemId: 'q2', earned: 15, status: 'graded' },
-  { studentId: 's4', itemId: 'q3', earned: 28, status: 'graded' },
-  { studentId: 's4', itemId: 'p1', earned: null, status: 'pending' },
-  { studentId: 's4', itemId: 'p2', earned: null, status: 'submitted' },
-  // Sarah Brown - top student
-  { studentId: 's5', itemId: 'a1', earned: 98, status: 'graded' },
-  { studentId: 's5', itemId: 'a2', earned: 95, status: 'graded' },
-  { studentId: 's5', itemId: 'a3', earned: 48, status: 'graded' },
-  { studentId: 's5', itemId: 'q1', earned: 30, status: 'graded' },
-  { studentId: 's5', itemId: 'q2', earned: 29, status: 'graded' },
-  { studentId: 's5', itemId: 'q3', earned: 47, status: 'graded' },
-  { studentId: 's5', itemId: 'p1', earned: 195, status: 'graded' },
-  { studentId: 's5', itemId: 'p2', earned: 49, status: 'graded' },
-  // James Taylor
-  { studentId: 's6', itemId: 'a1', earned: 80, status: 'graded' },
-  { studentId: 's6', itemId: 'a2', earned: 82, status: 'graded' },
-  { studentId: 's6', itemId: 'a3', earned: 38, status: 'graded' },
-  { studentId: 's6', itemId: 'q1', earned: 24, status: 'graded' },
-  { studentId: 's6', itemId: 'q2', earned: 26, status: 'graded' },
-  { studentId: 's6', itemId: 'q3', earned: 40, status: 'graded' },
-  { studentId: 's6', itemId: 'p1', earned: null, status: 'pending' },
-  { studentId: 's6', itemId: 'p2', earned: 40, status: 'graded' },
-  // Olivia Davis
-  { studentId: 's7', itemId: 'a1', earned: 88, status: 'graded' },
-  { studentId: 's7', itemId: 'a2', earned: 85, status: 'graded' },
-  { studentId: 's7', itemId: 'a3', earned: 42, status: 'graded' },
-  { studentId: 's7', itemId: 'q1', earned: 26, status: 'graded' },
-  { studentId: 's7', itemId: 'q2', earned: 24, status: 'graded' },
-  { studentId: 's7', itemId: 'q3', earned: 42, status: 'graded' },
-  { studentId: 's7', itemId: 'p1', earned: 170, status: 'graded' },
-  { studentId: 's7', itemId: 'p2', earned: 44, status: 'graded' },
-  // Daniel Martinez
-  { studentId: 's8', itemId: 'a1', earned: 72, status: 'graded' },
-  { studentId: 's8', itemId: 'a2', earned: 68, status: 'graded' },
-  { studentId: 's8', itemId: 'a3', earned: 30, status: 'graded' },
-  { studentId: 's8', itemId: 'q1', earned: 20, status: 'graded' },
-  { studentId: 's8', itemId: 'q2', earned: 18, status: 'graded' },
-  { studentId: 's8', itemId: 'q3', earned: 32, status: 'graded' },
-  { studentId: 's8', itemId: 'p1', earned: null, status: 'pending' },
-  { studentId: 's8', itemId: 'p2', earned: 35, status: 'graded' },
-  // Sophia Anderson
-  { studentId: 's9', itemId: 'a1', earned: 90, status: 'graded' },
-  { studentId: 's9', itemId: 'a2', earned: 92, status: 'graded' },
-  { studentId: 's9', itemId: 'a3', earned: 46, status: 'graded' },
-  { studentId: 's9', itemId: 'q1', earned: 27, status: 'graded' },
-  { studentId: 's9', itemId: 'q2', earned: 28, status: 'graded' },
-  { studentId: 's9', itemId: 'q3', earned: 45, status: 'graded' },
-  { studentId: 's9', itemId: 'p1', earned: 180, status: 'graded' },
-  { studentId: 's9', itemId: 'p2', earned: 47, status: 'graded' },
-  // Liam Thomas
-  { studentId: 's10', itemId: 'a1', earned: 65, status: 'graded' },
-  { studentId: 's10', itemId: 'a2', earned: 60, status: 'graded' },
-  { studentId: 's10', itemId: 'a3', earned: 28, status: 'graded' },
-  { studentId: 's10', itemId: 'q1', earned: 19, status: 'graded' },
-  { studentId: 's10', itemId: 'q2', earned: 16, status: 'graded' },
-  { studentId: 's10', itemId: 'q3', earned: 30, status: 'graded' },
-  { studentId: 's10', itemId: 'p1', earned: null, status: 'submitted' },
-  { studentId: 's10', itemId: 'p2', earned: 32, status: 'graded' },
-];
 
 // ── Page Component ──
 
@@ -150,22 +28,93 @@ const GradebookPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('expanded');
   const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
+  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
 
-  // Filter students by search
+  const { data: coursesData, isLoading: coursesLoading } = useQuery({
+    queryKey: ['courses', 'instructor'],
+    queryFn: () => courseApi.getAll({ instructor_courses: true, limit: 100 }).then(r => r.data),
+  });
+
+  const courses = coursesData?.results ?? [];
+
+  const { data: submissionsData, isLoading: submissionsLoading } = useQuery({
+    queryKey: ['submissions', 'gradebook', selectedCourseId],
+    queryFn: () => submissionApi.getAll({ course: selectedCourseId ?? undefined, limit: 500 }).then(r => r.data),
+    enabled: selectedCourseId !== null,
+  });
+
+  const { data: statsData } = useQuery({
+    queryKey: ['submissions', 'statistics', selectedCourseId],
+    queryFn: () => gradeStatisticsApi.getStatistics(selectedCourseId!).then(r => r.data),
+    enabled: selectedCourseId !== null,
+  });
+
+  const submissions = (Array.isArray(submissionsData) ? submissionsData : []) as Array<{
+    id: number; assignment: number; assignment_title: string; session: number; session_title: string;
+    enrollment: number; user: number; user_name: string; user_email: string;
+    status: string; submitted_at: string; grade?: number | null; feedback?: string | null;
+  }>;
+
+  const selectedCourse = courses.find(c => c.id === selectedCourseId);
+
+  const realStudents = useMemo((): GradebookStudent[] => {
+    const seen = new Map<number, GradebookStudent>();
+    submissions.forEach(s => {
+      if (!seen.has(s.enrollment)) {
+        const parts = s.user_name.split(' ');
+        seen.set(s.enrollment, {
+          id: String(s.enrollment),
+          name: s.user_name,
+          initials: parts.map(p => p[0]).join('').slice(0, 2).toUpperCase(),
+          email: s.user_email,
+        });
+      }
+    });
+    return Array.from(seen.values());
+  }, [submissions]);
+
+  const realItems = useMemo((): GradedItem[] => {
+    const seen = new Map<number, GradedItem>();
+    submissions.forEach(s => {
+      if (!seen.has(s.assignment)) {
+        const isQuiz = s.session_title?.toLowerCase().includes('quiz') || s.assignment_title?.toLowerCase().includes('quiz');
+        const isProject = s.assignment_title?.toLowerCase().includes('project') || s.session_title?.toLowerCase().includes('project');
+        seen.set(s.assignment, {
+          id: String(s.assignment),
+          title: s.assignment_title || s.session_title || 'Assessment',
+          type: isQuiz ? 'quiz' : isProject ? 'project' : 'assignment',
+          categoryId: isQuiz ? 'quizzes' : isProject ? 'projects' : 'assignments',
+          maxScore: 100,
+          dueDate: new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        });
+      }
+    });
+    return Array.from(seen.values());
+  }, [submissions]);
+
+  const realGrades = useMemo((): GradeEntry[] => {
+    return submissions.map(s => ({
+      studentId: String(s.enrollment),
+      itemId: String(s.assignment),
+      earned: s.grade ?? null,
+      status: (s.status === 'graded' ? 'graded' : s.status === 'submitted' ? 'submitted' : 'pending') as GradeEntry['status'],
+    }));
+  }, [submissions]);
+
+  const students = realStudents.length > 0 ? realStudents : sampleStudents;
+  const gradedItems = realItems.length > 0 ? realItems : sampleItems;
+  const grades = realGrades.length > 0 ? realGrades : sampleGrades;
+
   const filteredStudents = useMemo(
-    () =>
-      sampleStudents.filter((s) =>
-        s.name.toLowerCase().includes(searchQuery.toLowerCase())
-      ),
-    [searchQuery],
+    () => students.filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    [students, searchQuery],
   );
 
-  // Compute summary stats
   const summaryStats = useMemo(() => {
-    const studentFinalGrades = sampleStudents.map((student) => {
-      const studentGrades = sampleGrades.filter((g) => g.studentId === student.id && g.earned !== null);
+    const studentFinalGrades = students.map((student) => {
+      const studentGrades = grades.filter((g) => g.studentId === student.id && g.earned !== null);
       const categoryGrades = gradingConfig.categories.map((cat) => {
-        const catItems = sampleItems.filter((i) => i.categoryId === cat.id);
+        const catItems = gradedItems.filter((i) => i.categoryId === cat.id);
         const catGrades = catItems
           .map((item) => studentGrades.find((g) => g.itemId === item.id))
           .filter((g): g is GradeEntry => g !== undefined && g.earned !== null);
@@ -178,36 +127,35 @@ const GradebookPage: React.FC = () => {
       return calculateFinalGrade(categoryGrades, gradingConfig);
     });
 
-    const classAverage = studentFinalGrades.reduce((s, g) => s + g, 0) / studentFinalGrades.length;
-    const pendingCount = sampleGrades.filter((g) => g.status === 'submitted' || g.status === 'pending').length;
+    const classAverage = studentFinalGrades.length > 0
+      ? studentFinalGrades.reduce((s, g) => s + g, 0) / studentFinalGrades.length
+      : (statsData?.average_grade ?? 0);
+    const pendingCount = grades.filter((g) => g.status === 'submitted' || g.status === 'pending').length;
 
     return {
       classAverage,
-      gradedItemCount: sampleItems.length,
-      totalStudents: sampleStudents.length,
+      gradedItemCount: gradedItems.length,
+      totalStudents: students.length,
       pendingGradingCount: pendingCount,
     };
-  }, [gradingConfig]);
+  }, [students, grades, gradedItems, gradingConfig, statsData]);
 
-  // Grade distribution
   const distribution = useMemo(() => {
-    const dist: Record<string, number> = {};
-
-    if (gradingConfig.gradingScale === 'pass_fail') {
-      dist['Pass'] = 0;
-      dist['Fail'] = 0;
-    } else if (gradingConfig.gradingScale === 'letter') {
-      dist['A'] = 0;
-      dist['B'] = 0;
-      dist['C'] = 0;
-      dist['D'] = 0;
-      dist['F'] = 0;
+    if (statsData?.distribution) {
+      const dist: Record<string, number> = {};
+      statsData.distribution.forEach(d => {
+        dist[d.label] = d.count;
+      });
+      return dist;
     }
-
-    sampleStudents.forEach((student) => {
-      const studentGrades = sampleGrades.filter((g) => g.studentId === student.id && g.earned !== null);
+    const dist: Record<string, number> = {};
+    if (gradingConfig.gradingScale === 'letter') {
+      ['A', 'B', 'C', 'D', 'F'].forEach(g => { dist[g] = 0; });
+    }
+    students.forEach((student) => {
+      const studentGrades = grades.filter((g) => g.studentId === student.id && g.earned !== null);
       const categoryGrades = gradingConfig.categories.map((cat) => {
-        const catItems = sampleItems.filter((i) => i.categoryId === cat.id);
+        const catItems = gradedItems.filter((i) => i.categoryId === cat.id);
         const catGrades = catItems
           .map((item) => studentGrades.find((g) => g.itemId === item.id))
           .filter((g): g is GradeEntry => g !== undefined && g.earned !== null);
@@ -217,32 +165,27 @@ const GradebookPage: React.FC = () => {
           possible: catItems.reduce((s, i) => s + i.maxScore, 0),
         };
       }).filter((cg) => cg.possible > 0);
-
       const finalPct = calculateFinalGrade(categoryGrades, gradingConfig);
       const grade = formatGrade(finalPct, gradingConfig);
       dist[grade] = (dist[grade] || 0) + 1;
     });
-
     return dist;
-  }, [gradingConfig]);
+  }, [students, grades, gradedItems, gradingConfig, statsData]);
 
-  // Detail panel data
-  const detailStudent = detailStudentId ? sampleStudents.find((s) => s.id === detailStudentId) ?? null : null;
+  const detailStudent = detailStudentId ? students.find((s) => s.id === detailStudentId) ?? null : null;
   const detailGrades = detailStudentId
-    ? sampleGrades
-        .filter((g) => g.studentId === detailStudentId)
-        .map((g) => ({
-          itemId: g.itemId,
-          earned: g.earned,
-          possible: sampleItems.find((i) => i.id === g.itemId)?.maxScore ?? 0,
-          status: g.status,
-        }))
+    ? grades.filter((g) => g.studentId === detailStudentId).map((g) => ({
+        itemId: g.itemId,
+        earned: g.earned,
+        possible: gradedItems.find((i) => i.id === g.itemId)?.maxScore ?? 0,
+        status: g.status,
+      }))
     : [];
   const detailFinalGrade = useMemo(() => {
     if (!detailStudentId) return 0;
-    const studentGrades = sampleGrades.filter((g) => g.studentId === detailStudentId && g.earned !== null);
+    const studentGrades = grades.filter((g) => g.studentId === detailStudentId && g.earned !== null);
     const categoryGrades = gradingConfig.categories.map((cat) => {
-      const catItems = sampleItems.filter((i) => i.categoryId === cat.id);
+      const catItems = gradedItems.filter((i) => i.categoryId === cat.id);
       const catGrades = catItems
         .map((item) => studentGrades.find((g) => g.itemId === item.id))
         .filter((g): g is GradeEntry => g !== undefined && g.earned !== null);
@@ -253,7 +196,7 @@ const GradebookPage: React.FC = () => {
       };
     }).filter((cg) => cg.possible > 0);
     return calculateFinalGrade(categoryGrades, gradingConfig);
-  }, [detailStudentId, gradingConfig]);
+  }, [detailStudentId, grades, gradedItems, gradingConfig]);
 
   return (
     <Box sx={{ display: 'flex', bgcolor: '#f8f9fa', minHeight: '100vh' }}>
@@ -262,7 +205,7 @@ const GradebookPage: React.FC = () => {
       <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
 
       <GradebookTopBar
-        courseName="Advanced React Patterns"
+        courseName={selectedCourse?.title || 'Select a course'}
         onBack={() => navigate('/instructor')}
         onExport={() => setExportOpen(true)}
         onSettings={() => navigate('/instructor/course/create')}
@@ -280,6 +223,35 @@ const GradebookPage: React.FC = () => {
         <Toolbar sx={{ minHeight: '72px !important' }} />
 
         <Box sx={{ p: { xs: 2, md: 3 } }}>
+          {/* Course Selector */}
+          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+            <FormControl size="small" sx={{ minWidth: 280 }}>
+              <InputLabel>Select Course</InputLabel>
+              <Select
+                value={selectedCourseId ?? ''}
+                label="Select Course"
+                onChange={(e) => setSelectedCourseId(e.target.value ? Number(e.target.value) : null)}
+              >
+                {coursesLoading ? (
+                  <MenuItem value="" disabled>
+                    <CircularProgress size={16} sx={{ mr: 1 }} /> Loading courses...
+                  </MenuItem>
+                ) : courses.length > 0 ? (
+                  courses.map((c) => (
+                    <MenuItem key={c.id} value={c.id}>{c.title}</MenuItem>
+                  ))
+                ) : (
+                  <MenuItem value="" disabled>No courses found</MenuItem>
+                )}
+              </Select>
+            </FormControl>
+            {submissionsLoading && selectedCourseId && (
+              <Typography variant="body2" color="text.secondary">
+                Loading submissions...
+              </Typography>
+            )}
+          </Box>
+
           {/* Summary Cards */}
           <GradebookSummaryCards
             classAverage={summaryStats.classAverage}
@@ -313,8 +285,8 @@ const GradebookPage: React.FC = () => {
             {/* Gradebook Table */}
             <GradebookTable
               students={filteredStudents}
-              gradedItems={sampleItems}
-              grades={sampleGrades}
+              gradedItems={gradedItems}
+              grades={grades}
               categories={gradingConfig.categories}
               gradingConfig={gradingConfig}
               onCellClick={(studentId, itemId) => console.log('Grade cell clicked:', studentId, itemId)}
@@ -337,7 +309,7 @@ const GradebookPage: React.FC = () => {
         onClose={() => setDetailStudentId(null)}
         student={detailStudent}
         grades={detailGrades}
-        gradedItems={sampleItems}
+        gradedItems={gradedItems}
         categories={gradingConfig.categories}
         gradingConfig={gradingConfig}
         finalGrade={detailFinalGrade}
