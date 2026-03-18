@@ -9,41 +9,47 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import LanguageIcon from '@mui/icons-material/Language';
 
-const CourseInstructor: React.FC = () => {
+interface CourseInstructorProps {
+  instructorId?: number;
+  name?: string;
+}
+
+const CourseInstructor: React.FC<CourseInstructorProps> = ({ name = 'Instructor' }) => {
+  const getInitials = (n: string) => n.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase();
+  
   return (
     <Box id="instructor" className="course-section" sx={{ mb: 8, scrollMarginTop: '140px' }}>
       <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: '#18181b' }}>Meet Your Instructor</Typography>
       <Paper elevation={0} sx={{ p: 4, border: '1px solid #e4e4e7', borderRadius: 3 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} alignItems="flex-start">
-          <Avatar sx={{ width: 120, height: 120, fontSize: '2.5rem', background: 'linear-gradient(135deg, #ffb74d, #fb923c)', fontWeight: 700 }}>MR</Avatar>
+          <Avatar sx={{ width: 120, height: 120, fontSize: '2.5rem', background: 'linear-gradient(135deg, #ffb74d, #fb923c)', fontWeight: 700 }}>
+            {name ? getInitials(name) : 'IN'}
+          </Avatar>
           <Box flex={1}>
-            <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5, color: '#ffa424', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>Michael Rodriguez</Typography>
-            <Typography sx={{ color: '#52525b', mb: 2 }}>Senior Software Engineer • React Specialist</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5, color: '#ffa424', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>{name}</Typography>
+            <Typography sx={{ color: '#52525b', mb: 2 }}>Instructor</Typography>
             
             <Stack direction="row" spacing={3} sx={{ mb: 3 }} flexWrap="wrap">
               <Stack direction="row" spacing={1} alignItems="center" sx={{ fontSize: '0.875rem', color: '#52525b' }}>
                 <StarIcon fontSize="small" sx={{ color: '#71717a' }} />
-                <Typography>4.8 Rating</Typography>
+                <Typography>-- Rating</Typography>
               </Stack>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ fontSize: '0.875rem', color: '#52525b' }}>
                 <CommentIcon fontSize="small" sx={{ color: '#71717a' }} />
-                <Typography>2,847 Reviews</Typography>
+                <Typography>-- Reviews</Typography>
               </Stack>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ fontSize: '0.875rem', color: '#52525b' }}>
                 <PeopleIcon fontSize="small" sx={{ color: '#71717a' }} />
-                <Typography>28,542 Students</Typography>
+                <Typography>-- Students</Typography>
               </Stack>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ fontSize: '0.875rem', color: '#52525b' }}>
                 <PlayCircleOutlineIcon fontSize="small" sx={{ color: '#71717a' }} />
-                <Typography>5 Courses</Typography>
+                <Typography>-- Courses</Typography>
               </Stack>
             </Stack>
 
             <Typography paragraph sx={{ color: '#3f3f46', lineHeight: 1.8 }}>
-              Michael is a Senior Software Engineer with over 10 years of experience building web applications at scale. He has worked at Google and Meta, where he contributed to React-based products used by millions of users daily.
-            </Typography>
-            <Typography paragraph sx={{ color: '#3f3f46', lineHeight: 1.8 }}>
-              He's passionate about teaching and has helped over 28,000 students improve their React skills. His teaching style focuses on practical, real-world applications rather than abstract theory.
+              Instructor bio will appear here.
             </Typography>
 
             <Stack direction="row" spacing={1} sx={{ mt: 3 }}>

@@ -38,6 +38,7 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
     setEnrollModalOpen(true);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const courses = [
     {
       category: 'Web Development',

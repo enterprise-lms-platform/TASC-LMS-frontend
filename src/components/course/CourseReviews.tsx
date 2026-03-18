@@ -73,7 +73,7 @@ const CourseReviews: React.FC<CourseReviewsProps> = ({ courseId }) => {
         </Box>
 
         <Box flex={1} maxWidth={400}>
-          {[5, 4, 3, 2, 1].map((star, i) => (
+          {[5, 4, 3, 2, 1].map((star) => (
             <Stack key={star} direction="row" alignItems="center" spacing={2} sx={{ mb: 1, cursor: 'pointer', '&:hover .MuiLinearProgress-bar': { bgcolor: '#ffa424' } }}>
               <Box display="flex" alignItems="center" width={50}>
                 <StarIcon fontSize="small" sx={{ color: '#71717a', mr: 0.5 }} />

@@ -5,16 +5,27 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ShareIcon from '@mui/icons-material/Share';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import type { PublicCourseDetail } from '../../types/types';
 
-const CoursePricingCard: React.FC = () => {
+interface CoursePricingCardProps {
+  course?: PublicCourseDetail;
+}
+
+const CoursePricingCard: React.FC<CoursePricingCardProps> = ({ course }) => {
+  const formatPrice = (price: string | undefined) => {
+    if (!price) return '0';
+    const num = parseFloat(price);
+    return isNaN(num) ? '0' : num.toFixed(2);
+  };
+
   return (
     <Box className="enrollment-card-sticky" sx={{ width: '100%', maxWidth: 360, bgcolor: 'white', borderRadius: 4, overflow: 'hidden', boxShadow: 6, display: { xs: 'none', lg: 'block' } }}>
       {/* Video Preview */}
       <Box sx={{ position: 'relative', cursor: 'pointer', '&:hover .preview-overlay': { opacity: 1 } }}>
         <Box
           component="img"
-          src="https://images.unsplash.com/photo-1616400619175-5beda3a17896?q=80&w=1074&auto=format&fit=crop"
-          alt="Course Preview"
+          src={course?.thumbnail || 'https://images.unsplash.com/photo-1616400619175-5beda3a17896?q=80&w=1074&auto=format&fit=crop'}
+          alt={course?.title || 'Course Preview'}
           sx={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }}
         />
         <Box
@@ -73,13 +84,20 @@ const CoursePricingCard: React.FC = () => {
       {/* Content */}
       <Box sx={{ p: 3 }}>
         <Stack direction="row" alignItems="baseline" spacing={1} sx={{ mb: 1 }}>
-          <Typography variant="h4" sx={{ fontWeight: 800, color: '#18181b' }}>$99.00</Typography>
-          <Typography sx={{ color: '#71717a', fontSize: '1rem', fontWeight: 500 }}>/ 6 months</Typography>
+          <Typography variant="h4" sx={{ fontWeight: 800, color: '#18181b' }}>${formatPrice(course?.discounted_price || course?.price)}</Typography>
+          {course?.discount_percentage ? (
+            <>
+              <Typography sx={{ color: '#71717a', fontSize: '1rem', fontWeight: 500, textDecoration: 'line-through' }}>${formatPrice(course.price)}</Typography>
+              <Chip label={`${course.discount_percentage}% OFF`} size="small" sx={{ bgcolor: '#fef3c7', color: '#d97706', fontWeight: 700, height: 24 }} />
+            </>
+          ) : (
+            <Typography sx={{ color: '#71717a', fontSize: '1rem', fontWeight: 500 }}>/ course</Typography>
+          )}
         </Stack>
         
         <Box sx={{ mb: 3 }}>
           <Chip 
-            label="Biannual Access Pass" 
+            label="Full Access" 
             size="small" 
             sx={{ 
               bgcolor: 'rgba(255, 164, 36, 0.15)', 
@@ -92,7 +110,7 @@ const CoursePricingCard: React.FC = () => {
 
         <Stack direction="row" alignItems="center" spacing={1} sx={{ color: '#10b981', mb: 3 }}>
           <AccessTimeIcon sx={{ fontSize: 18 }} />
-          <Typography sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Full access to all courses!</Typography>
+          <Typography sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Full access to all course content!</Typography>
         </Stack>
 
         <Stack spacing={2} sx={{ mb: 3 }}>
@@ -101,7 +119,7 @@ const CoursePricingCard: React.FC = () => {
             size="large" 
             fullWidth 
             startIcon={<ShoppingCartIcon />} 
-            href="/checkout"
+            href={`/checkout?course=${course?.slug || ''}`}
             sx={{ bgcolor: '#ffa424', fontWeight: 700, '&:hover': { bgcolor: '#f97316' } }}
           >
             Get Full Access

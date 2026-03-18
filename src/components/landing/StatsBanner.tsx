@@ -7,7 +7,7 @@ interface StatsBannerProps {
 }
 
 const StatsBanner: React.FC<StatsBannerProps> = ({ isMobile }) => {
-  const { data: statsData, isLoading } = useQuery({
+  const { data: statsData } = useQuery({
     queryKey: ['publicStats'],
     queryFn: () => publicStatsApi.getStats(),
   });

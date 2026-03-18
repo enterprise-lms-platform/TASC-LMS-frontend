@@ -259,14 +259,17 @@ const CourseStructurePage: React.FC = () => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDragStartLesson = (lessonId: number) => {
     setDraggedLessonId(lessonId);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDragEndLesson = () => {
     setDraggedLessonId(null);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDropModule = async (moduleId: number | string) => {
     if (!draggedLessonId) return;
     const targetModule = moduleId === 'ungrouped' ? null : Number(moduleId);

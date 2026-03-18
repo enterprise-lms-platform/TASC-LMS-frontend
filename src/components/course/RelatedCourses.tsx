@@ -1,7 +1,14 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Box, Typography, Grid, Paper, Stack, Rating } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { publicCourseApi, type PublicCourseParams } from '../../services/public.services';
 
-const courses = [
+interface RelatedCoursesProps {
+  categoryId?: number;
+}
+
+const defaultCourses = [
   {
     title: "Node.js API Development with Express & MongoDB",
     instructor: "Peter Ochieng",
@@ -28,12 +35,38 @@ const courses = [
   }
 ];
 
-const RelatedCourses: React.FC = () => {
+const RelatedCourses: React.FC<RelatedCoursesProps> = ({ categoryId }) => {
+  const navigate = useNavigate();
+  
+  const params: PublicCourseParams = {
+    page_size: 3,
+  };
+  if (categoryId) params.category = categoryId;
+
+  const { data: coursesData } = useQuery({
+    queryKey: ['relatedCourses', categoryId],
+    queryFn: () => publicCourseApi.getAll(params),
+    enabled: !!categoryId,
+  });
+
+  const apiData = coursesData?.data;
+  const courses = (apiData?.results?.length || 0) > 0 
+    ? (apiData?.results as any[] || []).slice(0, 3).map((c: any) => ({
+        title: c.title,
+        instructor: c.instructor_name,
+        rating: c.rating || 0,
+        reviews: c.rating_count || 0,
+        price: c.discounted_price || c.price || '0',
+        image: c.thumbnail || defaultCourses[0].image,
+        slug: c.slug,
+      }))
+    : defaultCourses;
+
   return (
     <Box id="related" className="course-section" sx={{ mb: 8 }}>
       <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: '#18181b' }}>Students Also Bought</Typography>
       <Grid container spacing={4}>
-        {courses.map((course, i) => (
+        {courses.map((course: any, i) => (
           <Grid key={i} size={{ xs: 12, md: 4 }}>
             <Paper 
               elevation={0}
@@ -45,6 +78,7 @@ const RelatedCourses: React.FC = () => {
                 transition: 'all 0.3s',
                 '&:hover': { transform: 'translateY(-4px)', boxShadow: 4 }
               }}
+              onClick={() => navigate(`/course-details?slug=${course.slug || ''}`)}
             >
               <Box component="img" src={course.image} alt={course.title} sx={{ width: '100%', height: 180, objectFit: 'cover' }} />
               <Box p={3}>
@@ -58,7 +92,6 @@ const RelatedCourses: React.FC = () => {
                     <Typography variant="body2" fontWeight={600} color="#f59e0b">{course.rating}</Typography>
                     <Typography variant="caption" color="text.secondary">({course.reviews})</Typography>
                   </Stack>
-                  <Typography fontWeight={700} color="#18181b">{course.price}</Typography>
                 </Stack>
               </Box>
             </Paper>
