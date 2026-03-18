@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
-import { useQuery } from '@tanstack/react-query';
 import { publicStatsApi, publicCategoryApi } from '../../services/public.services';
 
 interface CatalogueHeroProps {
@@ -40,23 +39,10 @@ const CatalogueHero: React.FC<CatalogueHeroProps> = ({ isMobile, onSearch }) => 
   const categories = categoriesData?.data?.results ?? [];
 
   const stats = [
-    { value: apiStats ? `${apiStats.courses.toLocaleString()}+` : '...', label: 'Courses' },
-    { value: apiStats ? `${apiStats.instructors.toLocaleString()}+` : '...', label: 'Expert Instructors' },
-    { value: apiStats ? `${apiStats.learners.toLocaleString()}+` : '...', label: 'Happy Learners' },
-    { value: apiStats ? `${apiStats.certificates.toLocaleString()}+` : '...', label: 'Certificates Earned' },
-  ];
-
-  const { data: statsData } = useQuery({
-    queryKey: ['publicStats'],
-    queryFn: () => publicStatsApi.getStats(),
-  });
-
-  const apiData = statsData?.data;
-  const stats = [
-    { value: apiData ? `${apiData.courses}+` : '...', label: 'Courses' },
-    { value: apiData ? `${apiData.instructors}+` : '...', label: 'Expert Instructors' },
-    { value: apiData ? `${apiData.learners}+` : '...', label: 'Happy Learners' },
-    { value: '4.8', label: 'Average Rating' },
+    { value: apiStats ? `${apiStats.courses}+` : '...', label: 'Courses' },
+    { value: apiStats ? `${apiStats.instructors}+` : '...', label: 'Expert Instructors' },
+    { value: apiStats ? `${apiStats.learners}+` : '...', label: 'Happy Learners' },
+    { value: apiStats ? `${apiStats.certificates}+` : '...', label: 'Certificates' },
   ];
 
   const handleSearch = () => {

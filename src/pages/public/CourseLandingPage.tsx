@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Container, Grid, useMediaQuery, useTheme, Typography, CircularProgress } from '@mui/material';
-import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Header from '../../components/landing/Header';
 import Footer from '../../components/landing/Footer';
@@ -14,7 +14,6 @@ import CourseReviews from '../../components/course/CourseReviews';
 import FaqSection from '../../components/business/FaqSection';
 import RelatedCourses from '../../components/course/RelatedCourses';
 import { publicCourseApi } from '../../services/public.services';
-import { CourseDetailContext } from '../../contexts/CourseDetailContext';
 import '../../styles/CourseLanding.css';
 
 const CourseLandingPage: React.FC = () => {
@@ -22,23 +21,16 @@ const CourseLandingPage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { slug } = useParams<{ slug: string }>();
-
-  const { data: courseData, isLoading, isError } = useQuery({
-    queryKey: ['publicCourse', slug],
-    queryFn: () => publicCourseApi.getBySlug(slug!).then((r) => r.data),
-    enabled: !!slug,
-  });
   const [searchParams] = useSearchParams();
   const courseSlug = searchParams.get('slug');
 
-  const { data: courseData, isLoading, error } = useQuery({
-    queryKey: ['course', courseSlug],
-    queryFn: () => publicCourseApi.getBySlug(courseSlug || ''),
+  const { data: courseData, isLoading, isError } = useQuery({
+    queryKey: ['publicCourse', courseSlug],
+    queryFn: () => publicCourseApi.getBySlug(courseSlug || '').then(r => r.data),
     enabled: !!courseSlug,
   });
 
-  const course = courseData?.data;
+  const course = courseData;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -57,7 +49,7 @@ const CourseLandingPage: React.FC = () => {
     );
   }
 
-  if (error || !course) {
+  if (isError || !course) {
     return (
       <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <Typography variant="h5" sx={{ color: '#27272a', mb: 1 }}>Course Not Found</Typography>
@@ -87,43 +79,41 @@ const CourseLandingPage: React.FC = () => {
           </Box>
         )}
 
-        {!slug && !isLoading && (
+        {!courseSlug && !isLoading && (
           <Box sx={{ py: 12, textAlign: 'center' }}>
             <Typography color="text.secondary" variant="h6">No course selected</Typography>
           </Box>
         )}
 
-        <CourseDetailContext.Provider value={courseData ?? null}>
-          {(courseData || !slug) && (
-            <>
-              <CourseHero course={course} />
+        {course && (
+          <>
+            <CourseHero course={course} />
 
-              <Container maxWidth="lg" sx={{ py: 6 }}>
-                <Grid container spacing={6}>
-                  {/* Main Content */}
-                  <Grid size={{ xs: 12, lg: 8 }}>
-                    <CourseNavigation />
-                    <CourseObjectives objectives={course.learning_objectives_list || []} />
-                    <CourseCurriculum courseId={course.id} />
-                    <CourseInstructor instructorId={course.instructor?.id} name={course.instructor_name} />
-                    <CourseReviews courseId={courseData?.id} courseId={course.id} />
-                    <Box id="faq" className="course-section" sx={{ scrollMarginTop: '140px', mb: 8 }}>
-                      <FaqSection />
-                    </Box>
-                    <RelatedCourses categoryId={course.category?.id} />
-                  </Grid>
-
-                  {/* Sticky Sidebar (Desktop) */}
-                  <Grid size={{ xs: 12, lg: 4 }} sx={{ display: { xs: 'none', lg: 'block' } }}>
-                    <Box sx={{ position: 'relative', height: '100%' }}>
-                      <CoursePricingCard />
-                    </Box>
-                  </Grid>
+            <Container maxWidth="lg" sx={{ py: 6 }}>
+              <Grid container spacing={6}>
+                {/* Main Content */}
+                <Grid size={{ xs: 12, lg: 8 }}>
+                  <CourseNavigation />
+                  <CourseObjectives objectives={course.learning_objectives_list || []} />
+                  <CourseCurriculum courseId={course.id} />
+                  <CourseInstructor name={course.instructor_name} />
+                  <CourseReviews courseId={course.id} />
+                  <Box id="faq" className="course-section" sx={{ scrollMarginTop: '140px', mb: 8 }}>
+                    <FaqSection />
+                  </Box>
+                  <RelatedCourses categoryId={course.category?.id} />
                 </Grid>
-              </Container>
-            </>
-          )}
-        </CourseDetailContext.Provider>
+
+                {/* Sticky Sidebar (Desktop) */}
+                <Grid size={{ xs: 12, lg: 4 }} sx={{ display: { xs: 'none', lg: 'block' } }}>
+                  <Box sx={{ position: 'relative', height: '100%' }}>
+                    <CoursePricingCard course={course} />
+                  </Box>
+                </Grid>
+              </Grid>
+            </Container>
+          </>
+        )}
       </Box>
 
       <Footer />
