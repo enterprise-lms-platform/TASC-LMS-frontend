@@ -116,17 +116,13 @@ These pages render but show fake data instead of real API responses. Each needs 
 - **What to do:** Wire to livestream detail + attendance API.
 - **Blocked?** No
 
-### 16. Instructor Course Preview Page
+### ~~16. Instructor Course Preview Page~~ — DONE
 - **File:** `src/pages/instructor/CoursePreviewPage.tsx`
-- **What's hardcoded:** `sampleModules[]` (2 modules + 6 lessons), `sampleReviews[]` (3 mock reviews)
-- **What to do:** Replace with real course modules/sessions and reviews data.
-- **Blocked?** Partially — no course reviews API exists
+- **Status:** Now fetches real modules from `useModules({ course: id })` and reviews from `courseReviewApi.getSummary()`. Sample data removed. Uses `useCourse` for course details. Completed 18 Mar 2026.
 
-### 17. Learner Course Detail Page
+### ~~17. Learner Course Detail Page~~ — DONE
 - **File:** `src/pages/learner/LearnerCourseDetailPage.tsx`
-- **What's hardcoded:** `sampleCourse` object (full course details)
-- **What to do:** Wire to `courseApi.getById()` with enrollment status.
-- **Blocked?** No — API exists
+- **Status:** Now fetches from `useCourse(courseId)` hook, modules from sessions data, and reviews from `courseReviewApi.getSummary()`. All child components wired to real API data. Sample course data and sample imports removed. Completed 18 Mar 2026.
 
 ### 18. Learner Course Catalog Page — KPIs
 - **File:** `src/pages/learner/LearnerCourseCatalogPage.tsx`
@@ -243,11 +239,9 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 - **What to do:** Fetch real metrics from backend.
 - **Blocked?** Yes — no public business stats endpoint
 
-### 36. Course Reviews Component — Fake Reviews
-- **File:** `src/components/course/CourseReviews.tsx` (lines 8-36)
-- **What's hardcoded:** 3 fake reviews with rating distribution (78%, 15%, etc.), overall 4.8 rating
-- **What to do:** Fetch real reviews from backend.
-- **Blocked?** Yes — no course reviews/ratings API exists
+### ~~36. Course Reviews Component — Fake Reviews~~ — DONE
+- **File:** `src/components/learner/course/CourseReviews.tsx` (lines 8-36)
+- **Status:** Component now accepts props for reviews and rating distribution. Sample data exports removed. Real data is passed from parent components via `courseReviewApi.getSummary()`. Completed 18 Mar 2026.
 
 ### 37. Business Page FAQ — Static Content
 - **File:** `src/components/business/FaqSection.tsx` (lines 6-31)
@@ -255,17 +249,11 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 - **What to do:** Move to CMS or API for easy updates without code changes.
 - **Blocked?** Low priority — acceptable as static for now
 
-### 38. Course Details Page — Entire Page Hardcoded (`/course-details`)
-The `CourseLandingPage` at `/course-details` is entirely static. Every child component has fake data:
-- **CourseHero.tsx** — Hardcoded title ("Advanced React Patterns"), subtitle, badges ("Bestseller", "Updated Jan 2026"), category, rating (4.8), enrollment count (28,542), instructor name
-- **CoursePricingCard.tsx** — Hardcoded price ($149.99 / $199.99), includes list, "30-Day Money-Back Guarantee", preview image from Unsplash
-- **CourseCurriculum.tsx** — 4 hardcoded modules with fake lessons, durations, types
-- **CourseObjectives.tsx** — 8 hardcoded learning objectives
-- **CourseInstructor.tsx** — Hardcoded instructor "Michael Rodriguez" with fake stats (4.8 rating, 2,847 reviews, 28,542 students, 5 courses)
-- **CourseReviews.tsx** — Already tracked as #36
-- **RelatedCourses.tsx** — 3 hardcoded courses with Unsplash/Pexels images and fake prices
-- **What to do:** This page needs a `courseId` or `slug` URL param. Fetch course detail from `publicCourseApi.getById()` or `courseApi.getById()` and pass data down to all child components. Currently takes no props or params at all.
-- **Blocked?** No — course detail API exists. But the page needs restructuring to accept a course ID.
+### ~~38. Course Details Page — Entire Page Hardcoded (`/course-details`)~~ — PARTIALLY DONE
+- **File:** `src/pages/public/CourseLandingPage.tsx`
+- **Status (Public page):** Route changed from `/course-details` to `/course-details/:slug`. Page now fetches via `publicCourseApi.getBySlug(slug)` with loading/error states. Created `CourseDetailContext` to share data with child components. Completed 17 Mar 2026.
+- **Still pending (public page child components):** CourseHero, CoursePricingCard, CourseCurriculum, CourseObjectives, CourseInstructor, RelatedCourses still render hardcoded data. Need to consume context.
+- **Note:** LearnerCourseDetailPage (`/learner/course/:courseId`) is now fully wired - see #17.
 
 ### 39. Catalogue Filters Sidebar — Hardcoded Filter Options
 - **File:** `src/components/catalogue/FiltersSidebar.tsx` (lines 46-59)
@@ -376,6 +364,14 @@ The `CourseLandingPage` at `/course-details` is entirely static. Every child com
 
 | Item | Date | Commit |
 |------|------|--------|
+| LearnerCourseDetailPage fully wired to real API (course, modules, reviews) | 18 Mar 2026 | — |
+| CoursePreviewPage wired to real modules and reviews API | 18 Mar 2026 | — |
+| CourseReviews component: removed sample data, accepts real props | 18 Mar 2026 | — |
+| CourseCurriculum, WhatYouLearn, CourseRequirements, CourseInstructor: removed sample data | 18 Mar 2026 | — |
+| Created `usePublicCourse` hook for course reviews API | 18 Mar 2026 | — |
+| Course publish flow wired to `useSubmitCourseForApproval()` | 17 Mar 2026 | — |
+| Learner assignments wired to `submissionApi.getAll()` | 17 Mar 2026 | — |
+| Bulk import wired to `bulkImportApi` with drag-drop upload | 17 Mar 2026 | — |
 | Drag-and-drop reordering (modules + lessons) | 16 Mar 2026 | `8ed0df3` |
 | Quiz player (timer, attempts, grading, all 6 types) | 16 Mar 2026 | `8ed0df3` |
 | Video resume (localStorage playback position) | 16 Mar 2026 | `8ed0df3` |
