@@ -1,7 +1,9 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box, Toolbar, CssBaseline, Paper, Typography, Chip,
   ToggleButtonGroup, ToggleButton, TextField, Stack,
+  CircularProgress,
 } from '@mui/material';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
@@ -480,7 +482,7 @@ const ContentUploadPage: React.FC = () => {
             {/* Right Column */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <UploadTipsCard contentType={contentType} />
-              <StorageInfoCard used={0} total={10} />  {/* TODO: Replace with real storage quota from backend API when available */}
+              <StorageInfoCard wired />              {/* Right Column */}
               <RecentUploadsCard uploads={sampleRecentUploads} />
             </Box>
           </Box>
