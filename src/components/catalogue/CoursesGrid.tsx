@@ -40,6 +40,7 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({ onMobileFilterOpen, category,
   const apiData = (coursesData as any)?.data;
   const courses: Course[] = (apiData?.results || []).map((course: any) => ({
     id: String(course.id),
+    slug: course.slug,
     title: course.title,
     category: course.category?.name || 'General',
     instructor: course.instructor_name,

@@ -1,6 +1,14 @@
-// import { Link } from '@mui/material';
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+
+const roleDashboardMap: Record<string, string> = {
+  learner: '/learner',
+  instructor: '/instructor',
+  lms_manager: '/manager',
+  finance: '/finance',
+  tasc_admin: '/superadmin',
+};
 
 interface HeaderProps {
   scrolled: boolean;
@@ -9,6 +17,8 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ scrolled, onMobileMenuToggle, isMobile }) => {
+  const { user, isAuthenticated, logout } = useAuth();
+  const dashboardPath = user?.role ? (roleDashboardMap[user.role] || '/learner') : '/learner';
 
   return (
     <header
@@ -75,39 +85,78 @@ const Header: React.FC<HeaderProps> = ({ scrolled, onMobileMenuToggle, isMobile 
 
           {/* Desktop Actions */}
           {!isMobile && (
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <Link
-                to="/login"
-                style={{
-                  padding: '8px 20px',
-                  border: '1px solid #d4d4d8',
-                  backgroundColor: 'white',
-                  color: '#3f3f46',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                  textDecoration: 'none',
-                  display: 'inline-block'
-                }}
-              >
-                Log In
-              </Link>
-              <Link
-                to="/register"
-                style={{
-                  padding: '8px 20px',
-                  backgroundColor: '#ffa424',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                  textDecoration: 'none',
-                  display: 'inline-block'
-                }}
-              >
-                Start Free Trial
-              </Link>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              {isAuthenticated && user ? (
+                <>
+                  <Link
+                    to={dashboardPath}
+                    style={{
+                      padding: '8px 20px',
+                      backgroundColor: '#ffa424',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: 500,
+                      textDecoration: 'none',
+                      display: 'inline-block',
+                    }}
+                  >
+                    My Dashboard
+                  </Link>
+                  <button
+                    onClick={() => logout()}
+                    style={{
+                      padding: '8px 20px',
+                      border: '1px solid #d4d4d8',
+                      backgroundColor: 'white',
+                      color: '#3f3f46',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: 500,
+                      fontFamily: 'inherit',
+                      fontSize: 'inherit',
+                    }}
+                  >
+                    Log Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    style={{
+                      padding: '8px 20px',
+                      border: '1px solid #d4d4d8',
+                      backgroundColor: 'white',
+                      color: '#3f3f46',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: 500,
+                      textDecoration: 'none',
+                      display: 'inline-block',
+                    }}
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    to="/register"
+                    style={{
+                      padding: '8px 20px',
+                      backgroundColor: '#ffa424',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: 500,
+                      textDecoration: 'none',
+                      display: 'inline-block',
+                    }}
+                  >
+                    Start Free Trial
+                  </Link>
+                </>
+              )}
             </div>
           )}
 

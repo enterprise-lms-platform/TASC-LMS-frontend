@@ -156,7 +156,7 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
             <div
               key={course.id || idx}
               className="course-card"
-              onClick={() => navigate(`/course-details?slug=${course.slug}`)}
+              onClick={() => navigate(`/course-details/${course.slug}`)}
               style={{
                 borderRadius: '16px',
                 overflow: 'hidden',

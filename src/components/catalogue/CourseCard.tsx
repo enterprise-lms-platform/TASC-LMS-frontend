@@ -10,6 +10,7 @@ import StarIcon from '@mui/icons-material/Star';
 
 export interface Course {
   id: string;
+  slug?: string;
   title: string;
   category: string;
   instructor: string;
@@ -73,7 +74,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEnroll }) => {
         </Typography>
 
         {/* Title */}
-        <Link to="/course-details" style={{ textDecoration: 'none', color: 'inherit' }}>
+        <Link to={`/course-details/${course.slug || course.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
           <Typography
             sx={{
               fontSize: '1.125rem',

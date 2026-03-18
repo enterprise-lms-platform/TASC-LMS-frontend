@@ -18,7 +18,7 @@ import type { ModuleData } from '../../components/instructor/course-structure/Mo
 import type { LessonData } from '../../components/instructor/course-structure/LessonItem';
 import type { SaveStatus } from '../../components/instructor/course-structure/StructureFooter';
 import type { CourseHeaderData } from '../../components/instructor/course-structure/CourseHeaderCard';
-import { useCourse, useSessions, useCreateSession, useModules, useCreateModule, usePartialUpdateSession, usePartialUpdateModule } from '../../hooks/useCatalogue';
+import { useCourse, useSessions, useCreateSession, useModules, useCreateModule, usePartialUpdateSession, usePartialUpdateModule, useSubmitCourseForApproval } from '../../hooks/useCatalogue';
 import { sessionApi } from '../../services/catalogue.services';
 import type { SessionType, Session, Module } from '../../types/types';
 import type { LessonType } from '../../components/instructor/course-structure/LessonItem';
@@ -190,9 +190,11 @@ const CourseStructurePage: React.FC = () => {
   const [activeModuleId, setActiveModuleId] = useState<number | null>(null);
   const [draggedLessonId, setDraggedLessonId] = useState<number | null>(null);
   const [snackError, setSnackError] = useState<string | null>(null);
+  const [snackSuccess, setSnackSuccess] = useState<string | null>(null);
 
   const updateSession = usePartialUpdateSession();
   const updateModule = usePartialUpdateModule();
+  const submitForApproval = useSubmitCourseForApproval();
 
   const { data: sessions } = useSessions(id ? { course: id } : undefined);
   const createSession = useCreateSession();
@@ -631,7 +633,16 @@ const CourseStructurePage: React.FC = () => {
   };
 
   const handlePublish = () => {
-    // TODO: implement publish flow
+    if (!id) return;
+    if (!window.confirm('Submit this course for approval? It will be reviewed before publishing.')) return;
+    submitForApproval.mutate(id, {
+      onSuccess: () => {
+        setSnackSuccess('Course submitted for approval successfully!');
+      },
+      onError: (err) => {
+        setSnackError(getErrorMessage(err, 'Failed to submit course for approval. Please try again.'));
+      },
+    });
   };
 
   const handleSettings = () => {
@@ -783,6 +794,7 @@ const CourseStructurePage: React.FC = () => {
       />
 
       <FeedbackSnackbar message={snackError} onClose={() => setSnackError(null)} />
+      <FeedbackSnackbar message={snackSuccess} onClose={() => setSnackSuccess(null)} severity="success" />
     </Box>
   );
 };

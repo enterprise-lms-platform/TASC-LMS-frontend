@@ -1,5 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+
+const roleDashboardMap: Record<string, string> = {
+  learner: '/learner',
+  instructor: '/instructor',
+  lms_manager: '/manager',
+  finance: '/finance',
+  tasc_admin: '/superadmin',
+};
 
 interface MobileDrawerProps {
   open: boolean;
@@ -7,6 +16,9 @@ interface MobileDrawerProps {
 }
 
 const MobileDrawer: React.FC<MobileDrawerProps> = ({ open, onClose }) => {
+  const { user, isAuthenticated, logout } = useAuth();
+  const dashboardPath = user?.role ? (roleDashboardMap[user.role] || '/learner') : '/learner';
+
   const menuItems = [
     { label: 'Courses', href: '#courses', icon: 'book-open' },
     { label: 'Pricing', href: '#pricing', icon: 'tag' },
@@ -142,58 +154,88 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ open, onClose }) => {
 
         {/* Action Buttons */}
         <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <Link
-            to="/login"
-            style={{
-              padding: '12px 16px',
-              backgroundColor: 'white',
-              color: '#ffa424',
-              border: '2px solid #ffa424',
-              borderRadius: '8px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              textAlign: 'center',
-              textDecoration: 'none',
-              display: 'block'
-            }}
-            onMouseEnter={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              target.style.backgroundColor = '#fff9f5';
-            }}
-            onMouseLeave={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              target.style.backgroundColor = 'white';
-            }}
-          >
-            Sign In
-          </Link>
-          <Link
-            to="/register"
-            style={{
-              padding: '12px 16px',
-              backgroundColor: '#ffa424',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              textAlign: 'center',
-              textDecoration: 'none',
-              display: 'block'
-            }}
-            onMouseEnter={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              target.style.backgroundColor = '#f97316';
-            }}
-            onMouseLeave={(e) => {
-              const target = e.currentTarget as HTMLElement;
-              target.style.backgroundColor = '#ffa424';
-            }}
-          >
-            Start Learning Free
-          </Link>
+          {isAuthenticated && user ? (
+            <>
+              <Link
+                to={dashboardPath}
+                onClick={onClose}
+                style={{
+                  padding: '12px 16px',
+                  backgroundColor: '#ffa424',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  textAlign: 'center',
+                  textDecoration: 'none',
+                  display: 'block',
+                }}
+              >
+                My Dashboard
+              </Link>
+              <button
+                onClick={() => { logout(); onClose(); }}
+                style={{
+                  padding: '12px 16px',
+                  backgroundColor: 'white',
+                  color: '#ffa424',
+                  border: '2px solid #ffa424',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  textAlign: 'center',
+                  fontFamily: 'inherit',
+                  fontSize: 'inherit',
+                }}
+              >
+                Log Out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                onClick={onClose}
+                style={{
+                  padding: '12px 16px',
+                  backgroundColor: 'white',
+                  color: '#ffa424',
+                  border: '2px solid #ffa424',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  textAlign: 'center',
+                  textDecoration: 'none',
+                  display: 'block',
+                }}
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register"
+                onClick={onClose}
+                style={{
+                  padding: '12px 16px',
+                  backgroundColor: '#ffa424',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  textAlign: 'center',
+                  textDecoration: 'none',
+                  display: 'block',
+                }}
+              >
+                Start Learning Free
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </>

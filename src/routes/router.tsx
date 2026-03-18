@@ -202,7 +202,7 @@ export const createAppRouter = (queryClient: QueryClient) => {
       element: <ForBusinessPage />,
     },
     {
-      path: '/course-details',
+      path: '/course-details/:slug',
       element: <CourseLandingPage />,
     },
     {

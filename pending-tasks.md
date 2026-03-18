@@ -1,6 +1,6 @@
 # TASC LMS Frontend — Pending Tasks
 
-**Last updated:** 17 March 2026 (updated with latest backend endpoint availability)
+**Last updated:** 17 March 2026 (night — wired CoursePublish, LearnerAssignments, BulkImport, CourseDetailsPage)
 **Repo:** `TASC-LMS-frontend`
 
 
@@ -51,20 +51,13 @@ These pages render but show fake data instead of real API responses. Each needs 
 - **Backend dependency:** No cross-org analytics endpoints exist.
 - **Blocked?** Yes — needs backend aggregation endpoints
 
-### 6. Manager Bulk Import Page
+### ~~6. Manager Bulk Import Page~~ — DONE
 - **File:** `src/pages/manager/ManagerBulkImportPage.tsx`
-- **What's hardcoded:** `columnMappings[]`, `importHistory[]` (lines 46-61)
-- **What to do:** Implement CSV parsing (papaparse), validate schema, POST to backend import endpoint, display per-row success/failure.
-- **Backend status:** `POST /api/v1/superadmin/users/bulk_import/` is now fully implemented with CSV validation, error tracking, and detailed response. Also `GET /api/v1/superadmin/users/csv_template/` returns a downloadable CSV template.
-- **Note:** Backend CSV columns are `email,first_name,last_name,role,department,phone_number` — verify this matches the frontend's expected format (`full_name,email_address,user_role,department,manager_email`). May need alignment.
-- **Blocked?** No — backend is ready. Frontend wiring needed.
+- **Status:** Wired to `bulkImportApi.uploadCsv()` and `bulkImportApi.downloadTemplate()` in `superadmin.services.ts`. Drag-and-drop file upload, real CSV upload via `useMutation`, template download, success/error feedback with error details table. Column mappings updated to match backend (`email,first_name,last_name,role,department,phone_number`). Removed hardcoded import history. Completed 17 Mar 2026.
 
-### 7. Content Upload Page — Storage Quota
+### ~~7. Content Upload Page — Storage Quota~~ — DONE
 - **File:** `src/pages/instructor/ContentUploadPage.tsx`
-- **What's hardcoded:** Storage info shows `used={0} total={10}` (line ~483)
-- **What to do:** Query real storage quota from `GET /api/v1/uploads/quota/` which returns `{ used_bytes, total_bytes }`.
-- **Backend status:** Endpoint now exists (`StorageQuotaView`).
-- **Blocked?** No — backend is ready
+- **Status:** Now fetches from `quotaApi.getQuota()` and converts `used_bytes`/`total_bytes` to GB for StorageInfoCard. Completed 17 Mar 2026.
 
 ### 8. Learner Certificates Page — Mock Fallback
 - **File:** `src/pages/learner/LearnerCertificatesPage.tsx`
@@ -99,11 +92,9 @@ These pages render but show fake data instead of real API responses. Each needs 
 - **What to do:** Replace with real enrollment data filtered by instructor's courses.
 - **Blocked?** No — enrollment API exists
 
-### 13. Instructor Notifications Page
+### ~~13. Instructor Notifications Page~~ — DONE
 - **File:** `src/pages/instructor/InstructorNotificationsPage.tsx`
-- **What's hardcoded:** `sampleNotifications[]` (10 mock notification objects)
-- **What to do:** Wire to `notificationApi.getAll()` (same pattern as LearnerNotificationsPage).
-- **Blocked?** No — endpoint exists
+- **Status:** Already wired to `notificationApi.getAll()` with mark-read and mark-all-read mutations. No hardcoded data remaining.
 
 ### 14. Instructor Workshops Page
 - **File:** `src/pages/instructor/WorkshopsPage.tsx`
@@ -190,11 +181,9 @@ These pages render but show fake data instead of real API responses. Each needs 
 
 These render on public-facing pages visible to all visitors. Hardcoded numbers and fake courses hurt credibility.
 
-### 27. Catalogue Courses Grid — Hardcoded Course Listings
-- **File:** `src/components/catalogue/CoursesGrid.tsx` (lines 13-23)
-- **What's hardcoded:** 9 fake courses with titles, instructors, ratings, prices. Also hardcoded "713" total results count.
-- **What to do:** Fetch from `publicCourseApi.getAll()` with pagination. The API exists.
-- **Blocked?** No
+### ~~27. Catalogue Courses Grid~~ — DONE
+- **File:** `src/components/catalogue/CoursesGrid.tsx`
+- **Status:** Now fetches from `publicCourseApi.getAll()` with real ratings, rating counts, and paginated total. Completed in `d42ae05`.
 
 ### 28. Catalogue Featured Categories — Fake Course Counts
 - **File:** `src/components/catalogue/FeaturedCategories.tsx` (lines 13-22)
@@ -202,24 +191,17 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 - **What to do:** Fetch from `publicCategoryApi.getAll()` and use real course counts.
 - **Blocked?** No — API exists
 
-### 29. Landing Page Stats Banner — Fake Platform Metrics
-- **File:** `src/components/landing/StatsBanner.tsx` (lines 8-13)
-- **What's hardcoded:** "1,000+ Courses", "50,000+ Active Learners", "200+ Instructors", "25,000+ Certificates"
-- **What to do:** Fetch real counts from `GET /api/v1/public/stats/` which returns `{ courses, learners, instructors, certificates }`.
-- **Backend status:** Endpoint now exists and returns live counts.
-- **Blocked?** No — backend is ready
+### ~~29. Landing Page Stats Banner~~ — DONE
+- **File:** `src/components/landing/StatsBanner.tsx`
+- **Status:** Now fetches from `publicStatsApi.getStats()` and displays real platform metrics. Completed in `d42ae05`.
 
-### 30. Landing Page Categories — Fake Course Counts
-- **File:** `src/components/landing/Categories.tsx` (lines 8-17)
-- **What's hardcoded:** 8 categories with fake counts (e.g., "42 courses")
-- **What to do:** Fetch from `publicCategoryApi.getAll()`.
-- **Blocked?** No
+### ~~30. Landing Page Categories~~ — DONE
+- **File:** `src/components/landing/Categories.tsx`
+- **Status:** Now fetches from `publicCategoryApi.getAll()` with real `courses_count`. Completed in `d42ae05`.
 
-### 31. Landing Page Featured Courses — Fake Courses
-- **File:** `src/components/landing/Courses.tsx` (lines 19-52)
-- **What's hardcoded:** 3 featured courses with fake instructors, ratings, prices
-- **What to do:** Fetch from `publicCourseApi.getAll()` with `featured=true` filter.
-- **Blocked?** No
+### ~~31. Landing Page Featured Courses~~ — DONE
+- **File:** `src/components/landing/Courses.tsx`
+- **Status:** Now fetches from `publicCourseApi.getAll({ featured: true })` with real ratings and review counts. Completed in `d42ae05`.
 
 ### 32. Landing Page Pricing — Hardcoded Price
 - **File:** `src/components/landing/Pricing.tsx` (lines 137-170)
@@ -227,12 +209,9 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 - **What to do:** Fetch from subscription plans API.
 - **Blocked?** No — subscription API exists
 
-### 33. Landing Page Trusted By — Fake Company Names
-- **File:** `src/components/landing/TrustedBy.tsx` (lines 8-14)
-- **What's hardcoded:** 5 fake companies ("Acme Corp", "Global Tech", etc.)
-- **What to do:** Fetch from `GET /api/v1/public/clients/` which returns `[{ name, logo_url }]`.
-- **Backend status:** Endpoint now exists.
-- **Blocked?** No — backend is ready
+### ~~33. Landing Page Trusted By~~ — DONE
+- **File:** `src/components/landing/TrustedBy.tsx`
+- **Status:** Now fetches from `publicClientsApi.getClients()`. Hardcoded fallback companies removed. Completed in `d42ae05`.
 
 ### 34. Business Page Pricing — Hardcoded Plans
 - **File:** `src/components/business/PricingSection.tsx` (lines 20-76)
@@ -259,30 +238,20 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 - **What to do:** Move to CMS or API for easy updates without code changes.
 - **Blocked?** Low priority — acceptable as static for now
 
-### 38. Course Details Page — Entire Page Hardcoded (`/course-details`)
-The `CourseLandingPage` at `/course-details` is entirely static. Every child component has fake data:
-- **CourseHero.tsx** — Hardcoded title ("Advanced React Patterns"), subtitle, badges ("Bestseller", "Updated Jan 2026"), category, rating (4.8), enrollment count (28,542), instructor name
-- **CoursePricingCard.tsx** — Hardcoded price ($149.99 / $199.99), includes list, "30-Day Money-Back Guarantee", preview image from Unsplash
-- **CourseCurriculum.tsx** — 4 hardcoded modules with fake lessons, durations, types
-- **CourseObjectives.tsx** — 8 hardcoded learning objectives
-- **CourseInstructor.tsx** — Hardcoded instructor "Michael Rodriguez" with fake stats (4.8 rating, 2,847 reviews, 28,542 students, 5 courses)
-- **CourseReviews.tsx** — Now unblocked (see #36)
-- **RelatedCourses.tsx** — 3 hardcoded courses with Unsplash/Pexels images and fake prices
-- **What to do:** This page needs a `courseId` or `slug` URL param. Fetch course detail from `publicCourseApi.getById(slug)` (supports slug lookup) and pass data down to all child components. Currently takes no props or params at all.
-- **Blocked?** No — course detail API exists, reviews API exists. Page needs restructuring to accept a course ID/slug.
+### 38. Course Details Page — Partially Done (page-level wiring complete)
+- **File:** `src/pages/public/CourseLandingPage.tsx`
+- **Status:** Route changed from `/course-details` to `/course-details/:slug`. Page now fetches via `publicCourseApi.getBySlug(slug)` with loading/error states. Created `CourseDetailContext` to share data with child components. Updated CourseCard and Courses.tsx links to use slug-based URLs. `courseId` prop now passed to CourseReviews. Completed 17 Mar 2026.
+- **Still pending:** Child components (CourseHero, CoursePricingCard, CourseCurriculum, CourseObjectives, CourseInstructor, RelatedCourses) still render hardcoded data. Each needs to consume `useCourseDetail()` context and display real data. This is a separate task per component.
 
-### 39. Catalogue Filters Sidebar — Hardcoded Filter Options
-- **File:** `src/components/catalogue/FiltersSidebar.tsx` (lines 46-59)
-- **What's hardcoded:** `categories[]` (6 items with fake counts), `levels[]` (3 items with fake counts), price range slider
-- **What to do:** Fetch categories from `publicCategoryApi.getAll()`, compute level counts from course data.
-- **Blocked?** No
+### 39. Catalogue Filters Sidebar — Partially Done
+- **File:** `src/components/catalogue/FiltersSidebar.tsx`
+- **Status:** Categories now fetched from `publicCategoryApi.getAll()` (completed in `d42ae05`).
+- **Still hardcoded:** `levels[]` counts (Beginner/Intermediate/Advanced with `count: 0`), price range slider.
+- **What to do:** Compute level counts from course data or backend filter aggregation.
 
-### 40. Catalogue Hero — Hardcoded Stats
-- **File:** `src/components/catalogue/CatalogueHero.tsx` (lines 22-27)
-- **What's hardcoded:** `stats[]` with "1,000+ Courses", "200+ Expert Instructors", "50K+ Happy Learners", "4.8 Average Rating"
-- **What to do:** Fetch from `GET /api/v1/public/stats/`.
-- **Backend status:** Endpoint now exists.
-- **Blocked?** No — backend is ready
+### ~~40. Catalogue Hero — Hardcoded Stats~~ — DONE
+- **File:** `src/components/catalogue/CatalogueHero.tsx`
+- **Status:** Now fetches from `publicStatsApi.getStats()` for stats bar + badge chip, and `publicCategoryApi.getAll()` for category dropdown. Removed `console.log` debug. Completed 17 Mar 2026.
 
 ### 41. Catalogue Pagination — Hardcoded Page Count
 - **File:** `src/components/catalogue/Pagination.tsx` (line 8)
@@ -290,15 +259,9 @@ The `CourseLandingPage` at `/course-details` is entirely static. Every child com
 - **What to do:** Compute from total results count in paginated API response.
 - **Blocked?** No
 
-### 42. Public Header — No Auth-Aware State
+### ~~42. Public Header — No Auth-Aware State~~ — DONE
 - **Files:** `src/components/landing/Header.tsx`, `src/components/landing/MobileDrawer.tsx`
-- **Issue:** Header always shows "Log In" / "Start Free Trial" buttons regardless of whether the user is authenticated. When a logged-in user visits `/`, `/courses`, `/course-details`, or `/for-business`, they see login/register buttons instead of their profile avatar, dashboard link, and role-appropriate navigation.
-- **What to do:**
-  - Import `useAuth()` in Header and MobileDrawer
-  - If `isAuthenticated`: show profile avatar/name, "My Dashboard" link (route based on `user.role`), and "Log Out" button
-  - If not authenticated: show current "Log In" / "Start Free Trial" buttons
-  - Also consider showing "My Courses" link for logged-in learners
-- **Blocked?** No — `useAuth()` hook and user context already exist
+- **Status:** Both now use `useAuth()`. Authenticated users see "My Dashboard" (role-based routing) + "Log Out". Unauthenticated users see original "Log In" / "Start Free Trial". Completed 17 Mar 2026.
 
 ---
 
@@ -347,17 +310,14 @@ The `CourseLandingPage` at `/course-details` is entirely static. Every child com
 - **What to do:** Implement bulk delete, bulk move, bulk status change for lessons.
 - **Blocked?** No
 
-### 48. Course Publish Flow
-- **File:** `src/pages/instructor/CourseStructurePage.tsx` (line 631)
-- **Comment:** `// TODO: implement publish flow`
-- **What to do:** Implement status change from draft to submitted/published, trigger approval workflow.
-- **Blocked?** No — approval API exists
+### ~~48. Course Publish Flow~~ — DONE
+- **File:** `src/pages/instructor/CourseStructurePage.tsx`
+- **Status:** `handlePublish()` now uses `useSubmitCourseForApproval()` hook with confirmation dialog, success snackbar, and error handling via `FeedbackSnackbar`. Completed 17 Mar 2026.
 
-### 49. Learner Assignment Submission UI
+### ~~49. Learner Assignment Submission UI~~ — Partially Done
 - **File:** `src/pages/learner/LearnerAssignmentsPage.tsx`
-- **What to do:** Wire to real API, implement file upload modal for submissions using existing presign flow, wire Submit button to POST endpoint.
-- **Backend dependency:** Submission endpoints exist.
-- **Blocked?** No
+- **Status:** Replaced all hardcoded data (`kpis[]`, `assignments[]`) with real `submissionApi.getAll()` fetch. KPIs computed from live data. Status mapping, grade labels, loading state all wired. Completed 17 Mar 2026.
+- **Still pending:** Submit/Late Submit buttons don't yet open a file upload modal — need file picker + presign upload flow for actual submission creation via `useCreateSubmission()`.
 
 ### 50. Learner Certificates — Real Data
 - **File:** `src/pages/learner/LearnerCertificatesPage.tsx`
@@ -386,14 +346,12 @@ Multiple pages have `console.log` statements acting as placeholder click handler
 - `src/pages/learner/LearnerCourseDetailPage.tsx:166` — "View instructor profile" stub
 - `src/pages/learner/LearnerCourseDetailPage.tsx:174` — "Write review" stub
 - `src/pages/learner/LearnerCourseCatalogPage.tsx:46,54,58` — enroll/browse/view stubs
-- `src/components/catalogue/CatalogueHero.tsx:106` — "Typing:" on search input (debug log)
+- ~~`src/components/catalogue/CatalogueHero.tsx:106` — "Typing:" on search input (debug log)~~ — removed
 - **What to do:** Replace each with real functionality or remove. The `onEnroll`, `onExport`, `onView` stubs are user-facing dead buttons.
 
-### 53. Unread Count Badge in Sidebar
-- **File:** Learner `Sidebar.tsx`
-- **Issue:** No live unread notification count badge.
-- **What to do:** Add `useQuery` for `notificationApi.getUnreadCount()` and display badge on Notifications nav item.
-- **Blocked?** No — endpoint exists
+### ~~53. Unread Count Badge in Sidebar~~ — DONE
+- **File:** `src/components/instructor/Sidebar.tsx`
+- **Status:** Instructor sidebar now fetches real unread count via `notificationApi.getUnreadCount()` (polls every 60s). Badge shows actual count instead of hardcoded `5`. Completed 17 Mar 2026.
 
 ### 54. Type Safety — `as any` Casts
 Several files use `as any` to work around type mismatches. These should be fixed with proper typing:
@@ -409,6 +367,16 @@ Several files use `as any` to work around type mismatches. These should be fixed
 
 | Item | Date | Commit |
 |------|------|--------|
+| Course publish flow: `handlePublish()` wired to `useSubmitCourseForApproval()` | 17 Mar 2026 | — |
+| Learner assignments: replaced hardcoded data with `submissionApi.getAll()` | 17 Mar 2026 | — |
+| Bulk import: drag-drop CSV upload + template download via `bulkImportApi` | 17 Mar 2026 | — |
+| Course details page: slug route, `publicCourseApi.getBySlug()`, CourseDetailContext | 17 Mar 2026 | — |
+| CatalogueHero: wired stats + categories to real APIs, removed console.log | 17 Mar 2026 | — |
+| ContentUploadPage: wired storage quota to `quotaApi.getQuota()` | 17 Mar 2026 | — |
+| Instructor Sidebar: real unread badge via `notificationApi.getUnreadCount()` | 17 Mar 2026 | — |
+| Header + MobileDrawer: auth-aware (My Dashboard / Log Out for logged-in users) | 17 Mar 2026 | — |
+| Wired 6 public/landing components to real APIs (CoursesGrid, StatsBanner, Categories, Courses, TrustedBy, FiltersSidebar) | 17 Mar 2026 | `d42ae05` |
+| Fixed public service types (paginated responses for categories/courses) | 17 Mar 2026 | `d42ae05` |
 | Fix TypeScript build errors (3 files) | 17 Mar 2026 | `28b5fe7` |
 | Drag-and-drop reordering (modules + lessons) | 16 Mar 2026 | `8ed0df3` |
 | Quiz player (timer, attempts, grading, all 6 types) | 16 Mar 2026 | `8ed0df3` |

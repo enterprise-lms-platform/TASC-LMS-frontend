@@ -12,7 +12,8 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
-import { publicStatsApi } from '../../services/public.services';
+import { useQuery } from '@tanstack/react-query';
+import { publicStatsApi, publicCategoryApi } from '../../services/public.services';
 
 interface CatalogueHeroProps {
   isMobile: boolean;
@@ -24,6 +25,26 @@ const popularSearches = ['Python', 'React', 'Machine Learning', 'AWS', 'UX Desig
 const CatalogueHero: React.FC<CatalogueHeroProps> = ({ isMobile, onSearch }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [category, setCategory] = React.useState('');
+
+  const { data: statsData } = useQuery({
+    queryKey: ['publicStats'],
+    queryFn: () => publicStatsApi.getStats(),
+  });
+
+  const { data: categoriesData } = useQuery({
+    queryKey: ['publicCategories'],
+    queryFn: () => publicCategoryApi.getAll(),
+  });
+
+  const apiStats = statsData?.data;
+  const categories = categoriesData?.data?.results ?? [];
+
+  const stats = [
+    { value: apiStats ? `${apiStats.courses.toLocaleString()}+` : '...', label: 'Courses' },
+    { value: apiStats ? `${apiStats.instructors.toLocaleString()}+` : '...', label: 'Expert Instructors' },
+    { value: apiStats ? `${apiStats.learners.toLocaleString()}+` : '...', label: 'Happy Learners' },
+    { value: apiStats ? `${apiStats.certificates.toLocaleString()}+` : '...', label: 'Certificates Earned' },
+  ];
 
   const { data: statsData } = useQuery({
     queryKey: ['publicStats'],
@@ -58,7 +79,7 @@ const CatalogueHero: React.FC<CatalogueHeroProps> = ({ isMobile, onSearch }) => 
           {/* Badge */}
           <Chip
             icon={<MenuBookIcon sx={{ fontSize: 16 }} />}
-            label="1000+ Courses Available"
+            label={apiStats ? `${apiStats.courses.toLocaleString()}+ Courses Available` : 'Courses Available'}
             sx={{
               bgcolor: '#fff3e0',
               color: '#ffa424',
@@ -143,12 +164,9 @@ const CatalogueHero: React.FC<CatalogueHeroProps> = ({ isMobile, onSearch }) => 
                 sx={{ minWidth: 140, '& .MuiSelect-select': { fontSize: '0.875rem', color: '#52525b' } }}
               >
                 <MenuItem value="">All Categories</MenuItem>
-                <MenuItem value="web">Web Development</MenuItem>
-                <MenuItem value="data">Data Science</MenuItem>
-                <MenuItem value="security">Cybersecurity</MenuItem>
-                <MenuItem value="business">Business</MenuItem>
-                <MenuItem value="design">Design</MenuItem>
-                <MenuItem value="marketing">Marketing</MenuItem>
+                {categories.map((cat) => (
+                  <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
+                ))}
               </Select>
             </Box>
 
