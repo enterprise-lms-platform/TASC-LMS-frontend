@@ -38,7 +38,10 @@ import type {
 export const useCategories = (params?: { parent?: number }) =>
   useQuery({
     queryKey: queryKeys.categories.all(params),
-    queryFn: () => categoryApi.getAll(params).then((r) => r.data),
+    queryFn: () => categoryApi.getAll(params).then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
   });
 
 export const useCategory = (id: number) =>
