@@ -45,12 +45,4 @@ const CourseRequirements: React.FC<CourseRequirementsProps> = ({ requirements })
   );
 };
 
-// Sample data
-export const sampleRequirements = [
-  'Basic understanding of JavaScript and React',
-  'Node.js and npm/yarn installed',
-  'Code editor (VS Code recommended)',
-  'Modern web browser',
-];
-
 export default CourseRequirements;

@@ -203,42 +203,4 @@ const CourseCurriculum: React.FC<CourseCurriculumProps> = ({
   );
 };
 
-// Sample data export
-export const sampleModules: Module[] = [
-  {
-    id: '1',
-    title: 'Module 1: React Fundamentals Review',
-    totalDuration: '2 hours',
-    lessons: [
-      { id: '1-1', title: 'Introduction to Advanced React Patterns', duration: '45 min', type: 'video' },
-      { id: '1-2', title: 'React Hooks Deep Dive', duration: '30 min', type: 'video' },
-      { id: '1-3', title: 'Project Setup and Configuration', duration: '20 min', type: 'article', isPreview: true },
-      { id: '1-4', title: 'Quiz: React Fundamentals', duration: '25 min', type: 'quiz' },
-    ],
-  },
-  {
-    id: '2',
-    title: 'Module 2: Advanced Component Patterns',
-    totalDuration: '3 hours',
-    lessons: [
-      { id: '2-1', title: 'Higher-Order Components (HOCs)', duration: '35 min', type: 'video' },
-      { id: '2-2', title: 'Render Props Pattern', duration: '40 min', type: 'video' },
-      { id: '2-3', title: 'Compound Components', duration: '30 min', type: 'video' },
-      { id: '2-4', title: 'Building a Modal with Compound Pattern', duration: '45 min', type: 'video' },
-      { id: '2-5', title: 'Module 2 Quiz', duration: '20 min', type: 'quiz' },
-    ],
-  },
-  {
-    id: '3',
-    title: 'Module 3: Custom Hooks Mastery',
-    totalDuration: '2.5 hours',
-    lessons: [
-      { id: '3-1', title: 'Creating Custom Hooks', duration: '35 min', type: 'video' },
-      { id: '3-2', title: 'useLocalStorage Hook', duration: '25 min', type: 'video' },
-      { id: '3-3', title: 'useFetch Hook', duration: '30 min', type: 'video' },
-      { id: '3-4', title: 'useDebounce and useThrottle', duration: '25 min', type: 'video' },
-    ],
-  },
-];
-
 export default CourseCurriculum;

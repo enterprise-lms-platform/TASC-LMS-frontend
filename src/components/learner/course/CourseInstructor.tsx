@@ -122,17 +122,4 @@ const CourseInstructor: React.FC<CourseInstructorProps> = ({
   );
 };
 
-// Sample instructor data
-export const sampleInstructor: InstructorData = {
-  id: '1',
-  name: 'Michael Rodriguez',
-  title: 'Senior Frontend Engineer @ TechCorp',
-  initials: 'MR',
-  avatar: '/avatars/male face (2).jpg',
-  bio: 'Michael is a senior frontend engineer with 8+ years of experience building scalable web applications. He has worked with companies like Google, Facebook, and Airbnb, and specializes in React performance optimization and advanced patterns.',
-  rating: 4.8,
-  courseCount: 8,
-  studentCount: '15,678',
-};
-
 export default CourseInstructor;

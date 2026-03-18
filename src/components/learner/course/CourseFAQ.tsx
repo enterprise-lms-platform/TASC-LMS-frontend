@@ -86,28 +86,4 @@ const CourseFAQ: React.FC<CourseFAQProps> = ({ faqs }) => {
   );
 };
 
-// Sample data
-export const sampleFAQs: FAQItem[] = [
-  {
-    id: '1',
-    question: "Can I take this course if I'm new to React?",
-    answer: 'This course is designed for intermediate to advanced React developers. We recommend having at least 6 months of React experience or completing our React Fundamentals course first.',
-  },
-  {
-    id: '2',
-    question: 'How long do I have access to the course?',
-    answer: 'You have lifetime access to this course. Once enrolled, you can access the content anytime, including all future updates we make to the curriculum.',
-  },
-  {
-    id: '3',
-    question: 'Is there a certificate upon completion?',
-    answer: 'Yes! Upon completing all lessons and passing the final assessment, you will receive a verified certificate of completion that you can share on LinkedIn and other platforms.',
-  },
-  {
-    id: '4',
-    question: 'What if I need help during the course?',
-    answer: "You can ask questions in our course discussion forum, and our instructors typically respond within 24-48 hours. We also have a supportive community of fellow learners who are happy to help.",
-  },
-];
-
 export default CourseFAQ;
