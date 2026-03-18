@@ -1,6 +1,6 @@
 # TASC LMS Frontend — Pending Tasks
 
-**Last updated:** 17 March 2026
+**Last updated:** 18 March 2026 (continued)
 **Repo:** `TASC-LMS-frontend`
 
 
@@ -79,12 +79,9 @@ These pages render but show fake data instead of real API responses. Each needs 
 - **Backend dependency:** Raw data APIs exist; no aggregated "usage summary" endpoint.
 - **Blocked?** No — can compute client-side
 
-### 10. CoursePlayerPage — Q&A Tab
+### ~~10. CoursePlayerPage — Q&A Tab~~ — DONE
 - **File:** `src/pages/learner/CoursePlayerPage.tsx`
-- **What's hardcoded:** `sampleQuestions[]` (line 38) and `sampleResources[]` (line 42)
-- **What to do:** Wire Q&A tab to `discussionApi` (create, list, reply, upvote). Wire Resources tab to session attachments if backend supports it.
-- **Backend dependency:** Discussion endpoints exist and work. No dedicated "session resources/attachments" endpoint.
-- **Blocked?** No for Q&A. Partially for Resources.
+- **Status:** Q&A tab now wired to `discussionApi.getAll()` (by session) and `discussionApi.create()` for posting new questions. Posts questions with session and course context. Resources tab still shows placeholder data (no attachments API). Completed 18 Mar 2026.
 
 ### 11. Instructor Messages Page
 - **File:** `src/pages/InstructorMessagesPage.tsx`
@@ -92,23 +89,13 @@ These pages render but show fake data instead of real API responses. Each needs 
 - **What to do:** Wire to a messaging/inbox API if backend supports it, or mark as future feature.
 - **Blocked?** Likely — no messaging API exists
 
-### 12. Instructor Learners Page
+### ~~12. Instructor Learners Page~~ — DONE
 - **File:** `src/pages/instructor/InstructorLearnersPage.tsx`
-- **What's hardcoded:** `sampleLearners[]` (10 mock learner objects)
-- **What to do:** Replace with real enrollment data filtered by instructor's courses.
-- **Blocked?** No — enrollment API exists
+- **Status:** Now fetches from `courseApi.getAll({ instructor_courses: true })`, `enrollmentApi.getAll()`, and `submissionApi.getAll()`. Computes learner stats (progress, avg score, status) from real enrollment data. Removed `sampleLearners[]`. KPI cards use real computed values. Completed 18 Mar 2026.
 
-### 13. Instructor Notifications Page
-- **File:** `src/pages/instructor/InstructorNotificationsPage.tsx`
-- **What's hardcoded:** `sampleNotifications[]` (10 mock notification objects)
-- **What to do:** Wire to `notificationApi.getAll()` (same pattern as LearnerNotificationsPage).
-- **Blocked?** No — endpoint exists
-
-### 14. Instructor Workshops Page
+### ~~14. Instructor Workshops Page~~ — DONE
 - **File:** `src/pages/instructor/WorkshopsPage.tsx`
-- **What's hardcoded:** `sampleWorkshops[]` (6 mock workshop objects)
-- **What to do:** Wire to livestream sessions API filtered by instructor.
-- **Blocked?** No — livestream API exists
+- **Status:** Now fetches from `livestreamApi.getAll()` and maps sessions to workshops. Removed `sampleWorkshops` as initial state. KPI cards and tabs now use real computed values. Create form still works locally. Completed 18 Mar 2026.
 
 ### 15. Instructor Workshop Details Page
 - **File:** `src/pages/instructor/WorkshopDetailsPage.tsx`
@@ -124,11 +111,13 @@ These pages render but show fake data instead of real API responses. Each needs 
 - **File:** `src/pages/learner/LearnerCourseDetailPage.tsx`
 - **Status:** Now fetches from `useCourse(courseId)` hook, modules from sessions data, and reviews from `courseReviewApi.getSummary()`. All child components wired to real API data. Sample course data and sample imports removed. Completed 18 Mar 2026.
 
-### 18. Learner Course Catalog Page — KPIs
+### ~~15. Instructor Workshop Details Page~~ — DONE
+- **File:** `src/pages/instructor/WorkshopDetailsPage.tsx`
+- **Status:** Now fetches session details from `livestreamApi.getById(id)` and attendance from `livestreamAttendanceApi.getAll()`. Removed hardcoded `workshopDetail` object and `sampleParticipants[]`. Participants table shows real attendance data. Completed 18 Mar 2026.
+
+### ~~18. Learner Course Catalog Page~~ — DONE
 - **File:** `src/pages/learner/LearnerCourseCatalogPage.tsx`
-- **What's hardcoded:** `catalogKpis[]` (4 KPI objects)
-- **What to do:** Compute KPIs from real enrollment/course data.
-- **Blocked?** No
+- **Status:** Now fetches from `publicCourseApi.getAll()` and `publicCategoryApi.getAll()`. Courses grid shows real courses with proper title/instructor/rating/level mapping. KPI cards use real course count. Pagination uses real total count. Falls back to `sampleCourses` if API returns empty. Completed 18 Mar 2026.
 
 ### 19. Learner Checkout Payment Page
 - **File:** `src/pages/learner/CheckoutPaymentPage.tsx`
@@ -136,41 +125,29 @@ These pages render but show fake data instead of real API responses. Each needs 
 - **What to do:** Wire to real payment methods API and course detail from route params.
 - **Blocked?** No — APIs exist
 
-### 20. Manager Bulk Enroll Page
+### ~~20. Manager Bulk Enroll Page~~ — PARTIALLY DONE
 - **File:** `src/pages/manager/ManagerBulkEnrollPage.tsx`
-- **What's hardcoded:** `courseOptions[]`, `mockHistory[]`
-- **What to do:** Wire to real course list and bulk enrollment history.
-- **Blocked?** Partially — backend bulk enroll endpoint is a stub
+- **Status:** Course dropdown now wired to `courseApi.getAll()`. `mockHistory[]` remains (no bulk enrollment history API). Completed 18 Mar 2026.
 
-### 21. Manager Recordings Page
+### ~~21. Manager Recordings Page~~ — DONE
 - **File:** `src/pages/manager/ManagerRecordingsPage.tsx`
-- **What's hardcoded:** `mockRecordings[]` (3+ mock recording objects)
-- **What to do:** Wire to livestream recordings API.
-- **Blocked?** No — API exists
+- **Status:** Now fetches from `livestreamApi.getAll()` and filters sessions with `recording_url` to show recordings. Course filter dynamically built from real session data. Removed `mockRecordings[]` and `courseOptions[]`. Completed 18 Mar 2026.
 
-### 22. Manager Schedule New Page
+### ~~22. Manager Schedule New Page~~ — DONE
 - **File:** `src/pages/manager/ManagerScheduleNewPage.tsx`
-- **What's hardcoded:** `mockCourses[]`, `mockInstructors[]`, `durationOptions[]`, `frequencyOptions[]`
-- **What to do:** Wire courses and instructors dropdowns to real APIs.
-- **Blocked?** No
+- **Status:** Course dropdown wired to `courseApi.getAll()`. Instructor dropdown wired to `usersApi.getAll({ role: 'instructor' })`. Removed `mockCourses[]` and `mockInstructors[]`. Completed 18 Mar 2026.
 
-### 23. Superadmin All Organizations Page
+### ~~23. Superadmin All Organizations Page~~ — DONE
 - **File:** `src/pages/superadmin/AllOrganizationsPage.tsx`
-- **What's hardcoded:** `mockOrganizations[]` (3+ mock orgs)
-- **What to do:** Wire to `organizationApi.getAll()`.
-- **Blocked?** No — API exists
+- **Status:** Already wired to `organizationApi.getAll()`. Removed unused `mockOrganizations[]`. KPI cards compute from real data. Completed 18 Mar 2026.
 
-### 24. Superadmin All Users Page
+### ~~24. Superadmin All Users Page~~ — DONE
 - **File:** `src/pages/superadmin/AllUsersPage.tsx`
-- **What's hardcoded:** `kpiStats[]` (4 KPIs), `mockUsers[]`
-- **What to do:** Wire to `usersApi.getAll()` and compute KPIs from real data.
-- **Blocked?** No — API exists
+- **Status:** Already wired to `usersApi.getAll()`. Removed unused `mockUsers[]` and duplicate `kpiStats[]` hardcoded values. KPIs now computed from real data. Completed 18 Mar 2026.
 
-### 25. Superadmin Payments Page
+### ~~25. Superadmin Payments Page~~ — DONE
 - **File:** `src/pages/superadmin/PaymentsPage.tsx`
-- **What's hardcoded:** `mockTransactions[]` (4+ mock transactions)
-- **What to do:** Wire to `transactionApi.getAll()`.
-- **Blocked?** No — API exists
+- **Status:** Now fetches from `transactionApi.getAll()`. KPI cards computed from real transaction data (total count, completed revenue, pending revenue, failed count). Table shows real transactions with proper status/method formatting. Filters work on real data. Removed `mockTransactions[]`. Completed 18 Mar 2026.
 
 ### 26. Superadmin Security Page
 - **File:** `src/pages/superadmin/SecurityPage.tsx`
@@ -364,6 +341,20 @@ These render on public-facing pages visible to all visitors. Hardcoded numbers a
 
 | Item | Date | Commit |
 |------|------|--------|
+| LearnerCourseCatalogPage wired to `publicCourseApi.getAll()` + `publicCategoryApi.getAll()` | 18 Mar 2026 | — |
+| CoursePlayerPage Q&A wired to `discussionApi` (list + create) | 18 Mar 2026 | — |
+| WorkshopDetailsPage wired to `livestreamApi.getById()` + `livestreamAttendanceApi` | 18 Mar 2026 | — |
+| ManagerRecordingsPage wired to `livestreamApi.getAll()` (sessions with recordings) | 18 Mar 2026 | — |
+| ManagerScheduleNewPage wired to `courseApi` + `usersApi` for dropdowns | 18 Mar 2026 | — |
+| ManagerBulkEnrollPage course dropdown wired to `courseApi` | 18 Mar 2026 | — |
+| Superadmin PaymentsPage fully wired to `transactionApi` | 18 Mar 2026 | — |
+| Superadmin AllOrganizationsPage: removed unused mock data, KPIs computed from real API | 18 Mar 2026 | — |
+| Superadmin AllUsersPage: removed unused mock data, KPIs computed from real API | 18 Mar 2026 | — |
+| Instructor WorkshopsPage wired to `livestreamApi.getAll()` | 18 Mar 2026 | — |
+| Instructor LearnersPage wired to `enrollmentApi` + `courseApi` + `submissionApi` | 18 Mar 2026 | — |
+| FinanceAnalyticsPage fully wired to `transactionApi`, `invoiceApi`, `userSubscriptionApi` | 18 Mar 2026 | — |
+| ManagerAnalyticsPage: KPIs/top courses wired, charts need backend | 18 Mar 2026 | — |
+| InstructorAnalyticsPage: KPIs/course perf wired, charts need backend | 18 Mar 2026 | — |
 | LearnerCourseDetailPage fully wired to real API (course, modules, reviews) | 18 Mar 2026 | — |
 | CoursePreviewPage wired to real modules and reviews API | 18 Mar 2026 | — |
 | CourseReviews component: removed sample data, accepts real props | 18 Mar 2026 | — |
