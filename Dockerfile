@@ -27,7 +27,8 @@
     COPY . .
     
     # Build production bundle to /app/dist
-    RUN npm run build
+    #RUN npm run build
+    RUN NODE_OPTIONS=--max-old-space-size=2048 npm run build
     
     # ------------------------------
     # Stage 2: Runtime (Nginx)
