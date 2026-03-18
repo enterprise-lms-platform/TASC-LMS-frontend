@@ -1,11 +1,19 @@
 import React from 'react';
 import { Box, Pagination as MuiPagination } from '@mui/material';
 
-const Pagination: React.FC = () => {
+interface PaginationProps {
+  count: number;
+  page: number;
+  onPageChange: (page: number) => void;
+}
+
+const Pagination: React.FC<PaginationProps> = ({ count, page, onPageChange }) => {
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}>
       <MuiPagination
-        count={24}
+        count={count}
+        page={page}
+        onChange={(_, newPage) => onPageChange(newPage)}
         variant="outlined"
         shape="rounded"
         sx={{

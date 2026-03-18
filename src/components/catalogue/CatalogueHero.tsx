@@ -1,4 +1,5 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   Container,
@@ -11,6 +12,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
+import { publicStatsApi } from '../../services/public.services';
 
 interface CatalogueHeroProps {
   isMobile: boolean;
@@ -19,16 +21,22 @@ interface CatalogueHeroProps {
 
 const popularSearches = ['Python', 'React', 'Machine Learning', 'AWS', 'UX Design'];
 
-const stats = [
-  { value: '1,000+', label: 'Courses' },
-  { value: '200+', label: 'Expert Instructors' },
-  { value: '50K+', label: 'Happy Learners' },
-  { value: '4.8', label: 'Average Rating' },
-];
-
 const CatalogueHero: React.FC<CatalogueHeroProps> = ({ isMobile, onSearch }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [category, setCategory] = React.useState('');
+
+  const { data: statsData } = useQuery({
+    queryKey: ['publicStats'],
+    queryFn: () => publicStatsApi.getStats(),
+  });
+
+  const apiData = statsData?.data;
+  const stats = [
+    { value: apiData ? `${apiData.courses}+` : '...', label: 'Courses' },
+    { value: apiData ? `${apiData.instructors}+` : '...', label: 'Expert Instructors' },
+    { value: apiData ? `${apiData.learners}+` : '...', label: 'Happy Learners' },
+    { value: '4.8', label: 'Average Rating' },
+  ];
 
   const handleSearch = () => {
     if (onSearch) {
@@ -102,10 +110,7 @@ const CatalogueHero: React.FC<CatalogueHeroProps> = ({ isMobile, onSearch }) => 
                 type="text"
                 placeholder="What do you want to learn?"
                 value={searchQuery}
-                onChange={(e) => {
-                  console.log('Typing:', e.target.value);
-                  setSearchQuery(e.target.value);
-                }}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 style={{
                   border: 'none',

@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Box, Typography, Accordion, AccordionSummary, AccordionDetails, Stack, Button, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import QuizIcon from '@mui/icons-material/Quiz';
+import { sessionApi } from '../../services/catalogue.services';
 
-const modules = [
+interface CourseCurriculumProps {
+  courseId?: number;
+}
+
+const defaultModules = [
   {
     title: "Module 1: Advanced Hooks Deep Dive",
     lectures: 8,
@@ -43,8 +49,46 @@ const modules = [
   }
 ];
 
-const CourseCurriculum: React.FC = () => {
+const CourseCurriculum: React.FC<CourseCurriculumProps> = ({ courseId }) => {
   const [expanded, setExpanded] = useState<string | false>('panel0');
+
+  const { data: sessionsData } = useQuery({
+    queryKey: ['sessions', courseId],
+    queryFn: () => sessionApi.getAll({ course: courseId }),
+    enabled: !!courseId,
+  });
+
+  const sessions = (sessionsData as any)?.data?.results || [];
+  
+  const modules = courseId && sessions.length > 0 
+    ? sessions.reduce((acc: any[], session: any) => {
+        const existing = acc.find(m => m.title === session.module_name);
+        if (existing) {
+          existing.lessons.push({
+            title: session.title,
+            duration: session.duration_minutes ? `${session.duration_minutes}m` : 'N/A',
+            type: session.session_type?.toLowerCase() || 'video',
+            preview: session.is_preview || false,
+          });
+          existing.lectures++;
+        } else {
+          acc.push({
+            title: session.module_name || `Module ${acc.length + 1}`,
+            lectures: 1,
+            duration: session.duration_minutes ? `${session.duration_minutes}m` : 'N/A',
+            lessons: [{
+              title: session.title,
+              duration: session.duration_minutes ? `${session.duration_minutes}m` : 'N/A',
+              type: session.session_type?.toLowerCase() || 'video',
+              preview: session.is_preview || false,
+            }]
+          });
+        }
+        return acc;
+      }, [])
+    : defaultModules;
+
+  const totalLectures = modules.reduce((sum, m) => sum + m.lectures, 0);
 
   const handleChange = (panel: string) => (_event: React.SyntheticEvent, isExpanded: boolean) => {
     setExpanded(isExpanded ? panel : false);
@@ -58,7 +102,7 @@ const CourseCurriculum: React.FC = () => {
       </Stack>
       
       <Typography sx={{ mb: 3, color: '#52525b', fontSize: '0.9rem' }}>
-        8 sections • 72 lectures • 24h 30m total length
+        {modules.length} sections • {totalLectures} lectures
       </Typography>
 
       <Box sx={{ border: '1px solid #e4e4e7', borderRadius: 3, overflow: 'hidden' }}>

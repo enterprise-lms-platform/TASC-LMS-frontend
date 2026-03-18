@@ -1,4 +1,5 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Box, Container, Typography, Grid, Paper, Chip } from '@mui/material';
 import CodeIcon from '@mui/icons-material/Code';
 import TimelineIcon from '@mui/icons-material/Timeline';
@@ -9,19 +10,44 @@ import CampaignIcon from '@mui/icons-material/Campaign';
 import CloudIcon from '@mui/icons-material/Cloud';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import AppsIcon from '@mui/icons-material/Apps';
+import { publicCategoryApi } from '../../services/public.services';
 
-const categories = [
-  { name: 'Web Development', count: '142 courses', icon: CodeIcon, className: 'category-icon-web' },
-  { name: 'Data Science', count: '98 courses', icon: TimelineIcon, className: 'category-icon-data' },
-  { name: 'Cybersecurity', count: '67 courses', icon: SecurityIcon, className: 'category-icon-security' },
-  { name: 'Business', count: '124 courses', icon: BusinessCenterIcon, className: 'category-icon-business' },
-  { name: 'Design', count: '89 courses', icon: BrushIcon, className: 'category-icon-design' },
-  { name: 'Marketing', count: '76 courses', icon: CampaignIcon, className: 'category-icon-marketing' },
-  { name: 'Cloud Computing', count: '54 courses', icon: CloudIcon, className: 'category-icon-cloud' },
-  { name: 'Mobile Development', count: '63 courses', icon: PhoneAndroidIcon, className: 'category-icon-mobile' },
-];
+const iconMap: Record<string, React.ElementType> = {
+  'Web Development': CodeIcon,
+  'Data Science': TimelineIcon,
+  'Cybersecurity': SecurityIcon,
+  'Business': BusinessCenterIcon,
+  'Design': BrushIcon,
+  'Marketing': CampaignIcon,
+  'Cloud Computing': CloudIcon,
+  'Mobile Development': PhoneAndroidIcon,
+};
+
+const classNameMap: Record<string, string> = {
+  'Web Development': 'category-icon-web',
+  'Data Science': 'category-icon-data',
+  'Cybersecurity': 'category-icon-security',
+  'Business': 'category-icon-business',
+  'Design': 'category-icon-design',
+  'Marketing': 'category-icon-marketing',
+  'Cloud Computing': 'category-icon-cloud',
+  'Mobile Development': 'category-icon-mobile',
+};
 
 const FeaturedCategories: React.FC = () => {
+  const { data: categoriesData } = useQuery({
+    queryKey: ['publicCategories'],
+    queryFn: () => publicCategoryApi.getAll(),
+  });
+
+  const apiData = categoriesData?.data;
+  const categories = (apiData?.results || []).map((cat: any) => ({
+    name: cat.name,
+    count: `${cat.courses_count || 0} courses`,
+    icon: iconMap[cat.name] || AppsIcon,
+    className: classNameMap[cat.name] || 'category-icon-web',
+  }));
+
   return (
     <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: 'white', borderTop: '1px solid #e4e4e7' }}>
       <Container maxWidth="lg">
