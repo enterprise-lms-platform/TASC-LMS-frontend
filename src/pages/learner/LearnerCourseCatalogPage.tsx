@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Toolbar, CssBaseline, Typography, Grid, Stack, Link, Paper } from '@mui/material';
-import { ChevronRight, MenuBook, People, School, Star } from '@mui/icons-material';
+import { ChevronRight, MenuBook, School, CheckCircle, PlayCircle } from '@mui/icons-material';
+import { enrollmentApi, certificateApi } from '../../services/learning.services';
 import '../../styles/LearnerDashboard.css';
 
 // Import learner components
@@ -16,12 +17,11 @@ import CatalogCourseCard, { sampleCourses } from '../../components/learner/catal
 import CatalogInstructorCard, { sampleInstructors } from '../../components/learner/catalog/CatalogInstructorCard';
 import CatalogPagination from '../../components/learner/catalog/CatalogPagination';
 
-/* Same color scheme as Learner Dashboard QuickStats */
-const catalogKpis = [
-  { label: 'Courses', value: '1000+', icon: <MenuBook />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-  { label: 'Instructors', value: '200+', icon: <School />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
-  { label: 'Learners', value: '50K+', icon: <People />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-  { label: 'Avg Rating', value: '4.8', icon: <Star />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+const fallbackCatalogKpis = [
+  { label: 'Enrolled Courses', value: '0', icon: <MenuBook />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+  { label: 'Completed', value: '0', icon: <CheckCircle />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+  { label: 'In Progress', value: '0', icon: <PlayCircle />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+  { label: 'Certificates', value: '0', icon: <School />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
 ];
 
 const LearnerCourseCatalogPage: React.FC = () => {
@@ -29,6 +29,37 @@ const LearnerCourseCatalogPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [catalogKpis, setCatalogKpis] = useState(fallbackCatalogKpis);
+
+  useEffect(() => {
+    const fetchKpiData = async () => {
+      try {
+        const [enrollmentsRes, certificatesRes] = await Promise.all([
+          enrollmentApi.getAll(),
+          certificateApi.getAll(),
+        ]);
+
+        const enrollments = (enrollmentsRes.data as any)?.results || enrollmentsRes.data || [];
+        const certificates = (certificatesRes.data as any)?.results || certificatesRes.data || [];
+
+        const enrolledCount = enrollments.length;
+        const completedCount = enrollments.filter((e: any) => e.status === 'completed' || e.progress_percentage === 100).length;
+        const inProgressCount = enrollments.filter((e: any) => e.status === 'active' && e.progress_percentage > 0 && e.progress_percentage < 100).length;
+        const certificatesCount = certificates.length || enrollments.filter((e: any) => e.certificate_issued).length;
+
+        setCatalogKpis([
+          { label: 'Enrolled Courses', value: String(enrolledCount), icon: <MenuBook />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+          { label: 'Completed', value: String(completedCount), icon: <CheckCircle />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+          { label: 'In Progress', value: String(inProgressCount), icon: <PlayCircle />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+          { label: 'Certificates', value: String(certificatesCount), icon: <School />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+        ]);
+      } catch (error) {
+        console.error('Failed to fetch KPI data:', error);
+      }
+    };
+
+    fetchKpiData();
+  }, []);
 
   const handleMobileMenuToggle = () => {
     setMobileOpen(!mobileOpen);

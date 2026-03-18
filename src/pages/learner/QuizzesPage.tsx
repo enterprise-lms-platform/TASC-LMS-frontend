@@ -6,8 +6,7 @@ import {
 import {
   Quiz as QuizIcon, CheckCircle as PassIcon, Cancel as FailIcon,
   AccessTime as TimeIcon, TrendingUp as ScoreIcon,
-  PlayArrow as StartIcon, Refresh as RetryIcon,
-  Lock as LockIcon,
+  PlayArrow as StartIcon,
 } from '@mui/icons-material';
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
