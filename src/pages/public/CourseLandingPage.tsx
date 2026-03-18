@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Container, Grid, useMediaQuery, useTheme, Typography, CircularProgress } from '@mui/material';
-import { useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Header from '../../components/landing/Header';
 import Footer from '../../components/landing/Footer';
@@ -21,8 +21,7 @@ const CourseLandingPage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchParams] = useSearchParams();
-  const courseSlug = searchParams.get('slug');
+  const { slug: courseSlug } = useParams<{ slug: string }>();
 
   const { data: courseData, isLoading, isError } = useQuery({
     queryKey: ['publicCourse', courseSlug],

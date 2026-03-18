@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'  //this is a stubborn import
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { faBookOpen, faCertificate, faChalkboardTeacher, faEye, faEyeSlash, faSignIn, faShieldAlt, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import {  loginStyles } from '../../styles/loginTheme'
 
@@ -37,6 +37,7 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) =
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login, isAuthenticated, user } = useAuth();
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
@@ -87,7 +88,8 @@ const LoginPage = () => {
         finance: '/finance',
         tasc_admin: '/superadmin',
       };
-      const redirectTo = roleRoutes[user.role] || '/learner';
+      const redirectParam = searchParams.get('redirect');
+      const redirectTo = redirectParam || roleRoutes[user.role] || '/learner';
       navigate(redirectTo, { replace: true });
     }
   }, [isAuthenticated, user, navigate]);

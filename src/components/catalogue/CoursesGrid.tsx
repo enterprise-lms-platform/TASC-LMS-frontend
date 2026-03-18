@@ -69,7 +69,14 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({ onMobileFilterOpen, category,
 
   return (
     <Box sx={{ flex: 1 }}>
-      <EnrollmentModal open={enrollModalOpen} onClose={() => setEnrollModalOpen(false)} courseTitle={selectedCourse?.title || ''} />
+      <EnrollmentModal
+        open={enrollModalOpen}
+        onClose={() => setEnrollModalOpen(false)}
+        courseTitle={selectedCourse?.title || ''}
+        courseSlug={selectedCourse?.slug || selectedCourse?.id}
+        courseId={selectedCourse ? Number(selectedCourse.id) : undefined}
+        isFree={selectedCourse?.isFree}
+      />
 
       {/* Results Header */}
       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, mb: 3, gap: 2 }}>

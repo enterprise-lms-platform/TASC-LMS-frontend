@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import type { UserRole } from '../types/types';
@@ -27,6 +27,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   allowedRoles,
 }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
+  const location = useLocation();
 
   // ⚠️ Only bypass in local dev with explicit env var AND dev mode enabled
   if (DEV_BYPASS_AUTH) {
@@ -56,7 +57,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   }
 
   // Check role-based access

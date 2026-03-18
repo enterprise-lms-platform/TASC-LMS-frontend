@@ -316,7 +316,7 @@ export const createAppRouter = (queryClient: QueryClient) => {
       element: <ProtectedRoute><CheckoutPaymentPage /></ProtectedRoute>,
       loader: async ({ request }) => {
         const url = new URL(request.url);
-        const courseId = url.searchParams.get('courseId');
+        const courseId = url.searchParams.get('courseId') || url.searchParams.get('course');
         return learnerLoaders.checkoutLoader(queryClient, { courseId: courseId || undefined });
       },
     },
