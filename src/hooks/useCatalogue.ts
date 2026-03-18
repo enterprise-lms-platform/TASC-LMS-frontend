@@ -40,7 +40,16 @@ export const useCategories = (params?: { parent?: number }) =>
     queryKey: queryKeys.categories.all(params),
     queryFn: () => categoryApi.getAll(params).then((r) => {
       const data = r.data;
-      return Array.isArray(data) ? data : (data as any).results ?? [];
+      // Backend returns paginated { count, next, previous, results }
+      if (Array.isArray(data)) {
+        return {
+          count: data.length,
+          next: null,
+          previous: null,
+          results: data,
+        };
+      }
+      return data;
     }),
   });
 

@@ -83,8 +83,7 @@ const ManagerCategoriesPage: React.FC = () => {
   const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
 
-  // Normalise — handle both plain array and paginated { results } response
-  const categoryList: Category[] = Array.isArray(categories) ? categories : (categories as any)?.results ?? [];
+  const categoryList: Category[] = categories?.results ?? [];
 
   // Filtered categories
   const filtered = useMemo(() => {
@@ -106,6 +105,13 @@ const ManagerCategoriesPage: React.FC = () => {
     if (!id || !categoryList.length) return '—';
     const cat = categoryList.find((c) => c.id === id);
     return cat ? cat.name : '—';
+  };
+
+  const formatCreatedAt = (iso?: string | null) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   // ─── Dialog Handlers ──────────────────────────────────────
@@ -372,7 +378,7 @@ const ManagerCategoriesPage: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" color="text.secondary">
-                            {new Date(cat.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            {formatCreatedAt(cat.created_at)}
                           </Typography>
                         </TableCell>
                         <TableCell align="right">
