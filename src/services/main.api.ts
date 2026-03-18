@@ -33,6 +33,10 @@ import {
   certificateApi,
   discussionApi,
   discussionReplyApi,
+  submissionApi,
+  quizSubmissionApi,
+  gradeStatisticsApi,
+  managerGradesApi,
 } from './learning.services';
 import {
   invoiceApi,
@@ -46,6 +50,8 @@ import {
   publicCategoryApi,
   publicTagApi,
   publicCourseApi,
+  publicStatsApi,
+  publicClientsApi,
 } from './public.services';
 import { uploadApi } from './upload.services';
 import { livestreamApi, livestreamAttendanceApi } from './livestream.services';
@@ -94,6 +100,10 @@ export const api = {
     certificate: certificateApi,
     discussion: discussionApi,
     discussionReply: discussionReplyApi,
+    submission: submissionApi,
+    quizSubmission: quizSubmissionApi,
+    gradeStatistics: gradeStatisticsApi,
+    managerGrades: managerGradesApi,
   },
 
   // Payments
@@ -111,6 +121,8 @@ export const api = {
     category: publicCategoryApi,
     tag: publicTagApi,
     course: publicCourseApi,
+    stats: publicStatsApi,
+    clients: publicClientsApi,
   },
 
   // Uploads (DO Spaces presigned)
