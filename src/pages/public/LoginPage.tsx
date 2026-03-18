@@ -244,6 +244,24 @@ const LoginPage = () => {
     }
   };
 
+  const handleMFAPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pasted) return;
+    const newCodes = [...mfaCodes];
+    for (let i = 0; i < 6; i++) {
+      newCodes[i] = pasted[i] || '';
+    }
+    setMfaCodes(newCodes);
+    // Focus last filled input or submit if complete
+    if (pasted.length === 6) {
+      handleVerifyOtp(newCodes);
+    } else {
+      const nextInput = document.getElementById(`mfa-input-${pasted.length}`) as HTMLInputElement;
+      nextInput?.focus();
+    }
+  };
+
   const handleMFAKeyDown = (index: number, e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Backspace' && !mfaCodes[index] && index > 0) {
       const prevInput = document.getElementById(`mfa-input-${index - 1}`) as HTMLInputElement;
@@ -519,6 +537,7 @@ const LoginPage = () => {
                         value={code}
                         onChange={(e) => handleMFAInputChange(index, e.target.value)}
                         onKeyDown={(e) => handleMFAKeyDown(index, e)}
+                        onPaste={handleMFAPaste}
                         disabled={otpLoading}
                         sx={loginStyles.mfaInput}
                       />

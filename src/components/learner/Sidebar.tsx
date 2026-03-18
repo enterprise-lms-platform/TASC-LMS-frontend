@@ -118,7 +118,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
           alignItems: 'center',
           gap: 1.5,
           minHeight: 80,
+          cursor: 'pointer',
         }}
+        onClick={() => navigate('/')}
       >
         <Box component="img" src="/TASC logo.png" alt="TASC Logo" sx={{ width: 64, height: 64, objectFit: 'contain' }} />
         <Typography variant="h6" fontWeight={700} color="#ffa424">

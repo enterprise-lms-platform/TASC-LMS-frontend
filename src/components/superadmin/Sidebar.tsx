@@ -140,7 +140,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
           alignItems: 'center',
           gap: 1.5,
           minHeight: 72,
+          cursor: 'pointer',
         }}
+        onClick={() => navigate('/')}
       >
         <Box
           component="img"

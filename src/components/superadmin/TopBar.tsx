@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -19,6 +20,7 @@ import {
   Fullscreen as FullscreenIcon,
   Menu as MenuIcon,
   KeyboardArrowDown as ArrowDownIcon,
+  Home as HomeIcon,
 } from '@mui/icons-material';
 import { useLogout } from '../../hooks/useLogout';
 import { useAuth } from '../../contexts/AuthContext';
@@ -35,6 +37,7 @@ const TopBar: React.FC<TopBarProps> = ({
   title = 'Super Admin Dashboard',
   subtitle = 'Platform Overview & System Management',
 }) => {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const handleLogout = useLogout();
   const { user } = useAuth();
@@ -75,6 +78,14 @@ const TopBar: React.FC<TopBarProps> = ({
             sx={{ display: { lg: 'none' }, color: 'text.primary' }}
           >
             <MenuIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => navigate('/')}
+            size="small"
+            sx={{ color: 'text.secondary', '&:hover': { color: '#ffa424', bgcolor: 'rgba(255,164,36,0.08)' } }}
+            title="Back to Home"
+          >
+            <HomeIcon sx={{ fontSize: 22 }} />
           </IconButton>
           <Box sx={{ minWidth: 0, flex: { xs: 1, md: 'none' } }}>
             <Typography

@@ -22,6 +22,7 @@ import {
   Person as PersonIcon,
   Settings as SettingsIcon,
   KeyboardArrowDown as ArrowDownIcon,
+  Home as HomeIcon,
 } from '@mui/icons-material';
 import { DRAWER_WIDTH } from './Sidebar';
 import { useAuth } from '../../contexts/AuthContext';
@@ -103,11 +104,21 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
           <MenuIcon />
         </IconButton>
 
+        {/* Home Button */}
+        <IconButton
+          onClick={() => navigate('/')}
+          size="small"
+          sx={{ mr: 1, color: 'text.secondary', '&:hover': { color: '#ffa424', bgcolor: 'rgba(255,164,36,0.08)' } }}
+          title="Back to Home"
+        >
+          <HomeIcon sx={{ fontSize: 22 }} />
+        </IconButton>
+
         {/* Page Title */}
         <Box sx={{ minWidth: 0, flex: { xs: 1, sm: 'none' } }}>
-          <Typography 
-            variant="h6" 
-            fontWeight={700} 
+          <Typography
+            variant="h6"
+            fontWeight={700}
             noWrap
             sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }}
           >

@@ -180,6 +180,25 @@ const VerificationPage = () => {
     }
   };
 
+  const handleOtpPaste = (e: React.ClipboardEvent, isLogin: boolean = false) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pasted) return;
+    const newCodes = Array(6).fill('');
+    for (let i = 0; i < pasted.length; i++) {
+      newCodes[i] = pasted[i];
+    }
+    if (isLogin) {
+      setLoginOtpCodes(newCodes);
+    } else {
+      setOtpCodes(newCodes);
+    }
+    if (pasted.length < 6) {
+      const nextInput = document.getElementById(`otp-${isLogin ? 'login-' : ''}${pasted.length}`) as HTMLInputElement;
+      nextInput?.focus();
+    }
+  };
+
   const handleVerifyAuthenticator = () => {
     const otp = otpCodes.join('');
 
@@ -359,6 +378,7 @@ const VerificationPage = () => {
                   inputProps={{ maxLength: 1, pattern: '[0-9]', inputMode: 'numeric' }}
                   value={code}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
+                  onPaste={(e) => handleOtpPaste(e)}
                   size="small"
                   sx={verificationStyles.otpInput}
                 />
@@ -828,6 +848,7 @@ const VerificationPage = () => {
                   inputProps={{ maxLength: 1, pattern: '[0-9]', inputMode: 'numeric' }}
                   value={code}
                   onChange={(e) => handleOtpChange(index, e.target.value, true)}
+                  onPaste={(e) => handleOtpPaste(e, true)}
                   size="small"
                   sx={verificationStyles.otpInput}
                 />
