@@ -165,12 +165,6 @@ const getStatusColor = (status: string) => {
 
 import KPICard from '../../components/superadmin/KPICard';
 
-// ... (Organization interface and mockOrganizations array remain unchanged)
-
-// ... (getStatusColor function remains unchanged)
-
-// const kpiCards = [
-
 const AllOrganizationsPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
