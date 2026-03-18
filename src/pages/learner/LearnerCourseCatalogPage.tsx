@@ -1,34 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Toolbar, CssBaseline, Typography, Grid, Stack, Link, Paper } from '@mui/material';
 import { ChevronRight, MenuBook, People, School, Star } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
 import '../../styles/LearnerDashboard.css';
 
-// Import learner components
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
-
-// Import catalog components
 import CatalogHero from '../../components/learner/catalog/CatalogHero';
 import CatalogFilterBar from '../../components/learner/catalog/CatalogFilterBar';
 import CatalogCategoryCard, { defaultCategories } from '../../components/learner/catalog/CatalogCategoryCard';
-import CatalogCourseCard, { sampleCourses } from '../../components/learner/catalog/CatalogCourseCard';
+import CatalogCourseCard, { sampleCourses, Course as CatalogCourse } from '../../components/learner/catalog/CatalogCourseCard';
 import CatalogInstructorCard, { sampleInstructors } from '../../components/learner/catalog/CatalogInstructorCard';
 import CatalogPagination from '../../components/learner/catalog/CatalogPagination';
-
-/* Same color scheme as Learner Dashboard QuickStats */
-const catalogKpis = [
-  { label: 'Courses', value: '1000+', icon: <MenuBook />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-  { label: 'Instructors', value: '200+', icon: <School />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
-  { label: 'Learners', value: '50K+', icon: <People />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-  { label: 'Avg Rating', value: '4.8', icon: <Star />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
-];
+import { publicCourseApi, publicCategoryApi } from '../../services/public.services';
 
 const LearnerCourseCatalogPage: React.FC = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [favorites, setFavorites] = useState<string[]>([]);
+
+  const { data: coursesData, isLoading: coursesLoading } = useQuery({
+    queryKey: ['public-courses', currentPage],
+    queryFn: () => publicCourseApi.getAll({ page: currentPage, page_size: 8 }),
+  });
+
+  const { data: categoriesData } = useQuery({
+    queryKey: ['public-categories'],
+    queryFn: () => publicCategoryApi.getAll(),
+  });
+
+  const courses = coursesData?.data?.results ?? [];
+  const totalCourses = coursesData?.data?.count ?? 0;
+  const totalPages = Math.ceil(totalCourses / 8);
+  const categories = categoriesData?.data ?? [];
+
+  const catalogCourses: CatalogCourse[] = useMemo(() => {
+    return courses.map(c => ({
+      id: String(c.id),
+      title: c.title,
+      instructor: c.instructor_name || 'Instructor',
+      description: c.short_description || '',
+      image: c.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=225&fit=crop',
+      category: c.category?.name || '',
+      badge: c.featured ? 'Bestseller' as const : undefined,
+      duration: c.duration_hours ? `${c.duration_hours}h` : '—',
+      level: (c.level?.charAt(0).toUpperCase() + c.level?.slice(1)) as CatalogCourse['level'] || 'Beginner',
+      rating: 0,
+      reviewCount: 0,
+    }));
+  }, [courses]);
+
+  const kpis = useMemo(() => [
+    { label: 'Courses', value: totalCourses > 0 ? `${totalCourses}+` : '—', icon: <MenuBook />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+    { label: 'Instructors', value: '—', icon: <School />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+    { label: 'Learners', value: '—', icon: <People />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+    { label: 'Avg Rating', value: '—', icon: <Star />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+  ], [totalCourses]);
+
+  const displayCourses = catalogCourses.length > 0 ? catalogCourses : sampleCourses;
 
   const handleMobileMenuToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -47,7 +78,7 @@ const LearnerCourseCatalogPage: React.FC = () => {
   };
 
   const handleCourseClick = (course: any) => {
-    navigate(`/learner/course/${course.id}`);
+    navigate(`/course/${course.id}`);
   };
 
   const handleCategoryClick = (category: any) => {
@@ -144,7 +175,7 @@ const LearnerCourseCatalogPage: React.FC = () => {
 
         {/* Stat Cards */}
         <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
-          {catalogKpis.map((k, index) => (
+          {kpis.map((k, index) => (
             <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
               <Paper
                 elevation={0}
@@ -217,7 +248,7 @@ const LearnerCourseCatalogPage: React.FC = () => {
         <Box sx={{ mb: 6 }}>
           <SectionHeader title="Most Popular Courses" viewAllText="View All Courses" />
           <Grid container spacing={3}>
-            {sampleCourses.map((course) => (
+            {displayCourses.map((course) => (
               <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={course.id}>
                 <CatalogCourseCard
                   course={course}
@@ -249,7 +280,7 @@ const LearnerCourseCatalogPage: React.FC = () => {
         {/* Pagination */}
         <CatalogPagination
           currentPage={currentPage}
-          totalPages={5}
+          totalPages={totalPages > 0 ? totalPages : 5}
           onPageChange={setCurrentPage}
         />
 

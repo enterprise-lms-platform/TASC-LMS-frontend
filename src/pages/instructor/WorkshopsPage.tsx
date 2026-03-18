@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   CssBaseline,
@@ -43,6 +44,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import { livestreamApi } from '../../services/main.api';
 
 export interface Workshop {
   id: string;
@@ -57,6 +59,15 @@ export interface Workshop {
   gradingType: 'attendance' | 'pass_fail' | 'score';
   category: string;
 }
+
+const getWorkshopStatus = (startTime: string, endTime: string): Workshop['status'] => {
+  const now = new Date();
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  if (now < start) return 'upcoming';
+  if (now >= start && now <= end) return 'ongoing';
+  return 'completed';
+};
 
 const sampleWorkshops: Workshop[] = [
   { id: 'w1', title: 'Leadership Essentials Bootcamp', description: 'Intensive 3-day workshop on leadership fundamentals', location: 'TASC Training Center, Nairobi', startDate: '2026-03-05', endDate: '2026-03-07', participants: 28, maxParticipants: 35, status: 'upcoming', gradingType: 'pass_fail', category: 'Leadership' },
@@ -87,9 +98,47 @@ const WorkshopsPage: React.FC = () => {
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [menuWorkshopId, setMenuWorkshopId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [workshops, setWorkshops] = useState(sampleWorkshops);
+  const [workshops, setWorkshops] = useState<Workshop[]>([]);
 
-  // Create form state
+  const { data: sessionsData, isLoading } = useQuery({
+    queryKey: ['livestreams', 'workshops'],
+    queryFn: () => livestreamApi.getAll({ limit: 100 }).then(r => r.data),
+  });
+
+  const sessions = sessionsData?.results ?? [];
+
+  const workshopSessions = useMemo(() => {
+    return sessions.map((s): Workshop => ({
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      location: s.platform === 'custom' ? s.join_url || 'Custom Platform' : s.platform,
+      startDate: s.start_time.split('T')[0],
+      endDate: s.end_time.split('T')[0],
+      participants: 0,
+      maxParticipants: s.max_attendees,
+      status: s.status === 'live' ? 'ongoing' : s.status === 'scheduled' ? 'upcoming' : 'completed',
+      gradingType: 'score',
+      category: s.course_title || 'General',
+    }));
+  }, [sessions]);
+
+  const allWorkshops = useMemo(() => {
+    const apiWorkshops = workshopSessions;
+    const localWorkshops = workshops.filter(w => !apiWorkshops.some(a => a.id === w.id));
+    return [...apiWorkshops, ...localWorkshops];
+  }, [workshopSessions, workshops]);
+
+  const filtered = allWorkshops.filter((w) => {
+    const matchSearch = w.title.toLowerCase().includes(search.toLowerCase()) || w.location.toLowerCase().includes(search.toLowerCase()) || w.category.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = statusFilter === null || w.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  const upcomingCount = allWorkshops.filter(w => w.status === 'upcoming').length;
+  const ongoingCount = allWorkshops.filter(w => w.status === 'ongoing').length;
+  const totalParticipants = allWorkshops.reduce((s, w) => s + w.participants, 0);
+
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [newLocation, setNewLocation] = useState('');
@@ -185,10 +234,10 @@ const WorkshopsPage: React.FC = () => {
           {/* KPIs */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {[
-              { label: 'Total Workshops', value: workshops.length, icon: <WorkshopsIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-              { label: 'Upcoming', value: workshops.filter((w) => w.status === 'upcoming').length, icon: <DateIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
-              { label: 'Ongoing', value: workshops.filter((w) => w.status === 'ongoing').length, icon: <EditIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-              { label: 'Total Participants', value: workshops.reduce((s, w) => s + w.participants, 0), icon: <PeopleIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+              { label: 'Total Workshops', value: allWorkshops.length, icon: <WorkshopsIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+              { label: 'Upcoming', value: upcomingCount, icon: <DateIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+              { label: 'Ongoing', value: ongoingCount, icon: <EditIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+              { label: 'Total Participants', value: totalParticipants, icon: <PeopleIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
             ].map((kpi) => (
               <Grid size={{ xs: 6, md: 3 }} key={kpi.label}>
                 <Paper
@@ -264,10 +313,10 @@ const WorkshopsPage: React.FC = () => {
               <Typography variant="body2" color="text.secondary">{filtered.length} workshops</Typography>
             </Box>
             <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ px: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-              <Tab label={`All (${workshops.length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Upcoming (${workshops.filter((w) => w.status === 'upcoming').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Ongoing (${workshops.filter((w) => w.status === 'ongoing').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Completed (${workshops.filter((w) => w.status === 'completed').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`All (${allWorkshops.length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Upcoming (${upcomingCount})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Ongoing (${ongoingCount})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Completed (${allWorkshops.filter((w) => w.status === 'completed').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
             </Tabs>
           </Paper>
 

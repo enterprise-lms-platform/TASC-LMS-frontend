@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, useLoaderData } from 'react-router-dom';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
-import { sessionProgressApi } from '../../services/learning.services';
+import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
+import { sessionProgressApi, discussionApi, discussionReplyApi } from '../../services/learning.services';
 import { queryKeys } from '../../hooks/queryKeys';
-import type { CourseDetail, Session, SessionProgress } from '../../types/types';
+import type { CourseDetail, Session, SessionProgress, Discussion, DiscussionReply } from '../../types/types';
 import { useSessionAssetUrl } from '../../hooks/useUpload';
 import { useQuizDetail } from '../../hooks/useCatalogue';
 import ReactPlayer from 'react-player';
@@ -81,6 +81,8 @@ const CoursePlayerPage: React.FC = () => {
   const [expandedModules, setExpandedModules] = useState<string[]>(['module-1']);
   const [curriculumOpen, setCurriculumOpen] = useState(true);
   const [newNote, setNewNote] = useState('');
+  const [questionText, setQuestionText] = useState('');
+  const [expandedQuestionId, setExpandedQuestionId] = useState<number | null>(null);
   
   // Real completed sessions array based on backend progress
   const completedSessions = recordedProgress.filter(p => p.is_completed).map(p => p.session);
@@ -92,6 +94,47 @@ const CoursePlayerPage: React.FC = () => {
   // Use the presigned URL hook — only triggers if the activeSession needs it and has an ID
   const isPrivateAsset = activeSession?.content_source === 'upload' && !!activeSession?.asset_bucket;
   const { data: assetUrlData, isLoading: isAssetLoading } = useSessionAssetUrl(isPrivateAsset ? activeSessionId || undefined : undefined);
+
+  // Q&A: fetch discussions for the active session
+  const { data: discussionsData } = useQuery({
+    queryKey: ['discussions', 'session', activeSessionId],
+    queryFn: () => discussionApi.getAll({ session: activeSessionId ?? undefined }).then(r => r.data),
+    enabled: activeSessionId !== null,
+  });
+
+  // Q&A: replies for expanded question
+  const { data: repliesData } = useQuery({
+    queryKey: ['discussion-replies', expandedQuestionId],
+    queryFn: () => discussionReplyApi.getAll({ discussion: expandedQuestionId ?? undefined }).then(r => r.data),
+    enabled: expandedQuestionId !== null,
+  });
+
+  // Q&A: mutation to create a new question
+  const createQuestionMutation = useMutation({
+    mutationFn: (data: { title: string; content: string }) =>
+      discussionApi.create({ ...data, session: activeSessionId ?? null, course: Number(courseId) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['discussions', 'session', activeSessionId] });
+      setQuestionText('');
+    },
+  });
+
+  const handleAskQuestion = () => {
+    if (!questionText.trim()) return;
+    createQuestionMutation.mutate({ title: questionText.trim(), content: questionText.trim() });
+  };
+
+  const discussions = (discussionsData ?? []) as Discussion[];
+  const replies = (repliesData ?? []) as DiscussionReply[];
+
+  const questions: Question[] = discussions.map((d) => ({
+    id: d.id,
+    author: d.user_name || 'Learner',
+    text: d.content,
+    votes: 0,
+    replies: d.reply_count,
+    time: timeAgo(d.created_at),
+  }));
 
   // Video resume: persist playback position in localStorage
   const playerRef = useRef<HTMLVideoElement | null>(null);
@@ -534,12 +577,23 @@ const CoursePlayerPage: React.FC = () => {
                   <TextField
                     fullWidth size="small"
                     placeholder="Ask a question about this session..."
+                    value={questionText}
+                    onChange={(e) => setQuestionText(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAskQuestion()}
                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
                   />
-                  <Button variant="contained" startIcon={<SendIcon />} sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 3, whiteSpace: 'nowrap', color: '#fff' }}>Ask</Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<SendIcon />}
+                    onClick={handleAskQuestion}
+                    disabled={createQuestionMutation.isPending || !questionText.trim()}
+                    sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 3, whiteSpace: 'nowrap', color: '#fff' }}
+                  >
+                    {createQuestionMutation.isPending ? 'Posting...' : 'Ask'}
+                  </Button>
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {sampleQuestions.map(q => (
+                  {questions.length > 0 ? questions.map(q => (
                     <Box key={q.id} sx={{ p: 2, bgcolor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', '&:hover': { borderColor: '#ffa424' }, transition: 'border-color 0.2s' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                         <Avatar sx={{ width: 28, height: 28, fontSize: '0.75rem', bgcolor: '#ffa424' }}>{q.author[0]}</Avatar>
@@ -552,7 +606,11 @@ const CoursePlayerPage: React.FC = () => {
                         <Button size="small" sx={{ textTransform: 'none', color: 'text.secondary', fontSize: '0.8rem' }}>{q.replies} replies</Button>
                       </Box>
                     </Box>
-                  ))}
+                  )) : (
+                    <Box sx={{ p: 3, textAlign: 'center', bgcolor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                      <Typography color="text.secondary">No questions yet. Be the first to ask!</Typography>
+                    </Box>
+                  )}
                 </Box>
               </Box>
             )}
@@ -642,3 +700,17 @@ const QuizSessionRenderer: React.FC<{ sessionId: number; onComplete?: (score: nu
 };
 
 export default CoursePlayerPage;
+
+function timeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Unknown';
+  const diffMs = Date.now() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return `${Math.floor(diffDays / 7)}w ago`;
+}
