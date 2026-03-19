@@ -186,12 +186,11 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
     setAttempt((prev) => ({ ...prev, score, passed, submitted: true }));
     onComplete?.(score, passed);
 
-    // Also submit to backend for server-side grading and record keeping
     const answers = questions.map((q) => ({
-      question_id: q.id,
-      answer: attempt.answers[q.id] ?? null,
+      question: q.id,
+      selected_answer: { value: attempt.answers[q.id] ?? null },
     }));
-    quizSubmissionApi.submit({ quiz: sessionId, answers }).catch(() => {
+    quizSubmissionApi.create({ quiz: sessionId, enrollment: 0, answers }).catch(() => {
       // Backend submission failed silently — client-side grade is already shown
     });
   }, [questions, attempt.answers, passingScore, onComplete, sessionId]);

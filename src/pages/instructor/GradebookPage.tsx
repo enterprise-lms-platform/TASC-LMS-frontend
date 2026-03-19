@@ -14,7 +14,8 @@ import StudentGradeDetailPanel from '../../components/instructor/gradebook/Stude
 import ExportDialog from '../../components/instructor/gradebook/ExportDialog';
 import { createDefaultGradingConfig, formatGrade, calculateFinalGrade } from '../../utils/gradingUtils';
 import type { GradingConfig } from '../../utils/gradingUtils';
-import { submissionApi } from '../../services/learning.services';
+import { submissionApi, gradeStatisticsApi } from '../../services/learning.services';
+import { courseApi } from '../../services/main.api';
 import type { Submission } from '../../types/types';
 
 function mapSubmissionStatus(s: Submission): 'graded' | 'submitted' | 'pending' | 'missing' {
@@ -72,31 +73,18 @@ const GradebookPage: React.FC = () => {
   const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
 
-  // Fetch all submissions for the instructor
-  const { data: submissionsRes, isLoading } = useQuery({
-    queryKey: ['instructor-submissions'],
-    queryFn: () => submissionApi.getAll(),
-  });
-
-  const rawSubs = submissionsRes?.data;
-  const submissions: Submission[] = Array.isArray(rawSubs) ? rawSubs : (rawSubs as any)?.results || [];
-
-  const { students: allStudents, items: allItems, grades: allGrades } = useMemo(
-    () => buildGradebookData(submissions),
-    [submissions],
-  );
-  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
-
-  const { data: coursesData, isLoading: coursesLoading } = useQuery({
+  const { data: coursesData } = useQuery({
     queryKey: ['courses', 'instructor'],
     queryFn: () => courseApi.getAll({ instructor_courses: true, limit: 100 }).then(r => r.data),
   });
 
-  const courses = coursesData?.results ?? [];
+  const courses = (coursesData?.results ?? []) as Array<{ id: number; title: string }>;
 
-  const { data: submissionsData, isLoading: submissionsLoading } = useQuery({
+  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
+
+  const { data: submissionsData } = useQuery({
     queryKey: ['submissions', 'gradebook', selectedCourseId],
-    queryFn: () => submissionApi.getAll({ course: selectedCourseId ?? undefined, limit: 500 }).then(r => r.data),
+    queryFn: () => submissionApi.getAll({ course: selectedCourseId ?? undefined }).then(r => r.data),
     enabled: selectedCourseId !== null,
   });
 
@@ -106,11 +94,24 @@ const GradebookPage: React.FC = () => {
     enabled: selectedCourseId !== null,
   });
 
-  const submissions = (Array.isArray(submissionsData) ? submissionsData : []) as Array<{
+  const rawSubs = submissionsData ?? [];
+  const submissions = (Array.isArray(rawSubs) ? rawSubs : (rawSubs as any)?.results ?? []) as Array<{
     id: number; assignment: number; assignment_title: string; session: number; session_title: string;
     enrollment: number; user: number; user_name: string; user_email: string;
     status: string; submitted_at: string; grade?: number | null; feedback?: string | null;
   }>;
+
+  const allSubs: Submission[] = useQuery({
+    queryKey: ['instructor-submissions'],
+    queryFn: () => submissionApi.getAll(),
+  }).data?.data as Submission[] ?? [];
+
+  const { students: allStudents, items: allItems, grades: allGrades } = useMemo(
+    () => buildGradebookData(allSubs),
+    [allSubs],
+  );
+
+  const isLoading = !submissionsData && selectedCourseId !== null;
 
   const selectedCourse = courses.find(c => c.id === selectedCourseId);
 
@@ -158,9 +159,9 @@ const GradebookPage: React.FC = () => {
     }));
   }, [submissions]);
 
-  const students = realStudents.length > 0 ? realStudents : sampleStudents;
-  const gradedItems = realItems.length > 0 ? realItems : sampleItems;
-  const grades = realGrades.length > 0 ? realGrades : sampleGrades;
+  const students = realStudents;
+  const gradedItems = realItems;
+  const grades = realGrades;
 
   const filteredStudents = useMemo(
     () =>
@@ -204,7 +205,7 @@ const GradebookPage: React.FC = () => {
     if (statsData?.distribution) {
       const dist: Record<string, number> = {};
       statsData.distribution.forEach(d => {
-        dist[d.label] = d.count;
+        dist[d.range] = d.count;
       });
       return dist;
     }

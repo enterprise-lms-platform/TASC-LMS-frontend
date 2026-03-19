@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { livestreamApi } from '../../services/livestream.services';
 import {
   Box,
   CssBaseline,
@@ -61,23 +60,6 @@ export interface Workshop {
   category: string;
 }
 
-const getWorkshopStatus = (startTime: string, endTime: string): Workshop['status'] => {
-  const now = new Date();
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  if (now < start) return 'upcoming';
-  if (now >= start && now <= end) return 'ongoing';
-  return 'completed';
-};
-
-const getWorkshopStatus = (startTime: string, endTime: string): Workshop['status'] => {
-  const now = new Date();
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  if (now < start) return 'upcoming';
-  if (now >= start && now <= end) return 'ongoing';
-  return 'completed';
-};
 
 
 const statusStyles: Record<string, { bg: string; color: string }> = {
@@ -131,12 +113,6 @@ const WorkshopsPage: React.FC = () => {
     return [...apiWorkshops, ...localWorkshops];
   }, [workshopSessions, workshops]);
 
-  const filtered = allWorkshops.filter((w) => {
-    const matchSearch = w.title.toLowerCase().includes(search.toLowerCase()) || w.location.toLowerCase().includes(search.toLowerCase()) || w.category.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === null || w.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
-
   const upcomingCount = allWorkshops.filter(w => w.status === 'upcoming').length;
   const ongoingCount = allWorkshops.filter(w => w.status === 'ongoing').length;
   const totalParticipants = allWorkshops.reduce((s, w) => s + w.participants, 0);
@@ -176,7 +152,7 @@ const WorkshopsPage: React.FC = () => {
       gradingType: newGradingType,
       category: 'General',
     };
-    setLocalWorkshops((prev) => [newWorkshop, ...prev]);
+    setWorkshops((prev) => [newWorkshop, ...prev]);
     setCreateOpen(false);
     setNewTitle('');
     setNewDescription('');

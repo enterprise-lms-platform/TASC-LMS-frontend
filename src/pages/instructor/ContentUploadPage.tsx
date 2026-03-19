@@ -25,7 +25,6 @@ import type { RecentUploadItem } from '../../components/instructor/content-uploa
 import UploadFooter from '../../components/instructor/content-upload/UploadFooter';
 import { uploadApi, quotaApi } from '../../services/upload.services';
 import type { SessionAssetUploadResult } from '../../services/upload.services';
-import { useQuery } from '@tanstack/react-query';
 import { usePartialUpdateSession } from '../../hooks/useCatalogue';
 import { getErrorMessage } from '../../utils/config';
 import FeedbackSnackbar from '../../components/common/FeedbackSnackbar';

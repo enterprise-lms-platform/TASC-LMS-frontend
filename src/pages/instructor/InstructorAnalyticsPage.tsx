@@ -68,9 +68,9 @@ const InstructorAnalyticsPage: React.FC = () => {
     const completedEnrollments = instructorEnrollments.filter((e) => e.completed_at).length;
     const completionRate = totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0;
 
-    const gradedSubmissions = submissions.filter((s) => s.score !== null && s.score !== undefined);
+    const gradedSubmissions = submissions.filter((s) => s.grade !== null && s.grade !== undefined);
     const avgScore = gradedSubmissions.length > 0
-      ? Math.round(gradedSubmissions.reduce((sum, s) => sum + (s.score ?? 0), 0) / gradedSubmissions.length)
+      ? Math.round(gradedSubmissions.reduce((sum, s) => sum + (s.grade ?? 0), 0) / gradedSubmissions.length)
       : 0;
 
     return [
