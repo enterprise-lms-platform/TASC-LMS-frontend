@@ -91,6 +91,8 @@ import ManagerBulkImportPage from '../pages/manager/ManagerBulkImportPage';
 import ManagerActivityPage from '../pages/manager/ManagerActivityPage';
 import ManagerCoursesPage from '../pages/manager/ManagerCoursesPage';
 import ManagerCreateCoursePage from '../pages/manager/ManagerCreateCoursePage';
+import ManagerCourseDetailPage from '../pages/manager/ManagerCourseDetailPage';
+import ManagerCourseEditPage from '../pages/manager/ManagerCourseEditPage';
 import ManagerInstructorsPage from '../pages/manager/ManagerInstructorsPage';
 import ManagerEnrollmentsPage from '../pages/manager/ManagerEnrollmentsPage';
 import ManagerBulkEnrollPage from '../pages/manager/ManagerBulkEnrollPage';
@@ -512,6 +514,16 @@ export const createAppRouter = (queryClient: QueryClient) => {
     {
       path: '/manager/create-course',
       element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerCreateCoursePage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/courses/:courseId',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerCourseDetailPage /></ProtectedRoute>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/courses/:courseId/edit',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerCourseEditPage /></ProtectedRoute>,
       loader: async () => managerLoaders.managerRouteLoader(queryClient),
     },
     {

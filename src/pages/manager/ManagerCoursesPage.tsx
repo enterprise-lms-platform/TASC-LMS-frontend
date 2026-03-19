@@ -25,6 +25,13 @@ import {
   LinearProgress,
   Tooltip,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import {
   MenuBook as MenuBookIcon,
@@ -36,9 +43,11 @@ import {
   Star as StarIcon,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
 import { courseApi, categoryApi } from '../../services/main.api';
+import { usePartialUpdateCourse } from '../../hooks/useCatalogue';
 
 // ─── Styles ────────────────────────────────────────────────
 
@@ -87,6 +96,14 @@ const ManagerCoursesPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [archiveTarget, setArchiveTarget] = useState<Record<string, any> | null>(null);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
+  const navigate = useNavigate();
+  const archiveCourse = usePartialUpdateCourse();
 
   const { data: coursesData, isLoading: coursesLoading } = useQuery({
     queryKey: ['courses', 'manager'],
@@ -101,8 +118,10 @@ const ManagerCoursesPage: React.FC = () => {
   const courses = coursesData?.results ?? (Array.isArray(coursesData) ? coursesData : []);
   const categories = Array.isArray(categoriesData) ? categoriesData : (categoriesData as any)?.results ?? [];
 
-  const getCategoryName = (categoryId: number) => {
-    const cat = categories.find((c) => c.id === categoryId);
+  const getCategoryName = (categoryValue: number | { id?: number; name?: string } | null | undefined) => {
+    if (!categoryValue) return 'Uncategorized';
+    if (typeof categoryValue === 'object') return categoryValue.name || 'Uncategorized';
+    const cat = categories.find((c) => c.id === categoryValue);
     return cat?.name || 'Uncategorized';
   };
 
@@ -114,7 +133,7 @@ const ManagerCoursesPage: React.FC = () => {
   };
 
   const getInstructorName = (course: Record<string, any>) => {
-    return course.instructor?.name || course.instructor?.email || 'Unknown Instructor';
+    return course.instructor_name || course.instructor?.name || course.instructor?.email || 'Unknown Instructor';
   };
 
   const getInitials = (name: string) => {
@@ -148,6 +167,18 @@ const ManagerCoursesPage: React.FC = () => {
   }, [courses]);
 
   const isLoading = coursesLoading;
+
+  const handleArchiveConfirm = async () => {
+    if (!archiveTarget?.id) return;
+    try {
+      await archiveCourse.mutateAsync({ id: archiveTarget.id, data: { status: 'archived' } });
+      setSnackbar({ open: true, message: 'Course archived successfully.', severity: 'success' });
+    } catch {
+      setSnackbar({ open: true, message: 'Failed to archive course.', severity: 'error' });
+    } finally {
+      setArchiveTarget(null);
+    }
+  };
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -245,6 +276,7 @@ const ManagerCoursesPage: React.FC = () => {
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
+                onClick={() => navigate('/manager/create-course')}
                 sx={{
                   background: 'linear-gradient(135deg, #ffa424, #f97316)',
                   textTransform: 'none',
@@ -382,13 +414,31 @@ const ManagerCoursesPage: React.FC = () => {
                       <TableCell align="center">
                         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
                           <Tooltip title="View">
-                            <IconButton size="small" sx={{ color: '#3b82f6' }}><ViewIcon fontSize="small" /></IconButton>
+                            <IconButton
+                              size="small"
+                              sx={{ color: '#3b82f6' }}
+                              onClick={() => navigate(`/manager/courses/${course.id}`)}
+                            >
+                              <ViewIcon fontSize="small" />
+                            </IconButton>
                           </Tooltip>
                           <Tooltip title="Edit">
-                            <IconButton size="small" sx={{ color: '#f59e0b' }}><EditIcon fontSize="small" /></IconButton>
+                            <IconButton
+                              size="small"
+                              sx={{ color: '#f59e0b' }}
+                              onClick={() => navigate(`/manager/courses/${course.id}/edit`)}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
                           </Tooltip>
-                          <Tooltip title="Disable">
-                            <IconButton size="small" sx={{ color: '#ef4444' }}><DisableIcon fontSize="small" /></IconButton>
+                          <Tooltip title="Archive">
+                            <IconButton
+                              size="small"
+                              sx={{ color: '#ef4444' }}
+                              onClick={() => setArchiveTarget(course)}
+                            >
+                              <DisableIcon fontSize="small" />
+                            </IconButton>
                           </Tooltip>
                         </Box>
                       </TableCell>
@@ -401,6 +451,42 @@ const ManagerCoursesPage: React.FC = () => {
           </Paper>
         </Box>
       </Box>
+      <Dialog open={!!archiveTarget} onClose={() => setArchiveTarget(null)}>
+        <DialogTitle>Archive Course</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to archive <strong>{archiveTarget?.title}</strong>? You can still find it under archived courses.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setArchiveTarget(null)} sx={{ textTransform: 'none' }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleArchiveConfirm}
+            color="error"
+            variant="contained"
+            disabled={archiveCourse.isPending}
+            sx={{ textTransform: 'none' }}
+          >
+            {archiveCourse.isPending ? 'Archiving...' : 'Archive'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
