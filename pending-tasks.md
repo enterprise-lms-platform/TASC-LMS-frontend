@@ -1,6 +1,6 @@
 # TASC LMS Frontend — Task Tracker
 
-**Last updated:** 18 March 2026
+**Last updated:** 19 March 2026
 **Repo:** `TASC-LMS-frontend`
 
 ---
@@ -113,8 +113,8 @@
 
 ### 38. Course Details Page — Partially Done
 - **File:** `src/pages/public/CourseLandingPage.tsx`
-- **Done:** Route changed to `/course-details/:slug`. Page fetches via `publicCourseApi.getBySlug(slug)`. Created `CourseDetailContext`.
-- **Still pending:** Child components (CourseHero, CoursePricingCard, CourseCurriculum, CourseObjectives, CourseInstructor, RelatedCourses) still render hardcoded data. Each needs to consume `useCourseDetail()` context.
+- **Done:** Route changed to `/course-details/:slug`. Page fetches via `publicCourseApi.getBySlug(slug)`. Created `CourseDetailContext`. Content sections (Curriculum, Objectives, Instructor) are wired up.
+- **Still pending:** Remaining child components (CourseHero, CoursePricingCard, RelatedCourses) still render hardcoded data. Each needs to consume `useCourseDetail()` context.
 
 ### 39. Catalogue Filters Sidebar — Partially Done
 - **File:** `src/components/catalogue/FiltersSidebar.tsx`
@@ -131,12 +131,11 @@
 
 ## HIGH — Service Layer Stubs & TODOs
 
-### 43. Grade Distribution API — Wire to Real Endpoints
-- **File:** `src/services/learning.services.ts`
-- **Issue:** `managerGradesApi.getGradeDistribution()` returns empty hardcoded structure. `managerGradesApi.getStudentGrades()` returns `[]`.
-- **Backend status:** `GET /api/v1/learning/submissions/statistics/?course={id}` now returns `{ total_submissions, graded, pending, average_grade, distribution }`.
-- **What to do:** Wire `getGradeDistribution()` to the statistics endpoint. Wire `getStudentGrades()` to submissions list filtered by course.
-- **Blocked?** No — backend endpoints now exist
+### 43. Manager Bulk Import — Backend Blocked
+- **File:** `src/pages/manager/ManagerBulkImportPage.tsx`
+- **Issue:** Currently uses `/api/v1/superadmin/users/bulk_import/` which throws 403 Forbidden for LMS Managers.
+- **What to do:** Wait for backend to implement `POST /api/v1/manager/users/bulk_import/` then update `manager.services.ts`.
+- **Blocked?** Yes — backend dependency.
 
 ### 44. Missing Query Parameter Support
 - **Files:** Multiple service files have TODO comments about missing backend filter support:
@@ -217,7 +216,7 @@ Several files use `as any` to work around type mismatches:
 | 2 | ManagerAnalyticsPage: KPIs/top courses wired (charts still need backend) | 18 Mar 2026 | — |
 | 3 | InstructorAnalyticsPage: KPIs/course perf wired (engagement chart needs backend) | 18 Mar 2026 | — |
 | 4 | FinanceAnalyticsPage: fully wired to `transactionApi`, `invoiceApi`, `userSubscriptionApi` | 18 Mar 2026 | — |
-| 6 | Manager Bulk Import: drag-drop CSV upload + template download via `bulkImportApi` | 18 Mar 2026 | — |
+| 6 | Manager Bulk Import: UI wired up but currently blocked by 403 for actual managers | 18 Mar 2026 | — |
 | 7 | ContentUploadPage: wired storage quota to `quotaApi.getQuota()` | 18 Mar 2026 | — |
 | 10 | CoursePlayerPage Q&A: wired to `discussionApi`, removed sampleQuestions | 18 Mar 2026 | — |
 | 12 | InstructorLearnersPage: replaced sampleLearners with `enrollmentApi.getAll()` + groupByLearner | 18 Mar 2026 | — |
@@ -294,3 +293,6 @@ Several files use `as any` to work around type mismatches:
 | Bulk enrollment endpoint (real implementation) | Enroll multiple users at once | ManagerBulkEnrollPage (#20) |
 | Security metrics endpoint | Active sessions, login attempts | SecurityPage (#26) |
 | Business-specific stats/pricing | Enterprise customer metrics, B2B plans | BusinessStatsSection (#35), PricingSection (#34) |
+| Manager-scoped bulk import | `POST /api/v1/manager/users/bulk_import/` (No 403 for managers) | ManagerBulkImportPage (#6, #43) |
+| Public course search | `?search=` filter support on `PublicCourseViewSet` | Catalogue search bar |
+| Discussion moderation | Pin and lock endpoints for existing API | Instructor/Manager discussions |
