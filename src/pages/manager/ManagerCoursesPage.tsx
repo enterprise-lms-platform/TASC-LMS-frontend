@@ -48,7 +48,13 @@ import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
 import { courseApi, categoryApi } from '../../services/main.api';
 import { usePartialUpdateCourse } from '../../hooks/useCatalogue';
-import type { CourseList, Category } from '../../types/types';
+import type { CourseList as BaseCourseList, Category } from '../../types/types';
+
+// Extend with fields the API may return but aren't in the shared type yet
+type CourseList = BaseCourseList & {
+  completion_rate?: number;
+  rating?: number;
+};
 
 // ─── Styles ────────────────────────────────────────────────
 
@@ -369,7 +375,7 @@ const ManagerCoursesPage: React.FC = () => {
 
                       {/* Enrollments */}
                       <TableCell align="center">
-                        <Typography variant="body2" fontWeight={600}>{(course.total_enrolled || 0).toLocaleString()}</Typography>
+                        <Typography variant="body2" fontWeight={600}>{(course.enrollment_count || 0).toLocaleString()}</Typography>
                       </TableCell>
 
                       {/* Completion Rate */}
@@ -401,7 +407,7 @@ const ManagerCoursesPage: React.FC = () => {
 
                       {/* Rating */}
                       <TableCell align="center">
-                        {course.rating > 0 ? (
+                        {(course.rating ?? 0) > 0 ? (
                           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
                             <StarIcon sx={{ fontSize: 16, color: '#fbbf24' }} />
                             <Typography variant="body2" fontWeight={600}>{course.rating}</Typography>

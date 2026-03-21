@@ -9,15 +9,23 @@ import {
   TextField,
   MenuItem,
   CircularProgress,
+  Alert,
 } from '@mui/material';
 import PhoneIcon from '@mui/icons-material/Phone';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { Link } from 'react-router-dom';
+import emailjs from '@emailjs/browser';
+
+// TODO: Replace these with real EmailJS credentials from https://dashboard.emailjs.com
+const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
+const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
+const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
 
 const BusinessCtaSection: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -27,13 +35,31 @@ const BusinessCtaSection: React.FC = () => {
     phone: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setError('');
+
+    try {
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        {
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email,
+          company: formData.company,
+          team_size: formData.teamSize,
+          phone: formData.phone,
+        },
+        EMAILJS_PUBLIC_KEY,
+      );
       setSubmitted(true);
-    }, 1500);
+    } catch {
+      setError('Something went wrong. Please try again or contact us directly.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -51,14 +77,25 @@ const BusinessCtaSection: React.FC = () => {
               </Typography>
               <Button
                 component={Link}
-                to="tel:+1234567890"
+                to="tel:+256741543906"
                 variant="outlined"
                 size="large"
                 startIcon={<PhoneIcon />}
                 sx={{ color: 'white', borderColor: 'white', borderWidth: 2, fontWeight: 600, textTransform: 'none', '&:hover': { bgcolor: 'white', color: '#ffa424' } }}
               >
-                Call Us: +1 (234) 567-890
+                Call Us: +256 741 543 906
               </Button>
+              
+              <Box sx={{ mt: 4, pt: 4, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <Typography sx={{ fontWeight: 600, mb: 1, color: 'white' }}>
+                  KAMPALA OFFICE
+                </Typography>
+                <Typography sx={{ color: '#d4d4d8', fontSize: '0.875rem', lineHeight: 1.6 }}>
+                  Plot 15, Martyrs Way, Ntinda<br />
+                  P. O. Box 124128, Kampala<br />
+                  <a href="mailto:admin@tasc.co.ug" style={{ color: '#ffa424', textDecoration: 'none' }}>admin@tasc.co.ug</a>
+                </Typography>
+              </Box>
             </Box>
           </Grid>
 
@@ -79,6 +116,7 @@ const BusinessCtaSection: React.FC = () => {
                   <Typography sx={{ fontSize: '0.875rem', color: '#71717a', mb: 3 }}>
                     Fill out the form and we'll be in touch within 24 hours.
                   </Typography>
+                  {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
                   <form onSubmit={handleSubmit}>
                     <Grid container spacing={2}>
                       <Grid size={{ xs: 12, sm: 6 }}>

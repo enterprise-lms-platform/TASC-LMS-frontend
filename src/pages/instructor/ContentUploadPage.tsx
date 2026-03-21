@@ -5,7 +5,7 @@ import {
   ToggleButtonGroup, ToggleButton, TextField, Stack,
   CircularProgress,
 } from '@mui/material';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import {
   PlayCircle as VideoIcon,
   Description as DocIcon,
@@ -13,7 +13,8 @@ import {
   CloudUpload as UploadIcon,
   Link as LinkIcon,
 } from '@mui/icons-material';
-import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import InstructorSidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import ManagerSidebar from '../../components/manager/Sidebar';
 import UploadZone from '../../components/instructor/content-upload/UploadZone';
 import type { UploadContentType } from '../../components/instructor/content-upload/UploadZone';
 import UploadProgress from '../../components/instructor/content-upload/UploadProgress';
@@ -59,8 +60,16 @@ const sampleRecentUploads: RecentUploadItem[] = [
 
 const ContentUploadPage: React.FC = () => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { courseId } = useParams<{ courseId: string }>();
   const [searchParams] = useSearchParams();
+
+  // Detect role context from URL to keep navigation within the correct dashboard
+  const isManager = pathname.startsWith('/manager/');
+  const Sidebar = isManager ? ManagerSidebar : InstructorSidebar;
+  const structurePath = isManager
+    ? `/manager/courses/${courseId}/structure`
+    : `/instructor/course/${courseId}/structure`;
 
   const numericCourseId = courseId ? Number(courseId) : 0;
   const sessionId = searchParams.get('sessionId') ? Number(searchParams.get('sessionId')) : 0;
@@ -230,7 +239,7 @@ const ContentUploadPage: React.FC = () => {
           },
         });
         setSnackSuccess('External video saved successfully.');
-        setTimeout(() => navigate(`/instructor/course/${courseId}/structure`), 800);
+        setTimeout(() => navigate(structurePath), 800);
       } catch (err) {
         setSnackError(getErrorMessage(err, 'Failed to save external video.'));
       } finally {
@@ -264,7 +273,7 @@ const ContentUploadPage: React.FC = () => {
         },
       });
       setSnackSuccess('Upload saved successfully.');
-      setTimeout(() => navigate(`/instructor/course/${courseId}/structure`), 800);
+      setTimeout(() => navigate(structurePath), 800);
     } catch (err) {
       setSnackError(getErrorMessage(err, 'Failed to save upload metadata.'));
     } finally {

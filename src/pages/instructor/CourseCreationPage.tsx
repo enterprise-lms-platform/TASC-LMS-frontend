@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Box, Toolbar, CssBaseline, Snackbar, Alert, LinearProgress, Typography } from '@mui/material';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 
 // Layout components
-import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import InstructorSidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import ManagerSidebar from '../../components/manager/Sidebar';
 
 // Course creation components
 import CourseTopBar from '../../components/instructor/course-creation/CourseTopBar';
@@ -83,9 +84,18 @@ const TOTAL_STEPS = 4;
 
 const CourseCreationPage: React.FC = () => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { courseId: routeCourseId } = useParams<{ courseId?: string }>();
   const editId = routeCourseId ? Number(routeCourseId) : null;
   const isEditMode = !!editId;
+
+  // Detect role context from URL to keep navigation within the correct dashboard
+  const isManager = pathname.startsWith('/manager/');
+  const Sidebar = isManager ? ManagerSidebar : InstructorSidebar;
+  const dashboardPath = isManager ? '/manager' : '/instructor';
+  const coursesPath = isManager ? '/manager/courses' : '/instructor/courses';
+  const buildCoursePath = (id: number | string, suffix: string) =>
+    isManager ? `/manager/courses/${id}/${suffix}` : `/instructor/course/${id}/${suffix}`;
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
@@ -394,7 +404,7 @@ const CourseCreationPage: React.FC = () => {
 
   const handleBack = () => {
     if (confirm('You have unsaved changes. Are you sure you want to leave?')) {
-      navigate('/instructor');
+      navigate(dashboardPath);
     }
   };
 
@@ -415,7 +425,7 @@ const CourseCreationPage: React.FC = () => {
 
   const handlePreview = () => {
     if (courseId) {
-      navigate(`/instructor/course/${courseId}/preview`);
+      navigate(buildCoursePath(courseId, 'preview'));
     } else {
       alert('Save the course first to preview it.');
     }
@@ -428,7 +438,7 @@ const CourseCreationPage: React.FC = () => {
       try {
         await submitForApproval.mutateAsync(result.id);
         setSnackbar({ open: true, message: 'Course submitted for approval! An LMS Manager will review it.', severity: 'success' });
-        setTimeout(() => navigate('/instructor/courses'), 1500);
+        setTimeout(() => navigate(coursesPath), 1500);
       } catch {
         setSnackbar({ open: true, message: 'Course saved, but failed to submit for approval. You can submit later from My Courses.', severity: 'error' });
       }

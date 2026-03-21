@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Box, Toolbar, CssBaseline, LinearProgress, Typography } from '@mui/material';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import InstructorSidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import ManagerSidebar from '../../components/manager/Sidebar';
 import StructureTopBar from '../../components/instructor/course-structure/StructureTopBar';
 import StructureFooter from '../../components/instructor/course-structure/StructureFooter';
 import CourseHeaderCard from '../../components/instructor/course-structure/CourseHeaderCard';
@@ -169,6 +170,7 @@ const CourseStructurePage: React.FC = () => {
 
   // Detect role context from URL to keep navigation within the correct dashboard
   const isManager = pathname.startsWith('/manager/');
+  const Sidebar = isManager ? ManagerSidebar : InstructorSidebar;
   const basePath = isManager
     ? `/manager/courses/${courseId}`
     : `/instructor/course/${courseId}`;
@@ -422,10 +424,10 @@ const CourseStructurePage: React.FC = () => {
         navigate(`${basePath}/quiz/builder?lesson=${lessonParam}&sessionId=${session.id}&course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'assignment':
-        navigate(`/instructor/assignment/create?lesson=${lessonParam}&sessionId=${session.id}&courseId=${id}&course=${encodeURIComponent(courseTitle)}`);
+        navigate(`${dashboardPath}/assignment/create?lesson=${lessonParam}&sessionId=${session.id}&courseId=${id}&course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'live':
-        navigate(`/instructor/sessions/schedule?lesson=${lessonParam}&sessionId=${session.id}&course=${encodeURIComponent(courseTitle)}`);
+        navigate(`${dashboardPath}/sessions/schedule?lesson=${lessonParam}&sessionId=${session.id}&course=${encodeURIComponent(courseTitle)}`);
         break;
       default:
         setSnackError(`No editor available for "${session.session_type}" sessions yet.`);
@@ -535,7 +537,7 @@ const CourseStructurePage: React.FC = () => {
         }
 
         navigate(
-          `/instructor/assignment/create?sessionId=${session.id}&lesson=${lessonParam}&courseId=${id}&course=${encodeURIComponent(courseTitle)}`
+          `${dashboardPath}/assignment/create?sessionId=${session.id}&lesson=${lessonParam}&courseId=${id}&course=${encodeURIComponent(courseTitle)}`
         );
       } catch (err) {
         setSaveStatus('saved');
@@ -598,10 +600,10 @@ const CourseStructurePage: React.FC = () => {
         navigate(`${basePath}/quiz/builder?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'assignment':
-        navigate(`/instructor/assignment/create?lesson=${lessonParam}&courseId=${id}&course=${encodeURIComponent(courseTitle)}`);
+        navigate(`${dashboardPath}/assignment/create?lesson=${lessonParam}&courseId=${id}&course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'livestream':
-        navigate(`/instructor/sessions/schedule?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`);
+        navigate(`${dashboardPath}/sessions/schedule?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`);
         break;
       default:
         break;
@@ -621,10 +623,10 @@ const CourseStructurePage: React.FC = () => {
         handleAddLesson(undefined, 'quiz');
         break;
       case 'assignment':
-        navigate(`/instructor/assignment/create?courseId=${id}&course=${encodeURIComponent(courseTitle)}`);
+        navigate(`${dashboardPath}/assignment/create?courseId=${id}&course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'livestream':
-        navigate(`/instructor/sessions/schedule?course=${encodeURIComponent(courseTitle)}`);
+        navigate(`${dashboardPath}/sessions/schedule?course=${encodeURIComponent(courseTitle)}`);
         break;
       default:
         break;

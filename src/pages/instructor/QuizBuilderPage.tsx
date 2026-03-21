@@ -3,7 +3,8 @@ import { Box, CssBaseline, Paper, Typography, Toolbar, CircularProgress, Snackba
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 
 // Layout components
-import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import InstructorSidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import ManagerSidebar from '../../components/manager/Sidebar';
 
 // Hooks
 import {
@@ -200,6 +201,7 @@ const QuizBuilderPage: React.FC = () => {
 
   // Detect role context from URL to keep navigation within the correct dashboard
   const isManager = pathname.startsWith('/manager/');
+  const Sidebar = isManager ? ManagerSidebar : InstructorSidebar;
   const basePath = isManager
     ? `/manager/courses/${courseId}`
     : `/instructor/course/${courseId}`;
@@ -546,7 +548,7 @@ const QuizBuilderPage: React.FC = () => {
             component="span"
             color="primary.main"
             sx={{ cursor: 'pointer', display: 'inline-block', mt: 2, textDecoration: 'underline' }}
-            onClick={() => navigate(courseId ? `/instructor/course/${courseId}/structure` : '/instructor')}
+            onClick={() => navigate(courseId ? `${basePath}/structure` : dashboardPath)}
           >
             Return to course structure
           </Typography>

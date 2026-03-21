@@ -516,6 +516,11 @@ export const createAppRouter = (queryClient: QueryClient) => {
       loader: async () => managerLoaders.managerRouteLoader(queryClient),
     },
     {
+      path: '/manager/courses/create',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><CourseCreationPage /></ProtectedRoute>,
+      loader: async () => instructorLoaders.courseCreationFormLoader(queryClient),
+    },
+    {
       path: '/manager/courses/:courseId',
       element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><CoursePreviewPage /></ProtectedRoute>,
       loader: async (args) => instructorLoaders.coursePreviewLoader(queryClient, args),
@@ -543,6 +548,16 @@ export const createAppRouter = (queryClient: QueryClient) => {
     {
       path: '/manager/courses/:courseId/quiz/builder',
       element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><QuizBuilderPage /></ProtectedRoute>,
+      loader: async () => instructorLoaders.instructorRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/assignment/create',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><AssignmentCreationPage /></ProtectedRoute>,
+      loader: async () => instructorLoaders.instructorRouteLoader(queryClient),
+    },
+    {
+      path: '/manager/sessions/schedule',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><SessionSchedulingPage /></ProtectedRoute>,
       loader: async () => instructorLoaders.instructorRouteLoader(queryClient),
     },
     {

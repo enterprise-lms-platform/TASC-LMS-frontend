@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, CssBaseline, Toolbar, Grid, LinearProgress, Alert } from '@mui/material';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import {
   CalendarMonth as CalendarIcon,
   Star as PointsIcon,
@@ -9,7 +9,8 @@ import {
 } from '@mui/icons-material';
 
 // Layout
-import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import InstructorSidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import ManagerSidebar from '../../components/manager/Sidebar';
 
 // Assignment components
 import AssignmentTopBar from '../../components/instructor/assignment/AssignmentTopBar';
@@ -100,6 +101,9 @@ function toIsoDateTime(dateStr: string, timeStr: string): string | null {
 }
 
 const AssignmentCreationPage: React.FC = () => {
+  const { pathname } = useLocation();
+  const isManager = pathname.startsWith('/manager/');
+  const Sidebar = isManager ? ManagerSidebar : InstructorSidebar;
   const [searchParams] = useSearchParams();
   const sessionIdParam = searchParams.get('sessionId');
   const courseIdParam = searchParams.get('courseId');

@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Box, CssBaseline, Toolbar, Paper, Typography, TextField, Snackbar, Alert } from '@mui/material';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useCreateLivestreamSession, useLivestreamSessions } from '../../hooks/useLivestream';
 
 // Layout
-import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import InstructorSidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import ManagerSidebar from '../../components/manager/Sidebar';
 
 // Session components
 import SessionTopBar from '../../components/instructor/sessions/SessionTopBar';
@@ -45,9 +46,15 @@ const defaultNotificationSettings: NotificationSetting[] = [
 
 const SessionSchedulingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
   const lessonTitle = searchParams.get('lesson') || '';
   const courseName = searchParams.get('course') || 'Advanced React Development';
+
+  // Detect role context from URL to keep navigation within the correct dashboard
+  const isManager = pathname.startsWith('/manager/');
+  const Sidebar = isManager ? ManagerSidebar : InstructorSidebar;
+  const sessionsPath = isManager ? '/manager/sessions' : '/instructor/sessions';
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Session Details state
@@ -152,7 +159,7 @@ const SessionSchedulingPage: React.FC = () => {
       {
         onSuccess: () => {
           setSnackbar({ open: true, message: 'Session scheduled successfully!', severity: 'success' });
-          setTimeout(() => navigate('/instructor/sessions'), 1500);
+          setTimeout(() => navigate(sessionsPath), 1500);
         },
         onError: (error: unknown) => {
           const msg = error instanceof Error ? error.message : 'Failed to schedule session';

@@ -16,7 +16,7 @@ const Footer: React.FC<FooterProps> = ({ isMobile = false }) => {
 
   const socialLinks = [
     { icon: 'facebook-f', label: 'Facebook', href: 'https://www.facebook.com/TascUg/' },
-    { icon: 'twitter', label: 'X (Twitter)', href: 'https://x.com/Tasc_Ug/' },
+    { icon: 'x-twitter', label: 'X (Twitter)', href: 'https://x.com/Tasc_Ug/' },
     { icon: 'linkedin-in', label: 'LinkedIn', href: 'https://www.linkedin.com/company/the-assessment-and-skilling-centre/' },
     { icon: 'instagram', label: 'Instagram', href: 'https://www.instagram.com/tascuganda/' },
     { icon: 'youtube', label: 'YouTube', href: 'https://www.youtube.com/channel/UCzQmK67VmivoyB72SDOcpKg' },

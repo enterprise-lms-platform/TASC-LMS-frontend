@@ -97,6 +97,18 @@
 - **What to do:** Fetch from subscription plans API or a dedicated business pricing endpoint.
 - **Blocked?** Partially — current subscription API is learner-focused
 
+### 35a. Business Demo Form — EmailJS Credentials Needed
+- **File:** `src/components/business/BusinessCtaSection.tsx` (lines 18-20)
+- **What's done:** EmailJS integration code is wired up (`@emailjs/browser` installed, `emailjs.send()` replaces fake setTimeout).
+- **Still pending:**
+  1. Create an EmailJS account at https://dashboard.emailjs.com
+  2. Add an email service (e.g. Gmail) and get the **Service ID**
+  3. Create an email template with variables: `{{first_name}}`, `{{last_name}}`, `{{email}}`, `{{company}}`, `{{team_size}}`, `{{phone}}`
+  4. Copy the **Public Key** from Account > General
+  5. Replace the 3 placeholder constants in `BusinessCtaSection.tsx` (`YOUR_SERVICE_ID`, `YOUR_TEMPLATE_ID`, `YOUR_PUBLIC_KEY`)
+  6. Optionally move the IDs to `.env` as `VITE_EMAILJS_*` variables
+- **Blocked?** Yes — needs EmailJS account setup (free tier: 200 emails/month)
+
 ### 35. Business Page Stats — Fake Metrics
 - **File:** `src/components/business/BusinessStatsSection.tsx` (lines 8-13)
 - **What's hardcoded:** "500+ Enterprise Customers", "250K+ Learners", "89% Completion Rate", "4.8 Satisfaction"
@@ -260,6 +272,13 @@ Several files use `as any` to work around type mismatches:
 | — | SubscriptionManagementPage: usage stats, billing, plan card wired to real APIs | 21 Mar 2026 | — |
 | — | Manager full course management (reuse instructor components, role-aware navigation) | 21 Mar 2026 | — |
 | — | Removed thin `ManagerCourseDetailPage` + `ManagerCourseEditPage` | 21 Mar 2026 | — |
+| — | Fixed hardcoded `/instructor/` paths in 5 shared components (CourseCreationPage, ContentUploadPage, CourseStructurePage, QuizBuilderPage, SessionSchedulingPage) — manager now stays in `/manager/` context | 21 Mar 2026 | — |
+| — | Added missing manager routes: `/manager/assignment/create`, `/manager/sessions/schedule` | 21 Mar 2026 | — |
+| 35a | BusinessCtaSection: wired demo form to EmailJS (`@emailjs/browser`), credentials pending | 21 Mar 2026 | — |
+| — | Shared pages render correct sidebar (manager vs instructor) via conditional import | 21 Mar 2026 | — |
+| — | Added `/manager/courses/create` route + fixed ManagerCreateCoursePage "Get Started" link | 21 Mar 2026 | — |
+| — | ManagerCreateCoursePage: added Quick Tools, tabbed course list (All/Drafts/In Review/Published/Rejected), per-course action buttons | 21 Mar 2026 | — |
+| — | Fixed ManagerCoursesPage build errors: `total_enrolled` → `enrollment_count`, added local type extension for `completion_rate`/`rating` | 21 Mar 2026 | — |
 
 ---
 
