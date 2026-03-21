@@ -41,7 +41,7 @@ const ManagerDashboard: React.FC = () => {
           flexGrow: 1,
           display: 'flex',
           flexDirection: 'column',
-          width: { lg: `calc(100% - ${DRAWER_WIDTH}px)` },
+          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
           minHeight: '100vh',
           minWidth: 0, // Prevent flex item from overflowing
           maxWidth: '100vw', 

@@ -13,11 +13,8 @@ import StatsBanner from '../../components/landing/StatsBanner';
 import Pricing from '../../components/landing/Pricing';
 import CTA from '../../components/landing/CTA';
 import Footer from '../../components/landing/Footer';
-import MobileDrawer from '../../components/landing/MobileDrawer';
-
 const LandingPage: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -40,16 +37,7 @@ const LandingPage: React.FC = () => {
 
   return (
     <div style={{ width: '100%', overflow: 'hidden' }}>
-      <Header
-        scrolled={scrolled}
-        onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
-        isMobile={isMobile}
-      />
-
-      <MobileDrawer
-        open={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
-      />
+      <Header scrolled={scrolled} />
 
       <Hero isMobile={isMobile} />
 
@@ -71,7 +59,7 @@ const LandingPage: React.FC = () => {
 
       <CTA isMobile={isMobile} />
 
-      <Footer isMobile={isMobile} />
+      <Footer />
     </div>
   );
 };

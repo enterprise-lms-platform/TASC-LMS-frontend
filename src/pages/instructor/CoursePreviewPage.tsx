@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Box, CssBaseline, LinearProgress, Typography } from '@mui/material';
+import { Box, CssBaseline, LinearProgress, Typography, Snackbar, Alert } from '@mui/material';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import PreviewHeader from '../../components/instructor/course-preview/PreviewHeader';
 import type { DeviceType, ViewMode } from '../../components/instructor/course-preview/PreviewHeader';
@@ -37,6 +37,7 @@ const CoursePreviewPage: React.FC = () => {
   const [deviceType, setDeviceType] = useState<DeviceType>('desktop');
   const [viewMode, setViewMode] = useState<ViewMode>('student');
   const [activeTab, setActiveTab] = useState(0);
+  const [toast, setToast] = useState('');
 
   const previewModules: PreviewModule[] = useMemo(() => {
     if (!modulesData?.length) return [];
@@ -129,7 +130,7 @@ const CoursePreviewPage: React.FC = () => {
   };
 
   const handlePublish = () => {
-    console.log('Publishing course...');
+    setToast('Publish from the course editor to go live');
   };
 
   if (courseLoading) {
@@ -210,8 +211,8 @@ const CoursePreviewPage: React.FC = () => {
               currentPrice={currentPrice}
               originalPrice={originalPrice}
               discount={discount}
-              onEnroll={() => console.log('Enroll clicked')}
-              onAddToCart={() => console.log('Add to cart clicked')}
+              onEnroll={() => setToast('Preview mode — enrollment is disabled')}
+              onAddToCart={() => setToast('Preview mode — cart is disabled')}
             />
           </Box>
         </Box>
@@ -222,8 +223,8 @@ const CoursePreviewPage: React.FC = () => {
               currentPrice={currentPrice}
               originalPrice={originalPrice}
               discount={discount}
-              onEnroll={() => console.log('Enroll clicked')}
-              onAddToCart={() => console.log('Add to cart clicked')}
+              onEnroll={() => setToast('Preview mode — enrollment is disabled')}
+              onAddToCart={() => setToast('Preview mode — cart is disabled')}
             />
           </Box>
         )}
@@ -289,6 +290,9 @@ const CoursePreviewPage: React.FC = () => {
           {deviceType === 'desktop' && <Box />}
         </Box>
       </PreviewFrame>
+      <Snackbar open={!!toast} autoHideDuration={3000} onClose={() => setToast('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity="info" onClose={() => setToast('')} variant="filled">{toast}</Alert>
+      </Snackbar>
     </Box>
   );
 };

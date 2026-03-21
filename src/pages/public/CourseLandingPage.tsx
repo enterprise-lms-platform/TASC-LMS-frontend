@@ -20,7 +20,6 @@ const CourseLandingPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { slug: courseSlug } = useParams<{ slug: string }>();
 
   const { data: courseData, isLoading, isError } = useQuery({
@@ -59,11 +58,7 @@ const CourseLandingPage: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Header
-        scrolled={scrolled}
-        onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
-        isMobile={isMobile}
-      />
+      <Header scrolled={scrolled} />
 
       <Box component="main" sx={{ flex: 1, mt: { xs: 8, md: 0 } }}>
         {isLoading && (

@@ -5,7 +5,6 @@ import {
   Toolbar,
   Typography,
   IconButton,
-  InputBase,
   Box,
   Badge,
   Avatar,
@@ -14,7 +13,6 @@ import {
   Divider,
 } from '@mui/material';
 import {
-  Search as SearchIcon,
   Notifications as NotificationsIcon,
   Help as HelpIcon,
   Fullscreen as FullscreenIcon,
@@ -75,7 +73,7 @@ const TopBar: React.FC<TopBarProps> = ({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <IconButton
             onClick={onMenuClick}
-            sx={{ display: { lg: 'none' }, color: 'text.primary' }}
+            sx={{ display: { md: 'none' }, color: 'text.primary' }}
           >
             <MenuIcon />
           </IconButton>
@@ -117,32 +115,6 @@ const TopBar: React.FC<TopBarProps> = ({
 
         {/* Controls */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          {/* Search Bar */}
-          <Box
-            sx={{
-              display: { xs: 'none', md: 'flex' },
-              alignItems: 'center',
-              bgcolor: 'rgba(0,0,0,0.03)',
-              borderRadius: 50,
-              px: 2,
-              py: 0.5,
-              width: 280,
-              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.04)',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:focus-within': {
-                width: 340,
-                bgcolor: 'white',
-                boxShadow: '0 0 0 2px rgba(255,164,36,0.2), inset 0 1px 3px rgba(0,0,0,0.02)',
-              },
-            }}
-          >
-            <SearchIcon sx={{ color: 'text.disabled', mr: 1, fontSize: 20 }} />
-            <InputBase
-              placeholder="Search users, courses, reports..."
-              sx={{ flex: 1, fontSize: '0.82rem', fontWeight: 400 }}
-            />
-          </Box>
-
           {/* Action Icons */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.5 } }}>
             <IconButton

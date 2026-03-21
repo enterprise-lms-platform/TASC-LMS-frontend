@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Container, Stack } from '@mui/material';
-// Reuse existing landing components
 import Header from '../../components/landing/Header';
 import Footer from '../../components/landing/Footer';
-import MobileDrawer from '../../components/landing/MobileDrawer';
-// Catalogue components
 import '../../styles/CourseCatalogue.css';
 import CatalogueHero from '../../components/catalogue/CatalogueHero';
-import FiltersSidebar from '../../components/catalogue/FiltersSidebar';
+import FiltersSidebar, { type FilterState } from '../../components/catalogue/FiltersSidebar';
 import CoursesGrid from '../../components/catalogue/CoursesGrid';
 import Pagination from '../../components/catalogue/Pagination';
 import FeaturedCategories from '../../components/catalogue/FeaturedCategories';
@@ -16,21 +13,23 @@ import MobileFilterDrawer from '../../components/catalogue/MobileFilterDrawer';
 
 const PAGE_SIZE = 12;
 
+const defaultFilters: FilterState = { categories: [], levels: [] };
+
 const CourseCataloguePage: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [search, setSearch] = useState('');
   const [heroCategory, setHeroCategory] = useState<number | undefined>(undefined);
+  const [filters, setFilters] = useState<FilterState>(defaultFilters);
+  const [sortBy, setSortBy] = useState('newest');
 
   const pageCount = Math.ceil(totalCount / PAGE_SIZE);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsMobile(window.innerWidth < 768);
     }
 
@@ -59,35 +58,60 @@ const CourseCataloguePage: React.FC = () => {
     setPage(1);
   };
 
+  const handleFiltersChange = (newFilters: FilterState) => {
+    setFilters(newFilters);
+    setPage(1);
+  };
+
+  const handleClearAll = () => {
+    setFilters(defaultFilters);
+    setPage(1);
+  };
+
+  const handleSortChange = (sort: string) => {
+    setSortBy(sort);
+    setPage(1);
+  };
+
+  // Merge hero category with sidebar categories
+  const effectiveCategory = heroCategory ?? (filters.categories.length === 1 ? filters.categories[0] : undefined);
+  const effectiveCategories = heroCategory ? [heroCategory] : filters.categories;
+
   return (
     <Box sx={{ width: '100%', bgcolor: '#fafafa', minHeight: '100vh' }}>
-      {/* Header */}
-      <Header scrolled={scrolled} onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)} isMobile={isMobile} />
+      <Header scrolled={scrolled} />
 
-      {/* Mobile Navigation Drawer */}
-      <MobileDrawer open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+      <MobileFilterDrawer
+        open={mobileFiltersOpen}
+        onClose={() => setMobileFiltersOpen(false)}
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        onClearAll={handleClearAll}
+      />
 
-      {/* Mobile Filter Drawer */}
-      <MobileFilterDrawer open={mobileFiltersOpen} onClose={() => setMobileFiltersOpen(false)} />
-
-      {/* Hero Section */}
       <CatalogueHero isMobile={isMobile} onSearch={handleSearch} />
 
-      {/* Main Content */}
       <Container maxWidth="lg" sx={{ py: { xs: 4, md: 8 } }}>
         <Stack direction={{ xs: 'column', lg: 'row' }} spacing={4}>
-          {/* Sidebar (Desktop only) */}
           <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
-            <FiltersSidebar />
+            <FiltersSidebar
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+              onClearAll={handleClearAll}
+            />
           </Box>
 
-          {/* Grid Content */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <CoursesGrid
               onMobileFilterOpen={() => setMobileFiltersOpen(true)}
               page={page}
               search={search}
-              category={heroCategory}
+              category={effectiveCategory}
+              categories={effectiveCategories}
+              level={filters.levels.length === 1 ? filters.levels[0] : undefined}
+              levels={filters.levels}
+              sortBy={sortBy}
+              onSortChange={handleSortChange}
               onTotalCountChange={setTotalCount}
             />
             {pageCount > 1 && <Pagination count={pageCount} page={page} onPageChange={handlePageChange} />}
@@ -95,14 +119,9 @@ const CourseCataloguePage: React.FC = () => {
         </Stack>
       </Container>
 
-      {/* Featured Categories */}
       <FeaturedCategories />
-
-      {/* CTA Banner */}
       <CatalogueCtaBanner />
-
-      {/* Footer */}
-      <Footer isMobile={isMobile} />
+      <Footer />
     </Box>
   );
 };

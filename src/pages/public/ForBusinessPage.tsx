@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, useMediaQuery, useTheme } from '@mui/material';
+import { Box } from '@mui/material';
 import Header from '../../components/landing/Header';
 import Footer from '../../components/landing/Footer';
 import BusinessHero from '../../components/business/BusinessHero';
@@ -15,10 +15,7 @@ import BusinessCtaSection from '../../components/business/BusinessCtaSection';
 import '../../styles/ForBusiness.css';
 
 const ForBusinessPage: React.FC = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,11 +27,7 @@ const ForBusinessPage: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Header
-        scrolled={scrolled}
-        onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
-        isMobile={isMobile}
-      />
+      <Header scrolled={scrolled} />
       
       <Box component="main" sx={{ flex: 1 }}>
         <BusinessHero />

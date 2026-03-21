@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, CssBaseline, Toolbar, Typography } from '@mui/material';
+import { Box, CssBaseline, Toolbar, Typography, Snackbar, Alert } from '@mui/material';
 
 // Layout
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
@@ -140,6 +140,7 @@ const GradingPage: React.FC = () => {
   const [criteria, setCriteria] = useState<GradingCriterion[]>(createDefaultCriteria());
   const [feedback, setFeedback] = useState('');
   const [lastSaved, setLastSaved] = useState<Date | undefined>();
+  const [toast, setToast] = useState('');
 
   const selectedSubmission = sampleSubmissions.find((s) => s.id === selectedId);
   const currentIndex = sampleSubmissions.findIndex((s) => s.id === selectedId);
@@ -174,7 +175,7 @@ const GradingPage: React.FC = () => {
 
   const handleSaveDraft = () => {
     setLastSaved(new Date());
-    console.log('Draft saved');
+    setToast('Draft saved');
   };
 
   const handleSubmitNext = () => {
@@ -311,8 +312,8 @@ const GradingPage: React.FC = () => {
                               <FileAttachment
                                 key={file.id}
                                 file={file}
-                                onView={() => console.log('View', file.name)}
-                                onDownload={() => console.log('Download', file.name)}
+                                onView={() => setToast(`Viewing ${file.name} — coming soon`)}
+                                onDownload={() => setToast(`Downloading ${file.name} — coming soon`)}
                               />
                             ))}
                           </Box>
@@ -372,6 +373,9 @@ const GradingPage: React.FC = () => {
           </Box>
         </Box>
       </Box>
+      <Snackbar open={!!toast} autoHideDuration={3000} onClose={() => setToast('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity="info" onClose={() => setToast('')} variant="filled">{toast}</Alert>
+      </Snackbar>
     </Box>
   );
 };

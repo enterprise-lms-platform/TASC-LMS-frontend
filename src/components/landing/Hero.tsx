@@ -55,25 +55,6 @@ const Hero: React.FC<HeroProps> = ({ isMobile }) => {
         >
           {/* Left Content */}
           <div style={{ maxWidth: '600px' }}>
-            <div
-              className="chip-badge"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                backgroundColor: '#fff3e0',
-                color: '#ffa424',
-                padding: '8px 16px',
-                borderRadius: '9999px',
-                fontWeight: 600,
-                marginBottom: '24px',
-                fontSize: '0.875rem',
-              }}
-            >
-              <i className="fas fa-sparkles" />
-              New: AI-Powered Learning Paths
-            </div>
-
             <h1
               className="hero-title"
               style={{

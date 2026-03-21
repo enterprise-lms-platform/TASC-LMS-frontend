@@ -1,6 +1,6 @@
 # TASC LMS Frontend — Task Tracker
 
-**Last updated:** 19 March 2026
+**Last updated:** 22 March 2026
 **Repo:** `TASC-LMS-frontend`
 
 ---
@@ -79,11 +79,9 @@
 
 ## CRITICAL — Public/Marketing Pages with Hardcoded Data
 
-### 28. Catalogue Featured Categories — Fake Course Counts
-- **File:** `src/components/catalogue/FeaturedCategories.tsx` (lines 13-22)
-- **What's hardcoded:** 8 categories with fake course counts (e.g., "Web Development: 142 courses")
-- **What to do:** Fetch from `publicCategoryApi.getAll()` and use real course counts.
-- **Blocked?** No — API exists
+### 28. Catalogue Featured Categories — DONE
+- **File:** `src/components/catalogue/FeaturedCategories.tsx`
+- **Done:** Backend `CategorySerializer` now returns `courses_count` (annotated with `Count` + `Q` for published courses). Frontend already uses `cat.courses_count || 0`. Capped at 8 categories.
 
 ### 32. Landing Page Pricing — Hardcoded Price
 - **File:** `src/components/landing/Pricing.tsx` (lines 137-170)
@@ -126,16 +124,13 @@
 - **Done:** Route changed to `/course-details/:slug`. Page fetches via `publicCourseApi.getBySlug(slug)`. Created `CourseDetailContext`. Content sections (Curriculum, Objectives, Instructor) are wired up.
 - **Still pending:** Remaining child components (CourseHero, CoursePricingCard, RelatedCourses) still render hardcoded data. Each needs to consume `useCourseDetail()` context.
 
-### 39. Catalogue Filters Sidebar — Partially Done
+### 39. Catalogue Filters Sidebar — DONE
 - **File:** `src/components/catalogue/FiltersSidebar.tsx`
-- **Done:** Categories fetched from `publicCategoryApi.getAll()`.
-- **Still pending:** `levels[]` counts (Beginner/Intermediate/Advanced with `count: 0`), price range slider.
+- **Done:** Fully rewritten with `FilterState` interface. Category and level checkboxes wired to API via parent state. Price filter removed (subscription-based model). Clear All button functional. Mobile filter drawer passes same state. Sort dropdown in CoursesGrid wired to backend `ordering` param.
 
-### 41. Catalogue Pagination — Hardcoded Page Count
-- **File:** `src/components/catalogue/Pagination.tsx` (line 8)
-- **What's hardcoded:** `count={24}` (fixed 24 pages)
-- **What to do:** Compute from total results count in paginated API response.
-- **Blocked?** No
+### 41. Catalogue Pagination — DONE
+- **File:** `src/components/catalogue/Pagination.tsx`
+- **Done:** Component uses `count` prop; parent `CourseCataloguePage` computes `pageCount` from API `totalCount`. No hardcoded value.
 
 ---
 
@@ -194,19 +189,17 @@
 - **Issue:** Generic "under development" page used for incomplete features.
 - **What to do:** Replace all references with actual implementations as features complete.
 
-### 52. Console.log Cleanup (widespread)
-Multiple pages have `console.log` statements acting as placeholder click handlers:
-- `src/pages/instructor/GradebookPage.tsx` — `onExport` logs "Exporting:"
-- `src/pages/instructor/CoursePreviewPage.tsx:95` — "Publishing course..." (publish flow stub)
-- `src/pages/instructor/CoursePreviewPage.tsx:183-197` — `onEnroll`, `onAddToCart` log stubs
-- `src/pages/instructor/GradingPage.tsx:177` — "Draft saved" (no actual save)
-- `src/pages/instructor/GradingPage.tsx:314-315` — file view/download stubs
-- `src/pages/instructor/QuizBuilderPage.tsx:561-562` — Preview/Settings button stubs
-- `src/pages/learner/LearnerCourseDetailPage.tsx:94` — "Starting preview" stub
-- `src/pages/learner/LearnerCourseDetailPage.tsx:166` — "View instructor profile" stub
-- `src/pages/learner/LearnerCourseDetailPage.tsx:174` — "Write review" stub
-- `src/pages/learner/LearnerCourseCatalogPage.tsx:46,54,58` — enroll/browse/view stubs
-- **What to do:** Replace each with real functionality or remove.
+### 52. Console.log Cleanup — DONE (toast placeholders remain)
+- All console.log placeholder handlers replaced:
+  - **Wired real actions:** `handleCategoryClick` filters by category, `handleEnroll` navigates to course detail, `onPreview` navigates to preview page, `onSettings` scrolls to settings
+  - **Toast notifications (temporary — replace with real functionality):**
+    - `GradingPage` → `handleSaveDraft`: wire to submission grade API (`submissionApi`)
+    - `GradingPage` → file `onView`/`onDownload`: wire to actual file URLs from submission data
+    - `LearnerCourseDetailPage` → `onWriteReview`: open review submission form (backend `CourseReview` API exists at `/api/v1/catalogue/courses/{id}/reviews/`)
+    - `LearnerCourseDetailPage` → `onViewProfile`: navigate to instructor profile page (page does not exist yet)
+    - `LearnerCourseCatalogPage` → `handleInstructorProfile`: navigate to instructor profile page (page does not exist yet)
+    - `GradebookPage` → `onExport`: wire to async report generation or client-side CSV export
+    - `CoursePreviewPage` → `onEnroll`/`onAddToCart`/`handlePublish`: preview-only context, may stay as informational toasts
 
 ### 54. Type Safety — `as any` Casts
 Several files use `as any` to work around type mismatches:
@@ -279,6 +272,21 @@ Several files use `as any` to work around type mismatches:
 | — | Added `/manager/courses/create` route + fixed ManagerCreateCoursePage "Get Started" link | 21 Mar 2026 | — |
 | — | ManagerCreateCoursePage: added Quick Tools, tabbed course list (All/Drafts/In Review/Published/Rejected), per-course action buttons | 21 Mar 2026 | — |
 | — | Fixed ManagerCoursesPage build errors: `total_enrolled` → `enrollment_count`, added local type extension for `completion_rate`/`rating` | 21 Mar 2026 | — |
+| — | Landing page responsive fixes: Footer CSS media queries, Header self-contained with MobileDrawer, mobile menu links fixed | 22 Mar 2026 | — |
+| — | All dashboard sidebars: `lg` → `md` breakpoint (960px) for sidebar collapse (manager, finance, superadmin) | 22 Mar 2026 | — |
+| — | Removed decorative search bars from all dashboard TopBars (learner, instructor, manager, finance, superadmin) | 22 Mar 2026 | — |
+| — | Removed "New: AI-Powered Learning Paths" badge from landing page Hero | 22 Mar 2026 | — |
+| 39 | Catalogue FiltersSidebar: fully wired category + level filters, removed price filter, Clear All functional | 22 Mar 2026 | — |
+| — | Catalogue CoursesGrid: sort dropdown wired to backend `ordering` param (newest, popular, title A-Z/Z-A) | 22 Mar 2026 | — |
+| — | Catalogue MobileFilterDrawer: receives and passes filter state from parent | 22 Mar 2026 | — |
+| — | Catalogue FeaturedCategories: capped at 8 categories max | 22 Mar 2026 | — |
+| — | Removed hardcoded popular search tags from CatalogueHero and learner CatalogFilterBar | 22 Mar 2026 | — |
+| — | Learner CatalogFilterBar: upgraded to search input + category dropdown + search button (matches public /courses) | 22 Mar 2026 | — |
+| — | LearnerCourseCatalogPage: search + category filter wired to `publicCourseApi.getAll()` | 22 Mar 2026 | — |
+| — | Backend: added `SearchFilter` + `OrderingFilter` to `PublicCourseViewSet` (search by title/description/instructor, order by title/published_at/enrollment_count) | 22 Mar 2026 | — |
+| 28 | FeaturedCategories: backend returns `courses_count` via annotated `CategorySerializer`, frontend uses real counts | 22 Mar 2026 | — |
+| 41 | Catalogue Pagination: already uses `count` prop from API, no hardcoded value | 22 Mar 2026 | — |
+| 52 | Console.log cleanup: replaced all placeholder handlers with real actions or toast notifications across 6 pages | 22 Mar 2026 | — |
 
 ---
 
@@ -313,5 +321,4 @@ Several files use `as any` to work around type mismatches:
 | Security metrics endpoint | Active sessions, login attempts | SecurityPage (#26) |
 | Business-specific stats/pricing | Enterprise customer metrics, B2B plans | BusinessStatsSection (#35), PricingSection (#34) |
 | Manager-scoped bulk import | `POST /api/v1/manager/users/bulk_import/` (No 403 for managers) | ManagerBulkImportPage (#6, #43) |
-| Public course search | `?search=` filter support on `PublicCourseViewSet` | Catalogue search bar |
 | Discussion moderation | Pin and lock endpoints for existing API | Instructor/Manager discussions |

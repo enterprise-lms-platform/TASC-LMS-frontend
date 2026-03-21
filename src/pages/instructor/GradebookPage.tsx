@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Box, CssBaseline, Toolbar, Typography, Select, MenuItem, FormControl, InputLabel, CircularProgress } from '@mui/material';
+import { Box, CssBaseline, Toolbar, Typography, Select, MenuItem, FormControl, InputLabel, CircularProgress, Snackbar, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
@@ -72,6 +72,7 @@ const GradebookPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('expanded');
   const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
+  const [toast, setToast] = useState('');
 
   const { data: coursesData } = useQuery({
     queryKey: ['courses', 'instructor'],
@@ -371,8 +372,11 @@ const GradebookPage: React.FC = () => {
       <ExportDialog
         open={exportOpen}
         onClose={() => setExportOpen(false)}
-        onExport={(options) => console.log('Exporting:', options)}
+        onExport={(options) => { setToast('Export coming soon'); setExportOpen(false); }}
       />
+      <Snackbar open={!!toast} autoHideDuration={3000} onClose={() => setToast('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity="info" onClose={() => setToast('')} variant="filled">{toast}</Alert>
+      </Snackbar>
     </Box>
   );
 };

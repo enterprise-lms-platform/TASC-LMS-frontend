@@ -6,7 +6,6 @@ import {
   Box,
   Typography,
   IconButton,
-  InputBase,
   Badge,
   Avatar,
   Menu,
@@ -15,7 +14,6 @@ import {
 } from '@mui/material';
 import {
   Menu as MenuIcon,
-  Search as SearchIcon,
   Notifications as NotificationsIcon,
   HelpOutline as HelpIcon,
   Logout as LogoutIcon,
@@ -70,8 +68,8 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
     <AppBar
       position="fixed"
       sx={{
-        width: { lg: `calc(100% - ${DRAWER_WIDTH}px)` },
-        ml: { lg: `${DRAWER_WIDTH}px` },
+        width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+        ml: { md: `${DRAWER_WIDTH}px` },
         bgcolor: 'rgba(255,255,255,0.72)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
@@ -86,7 +84,7 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
           color="inherit"
           edge="start"
           onClick={onMobileMenuToggle}
-          sx={{ mr: 2, display: { lg: 'none' } }}
+          sx={{ mr: 2, display: { md: 'none' } }}
         >
           <MenuIcon />
         </IconButton>
@@ -122,51 +120,6 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
         </Box>
 
         <Box sx={{ flexGrow: 1 }} />
-
-        {/* Search Bar — pill shaped */}
-        <Box
-          sx={{
-            position: 'relative',
-            mr: 2,
-            display: { xs: 'none', sm: 'block' },
-          }}
-        >
-          <Box
-            sx={{
-              position: 'absolute',
-              pointerEvents: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              pl: 2,
-              color: 'text.disabled',
-            }}
-          >
-            <SearchIcon sx={{ fontSize: 20 }} />
-          </Box>
-          <InputBase
-            placeholder="Search users, courses, reports..."
-            sx={{
-              color: 'inherit',
-              bgcolor: 'rgba(0,0,0,0.03)',
-              borderRadius: '50px',
-              p: 1,
-              pl: 6,
-              width: 240,
-              fontSize: '0.85rem',
-              transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)',
-              border: '1px solid transparent',
-              '&:focus-within': {
-                width: 300,
-                bgcolor: 'white',
-                border: '1px solid',
-                borderColor: 'primary.main',
-                boxShadow: '0 0 0 3px rgba(255,164,36,0.12)',
-              },
-            }}
-          />
-        </Box>
 
         {/* Action Icons */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.5 } }}>

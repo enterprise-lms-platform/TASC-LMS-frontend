@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Stack, useMediaQuery, useTheme, CssBaseline, Toolbar, Alert, CircularProgress, Typography } from '@mui/material';
+import { Box, Stack, useMediaQuery, useTheme, CssBaseline, Toolbar, Alert, CircularProgress, Typography, Snackbar } from '@mui/material';
 
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
@@ -30,6 +30,7 @@ const LearnerCourseDetailPage: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [enrollError, setEnrollError] = useState('');
+  const [toast, setToast] = useState('');
 
   const courseNumericId = courseId ? Number(courseId) : 0;
 
@@ -285,7 +286,7 @@ const LearnerCourseDetailPage: React.FC = () => {
               {instructorData && (
                 <CourseInstructor
                   instructor={instructorData}
-                  onViewProfile={() => console.log('View instructor profile')}
+                  onViewProfile={() => setToast('Instructor profiles coming soon')}
                 />
               )}
 
@@ -294,7 +295,7 @@ const LearnerCourseDetailPage: React.FC = () => {
                 totalReviews={reviewData?.total || 0}
                 ratingDistribution={reviewDistribution}
                 reviews={reviewsList}
-                onWriteReview={() => console.log('Write review')}
+                onWriteReview={() => setToast('Review submission coming soon')}
               />
 
               <CourseFAQ faqs={[]} />
@@ -343,6 +344,9 @@ const LearnerCourseDetailPage: React.FC = () => {
           </Stack>
         </Box>
       </Box>
+      <Snackbar open={!!toast} autoHideDuration={3000} onClose={() => setToast('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity="info" onClose={() => setToast('')} variant="filled">{toast}</Alert>
+      </Snackbar>
     </Box>
   );
 };

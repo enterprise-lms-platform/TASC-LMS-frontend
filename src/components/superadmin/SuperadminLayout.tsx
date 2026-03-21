@@ -31,7 +31,7 @@ const SuperadminLayout: React.FC<SuperadminLayoutProps> = ({
         component="main"
         sx={{
           flexGrow: 1,
-          width: { lg: `calc(100% - ${DRAWER_WIDTH}px)` },
+          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
           display: 'flex',
           flexDirection: 'column',
           minWidth: 0,

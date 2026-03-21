@@ -1,47 +1,30 @@
 import React, { useState } from 'react';
-import { Box, Chip, Button, Stack, Typography, Menu, MenuItem } from '@mui/material';
-import { FilterList, Sort, KeyboardArrowDown } from '@mui/icons-material';
-
-const categories = [
-  { name: 'All', count: 256 },
-  { name: 'Web Development', count: 42 },
-  { name: 'Data Science', count: 28 },
-  { name: 'Cybersecurity', count: 15 },
-  { name: 'Business', count: 36 },
-];
-
-const sortOptions = ['Popular', 'Newest', 'Highest Rated', 'Price: Low to High', 'Price: High to Low'];
+import { useQuery } from '@tanstack/react-query';
+import { Box, Button, Select, MenuItem, InputBase } from '@mui/material';
+import { Search as SearchIcon } from '@mui/icons-material';
+import { publicCategoryApi } from '../../../services/public.services';
 
 interface CatalogFilterBarProps {
-  activeCategory?: string;
-  onCategoryChange?: (category: string) => void;
-  onSortChange?: (sort: string) => void;
+  searchQuery?: string;
+  onSearch?: (query: string, categoryId?: number) => void;
 }
 
 const CatalogFilterBar: React.FC<CatalogFilterBarProps> = ({
-  activeCategory = 'All',
-  onCategoryChange,
-  onSortChange,
+  searchQuery: initialQuery = '',
+  onSearch,
 }) => {
-  const [selectedCategory, setSelectedCategory] = useState(activeCategory);
-  const [selectedSort, setSelectedSort] = useState('Popular');
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [query, setQuery] = useState(initialQuery);
+  const [category, setCategory] = useState('');
 
-  const handleCategoryClick = (category: string) => {
-    setSelectedCategory(category);
-    onCategoryChange?.(category);
-  };
+  const { data: categoriesData } = useQuery({
+    queryKey: ['publicCategories'],
+    queryFn: () => publicCategoryApi.getAll(),
+  });
 
-  const handleSortClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+  const categories = categoriesData?.data?.results ?? [];
 
-  const handleSortClose = (sort?: string) => {
-    setAnchorEl(null);
-    if (sort) {
-      setSelectedSort(sort);
-      onSortChange?.(sort);
-    }
+  const handleSearch = () => {
+    onSearch?.(query, category ? Number(category) : undefined);
   };
 
   return (
@@ -49,88 +32,67 @@ const CatalogFilterBar: React.FC<CatalogFilterBarProps> = ({
       sx={{
         bgcolor: 'white',
         borderRadius: 3,
-        p: 3,
         mb: 4,
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
         border: '1px solid #e4e4e7',
         display: 'flex',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: 3,
+        flexDirection: { xs: 'column', md: 'row' },
+        overflow: 'hidden',
       }}
     >
-      {/* Filter icon and label */}
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <FilterList sx={{ color: 'text.secondary', fontSize: 20 }} />
-        <Typography
-          sx={{
-            fontSize: '0.875rem',
-            fontWeight: 600,
-            color: 'text.secondary',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          Categories:
-        </Typography>
-      </Stack>
-
-      {/* Category chips */}
-      <Stack direction="row" spacing={1.5} sx={{ flexWrap: 'wrap', gap: 1 }}>
-        {categories.map((cat) => (
-          <Chip
-            key={cat.name}
-            label={`${cat.name} (${cat.count})`}
-            onClick={() => handleCategoryClick(cat.name)}
-            sx={{
-              bgcolor: selectedCategory === cat.name ? '#ffa424' : 'white',
-              color: selectedCategory === cat.name ? 'white' : '#52525b',
-              border: selectedCategory === cat.name ? 'none' : '1px solid #d4d4d8',
-              fontWeight: 500,
-              '&:hover': {
-                bgcolor: selectedCategory === cat.name ? '#e59420' : 'rgba(255, 164, 36, 0.05)',
-                borderColor: '#ffa424',
-              },
-            }}
-          />
-        ))}
-      </Stack>
-
-      {/* Sort dropdown */}
-      <Box sx={{ ml: 'auto' }}>
-        <Button
-          onClick={handleSortClick}
-          endIcon={<KeyboardArrowDown />}
-          startIcon={<Sort />}
-          sx={{
-            bgcolor: 'white',
-            color: '#52525b',
-            border: '1px solid #d4d4d8',
-            textTransform: 'none',
-            px: 2,
-            '&:hover': {
-              bgcolor: '#fafafa',
-              borderColor: '#a1a1aa',
-            },
-          }}
-        >
-          Sort by: {selectedSort}
-        </Button>
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={() => handleSortClose()}
-        >
-          {sortOptions.map((option) => (
-            <MenuItem
-              key={option}
-              onClick={() => handleSortClose(option)}
-              selected={option === selectedSort}
-            >
-              {option}
-            </MenuItem>
-          ))}
-        </Menu>
+      {/* Search Input */}
+      <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', px: 3, py: 1.5 }}>
+        <SearchIcon sx={{ color: '#a1a1aa', mr: 1.5, flexShrink: 0 }} />
+        <InputBase
+          placeholder="What do you want to learn?"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          sx={{ flex: 1, fontSize: '0.95rem' }}
+          fullWidth
+        />
       </Box>
+
+      {/* Divider */}
+      <Box sx={{ width: { xs: '100%', md: '1px' }, height: { xs: '1px', md: 'auto' }, bgcolor: '#e4e4e7', my: { xs: 0, md: 1.5 } }} />
+
+      {/* Category Dropdown */}
+      <Box sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1.5 }}>
+        <Select
+          value={category}
+          onChange={(e) => setCategory(e.target.value as string)}
+          displayEmpty
+          variant="standard"
+          disableUnderline
+          MenuProps={{ disableScrollLock: true }}
+          sx={{ minWidth: 140, '& .MuiSelect-select': { fontSize: '0.875rem', color: '#52525b' } }}
+        >
+          <MenuItem value="">All Categories</MenuItem>
+          {categories.map((cat) => (
+            <MenuItem key={cat.id} value={String(cat.id)}>{cat.name}</MenuItem>
+          ))}
+        </Select>
+      </Box>
+
+      {/* Search Button */}
+      <Button
+        onClick={handleSearch}
+        variant="contained"
+        startIcon={<SearchIcon />}
+        sx={{
+          bgcolor: '#ffa424',
+          borderRadius: 0,
+          px: 4,
+          py: 1.5,
+          fontWeight: 600,
+          textTransform: 'none',
+          boxShadow: 'none',
+          '&:hover': { bgcolor: '#f97316', boxShadow: 'none' },
+          width: { xs: '100%', md: 'auto' },
+        }}
+      >
+        Search
+      </Button>
     </Box>
   );
 };

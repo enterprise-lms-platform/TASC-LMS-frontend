@@ -568,8 +568,8 @@ const QuizBuilderPage: React.FC = () => {
       <QuizBuilderTopBar
         quizTitle={quizTitle}
         courseTitle={courseTitle}
-        onPreview={() => console.log('Preview')}
-        onSettings={() => console.log('Settings')}
+        onPreview={() => courseId ? navigate(`${basePath}/preview`) : setSnackbar({ open: true, message: 'Save quiz first to preview', severity: 'error' as const })}
+        onSettings={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         onMobileMenuToggle={() => setMobileOpen(!mobileOpen)}
       />
 

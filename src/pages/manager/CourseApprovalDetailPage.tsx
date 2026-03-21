@@ -85,7 +85,7 @@ const CourseApprovalDetailPage: React.FC = () => {
         position="fixed"
         elevation={0}
         sx={{
-          width: { lg: `calc(100% - ${drawerWidth}px)` },
+          width: { md: `calc(100% - ${drawerWidth}px)` },
           ml: { lg: `${drawerWidth}px` },
           bgcolor: 'white',
           borderBottom: 1,
@@ -116,7 +116,7 @@ const CourseApprovalDetailPage: React.FC = () => {
         </Toolbar>
       </AppBar>
 
-      <Box component="main" sx={{ flexGrow: 1, width: { lg: `calc(100% - ${drawerWidth}px)` }, minHeight: '100vh' }}>
+      <Box component="main" sx={{ flexGrow: 1, width: { md: `calc(100% - ${drawerWidth}px)` }, minHeight: '100vh' }}>
         <Toolbar sx={{ minHeight: '72px !important' }} />
 
         <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1000, mx: 'auto' }}>

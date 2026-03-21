@@ -19,7 +19,6 @@ interface CatalogueHeroProps {
   onSearch?: (query: string, category: string) => void;
 }
 
-const popularSearches = ['Python', 'React', 'Machine Learning', 'AWS', 'UX Design'];
 
 const CatalogueHero: React.FC<CatalogueHeroProps> = ({ isMobile, onSearch }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -51,12 +50,6 @@ const CatalogueHero: React.FC<CatalogueHeroProps> = ({ isMobile, onSearch }) => 
     }
   };
 
-  const handlePopularClick = (term: string) => {
-    setSearchQuery(term);
-    if (onSearch) {
-      onSearch(term, category);
-    }
-  };
 
   return (
     <Box className="catalogue-hero">
@@ -175,29 +168,6 @@ const CatalogueHero: React.FC<CatalogueHeroProps> = ({ isMobile, onSearch }) => 
               Search
             </Button>
           </Box>
-
-          {/* Popular Searches */}
-          {!isMobile && (
-            <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center" flexWrap="wrap" sx={{ mb: 5, gap: 1 }}>
-              <Typography sx={{ fontSize: '0.875rem', color: '#71717a' }}>Popular:</Typography>
-              {popularSearches.map((term) => (
-                <Chip
-                  key={term}
-                  label={term}
-                  onClick={() => handlePopularClick(term)}
-                  variant="outlined"
-                  sx={{
-                    borderColor: '#e4e4e7',
-                    bgcolor: 'white',
-                    color: '#52525b',
-                    fontSize: '0.875rem',
-                    cursor: 'pointer',
-                    '&:hover': { borderColor: '#ffb74d', bgcolor: '#fff3e0', color: '#ffa424' },
-                  }}
-                />
-              ))}
-            </Stack>
-          )}
 
           {/* Stats Bar */}
           <Stack

@@ -123,7 +123,7 @@ const ManagerSettingsPage: React.FC = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          width: { lg: `calc(100% - ${DRAWER_WIDTH}px)` },
+          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
           minHeight: '100vh',
           minWidth: 0,
           maxWidth: '100vw',

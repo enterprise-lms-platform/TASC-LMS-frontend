@@ -34,7 +34,7 @@ const FinanceDashboard: React.FC = () => {
         sx={{
           flexGrow: 1,
           p: { xs: 2, md: 3 },
-          width: { lg: `calc(100% - ${DRAWER_WIDTH}px)` },
+          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
           overflowX: 'hidden',
           minWidth: 0,
           maxWidth: '100vw',

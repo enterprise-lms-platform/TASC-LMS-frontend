@@ -41,7 +41,7 @@ const FeaturedCategories: React.FC = () => {
   });
 
   const apiData = categoriesData?.data;
-  const categories = (apiData?.results || []).map((cat: any) => ({
+  const categories = (apiData?.results || []).slice(0, 8).map((cat: any) => ({
     name: cat.name,
     count: `${cat.courses_count || 0} courses`,
     icon: iconMap[cat.name] || AppsIcon,

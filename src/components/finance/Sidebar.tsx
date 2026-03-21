@@ -333,7 +333,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
   };
 
   return (
-    <Box component="nav" sx={{ width: { lg: DRAWER_WIDTH }, flexShrink: { lg: 0 } }}>
+    <Box component="nav" sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}>
       {/* Mobile Drawer */}
       <Drawer
         variant="temporary"
@@ -341,7 +341,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
         onClose={onMobileClose}
         ModalProps={{ keepMounted: true }}
         sx={{
-          display: { xs: 'block', lg: 'none' },
+          display: { xs: 'block', md: 'none' },
           '& .MuiDrawer-paper': drawerPaperStyles,
         }}
       >
@@ -352,7 +352,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
       <Drawer
         variant="permanent"
         sx={{
-          display: { xs: 'none', lg: 'block' },
+          display: { xs: 'none', md: 'block' },
           '& .MuiDrawer-paper': drawerPaperStyles,
         }}
         open
