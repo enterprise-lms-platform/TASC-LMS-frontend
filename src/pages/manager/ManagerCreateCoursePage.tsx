@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Box,
   CssBaseline,
@@ -8,6 +8,7 @@ import {
   Grid,
   Button,
   Chip,
+  CircularProgress,
 } from '@mui/material';
 import {
   AddCircle as AddCircleIcon,
@@ -16,8 +17,11 @@ import {
   CloudUpload as CloudUploadIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { courseApi } from '../../services/main.api';
+import type { CourseList } from '../../types/types';
 
 // ─── Styles ────────────────────────────────────────────────
 
@@ -40,7 +44,7 @@ const headerSx = {
   gap: 2,
 };
 
-// ─── Mock Data ─────────────────────────────────────────────
+// ─── Quick Start Options ───────────────────────────────────
 
 interface QuickStartOption {
   title: string;
@@ -75,20 +79,14 @@ const quickStartOptions: QuickStartOption[] = [
   },
 ];
 
-interface RecentCourse {
-  id: number;
-  title: string;
-  instructor: string;
-  status: 'Published' | 'Draft' | 'In Review';
-  date: string;
-}
+// ─── Helpers ───────────────────────────────────────────────
 
-const recentCourses: RecentCourse[] = [
-  { id: 1, title: 'Advanced React Patterns', instructor: 'Dr. Sarah Chen', status: 'Published', date: 'Mar 5, 2026' },
-  { id: 2, title: 'Machine Learning Fundamentals', instructor: 'James Wilson', status: 'In Review', date: 'Mar 3, 2026' },
-  { id: 3, title: 'Cloud Architecture with AWS', instructor: 'Maria Garcia', status: 'Draft', date: 'Feb 28, 2026' },
-  { id: 4, title: 'Cybersecurity Essentials', instructor: 'Alex Kim', status: 'Published', date: 'Feb 25, 2026' },
-];
+const getDisplayStatus = (status: string): string => {
+  if (status === 'published') return 'Published';
+  if (status === 'pending_approval') return 'In Review';
+  if (status === 'archived') return 'Archived';
+  return 'Draft';
+};
 
 const getStatusChipSx = (status: string) => {
   switch (status) {
@@ -103,11 +101,22 @@ const getStatusChipSx = (status: string) => {
   }
 };
 
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
 // ─── Component ─────────────────────────────────────────────
 
-const ManagerCreateCoursePage: React.FC = () => {
+const ManagerCreateCoursePage = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
+
+  const { data: coursesData, isLoading } = useQuery({
+    queryKey: ['courses', 'manager', 'recent'],
+    queryFn: () => courseApi.getAll({ limit: 5 }).then(r => r.data),
+  });
+
+  const recentCourses: CourseList[] = coursesData?.results ?? (Array.isArray(coursesData) ? coursesData : []);
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -247,53 +256,67 @@ const ManagerCreateCoursePage: React.FC = () => {
             ))}
           </Grid>
 
-          {/* ── Recent Courses ── */}
+          {/* ── Recent Courses (Live Data) ── */}
           <Paper elevation={0} sx={cardSx}>
             <Box sx={headerSx}>
               <Typography fontWeight={700}>Recent Courses</Typography>
             </Box>
             <Box>
-              {recentCourses.map((course, i) => (
-                <Box
-                  key={course.id}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                    p: 2,
-                    px: 3,
-                    borderBottom: i < recentCourses.length - 1 ? 1 : 0,
-                    borderColor: 'divider',
-                    '&:hover': { bgcolor: 'rgba(255,164,36,0.03)' },
-                    transition: 'background 0.15s',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight={600} noWrap>
-                      {course.title}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {course.instructor}
-                    </Typography>
-                  </Box>
-
-                  <Chip
-                    label={course.status}
-                    size="small"
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: '0.7rem',
-                      borderRadius: '6px',
-                      ...getStatusChipSx(course.status),
-                    }}
-                  />
-
-                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100, textAlign: 'right' }}>
-                    {course.date}
-                  </Typography>
+              {isLoading ? (
+                <Box sx={{ p: 4, textAlign: 'center' }}>
+                  <CircularProgress size={28} />
                 </Box>
-              ))}
+              ) : recentCourses.length === 0 ? (
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">No courses yet. Create your first one above!</Typography>
+                </Box>
+              ) : (
+                recentCourses.map((course, i) => {
+                  const displayStatus = getDisplayStatus(course.status);
+                  return (
+                    <Box
+                      key={course.id}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        p: 2,
+                        px: 3,
+                        borderBottom: i < recentCourses.length - 1 ? 1 : 0,
+                        borderColor: 'divider',
+                        '&:hover': { bgcolor: 'rgba(255,164,36,0.03)', cursor: 'pointer' },
+                        transition: 'background 0.15s',
+                        flexWrap: 'wrap',
+                      }}
+                      onClick={() => navigate(`/manager/courses/${course.id}`)}
+                    >
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="body2" fontWeight={600} noWrap>
+                          {course.title}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {course.instructor_name || 'Unknown Instructor'}
+                        </Typography>
+                      </Box>
+
+                      <Chip
+                        label={displayStatus}
+                        size="small"
+                        sx={{
+                          fontWeight: 600,
+                          fontSize: '0.7rem',
+                          borderRadius: '6px',
+                          ...getStatusChipSx(displayStatus),
+                        }}
+                      />
+
+                      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100, textAlign: 'right' }}>
+                        {course.published_at ? formatDate(course.published_at) : '—'}
+                      </Typography>
+                    </Box>
+                  );
+                })
+              )}
             </Box>
           </Paper>
         </Box>

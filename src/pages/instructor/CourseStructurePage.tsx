@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Box, Toolbar, CssBaseline, LinearProgress, Typography } from '@mui/material';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
 import StructureTopBar from '../../components/instructor/course-structure/StructureTopBar';
 import StructureFooter from '../../components/instructor/course-structure/StructureFooter';
@@ -164,7 +164,15 @@ function extractUserId(value: unknown): number | undefined {
 const CourseStructurePage: React.FC = () => {
   const navigate = useNavigate();
   const { courseId } = useParams<{ courseId: string }>();
+  const { pathname } = useLocation();
   const id = courseId ? Number(courseId) : 0;
+
+  // Detect role context from URL to keep navigation within the correct dashboard
+  const isManager = pathname.startsWith('/manager/');
+  const basePath = isManager
+    ? `/manager/courses/${courseId}`
+    : `/instructor/course/${courseId}`;
+  const dashboardPath = isManager ? '/manager' : '/instructor';
   const { user } = useAuth();
 
   // Load course data from API
@@ -232,7 +240,7 @@ const CourseStructurePage: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate('/instructor');
+    navigate(dashboardPath);
   };
 
   const handleAddModule = () => {
@@ -404,14 +412,14 @@ const CourseStructurePage: React.FC = () => {
 
     if (uploadTypes.has(session.session_type)) {
       navigate(
-        `/instructor/course/${courseId}/upload?type=${session.session_type}&lesson=${lessonParam}&sessionId=${session.id}`
+        `${basePath}/upload?type=${session.session_type}&lesson=${lessonParam}&sessionId=${session.id}`
       );
       return;
     }
 
     switch (session.session_type) {
       case 'quiz':
-        navigate(`/instructor/course/${courseId}/quiz/builder?lesson=${lessonParam}&sessionId=${session.id}&course=${encodeURIComponent(courseTitle)}`);
+        navigate(`${basePath}/quiz/builder?lesson=${lessonParam}&sessionId=${session.id}&course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'assignment':
         navigate(`/instructor/assignment/create?lesson=${lessonParam}&sessionId=${session.id}&courseId=${id}&course=${encodeURIComponent(courseTitle)}`);
@@ -485,7 +493,7 @@ const CourseStructurePage: React.FC = () => {
         }
 
         navigate(
-          `/instructor/course/${courseId}/upload?type=${data.type}&lesson=${lessonParam}&sessionId=${session.id}`
+          `${basePath}/upload?type=${data.type}&lesson=${lessonParam}&sessionId=${session.id}`
         );
       } catch (err) {
         setSaveStatus('saved');
@@ -570,7 +578,7 @@ const CourseStructurePage: React.FC = () => {
         }
 
         navigate(
-          `/instructor/course/${courseId}/quiz/builder?sessionId=${session.id}&lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`
+          `${basePath}/quiz/builder?sessionId=${session.id}&lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`
         );
       } catch (err) {
         setSaveStatus('saved');
@@ -587,7 +595,7 @@ const CourseStructurePage: React.FC = () => {
 
     switch (data.type) {
       case 'quiz':
-        navigate(`/instructor/course/${courseId}/quiz/builder?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`);
+        navigate(`${basePath}/quiz/builder?lesson=${lessonParam}&course=${encodeURIComponent(courseTitle)}`);
         break;
       case 'assignment':
         navigate(`/instructor/assignment/create?lesson=${lessonParam}&courseId=${id}&course=${encodeURIComponent(courseTitle)}`);
@@ -607,7 +615,7 @@ const CourseStructurePage: React.FC = () => {
       case 'video':
       case 'document':
       case 'scorm':
-        navigate(`/instructor/course/${courseId}/upload?type=${type}`);
+        navigate(`${basePath}/upload?type=${type}`);
         break;
       case 'quiz':
         handleAddLesson(undefined, 'quiz');
@@ -629,7 +637,7 @@ const CourseStructurePage: React.FC = () => {
   };
 
   const handlePreview = () => {
-    navigate(`/instructor/course/${courseId}/preview`);
+    navigate(`${basePath}/preview`);
   };
 
   const handlePublish = () => {
@@ -646,11 +654,11 @@ const CourseStructurePage: React.FC = () => {
   };
 
   const handleSettings = () => {
-    navigate(`/instructor/course/${courseId}/edit`);
+    navigate(`${basePath}/edit`);
   };
 
   const handleEditInfo = () => {
-    navigate(`/instructor/course/${courseId}/edit`);
+    navigate(`${basePath}/edit`);
   };
 
   return (
@@ -712,7 +720,7 @@ const CourseStructurePage: React.FC = () => {
                 component="span"
                 color="primary"
                 sx={{ cursor: 'pointer', fontWeight: 600 }}
-                onClick={() => navigate('/instructor')}
+                onClick={() => navigate(dashboardPath)}
               >
                 Return to Dashboard
               </Typography>

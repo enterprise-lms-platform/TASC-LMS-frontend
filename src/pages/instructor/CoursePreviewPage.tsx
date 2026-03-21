@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Box, CssBaseline, LinearProgress, Typography } from '@mui/material';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import PreviewHeader from '../../components/instructor/course-preview/PreviewHeader';
 import type { DeviceType, ViewMode } from '../../components/instructor/course-preview/PreviewHeader';
 import PreviewFrame from '../../components/instructor/course-preview/PreviewFrame';
@@ -22,7 +22,13 @@ const strToLines = (s?: string | null): string[] =>
 const CoursePreviewPage: React.FC = () => {
   const navigate = useNavigate();
   const { courseId } = useParams<{ courseId: string }>();
+  const { pathname } = useLocation();
   const id = courseId ? Number(courseId) : 0;
+
+  // Detect role context from URL to keep navigation within the correct dashboard
+  const basePath = pathname.startsWith('/manager/')
+    ? `/manager/courses/${courseId}`
+    : `/instructor/course/${courseId}`;
 
   const { data: courseData, isLoading: courseLoading, isError: courseIsError } = useCourse(id, { enabled: !!courseId });
   const { data: modulesData } = useModules({ course: id });
@@ -119,7 +125,7 @@ const CoursePreviewPage: React.FC = () => {
   }, [reviewData]);
 
   const handleEdit = () => {
-    navigate(`/instructor/course/${courseId}/edit`);
+    navigate(`${basePath}/edit`);
   };
 
   const handlePublish = () => {

@@ -42,12 +42,10 @@
 - **Backend dependency:** Certificate API exists but `pdf_url` may not be populated (PDF generation logic incomplete on backend).
 - **Blocked?** Partially — depends on backend PDF generation
 
-### 9. Learner Subscription Page — Usage Stats
+### 9. Learner Subscription Page — Usage Stats — DONE
 - **File:** `src/pages/learner/SubscriptionManagementPage.tsx`
-- **What's hardcoded:** Usage stats (course access count, certificates, live sessions, downloads) and billing history.
-- **What to do:** Compute usage from real enrollment/progress/certificate data.
-- **Backend dependency:** Raw data APIs exist; no aggregated "usage summary" endpoint.
-- **Blocked?** No — can compute client-side
+- **Done:** Usage stats computed from `useEnrollments()`, `useCertificates()`, `livestreamApi.getAll()`. Billing history wired to `invoiceApi.getAll()`. Plan card wired to `subscriptionApi.getMyStatus()`. All hardcoded arrays removed.
+- **Blocked?** No — completed
 
 ### 10. CoursePlayerPage — Partially Done
 - **File:** `src/pages/learner/CoursePlayerPage.tsx`
@@ -259,7 +257,9 @@ Several files use `as any` to work around type mismatches:
 | — | Notes tab persisted to backend | 16 Mar 2026 | `947ea56` |
 | — | Certificate/invoice download buttons | 15 Mar 2026 | `5e2d1c2` |
 | — | Privacy policy + certificate validation pages | 14 Mar 2026 | `e3dc560` |
-| — | Manager pages wired to real API | 13 Mar 2026 | `3fca5c3` |
+| — | SubscriptionManagementPage: usage stats, billing, plan card wired to real APIs | 21 Mar 2026 | — |
+| — | Manager full course management (reuse instructor components, role-aware navigation) | 21 Mar 2026 | — |
+| — | Removed thin `ManagerCourseDetailPage` + `ManagerCourseEditPage` | 21 Mar 2026 | — |
 
 ---
 

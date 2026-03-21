@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -28,7 +28,7 @@ import {
   FormControl,
   FormControlLabel,
   Checkbox,
-
+  CircularProgress,
   Snackbar,
   Alert,
 } from '@mui/material';
@@ -56,8 +56,13 @@ import {
   CloudDownload as CloudDownloadIcon,
   HelpOutline as HelpIcon,
 } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
+import { useEnrollments, useCertificates } from '../../hooks/useLearning';
+import { invoiceApi, subscriptionApi } from '../../services/payments.services';
+import { livestreamApi } from '../../services/catalogue.services';
+import type { Invoice } from '../../types/types';
 
 // --- Main Page Component ---
 const SubscriptionManagementPage: React.FC = () => {
@@ -75,9 +80,72 @@ const SubscriptionManagementPage: React.FC = () => {
     setToast({ open: true, message, severity });
   };
 
+  // ─── Fetch real data ───
+  const { data: enrollments = [] } = useEnrollments();
+  const { data: certificates = [] } = useCertificates();
+  const { data: invoicesResponse } = useQuery({
+    queryKey: ['learnerInvoices'],
+    queryFn: () => invoiceApi.getAll().then((r) => {
+      const d = r.data;
+      return Array.isArray(d) ? d : (d as { results?: Invoice[] }).results ?? [];
+    }),
+  });
+  const { data: subStatus } = useQuery({
+    queryKey: ['mySubscriptionStatus'],
+    queryFn: () => subscriptionApi.getMyStatus().then((r) => r.data),
+  });
+  const { data: livestreamData } = useQuery({
+    queryKey: ['learnerLiveSessions'],
+    queryFn: () => livestreamApi.getAll().then((r) => {
+      const d = r.data;
+      return Array.isArray(d) ? d : (d as { results?: unknown[] }).results ?? [];
+    }),
+  });
+
+  const invoices: Invoice[] = invoicesResponse ?? [];
+  const liveSessions = livestreamData ?? [];
+
+  // ─── Compute usage stats from real data ───
+  const usageStats = useMemo(() => {
+    const courseCount = enrollments.length;
+    const certCount = certificates.length;
+    const liveCount = liveSessions.length;
+
+    return [
+      { icon: <BookIcon />, label: 'Courses Accessed', value: `${courseCount} / Unlimited`, progress: 100, color: '#10b981', sublabel: 'Unlimited access with your plan' },
+      { icon: <CertificateIcon />, label: 'Certificates Earned', value: `${certCount}`, progress: Math.min(certCount * 10, 100), color: '#3b82f6', sublabel: `${certCount} certificate${certCount !== 1 ? 's' : ''} earned` },
+      { icon: <VideoIcon />, label: 'Live Sessions', value: `${liveCount}`, progress: Math.min(liveCount * 5, 100), color: '#ffa424', sublabel: `${liveCount} live session${liveCount !== 1 ? 's' : ''} attended` },
+      { icon: <CloudDownloadIcon />, label: 'Downloads', value: `${courseCount + certCount}`, progress: Math.min((courseCount + certCount) * 2, 100), color: '#f59e0b', sublabel: 'Based on course materials & certificates' },
+    ];
+  }, [enrollments, certificates, liveSessions]);
+
+  // ─── Billing history from real invoices ───
+  const billingHistory = useMemo(() =>
+    invoices
+      .slice(0, 5)
+      .map((inv) => ({
+        id: inv.invoice_number,
+        date: new Date(inv.issue_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        amount: `${inv.currency} ${parseFloat(inv.total_amount).toFixed(2)}`,
+        status: inv.is_paid ? 'Paid' : inv.status,
+        pdfUrl: inv.invoice_pdf_url,
+      })),
+    [invoices],
+  );
+
+  // ─── Subscription plan info ───
+  const planName = subStatus?.plan?.name ?? 'Free Plan';
+  const planPrice = subStatus?.plan ? `${subStatus.plan.currency} ${parseFloat(subStatus.plan.price).toFixed(2)}` : '—';
+  const billingCycle = subStatus?.plan?.billing_cycle ?? '—';
+  const startDate = subStatus?.start_date ? new Date(subStatus.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+  const endDate = subStatus?.end_date ? new Date(subStatus.end_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—';
+  const nextPayment = subStatus?.end_date ? `${planPrice} on ${endDate}` : '—';
+  const daysRemaining = subStatus?.days_remaining ?? 0;
+  const isActive = subStatus?.has_active_subscription ?? false;
+
   const handleCancelSubscription = () => {
     setCancelModalOpen(false);
-    showToast('Your subscription has been cancelled. It will remain active until August 15, 2026.', 'warning');
+    showToast(`Your subscription has been cancelled. It will remain active until ${endDate}.`, 'warning');
   };
 
   const handleAddPayment = () => {
@@ -86,21 +154,6 @@ const SubscriptionManagementPage: React.FC = () => {
     setPhoneNumber('');
     setSetAsDefault(false);
   };
-
-  // Usage data
-  const usageStats = [
-    { icon: <BookIcon />, label: 'Courses Accessed', value: '8 / Unlimited', progress: 100, color: '#10b981', sublabel: 'Unlimited access with Pro plan' },
-    { icon: <CertificateIcon />, label: 'Certificates Earned', value: '3 / 10', progress: 30, color: '#3b82f6', sublabel: '7 certificates remaining this month' },
-    { icon: <VideoIcon />, label: 'Live Sessions', value: '12 / 20', progress: 60, color: '#ffa424', sublabel: '8 live sessions remaining' },
-    { icon: <CloudDownloadIcon />, label: 'Downloads', value: '45 / 50', progress: 90, color: '#f59e0b', sublabel: '5 downloads remaining' },
-  ];
-
-  // Billing history
-  const billingHistory = [
-    { id: 'INV-2026-0215', date: 'Feb 15, 2026', amount: '$99.00', status: 'Paid' },
-    { id: 'INV-2025-0815', date: 'Aug 15, 2025', amount: '$99.00', status: 'Paid' },
-    { id: 'INV-2025-0215', date: 'Feb 15, 2025', amount: '$99.00', status: 'Paid' },
-  ];
 
   // Payment methods
   const paymentMethods = [
@@ -145,23 +198,23 @@ const SubscriptionManagementPage: React.FC = () => {
           <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="flex-start" sx={{ position: 'relative', zIndex: 1, mb: 3 }}>
             <Box>
               <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, bgcolor: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', px: 2, py: 0.5, borderRadius: 999, mb: 2, fontSize: '0.875rem', fontWeight: 600 }}>
-                <StarIcon sx={{ fontSize: 16 }} /> Active Plan
+                <StarIcon sx={{ fontSize: 16 }} /> {isActive ? 'Active Plan' : 'No Active Plan'}
               </Box>
-              <Typography variant="h3" fontWeight={700} sx={{ mb: 1 }}>Biannual Access Pass</Typography>
+              <Typography variant="h3" fontWeight={700} sx={{ mb: 1 }}>{planName}</Typography>
               <Typography variant="h5" sx={{ opacity: 0.9 }}>
-                $99.00 <Typography component="span" variant="body2" sx={{ opacity: 0.8 }}>/ 6 months</Typography>
+                {planPrice} <Typography component="span" variant="body2" sx={{ opacity: 0.8 }}>/ {billingCycle}</Typography>
               </Typography>
             </Box>
             <Box sx={{ mt: { xs: 2, md: 0 }, bgcolor: 'rgba(255,255,255,0.15)', p: 2, borderRadius: 2, backdropFilter: 'blur(10px)' }}>
-              <Typography variant="body2" sx={{ opacity: 0.8 }}>Auto-renews Aug 15, 2026</Typography>
+              <Typography variant="body2" sx={{ opacity: 0.8 }}>{daysRemaining > 0 ? `Auto-renews ${endDate}` : 'No active renewal'}</Typography>
             </Box>
           </Stack>
 
           <Grid container spacing={2} sx={{ position: 'relative', zIndex: 1, mb: 3 }}>
             {[
-              { label: 'Billing Cycle', value: 'Biannual (6 Months)' },
-              { label: 'Member Since', value: 'Feb 15, 2025' },
-              { label: 'Next Payment', value: '$99.00 on Aug 15, 2026' },
+              { label: 'Billing Cycle', value: billingCycle },
+              { label: 'Member Since', value: startDate },
+              { label: 'Next Payment', value: nextPayment },
               { label: 'Payment Method', value: 'M-Pesa (...4521)' },
             ].map((item, i) => (
               <Grid size={{ xs: 12, sm: 6, md: 3 }} key={i}>
@@ -187,7 +240,7 @@ const SubscriptionManagementPage: React.FC = () => {
               <Typography variant="h6" fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <PieChartIcon sx={{ color: '#ffa424' }} /> Usage This Period
               </Typography>
-              <Typography variant="body2" color="text.secondary">Resets on Aug 15, 2026</Typography>
+              <Typography variant="body2" color="text.secondary">{daysRemaining > 0 ? `Resets ${endDate}` : '—'}</Typography>
             </Stack>
             <Grid container spacing={3}>
               {usageStats.map((stat, i) => (

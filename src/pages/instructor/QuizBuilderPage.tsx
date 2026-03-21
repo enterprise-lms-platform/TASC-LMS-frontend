@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Box, CssBaseline, Paper, Typography, Toolbar, CircularProgress, Snackbar, Alert } from '@mui/material';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 
 // Layout components
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
@@ -192,10 +192,18 @@ function buildSettingsPayload(state: {
 const QuizBuilderPage: React.FC = () => {
   const navigate = useNavigate();
   const { courseId } = useParams<{ courseId: string }>();
+  const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
   const sessionIdParam = searchParams.get('sessionId');
   const sessionId = sessionIdParam ? Number(sessionIdParam) : null;
   const courseTitle = searchParams.get('course') || 'Course';
+
+  // Detect role context from URL to keep navigation within the correct dashboard
+  const isManager = pathname.startsWith('/manager/');
+  const basePath = isManager
+    ? `/manager/courses/${courseId}`
+    : `/instructor/course/${courseId}`;
+  const dashboardPath = isManager ? '/manager' : '/instructor';
   const [mobileOpen, setMobileOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
@@ -500,7 +508,7 @@ const QuizBuilderPage: React.FC = () => {
             component="span"
             color="primary.main"
             sx={{ cursor: 'pointer', display: 'inline-block', mt: 2, textDecoration: 'underline' }}
-            onClick={() => navigate(courseId ? `/instructor/course/${courseId}/structure` : '/instructor')}
+            onClick={() => navigate(courseId ? `${basePath}/structure` : dashboardPath)}
           >
             Return to course structure
           </Typography>

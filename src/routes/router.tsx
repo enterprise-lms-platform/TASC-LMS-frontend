@@ -91,8 +91,7 @@ import ManagerBulkImportPage from '../pages/manager/ManagerBulkImportPage';
 import ManagerActivityPage from '../pages/manager/ManagerActivityPage';
 import ManagerCoursesPage from '../pages/manager/ManagerCoursesPage';
 import ManagerCreateCoursePage from '../pages/manager/ManagerCreateCoursePage';
-import ManagerCourseDetailPage from '../pages/manager/ManagerCourseDetailPage';
-import ManagerCourseEditPage from '../pages/manager/ManagerCourseEditPage';
+
 import ManagerInstructorsPage from '../pages/manager/ManagerInstructorsPage';
 import ManagerEnrollmentsPage from '../pages/manager/ManagerEnrollmentsPage';
 import ManagerBulkEnrollPage from '../pages/manager/ManagerBulkEnrollPage';
@@ -518,13 +517,33 @@ export const createAppRouter = (queryClient: QueryClient) => {
     },
     {
       path: '/manager/courses/:courseId',
-      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerCourseDetailPage /></ProtectedRoute>,
-      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><CoursePreviewPage /></ProtectedRoute>,
+      loader: async (args) => instructorLoaders.coursePreviewLoader(queryClient, args),
     },
     {
       path: '/manager/courses/:courseId/edit',
-      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerCourseEditPage /></ProtectedRoute>,
-      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><CourseCreationPage /></ProtectedRoute>,
+      loader: async () => instructorLoaders.courseCreationFormLoader(queryClient),
+    },
+    {
+      path: '/manager/courses/:courseId/structure',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><CourseStructurePage /></ProtectedRoute>,
+      loader: async (args) => instructorLoaders.courseStructureLoader(queryClient, args),
+    },
+    {
+      path: '/manager/courses/:courseId/upload',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ContentUploadPage /></ProtectedRoute>,
+      loader: async (args) => instructorLoaders.courseStructureLoader(queryClient, args),
+    },
+    {
+      path: '/manager/courses/:courseId/preview',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><CoursePreviewPage /></ProtectedRoute>,
+      loader: async (args) => instructorLoaders.coursePreviewLoader(queryClient, args),
+    },
+    {
+      path: '/manager/courses/:courseId/quiz/builder',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><QuizBuilderPage /></ProtectedRoute>,
+      loader: async () => instructorLoaders.instructorRouteLoader(queryClient),
     },
     {
       path: '/manager/instructors',

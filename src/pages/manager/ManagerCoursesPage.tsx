@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Box,
   CssBaseline,
@@ -48,6 +48,7 @@ import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
 import { courseApi, categoryApi } from '../../services/main.api';
 import { usePartialUpdateCourse } from '../../hooks/useCatalogue';
+import type { CourseList, Category } from '../../types/types';
 
 // ─── Styles ────────────────────────────────────────────────
 
@@ -96,7 +97,7 @@ const ManagerCoursesPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [archiveTarget, setArchiveTarget] = useState<Record<string, any> | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<CourseList | null>(null);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
@@ -116,24 +117,24 @@ const ManagerCoursesPage: React.FC = () => {
   });
 
   const courses = coursesData?.results ?? (Array.isArray(coursesData) ? coursesData : []);
-  const categories = Array.isArray(categoriesData) ? categoriesData : (categoriesData as any)?.results ?? [];
+  const categories: Category[] = Array.isArray(categoriesData) ? categoriesData : (categoriesData as { results?: Category[] })?.results ?? [];
 
-  const getCategoryName = (categoryValue: number | { id?: number; name?: string } | null | undefined) => {
+  const getCategoryName = (categoryValue: number | Category | null | undefined) => {
     if (!categoryValue) return 'Uncategorized';
     if (typeof categoryValue === 'object') return categoryValue.name || 'Uncategorized';
     const cat = categories.find((c) => c.id === categoryValue);
     return cat?.name || 'Uncategorized';
   };
 
-  const getCourseStatus = (course: Record<string, any>): 'Published' | 'Draft' | 'Under Review' | 'Archived' => {
+  const getCourseStatus = (course: CourseList): 'Published' | 'Draft' | 'Under Review' | 'Archived' => {
     if (course.status === 'published') return 'Published';
     if (course.status === 'archived') return 'Archived';
     if (course.status === 'pending_approval') return 'Under Review';
     return 'Draft';
   };
 
-  const getInstructorName = (course: Record<string, any>) => {
-    return course.instructor_name || course.instructor?.name || course.instructor?.email || 'Unknown Instructor';
+  const getInstructorName = (course: CourseList) => {
+    return course.instructor_name || 'Unknown Instructor';
   };
 
   const getInitials = (name: string) => {
@@ -319,7 +320,7 @@ const ManagerCoursesPage: React.FC = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredCourses.map((course: any) => {
+                    filteredCourses.map((course: CourseList) => {
                       const status = getCourseStatus(course);
                       const instructorName = getInstructorName(course);
                       return (
