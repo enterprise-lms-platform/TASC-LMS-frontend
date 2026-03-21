@@ -61,7 +61,7 @@ import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
 import { useEnrollments, useCertificates } from '../../hooks/useLearning';
 import { invoiceApi, subscriptionApi } from '../../services/payments.services';
-import { livestreamApi } from '../../services/catalogue.services';
+import { livestreamApi } from '../../services/livestream.services';
 import type { Invoice } from '../../types/types';
 
 // --- Main Page Component ---
