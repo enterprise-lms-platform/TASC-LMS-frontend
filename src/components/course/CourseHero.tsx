@@ -7,9 +7,11 @@ import type { PublicCourseDetail } from '../../types/types';
 
 interface CourseHeroProps {
   course?: PublicCourseDetail;
+  averageRating?: number;
+  totalReviews?: number;
 }
 
-const CourseHero: React.FC<CourseHeroProps> = ({ course }) => {
+const CourseHero: React.FC<CourseHeroProps> = ({ course, averageRating = 0, totalReviews = 0 }) => {
   const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return 'N/A';
     return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
@@ -59,10 +61,10 @@ const CourseHero: React.FC<CourseHeroProps> = ({ course }) => {
             {/* Ratings & Stats */}
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 2, sm: 4 }} sx={{ mb: 3 }} alignItems={{ xs: 'flex-start', sm: 'center' }}>
               <Stack direction="row" alignItems="center" spacing={1}>
-                <Typography sx={{ fontWeight: 700, color: '#f59e0b', fontSize: '1.125rem' }}>--</Typography>
-                <Rating value={0} readOnly size="small" sx={{ color: '#f59e0b' }} />
+                <Typography sx={{ fontWeight: 700, color: '#f59e0b', fontSize: '1.125rem' }}>{averageRating > 0 ? averageRating.toFixed(1) : '--'}</Typography>
+                <Rating value={averageRating} readOnly precision={0.1} size="small" sx={{ color: '#f59e0b' }} />
                 <Typography component="a" href="#reviews" sx={{ color: '#a1a1aa', textDecoration: 'underline', fontSize: '0.875rem', cursor: 'pointer' }}>
-                  (-- ratings)
+                  ({totalReviews > 0 ? `${totalReviews} ratings` : 'No ratings yet'})
                 </Typography>
               </Stack>
               <Stack direction="row" alignItems="center" spacing={1} sx={{ color: '#d4d4d8', fontSize: '0.875rem' }}>

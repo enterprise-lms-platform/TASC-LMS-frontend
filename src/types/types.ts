@@ -568,6 +568,7 @@ export interface CourseDetail {
   tags: Tag[];
   level: CourseLevel;
   price: string;
+  currency?: string;
   discounted_price: string;
   discount_percentage?: number;
   duration_hours?: number;

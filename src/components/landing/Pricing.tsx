@@ -1,8 +1,57 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { CircularProgress } from '@mui/material';
+import { subscriptionApi } from '../../services/payments.services';
+import type { Subscription } from '../../types/types';
 
-
+const BILLING_LABELS: Record<string, string> = {
+  monthly: 'month',
+  quarterly: '3 months',
+  biannual: '6 months',
+  yearly: 'year',
+};
 
 const Pricing: React.FC = () => {
+  const { data: plansData, isLoading } = useQuery({
+    queryKey: ['subscriptionPlans'],
+    queryFn: () => subscriptionApi.getAll().then(r => r.data),
+  });
+
+  const plans: Subscription[] = Array.isArray(plansData)
+    ? plansData
+    : (plansData as { results?: Subscription[] })?.results ?? [];
+
+  const plan = plans.find(p => p.status === 'active') || plans[0];
+
+  const price = plan ? parseFloat(plan.price) : 99;
+  const priceWhole = Math.floor(price);
+  const priceCents = Math.round((price - priceWhole) * 100);
+  const billingLabel = plan ? (BILLING_LABELS[plan.billing_cycle] || plan.billing_cycle) : '6 months';
+  const currency = plan?.currency === 'USD' ? '$' : (plan?.currency || '$');
+
+  const monthsMap: Record<string, number> = { monthly: 1, quarterly: 3, biannual: 6, yearly: 12 };
+  const months = plan ? (monthsMap[plan.billing_cycle] || 6) : 6;
+  const monthlyPrice = (price / months).toFixed(2);
+
+  const features = plan?.features && typeof plan.features === 'object' && Array.isArray((plan.features as { list?: string[] }).list)
+    ? (plan.features as { list: string[] }).list
+    : [
+        'Unlimited access to all courses',
+        'Earn professional certificates',
+        'Join live interactive sessions',
+        'Download resources for offline learning',
+        'Priority email support',
+        'Access to community forums',
+      ];
+
+  if (isLoading) {
+    return (
+      <section id="pricing" style={{ paddingTop: '96px', paddingBottom: '96px', backgroundColor: 'white', textAlign: 'center' }}>
+        <CircularProgress sx={{ color: '#ffa424' }} />
+      </section>
+    );
+  }
+
   return (
     <section
       id="pricing"
@@ -46,7 +95,7 @@ const Pricing: React.FC = () => {
               marginRight: 'auto',
             }}
           >
-            Get full access to all courses, certifications, and live sessions with our simple biannual subscription.
+            {plan?.description || 'Get full access to all courses, certifications, and live sessions with our simple subscription.'}
           </p>
         </div>
 
@@ -88,7 +137,7 @@ const Pricing: React.FC = () => {
             </div>
 
             <h3 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '8px', textAlign: 'center', margin: '0 0 8px 0' }}>
-              Biannual Plan
+              {plan?.name || 'Subscription Plan'}
             </h3>
             <p
               style={{
@@ -115,33 +164,26 @@ const Pricing: React.FC = () => {
                 }}
               >
                 <span className="pricing-price-currency" style={{ fontSize: '2rem', fontWeight: 600, color: '#27272a' }}>
-                  $
+                  {currency}
                 </span>
                 <span className="pricing-price-amount" style={{ fontSize: '4rem', fontWeight: 800, color: '#27272a' }}>
-                  99
+                  {priceCents > 0 ? `${priceWhole}.${String(priceCents).padStart(2, '0')}` : priceWhole}
                 </span>
                 <span className="pricing-price-period" style={{ fontSize: '1.25rem', color: '#71717a', marginLeft: '8px', fontWeight: 500 }}>
-                  / 6 months
+                  / {billingLabel}
                 </span>
               </div>
             </div>
             
             <p style={{ textAlign: 'center', color: '#10b981', fontWeight: 600, fontSize: '0.875rem', marginBottom: '32px' }}>
-              Just $16.50/month
+              Just {currency}{monthlyPrice}/month
             </p>
 
             <hr style={{ border: 'none', borderTop: '1px solid #e4e4e7', marginBottom: '32px' }} />
 
             {/* Features */}
             <div style={{ marginBottom: '40px' }}>
-              {[
-                'Unlimited access to all courses',
-                'Earn professional certificates',
-                'Join live interactive sessions',
-                'Download resources for offline learning',
-                'Priority email support',
-                'Access to community forums',
-              ].map((feature) => (
+              {features.map((feature) => (
                 <div
                   key={feature}
                   style={{

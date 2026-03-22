@@ -6,67 +6,51 @@ import { publicCourseApi, type PublicCourseParams } from '../../services/public.
 
 interface RelatedCoursesProps {
   categoryId?: number;
+  currentCourseId?: number;
 }
 
-const defaultCourses = [
-  {
-    title: "Node.js API Development with Express & MongoDB",
-    instructor: "Peter Ochieng",
-    rating: 4.7,
-    reviews: 489,
-    price: "$99.99",
-    image: "https://images.pexels.com/photos/8464440/pexels-photo-8464440.jpeg"
-  },
-  {
-    title: "Deep Learning with TensorFlow & PyTorch",
-    instructor: "Sarah Kim",
-    rating: 4.8,
-    reviews: 978,
-    price: "$179.99",
-    image: "https://images.pexels.com/photos/6966593/pexels-photo-6966593.jpeg"
-  },
-  {
-    title: "Full Stack Web Development Bootcamp",
-    instructor: "Michael Rodriguez",
-    rating: 4.9,
-    reviews: 2156,
-    price: "$149.99",
-    image: "https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=1031&auto=format&fit=crop"
-  }
-];
+interface RelatedCourse {
+  title: string;
+  instructor: string;
+  rating: number;
+  reviews: number;
+  image: string;
+  slug: string;
+}
 
-const RelatedCourses: React.FC<RelatedCoursesProps> = ({ categoryId }) => {
+const RelatedCourses: React.FC<RelatedCoursesProps> = ({ categoryId, currentCourseId }) => {
   const navigate = useNavigate();
-  
+
   const params: PublicCourseParams = {
-    page_size: 3,
+    page_size: 4,
   };
   if (categoryId) params.category = categoryId;
 
   const { data: coursesData } = useQuery({
     queryKey: ['relatedCourses', categoryId],
     queryFn: () => publicCourseApi.getAll(params),
-    enabled: !!categoryId,
   });
 
-  const apiData = coursesData?.data;
-  const courses = (apiData?.results?.length || 0) > 0 
-    ? (apiData?.results as any[] || []).slice(0, 3).map((c: any) => ({
-        title: c.title,
-        instructor: c.instructor_name,
-        rating: c.rating || 0,
-        reviews: c.rating_count || 0,
-        price: c.discounted_price || c.price || '0',
-        image: c.thumbnail || defaultCourses[0].image,
-        slug: c.slug,
-      }))
-    : defaultCourses;
+  const apiResults = coursesData?.data?.results ?? [];
+  const courses: RelatedCourse[] = apiResults
+    .filter((c: any) => c.id !== currentCourseId)
+    .slice(0, 3)
+    .map((c: any) => ({
+      title: c.title,
+      instructor: c.instructor_name || 'Instructor',
+      rating: c.rating || 0,
+      reviews: c.rating_count || 0,
+      image: c.thumbnail || '',
+      slug: c.slug,
+    }));
+
+  if (courses.length === 0) return null;
 
   return (
     <Box id="related" className="course-section" sx={{ mb: 8 }}>
       <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: '#18181b' }}>Students Also Bought</Typography>
       <Grid container spacing={4}>
-        {courses.map((course: any, i) => (
+        {courses.map((course, i) => (
           <Grid key={i} size={{ xs: 12, md: 4 }}>
             <Paper 
               elevation={0}
@@ -78,7 +62,7 @@ const RelatedCourses: React.FC<RelatedCoursesProps> = ({ categoryId }) => {
                 transition: 'all 0.3s',
                 '&:hover': { transform: 'translateY(-4px)', boxShadow: 4 }
               }}
-              onClick={() => navigate(`/course-details?slug=${course.slug || ''}`)}
+              onClick={() => course.slug && navigate(`/course-details/${course.slug}`)}
             >
               <Box component="img" src={course.image} alt={course.title} sx={{ width: '100%', height: 180, objectFit: 'cover' }} />
               <Box p={3}>

@@ -14,6 +14,7 @@ import CourseReviews from '../../components/course/CourseReviews';
 import FaqSection from '../../components/business/FaqSection';
 import RelatedCourses from '../../components/course/RelatedCourses';
 import { publicCourseApi } from '../../services/public.services';
+import { useCourseReviews } from '../../hooks/usePublicCourse';
 import '../../styles/CourseLanding.css';
 
 const CourseLandingPage: React.FC = () => {
@@ -29,6 +30,7 @@ const CourseLandingPage: React.FC = () => {
   });
 
   const course = courseData;
+  const { data: reviewData } = useCourseReviews(course?.id || 0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -81,7 +83,7 @@ const CourseLandingPage: React.FC = () => {
 
         {course && (
           <>
-            <CourseHero course={course} />
+            <CourseHero course={course} averageRating={reviewData?.average || 0} totalReviews={reviewData?.total || 0} />
 
             <Container maxWidth="lg" sx={{ py: 6 }}>
               <Grid container spacing={6}>
@@ -95,7 +97,7 @@ const CourseLandingPage: React.FC = () => {
                   <Box id="faq" className="course-section" sx={{ scrollMarginTop: '140px', mb: 8 }}>
                     <FaqSection />
                   </Box>
-                  <RelatedCourses categoryId={course.category?.id} />
+                  <RelatedCourses categoryId={course.category?.id} currentCourseId={course.id} />
                 </Grid>
 
                 {/* Sticky Sidebar (Desktop) */}

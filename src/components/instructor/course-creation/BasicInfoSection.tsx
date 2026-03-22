@@ -36,20 +36,16 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ data, onChange }) =
   // Fetch all tags from API
   const { data: tagsData, isLoading: tagsLoading } = useTags();
 
-  const categories = Array.isArray(categoriesData)
-    ? categoriesData
-    : (categoriesData as any)?.results ?? [];
+  const categories = categoriesData?.results ?? [];
 
-  const tags = Array.isArray(tagsData)
-    ? tagsData
-    : (tagsData as any)?.results ?? [];
+  const tags = Array.isArray(tagsData) ? tagsData : [];
 
   const handleChange = (field: keyof BasicInfoData, value: string | number | number[]) => {
     onChange({ ...data, [field]: value });
   };
 
   // Find selected tag objects for Autocomplete value
-  const selectedTags = tags.filter((t: any) => data.tags.includes(t.id));
+  const selectedTags = tags.filter((t) => data.tags.includes(t.id));
 
   return (
     <Paper elevation={0} sx={{ p: 3, borderRadius: 2, border: 1, borderColor: 'grey.200' }}>

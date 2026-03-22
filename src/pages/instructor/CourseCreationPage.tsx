@@ -147,7 +147,7 @@ const CourseCreationPage: React.FC = () => {
       fullDescription: c.description || '',
       category: (typeof c.category === 'object' && c.category?.id != null) ? c.category.id : '',
       subcategory: c.subcategory || '',
-      tags: Array.isArray(c.tags) ? c.tags.map((t: any) => t.id) : [],
+      tags: Array.isArray(c.tags) ? c.tags.map((t) => t.id) : [],
     });
 
     // Media
@@ -165,7 +165,7 @@ const CourseCreationPage: React.FC = () => {
       pricingType: priceNum === 0 ? 'free' : 'paid',
       price: priceNum,
       originalPrice: priceNum,
-      currency: (c as any).currency || 'USD',
+      currency: c.currency || 'USD',
     });
 
     // Details

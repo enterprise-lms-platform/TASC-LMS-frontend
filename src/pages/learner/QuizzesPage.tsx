@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { enrollmentApi, sessionProgressApi } from '../../services/learning.services';
 import { sessionApi } from '../../services/catalogue.services';
 import { queryKeys } from '../../hooks/queryKeys';
-import type { SessionProgress, QuizDetailResponse } from '../../types/types';
+import type { SessionProgress, QuizDetailResponse, Enrollment } from '../../types/types';
 import '../../styles/LearnerDashboard.css';
 
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
@@ -64,7 +64,7 @@ const QuizzesPage: React.FC = () => {
   });
   const allProgress: SessionProgress[] = Array.isArray(progressRes)
     ? progressRes
-    : (progressRes as any)?.results ?? [];
+    : (progressRes as { results?: SessionProgress[] })?.results ?? [];
 
   // Filter quiz-type sessions from progress
   const quizProgress = useMemo(
@@ -86,9 +86,8 @@ const QuizzesPage: React.FC = () => {
   const quizRows: QuizRow[] = useMemo(() => {
     return quizProgress.map((prog, i) => {
       const detail: QuizDetailResponse | undefined = quizDetailQueries[i]?.data as QuizDetailResponse | undefined;
-      const enrollment = Array.isArray(enrollments)
-        ? enrollments.find((e: any) => e.id === prog.enrollment)
-        : undefined;
+      const enrollmentsList = Array.isArray(enrollments) ? enrollments : [];
+      const enrollment = enrollmentsList.find((e: Enrollment) => e.id === prog.enrollment);
 
       const questionCount = detail?.questions?.length ?? 0;
       const passingScore = detail?.settings?.passing_score_percent ?? 70;
@@ -104,8 +103,8 @@ const QuizzesPage: React.FC = () => {
       return {
         sessionId: prog.session,
         title: prog.session_title || detail?.session?.title || 'Quiz',
-        courseTitle: (enrollment as any)?.course_title ?? '',
-        courseId: (enrollment as any)?.course ?? 0,
+        courseTitle: enrollment?.course_title ?? '',
+        courseId: enrollment?.course ?? 0,
         questions: questionCount,
         duration: timeLimit ? `${timeLimit} min` : `${prog.duration_minutes || 0} min`,
         passingScore,

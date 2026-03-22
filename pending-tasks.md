@@ -83,11 +83,9 @@
 - **File:** `src/components/catalogue/FeaturedCategories.tsx`
 - **Done:** Backend `CategorySerializer` now returns `courses_count` (annotated with `Count` + `Q` for published courses). Frontend already uses `cat.courses_count || 0`. Capped at 8 categories.
 
-### 32. Landing Page Pricing — Hardcoded Price
-- **File:** `src/components/landing/Pricing.tsx` (lines 137-170)
-- **What's hardcoded:** "$99 / 6 months" price and 6 feature bullet points
-- **What to do:** Fetch from subscription plans API.
-- **Blocked?** No — subscription API exists
+### 32. Landing Page Pricing — DONE
+- **File:** `src/components/landing/Pricing.tsx`
+- **Done:** Fetches from `subscriptionApi.getAll()`. Displays plan name, price, billing cycle, monthly equivalent, and features dynamically. Falls back to defaults if no plans exist.
 
 ### 34. Business Page Pricing — Hardcoded Plans
 - **File:** `src/components/business/PricingSection.tsx` (lines 20-76)
@@ -121,8 +119,7 @@
 
 ### 38. Course Details Page — Partially Done
 - **File:** `src/pages/public/CourseLandingPage.tsx`
-- **Done:** Route changed to `/course-details/:slug`. Page fetches via `publicCourseApi.getBySlug(slug)`. Created `CourseDetailContext`. Content sections (Curriculum, Objectives, Instructor) are wired up.
-- **Still pending:** Remaining child components (CourseHero, CoursePricingCard, RelatedCourses) still render hardcoded data. Each needs to consume `useCourseDetail()` context.
+- **Done:** Route changed to `/course-details/:slug`. Page fetches via `publicCourseApi.getBySlug(slug)`. Created `CourseDetailContext`. Content sections (Curriculum, Objectives, Instructor) are wired up. CourseHero now receives real review data (average rating + total reviews). CoursePricingCard fully wired (enrollment check, free enroll, checkout). RelatedCourses fetches from API (hardcoded fallback removed), excludes current course, returns null if empty.
 
 ### 39. Catalogue Filters Sidebar — DONE
 - **File:** `src/components/catalogue/FiltersSidebar.tsx`
@@ -201,13 +198,9 @@
     - `GradebookPage` → `onExport`: wire to async report generation or client-side CSV export
     - `CoursePreviewPage` → `onEnroll`/`onAddToCart`/`handlePublish`: preview-only context, may stay as informational toasts
 
-### 54. Type Safety — `as any` Casts
-Several files use `as any` to work around type mismatches:
-- `src/pages/instructor/CourseCreationPage.tsx:158,172` — casting course fields
-- `src/pages/learner/QuizzesPage.tsx:68,108-109` — casting progress/enrollment data
-- `src/pages/learner/CoursePlayerPage.tsx:385` — casting ReactPlayer
-- `src/components/instructor/course-creation/BasicInfoSection.tsx:41,45` — casting categories/tags response
-- **What to do:** Fix underlying type definitions so casts aren't needed.
+### 54. Type Safety — DONE (1 remaining)
+- **Fixed:** `CourseCreationPage` (added `currency` to `CourseDetail` type), `QuizzesPage` (proper `Enrollment` type), `BasicInfoSection` (proper paginated response access)
+- **Remaining:** `CoursePlayerPage:385` — `ReactPlayer as any` is a React 19 compat workaround, left as-is with `@ts-ignore`
 
 ---
 
@@ -287,6 +280,9 @@ Several files use `as any` to work around type mismatches:
 | 28 | FeaturedCategories: backend returns `courses_count` via annotated `CategorySerializer`, frontend uses real counts | 22 Mar 2026 | — |
 | 41 | Catalogue Pagination: already uses `count` prop from API, no hardcoded value | 22 Mar 2026 | — |
 | 52 | Console.log cleanup: replaced all placeholder handlers with real actions or toast notifications across 6 pages | 22 Mar 2026 | — |
+| 32 | Landing Pricing: fetches plan name, price, billing cycle from `subscriptionApi.getAll()` | 22 Mar 2026 | — |
+| 38 | Course Details: CourseHero wired to reviews, CoursePricingCard already wired, RelatedCourses fetches from API (no hardcoded fallback) | 22 Mar 2026 | — |
+| 54 | Type safety: fixed `as any` casts in CourseCreationPage, QuizzesPage, BasicInfoSection; added `currency` to `CourseDetail` type | 22 Mar 2026 | — |
 
 ---
 
