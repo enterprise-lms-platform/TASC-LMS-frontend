@@ -29,6 +29,7 @@ import {
   TableChart as ExportIcon,
   PictureAsPdf as StatementsIcon,
   Assessment as CustomReportsIcon,
+  Person as ProfileIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -92,6 +93,12 @@ const navSections: NavSection[] = [
       { text: 'Export Data', icon: <ExportIcon />, path: '/finance/export' },
       { text: 'Financial Statements', icon: <StatementsIcon />, path: '/finance/statements' },
       { text: 'Custom Reports', icon: <CustomReportsIcon />, path: '/finance/custom-reports' },
+    ],
+  },
+  {
+    title: 'Account',
+    items: [
+      { text: 'My Profile', icon: <ProfileIcon />, path: '/finance/profile' },
     ],
   },
 ];

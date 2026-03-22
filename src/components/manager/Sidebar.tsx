@@ -124,6 +124,12 @@ const navSections: NavSection[] = [
       { text: 'Billing', icon: <BillingIcon />, path: '/manager/billing' },
     ],
   },
+  {
+    title: 'Account',
+    items: [
+      { text: 'My Profile', icon: <InstructorIcon />, path: '/manager/profile' },
+    ],
+  },
 ];
 
 interface SidebarProps {

@@ -35,6 +35,7 @@ import {
   Storage as DataMigrationIcon,
   Security as SecurityIcon,
   SettingsApplications as GatewayIcon,
+  Person as ProfileIcon,
 } from '@mui/icons-material';
 
 const DRAWER_WIDTH = 280;
@@ -103,6 +104,12 @@ const navSections: NavSection[] = [
       { text: 'Integrations', icon: <IntegrationsIcon />, path: '/superadmin/integrations' },
       { text: 'Data Migration', icon: <DataMigrationIcon />, path: '/superadmin/data-migration' },
       { text: 'Security', icon: <SecurityIcon />, path: '/superadmin/security' },
+    ],
+  },
+  {
+    title: 'Account',
+    items: [
+      { text: 'My Profile', icon: <ProfileIcon />, path: '/superadmin/profile' },
     ],
   },
 ];
