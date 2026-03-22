@@ -21,11 +21,10 @@ const BASE_PATH = '/api/v1/payments';
 export interface InvoiceParams {
   customer?: number;
   status?: string;
-  // TODO: Backend API must support these query parameters
-  limit?: number;               // Limit the number of results returned
-  page?: number;                // Pagination page number
-  date_from?: string;           // Filter invoices from this date
-  date_to?: string;             // Filter invoices up to this date
+  limit?: number;
+  page?: number;
+  from_date?: string;           // YYYY-MM-DD
+  to_date?: string;             // YYYY-MM-DD
 }
 
 export const invoiceApi = {
@@ -70,11 +69,10 @@ export const invoiceApi = {
 export interface TransactionParams {
   invoice?: number;
   status?: string;
-  // TODO: Backend API must support these query parameters
-  limit?: number;               // Limit the number of results returned
-  page?: number;                // Pagination page number
-  date_from?: string;           // Filter transactions from this date
-  date_to?: string;             // Filter transactions up to this date
+  limit?: number;
+  page?: number;
+  from_date?: string;           // YYYY-MM-DD
+  to_date?: string;             // YYYY-MM-DD
 }
 
 export const transactionApi = {

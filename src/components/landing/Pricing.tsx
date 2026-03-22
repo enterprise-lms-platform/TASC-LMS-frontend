@@ -2,7 +2,16 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CircularProgress } from '@mui/material';
 import { subscriptionApi } from '../../services/payments.services';
+import { useAuth } from '../../hooks/useAuth';
 import type { Subscription } from '../../types/types';
+
+const roleDashboardMap: Record<string, string> = {
+  learner: '/learner',
+  instructor: '/instructor',
+  lms_manager: '/manager',
+  finance: '/finance',
+  tasc_admin: '/superadmin',
+};
 
 const BILLING_LABELS: Record<string, string> = {
   monthly: 'month',
@@ -12,6 +21,9 @@ const BILLING_LABELS: Record<string, string> = {
 };
 
 const Pricing: React.FC = () => {
+  const { user, isAuthenticated } = useAuth();
+  const dashboardPath = user?.role ? (roleDashboardMap[user.role] || '/learner') : '/learner';
+
   const { data: plansData, isLoading } = useQuery({
     queryKey: ['subscriptionPlans'],
     queryFn: () => subscriptionApi.getAll().then(r => r.data),
@@ -19,7 +31,7 @@ const Pricing: React.FC = () => {
 
   const plans: Subscription[] = Array.isArray(plansData)
     ? plansData
-    : (plansData as { results?: Subscription[] })?.results ?? [];
+    : (plansData as unknown as { results?: Subscription[] })?.results ?? [];
 
   const plan = plans.find(p => p.status === 'active') || plans[0];
 
@@ -213,7 +225,7 @@ const Pricing: React.FC = () => {
             </div>
 
             <button
-              onClick={() => window.location.href = '/register'}
+              onClick={() => window.location.href = isAuthenticated ? dashboardPath : '/register'}
               className="pricing-button"
               style={{
                 width: '100%',
@@ -229,7 +241,7 @@ const Pricing: React.FC = () => {
                 boxShadow: '0 4px 12px rgba(255, 164, 36, 0.25)',
               }}
             >
-              Get Full Access Now
+              {isAuthenticated ? 'Go to Dashboard' : 'Get Full Access Now'}
             </button>
             
             <p style={{ textAlign: 'center', fontSize: '0.875rem', color: '#71717a', marginTop: '16px' }}>

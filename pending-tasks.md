@@ -42,11 +42,6 @@
 - **Backend dependency:** Certificate API exists but `pdf_url` may not be populated (PDF generation logic incomplete on backend).
 - **Blocked?** Partially — depends on backend PDF generation
 
-### 9. Learner Subscription Page — Usage Stats — DONE
-- **File:** `src/pages/learner/SubscriptionManagementPage.tsx`
-- **Done:** Usage stats computed from `useEnrollments()`, `useCertificates()`, `livestreamApi.getAll()`. Billing history wired to `invoiceApi.getAll()`. Plan card wired to `subscriptionApi.getMyStatus()`. All hardcoded arrays removed.
-- **Blocked?** No — completed
-
 ### 10. CoursePlayerPage — Partially Done
 - **File:** `src/pages/learner/CoursePlayerPage.tsx`
 - **Done:** Q&A tab wired to `discussionApi.getAll()` and `discussionApi.create()`. Removed `sampleQuestions[]`.
@@ -79,14 +74,6 @@
 
 ## CRITICAL — Public/Marketing Pages with Hardcoded Data
 
-### 28. Catalogue Featured Categories — DONE
-- **File:** `src/components/catalogue/FeaturedCategories.tsx`
-- **Done:** Backend `CategorySerializer` now returns `courses_count` (annotated with `Count` + `Q` for published courses). Frontend already uses `cat.courses_count || 0`. Capped at 8 categories.
-
-### 32. Landing Page Pricing — DONE
-- **File:** `src/components/landing/Pricing.tsx`
-- **Done:** Fetches from `subscriptionApi.getAll()`. Displays plan name, price, billing cycle, monthly equivalent, and features dynamically. Falls back to defaults if no plans exist.
-
 ### 34. Business Page Pricing — Hardcoded Plans
 - **File:** `src/components/business/PricingSection.tsx` (lines 20-76)
 - **What's hardcoded:** 3 B2B pricing tiers (Team $15, Business $20, Enterprise $25) with feature lists
@@ -117,18 +104,6 @@
 - **What to do:** Move to CMS or API for easy updates without code changes.
 - **Blocked?** Low priority — acceptable as static for now
 
-### 38. Course Details Page — Partially Done
-- **File:** `src/pages/public/CourseLandingPage.tsx`
-- **Done:** Route changed to `/course-details/:slug`. Page fetches via `publicCourseApi.getBySlug(slug)`. Created `CourseDetailContext`. Content sections (Curriculum, Objectives, Instructor) are wired up. CourseHero now receives real review data (average rating + total reviews). CoursePricingCard fully wired (enrollment check, free enroll, checkout). RelatedCourses fetches from API (hardcoded fallback removed), excludes current course, returns null if empty.
-
-### 39. Catalogue Filters Sidebar — DONE
-- **File:** `src/components/catalogue/FiltersSidebar.tsx`
-- **Done:** Fully rewritten with `FilterState` interface. Category and level checkboxes wired to API via parent state. Price filter removed (subscription-based model). Clear All button functional. Mobile filter drawer passes same state. Sort dropdown in CoursesGrid wired to backend `ordering` param.
-
-### 41. Catalogue Pagination — DONE
-- **File:** `src/components/catalogue/Pagination.tsx`
-- **Done:** Component uses `count` prop; parent `CourseCataloguePage` computes `pageCount` from API `totalCount`. No hardcoded value.
-
 ---
 
 ## HIGH — Service Layer Stubs & TODOs
@@ -139,21 +114,13 @@
 - **What to do:** Wait for backend to implement `POST /api/v1/manager/users/bulk_import/` then update `manager.services.ts`.
 - **Blocked?** Yes — backend dependency.
 
-### 44. Missing Query Parameter Support
-- **Files:** Multiple service files have TODO comments about missing backend filter support:
-  - `learning.services.ts`: Enrollment filters (`search`, `dateRange`, `courseId`), session progress `course` filter
-  - `payments.services.ts`: Invoice/transaction filters (`limit`, `page`, `date_from`, `date_to`)
-  - `catalogue.services.ts`: Course/session filters
-- **What to do:** Confirm which filters backend supports and wire them up.
-- **Blocked?** Needs backend confirmation
-
-### 45. QuizPlayer — DONE
-- **File:** `src/components/learner/quiz-player/QuizPlayer.tsx`
-- **Done:** Server-returned scores override client-side grades when available. Past attempts fetched via `quizSubmissionApi.getAll({ quiz })` and displayed on pre-start screen with date, score %, and pass/fail chip. `previousAttempts` count drives attempt-remaining logic.
-
-### 46. Report Download — DONE
-- **Files:** `src/pages/manager/ManagerReportsPage.tsx`, `src/pages/finance/FinanceExportPage.tsx`
-- **Done:** FinanceExportPage fully wired to `reportsApi` — templates from `getTypes()`, recent exports from `getAll()`, generate via `generate()`, download via `download()`. Status indicators (ready/processing/failed). Bulk export with date range params. KPIs computed from real data.
+### 44. Missing Query Parameter Support — DONE
+- **Done:** Backend filters implemented for all 3 viewsets. Frontend TODO comments removed, param names aligned (`from_date`/`to_date`).
+  - `EnrollmentViewSet`: added `search` filter (name/email/course title)
+  - `SessionProgressViewSet`: implemented `enrollment`, `session`, `course` filters
+  - `InvoiceViewSet`: added `from_date`/`to_date` date range filters
+  - `TransactionViewSet`: already had `from_date`/`to_date` (confirmed working)
+  - `CourseViewSet`/`SessionViewSet`: already had all filters (confirmed working)
 
 ---
 
@@ -174,14 +141,6 @@
 - **File:** `src/pages/learner/LearnerCertificatesPage.tsx`
 - **What to do:** Remove `MOCK_CERTIFICATES` fallback, ensure download button works with real `pdf_url`.
 - **Blocked?** Partially — backend PDF generation unclear
-
-### 55. Payment History Page — DONE
-- **File:** `src/pages/learner/PaymentHistoryPage.tsx`
-- **Done:** Transactions fetched from `transactionApi.getAll()` with status filter and pagination. KPI stats computed from real data. Transaction detail modal uses real fields. Removed all 7 hardcoded transaction objects.
-
-### 56. Subscription Management — DONE
-- **File:** `src/pages/learner/SubscriptionManagementPage.tsx`
-- **Done:** Payment methods fetched from `paymentMethodApi.getAll()`. Display name, method type icon, and default status from real `PaymentMethod` data. Removed hardcoded M-Pesa/MTN MoMo array.
 
 ### 57. Landing Testimonials — Hardcoded
 - **File:** `src/components/landing/Testimonials.tsx`
@@ -209,20 +168,17 @@
 - **Issue:** Generic "under development" page used for incomplete features.
 - **What to do:** Replace all references with actual implementations as features complete.
 
-### 52. Console.log Cleanup — DONE (toast placeholders remain)
-- All console.log placeholder handlers replaced:
-  - **Wired real actions:** `handleCategoryClick` filters by category, `handleEnroll` navigates to course detail, `onPreview` navigates to preview page, `onSettings` scrolls to settings
-  - **Toast notifications (temporary — replace with real functionality):**
-    - `GradingPage` → `handleSaveDraft`: wire to submission grade API (`submissionApi`)
-    - `GradingPage` → file `onView`/`onDownload`: wire to actual file URLs from submission data
-    - `LearnerCourseDetailPage` → `onWriteReview`: open review submission form (backend `CourseReview` API exists at `/api/v1/catalogue/courses/{id}/reviews/`)
-    - `LearnerCourseDetailPage` → `onViewProfile`: navigate to instructor profile page (page does not exist yet)
-    - `LearnerCourseCatalogPage` → `handleInstructorProfile`: navigate to instructor profile page (page does not exist yet)
-    - `GradebookPage` → `onExport`: wire to async report generation or client-side CSV export
-    - `CoursePreviewPage` → `onEnroll`/`onAddToCart`/`handlePublish`: preview-only context, may stay as informational toasts
+### 52. Console.log Cleanup — Toast Placeholders Remain
+- **Toast notifications (temporary — replace with real functionality):**
+  - `GradingPage` → `handleSaveDraft`: wire to submission grade API (`submissionApi`)
+  - `GradingPage` → file `onView`/`onDownload`: wire to actual file URLs from submission data
+  - `LearnerCourseDetailPage` → `onWriteReview`: open review submission form (backend `CourseReview` API exists at `/api/v1/catalogue/courses/{id}/reviews/`)
+  - `LearnerCourseDetailPage` → `onViewProfile`: navigate to instructor profile page (page does not exist yet)
+  - `LearnerCourseCatalogPage` → `handleInstructorProfile`: navigate to instructor profile page (page does not exist yet)
+  - `GradebookPage` → `onExport`: wire to async report generation or client-side CSV export
+  - `CoursePreviewPage` → `onEnroll`/`onAddToCart`/`handlePublish`: preview-only context, may stay as informational toasts
 
-### 54. Type Safety — DONE (1 remaining)
-- **Fixed:** `CourseCreationPage` (added `currency` to `CourseDetail` type), `QuizzesPage` (proper `Enrollment` type), `BasicInfoSection` (proper paginated response access)
+### 54. Type Safety — 1 Remaining
 - **Remaining:** `CoursePlayerPage:385` — `ReactPlayer as any` is a React 19 compat workaround, left as-is with `@ts-ignore`
 
 ---
@@ -237,6 +193,7 @@
 | 4 | FinanceAnalyticsPage: fully wired to `transactionApi`, `invoiceApi`, `userSubscriptionApi` | 18 Mar 2026 | — |
 | 6 | Manager Bulk Import: UI wired up but currently blocked by 403 for actual managers | 18 Mar 2026 | — |
 | 7 | ContentUploadPage: wired storage quota to `quotaApi.getQuota()` | 18 Mar 2026 | — |
+| 9 | SubscriptionManagementPage: usage stats, billing, plan card wired to real APIs | 21 Mar 2026 | — |
 | 10 | CoursePlayerPage Q&A: wired to `discussionApi`, removed sampleQuestions | 18 Mar 2026 | — |
 | 12 | InstructorLearnersPage: replaced sampleLearners with `enrollmentApi.getAll()` + groupByLearner | 18 Mar 2026 | — |
 | 13 | Instructor Notifications: already wired to `notificationApi.getAll()`, no hardcoded data | 18 Mar 2026 | — |
@@ -252,19 +209,28 @@
 | 24 | AllUsersPage: removed dead mockUsers, added `userStatsApi` for KPIs | 18 Mar 2026 | — |
 | 25 | Superadmin PaymentsPage fully wired to `transactionApi` | 18 Mar 2026 | — |
 | 27 | Catalogue CoursesGrid: fetches from `publicCourseApi.getAll()` with real ratings | 18 Mar 2026 | `d42ae05` |
+| 28 | FeaturedCategories: backend returns `courses_count` via annotated `CategorySerializer` | 22 Mar 2026 | — |
 | 29 | StatsBanner: fetches from `publicStatsApi.getStats()` | 18 Mar 2026 | `d42ae05` |
 | 30 | Landing Categories: fetches from `publicCategoryApi.getAll()` with real `courses_count` | 18 Mar 2026 | `d42ae05` |
 | 31 | Landing Featured Courses: fetches from `publicCourseApi.getAll({ featured: true })` | 18 Mar 2026 | `d42ae05` |
+| 32 | Landing Pricing: fetches plan name, price, billing cycle from `subscriptionApi.getAll()` | 22 Mar 2026 | — |
 | 33 | TrustedBy: fetches from `publicClientsApi.getClients()` | 18 Mar 2026 | `d42ae05` |
+| 35a | BusinessCtaSection: wired demo form to EmailJS (`@emailjs/browser`), credentials pending | 21 Mar 2026 | — |
 | 36 | CourseReviews: removed hardcoded fallback, accepts real props from parent | 18 Mar 2026 | — |
-| 38 | Course details page: slug route, `publicCourseApi.getBySlug()`, CourseDetailContext | 18 Mar 2026 | — |
+| 38 | Course details page: slug route, CourseDetailContext, reviews, pricing card, related courses | 22 Mar 2026 | — |
+| 39 | Catalogue FiltersSidebar: fully wired category + level filters, sort dropdown, mobile drawer | 22 Mar 2026 | — |
 | 40 | CatalogueHero: wired stats + categories to real APIs | 18 Mar 2026 | — |
+| 41 | Catalogue Pagination: uses `count` prop from API, no hardcoded value | 22 Mar 2026 | — |
 | 42 | Public Header + MobileDrawer: auth-aware (My Dashboard / Log Out) | 18 Mar 2026 | — |
-| 45 | QuizPlayer: added server-side submission via `quizSubmissionApi.submit()` | 18 Mar 2026 | — |
-| 46 | ManagerReportsPage: fixed status bug + wired download handler | 18 Mar 2026 | — |
+| 45 | QuizPlayer: server scores override client-side, past attempts on pre-start screen | 22 Mar 2026 | — |
+| 46 | FinanceExportPage: wired to `reportsApi` (types, generate, download, status indicators) | 22 Mar 2026 | — |
 | 48 | Course Publish Flow: `handlePublish()` wired to `useSubmitCourseForApproval()` | 18 Mar 2026 | — |
 | 49 | Learner assignments wired to `submissionApi.getAll()` | 18 Mar 2026 | — |
+| 52 | Console.log cleanup: replaced all placeholder handlers with real actions or toasts | 22 Mar 2026 | — |
 | 53 | Instructor Sidebar: real unread badge via `notificationApi.getUnreadCount()` | 18 Mar 2026 | — |
+| 54 | Type safety: fixed `as any` casts in 3 files; added `currency` to `CourseDetail` type | 22 Mar 2026 | — |
+| 55 | PaymentHistoryPage: wired to `transactionApi.getAll()`, removed 7 hardcoded transactions | 22 Mar 2026 | — |
+| 56 | SubscriptionManagementPage: payment methods wired to `paymentMethodApi.getAll()` | 22 Mar 2026 | — |
 | — | CourseCurriculum, WhatYouLearn, CourseRequirements, CourseInstructor: removed sample data | 18 Mar 2026 | — |
 | — | Created `usePublicCourse` hook for course reviews API | 18 Mar 2026 | — |
 | — | Fixed public service types (paginated responses for categories/courses) | 18 Mar 2026 | `d42ae05` |
@@ -278,38 +244,24 @@
 | — | Notes tab persisted to backend | 16 Mar 2026 | `947ea56` |
 | — | Certificate/invoice download buttons | 15 Mar 2026 | `5e2d1c2` |
 | — | Privacy policy + certificate validation pages | 14 Mar 2026 | `e3dc560` |
-| — | SubscriptionManagementPage: usage stats, billing, plan card wired to real APIs | 21 Mar 2026 | — |
 | — | Manager full course management (reuse instructor components, role-aware navigation) | 21 Mar 2026 | — |
-| — | Removed thin `ManagerCourseDetailPage` + `ManagerCourseEditPage` | 21 Mar 2026 | — |
-| — | Fixed hardcoded `/instructor/` paths in 5 shared components (CourseCreationPage, ContentUploadPage, CourseStructurePage, QuizBuilderPage, SessionSchedulingPage) — manager now stays in `/manager/` context | 21 Mar 2026 | — |
+| — | Removed thin ManagerCourseDetailPage + ManagerCourseEditPage | 21 Mar 2026 | — |
+| — | Fixed hardcoded `/instructor/` paths in 5 shared components | 21 Mar 2026 | — |
 | — | Added missing manager routes: `/manager/assignment/create`, `/manager/sessions/schedule` | 21 Mar 2026 | — |
-| 35a | BusinessCtaSection: wired demo form to EmailJS (`@emailjs/browser`), credentials pending | 21 Mar 2026 | — |
-| — | Shared pages render correct sidebar (manager vs instructor) via conditional import | 21 Mar 2026 | — |
-| — | Added `/manager/courses/create` route + fixed ManagerCreateCoursePage "Get Started" link | 21 Mar 2026 | — |
-| — | ManagerCreateCoursePage: added Quick Tools, tabbed course list (All/Drafts/In Review/Published/Rejected), per-course action buttons | 21 Mar 2026 | — |
-| — | Fixed ManagerCoursesPage build errors: `total_enrolled` → `enrollment_count`, added local type extension for `completion_rate`/`rating` | 21 Mar 2026 | — |
-| — | Landing page responsive fixes: Footer CSS media queries, Header self-contained with MobileDrawer, mobile menu links fixed | 22 Mar 2026 | — |
-| — | All dashboard sidebars: `lg` → `md` breakpoint (960px) for sidebar collapse (manager, finance, superadmin) | 22 Mar 2026 | — |
-| — | Removed decorative search bars from all dashboard TopBars (learner, instructor, manager, finance, superadmin) | 22 Mar 2026 | — |
-| — | Removed "New: AI-Powered Learning Paths" badge from landing page Hero | 22 Mar 2026 | — |
-| 39 | Catalogue FiltersSidebar: fully wired category + level filters, removed price filter, Clear All functional | 22 Mar 2026 | — |
-| — | Catalogue CoursesGrid: sort dropdown wired to backend `ordering` param (newest, popular, title A-Z/Z-A) | 22 Mar 2026 | — |
-| — | Catalogue MobileFilterDrawer: receives and passes filter state from parent | 22 Mar 2026 | — |
-| — | Catalogue FeaturedCategories: capped at 8 categories max | 22 Mar 2026 | — |
-| — | Removed hardcoded popular search tags from CatalogueHero and learner CatalogFilterBar | 22 Mar 2026 | — |
-| — | Learner CatalogFilterBar: upgraded to search input + category dropdown + search button (matches public /courses) | 22 Mar 2026 | — |
-| — | LearnerCourseCatalogPage: search + category filter wired to `publicCourseApi.getAll()` | 22 Mar 2026 | — |
-| — | Backend: added `SearchFilter` + `OrderingFilter` to `PublicCourseViewSet` (search by title/description/instructor, order by title/published_at/enrollment_count) | 22 Mar 2026 | — |
-| 28 | FeaturedCategories: backend returns `courses_count` via annotated `CategorySerializer`, frontend uses real counts | 22 Mar 2026 | — |
-| 41 | Catalogue Pagination: already uses `count` prop from API, no hardcoded value | 22 Mar 2026 | — |
-| 52 | Console.log cleanup: replaced all placeholder handlers with real actions or toast notifications across 6 pages | 22 Mar 2026 | — |
-| 32 | Landing Pricing: fetches plan name, price, billing cycle from `subscriptionApi.getAll()` | 22 Mar 2026 | — |
-| 38 | Course Details: CourseHero wired to reviews, CoursePricingCard already wired, RelatedCourses fetches from API (no hardcoded fallback) | 22 Mar 2026 | — |
-| 54 | Type safety: fixed `as any` casts in CourseCreationPage, QuizzesPage, BasicInfoSection; added `currency` to `CourseDetail` type | 22 Mar 2026 | — |
-| 45 | QuizPlayer: server scores override client-side, past attempts displayed on pre-start screen | 22 Mar 2026 | — |
-| 46 | FinanceExportPage: wired to `reportsApi` (types, generate, download, recent exports, status indicators) | 22 Mar 2026 | — |
-| 55 | PaymentHistoryPage: wired to `transactionApi.getAll()`, KPIs from real data, removed 7 hardcoded transactions | 22 Mar 2026 | — |
-| 56 | SubscriptionManagementPage: payment methods wired to `paymentMethodApi.getAll()`, removed hardcoded array | 22 Mar 2026 | — |
+| — | Shared pages render correct sidebar (manager vs instructor) | 21 Mar 2026 | — |
+| — | ManagerCreateCoursePage: Quick Tools, tabbed course list, per-course action buttons | 21 Mar 2026 | — |
+| — | Fixed ManagerCoursesPage build errors | 21 Mar 2026 | — |
+| — | Landing page responsive fixes: Footer, Header, mobile menu | 22 Mar 2026 | — |
+| — | All dashboard sidebars: `lg` → `md` breakpoint (960px) | 22 Mar 2026 | — |
+| — | Removed decorative search bars from all dashboard TopBars | 22 Mar 2026 | — |
+| — | Removed "New: AI-Powered Learning Paths" badge from Hero | 22 Mar 2026 | — |
+| — | Catalogue sort dropdown wired to backend `ordering` param | 22 Mar 2026 | — |
+| — | Catalogue MobileFilterDrawer passes filter state from parent | 22 Mar 2026 | — |
+| — | Removed hardcoded popular search tags from CatalogueHero and CatalogFilterBar | 22 Mar 2026 | — |
+| — | Learner CatalogFilterBar: search input + category dropdown + search button | 22 Mar 2026 | — |
+| — | Backend: SearchFilter + OrderingFilter on PublicCourseViewSet | 22 Mar 2026 | — |
+| — | CTA + Pricing buttons: auth-aware routing, Schedule Demo wired to /for-business | 22 Mar 2026 | — |
+| 44 | Query param support: backend filters + frontend TODO cleanup + param name alignment | 22 Mar 2026 | — |
 
 ---
 
@@ -344,4 +296,6 @@
 | Security metrics endpoint | Active sessions, login attempts | SecurityPage (#26) |
 | Business-specific stats/pricing | Enterprise customer metrics, B2B plans | BusinessStatsSection (#35), PricingSection (#34) |
 | Manager-scoped bulk import | `POST /api/v1/manager/users/bulk_import/` (No 403 for managers) | ManagerBulkImportPage (#6, #43) |
+| Session attachments/resources | Files attached to lessons | CoursePlayerPage Resources (#10) |
+| Certificate PDF generation | Populate `pdf_url` on Certificate model | LearnerCertificatesPage (#8, #50) |
 | Discussion moderation | Pin and lock endpoints for existing API | Instructor/Manager discussions |

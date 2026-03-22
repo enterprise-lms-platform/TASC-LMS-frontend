@@ -47,7 +47,7 @@ export const financeDashboardLoader = async (queryClient: QueryClient) => {
  */
 export const financePaymentsLoader = async (
   queryClient: QueryClient,
-  params?: { page?: number; status?: string; date_from?: string; date_to?: string }
+  params?: { page?: number; status?: string; from_date?: string; to_date?: string }
 ) => {
   try {
     const transactions = await queryClient.ensureQueryData({
@@ -70,7 +70,7 @@ export const financePaymentsLoader = async (
  */
 export const financeInvoicesLoader = async (
   queryClient: QueryClient,
-  params?: { page?: number; status?: string; date_from?: string; date_to?: string }
+  params?: { page?: number; status?: string; from_date?: string; to_date?: string }
 ) => {
   try {
     const invoices = await queryClient.ensureQueryData({

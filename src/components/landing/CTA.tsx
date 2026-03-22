@@ -1,10 +1,21 @@
 import React from 'react';
+import { useAuth } from '../../hooks/useAuth';
+
+const roleDashboardMap: Record<string, string> = {
+  learner: '/learner',
+  instructor: '/instructor',
+  lms_manager: '/manager',
+  finance: '/finance',
+  tasc_admin: '/superadmin',
+};
 
 interface CTAProps {
   isMobile: boolean;
 }
 
 const CTA: React.FC<CTAProps> = ({ isMobile }) => {
+  const { user, isAuthenticated } = useAuth();
+  const dashboardPath = user?.role ? (roleDashboardMap[user.role] || '/learner') : '/learner';
   return (
     <section
       className="cta-section"
@@ -63,6 +74,7 @@ const CTA: React.FC<CTAProps> = ({ isMobile }) => {
             >
               <button
                 className="cta-button"
+                onClick={() => window.location.href = isAuthenticated ? dashboardPath : '/register'}
                 style={{
                   padding: '14px 32px',
                   backgroundColor: 'white',
@@ -80,11 +92,12 @@ const CTA: React.FC<CTAProps> = ({ isMobile }) => {
                   minWidth: '200px',
                 }}
               >
-                <i className="fas fa-play" />
-                Start Learning Free
+                <i className={isAuthenticated ? 'fas fa-arrow-right' : 'fas fa-play'} />
+                {isAuthenticated ? 'Go to Dashboard' : 'Start Learning Free'}
               </button>
               <button
                 className="cta-button"
+                onClick={() => window.location.href = '/for-business'}
                 style={{
                   padding: '14px 32px',
                   backgroundColor: 'rgba(255, 255, 255, 0.2)',

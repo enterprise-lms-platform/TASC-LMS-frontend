@@ -38,7 +38,6 @@ const BASE_PATH = '/api/v1/catalogue';
 
 export interface CategoryListParams {
   parent?: number;
-  // TODO: Backend API must support these query parameters
   search?: string;
   page?: number;
   limit?: number;
@@ -95,11 +94,10 @@ export interface CourseListParams {
   tag?: string;
   page?: number;
   page_size?: number;
-  // TODO: Backend API must support these query parameters
-  search?: string;              // Full-text search across course title/description
-  instructor_courses?: boolean; // Filter to only courses owned by the authenticated instructor
-  limit?: number;               // Limit the number of results returned
-  status?: string;              // Filter by course status (e.g., 'draft', 'published')
+  search?: string;              // Note: search only works on PublicCourseViewSet, not authenticated CourseViewSet
+  instructor_courses?: boolean;
+  limit?: number;
+  status?: string;
 }
 
 export const courseApi = {

@@ -64,7 +64,7 @@ const QuizzesPage: React.FC = () => {
   });
   const allProgress: SessionProgress[] = Array.isArray(progressRes)
     ? progressRes
-    : (progressRes as { results?: SessionProgress[] })?.results ?? [];
+    : (progressRes as unknown as { results?: SessionProgress[] })?.results ?? [];
 
   // Filter quiz-type sessions from progress
   const quizProgress = useMemo(

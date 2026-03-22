@@ -24,14 +24,13 @@ const BASE_PATH = '/api/v1/learning';
 
 // ENROLLMENTS
 
-// TODO: Backend API must support these query parameters for enrollment filtering
 export interface EnrollmentParams {
-  course?: number;              // Filter enrollments by course ID
-  search?: string;              // Search enrollments by learner name/email
-  courseId?: number;             // Alternative course filter used by some loaders
-  page?: number;                // Pagination page number
-  dateRange?: string;           // Filter by date range (used by analytics)
-  role?: 'instructor';          // Pass 'instructor' to see enrollments in courses you teach
+  course?: number;
+  search?: string;              // Search by learner name/email or course title
+  courseId?: number;
+  page?: number;
+  dateRange?: string;
+  role?: 'instructor';
 }
 
 export const enrollmentApi = {
@@ -60,8 +59,7 @@ export const enrollmentApi = {
 export interface SessionProgressParams {
   enrollment?: number;
   session?: number;
-  // TODO: Backend API must support filtering session progress by course
-  course?: number;              // Filter progress records by course ID
+  course?: number;
 }
 
 export const sessionProgressApi = {
