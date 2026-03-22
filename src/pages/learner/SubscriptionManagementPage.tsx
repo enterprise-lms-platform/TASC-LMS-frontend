@@ -60,9 +60,9 @@ import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
 import { useEnrollments, useCertificates } from '../../hooks/useLearning';
-import { invoiceApi, subscriptionApi } from '../../services/payments.services';
+import { invoiceApi, subscriptionApi, paymentMethodApi } from '../../services/payments.services';
 import { livestreamApi } from '../../services/livestream.services';
-import type { Invoice } from '../../types/types';
+import type { Invoice, PaymentMethod } from '../../types/types';
 
 // --- Main Page Component ---
 const SubscriptionManagementPage: React.FC = () => {
@@ -99,6 +99,13 @@ const SubscriptionManagementPage: React.FC = () => {
     queryFn: () => livestreamApi.getAll().then((r) => {
       const d = r.data;
       return Array.isArray(d) ? d : (d as { results?: unknown[] }).results ?? [];
+    }),
+  });
+  const { data: paymentMethodsData } = useQuery({
+    queryKey: ['learnerPaymentMethods'],
+    queryFn: () => paymentMethodApi.getAll().then((r) => {
+      const d = r.data;
+      return Array.isArray(d) ? d : (d as { results?: PaymentMethod[] }).results ?? [];
     }),
   });
 
@@ -155,11 +162,18 @@ const SubscriptionManagementPage: React.FC = () => {
     setSetAsDefault(false);
   };
 
-  // Payment methods
-  const paymentMethods = [
-    { type: 'M-Pesa', number: '+254 *** *** 4521', icon: <PhoneIcon />, isDefault: true, color: '#4caf50' },
-    { type: 'MTN MoMo', number: '+256 *** *** 7892', icon: <SimCardIcon />, isDefault: false, color: '#ffcc00' },
-  ];
+  // Payment methods from API
+  const METHOD_DISPLAY: Record<string, { label: string; icon: React.ReactElement; color: string }> = {
+    mobile_money: { label: 'Mobile Money', icon: <PhoneIcon />, color: '#4caf50' },
+    credit_card: { label: 'Credit Card', icon: <WalletIcon />, color: '#3b82f6' },
+    paypal: { label: 'PayPal', icon: <SimCardIcon />, color: '#003087' },
+    bank_transfer: { label: 'Bank Transfer', icon: <WalletIcon />, color: '#6366f1' },
+  };
+  const paymentMethods = (paymentMethodsData ?? []).map((pm: PaymentMethod) => {
+    const display = METHOD_DISPLAY[pm.method_type] ?? { label: pm.method_type, icon: <PhoneIcon />, color: '#71717a' };
+    const number = pm.display_name || pm.card_last_four ? `**** ${pm.card_last_four}` : pm.paypal_email || pm.bank_account_last_four ? `**** ${pm.bank_account_last_four}` : '';
+    return { type: display.label, number, icon: display.icon, isDefault: pm.is_default, color: display.color, id: pm.id };
+  });
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#fafafa' }}>

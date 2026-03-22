@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   Typography,
@@ -29,6 +30,7 @@ import {
   Snackbar,
   Alert,
   Pagination,
+  CircularProgress,
 } from '@mui/material';
 import {
   Check as CheckIcon,
@@ -50,38 +52,57 @@ import {
   Email as EmailIcon,
   Info as InfoIcon,
   Description as DescriptionIcon,
+  CreditCard as CardIcon,
+  AccountBalance as BankIcon,
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
+import { transactionApi } from '../../services/payments.services';
+import type { Transaction } from '../../types/types';
 
-// Transaction data
-const transactions = [
-  { id: 'TXN-2025-1215-8745', title: 'Pro Plan - Monthly', type: 'subscription', date: 'Dec 15, 2025', method: 'M-Pesa (...4521)', methodType: 'mpesa', amount: '$29.99', status: 'completed', invoiceId: 'INV-2025-1215' },
-  { id: 'TXN-2025-1210-3421', title: 'Advanced React Patterns', type: 'course', date: 'Dec 10, 2025', method: 'M-Pesa (...4521)', methodType: 'mpesa', amount: '$129.99', status: 'completed', invoiceId: 'INV-2025-1210' },
-  { id: 'TXN-2025-1115-2198', title: 'Pro Plan - Monthly', type: 'subscription', date: 'Nov 15, 2025', method: 'M-Pesa (...4521)', methodType: 'mpesa', amount: '$29.99', status: 'completed', invoiceId: 'INV-2025-1115' },
-  { id: 'TXN-2025-1108-7654', title: 'Data Science Bootcamp', type: 'course', date: 'Nov 8, 2025', method: 'MTN MoMo (...7892)', methodType: 'mtn', amount: '$199.99', status: 'pending', invoiceId: null },
-  { id: 'TXN-2025-1015-5432', title: 'Pro Plan - Monthly', type: 'subscription', date: 'Oct 15, 2025', method: 'M-Pesa (...4521)', methodType: 'mpesa', amount: '$29.99', status: 'completed', invoiceId: 'INV-2025-1015' },
-  { id: 'TXN-2025-1002-9876', title: 'Refund - JavaScript Masterclass', type: 'refund', date: 'Oct 2, 2025', method: 'M-Pesa (...4521)', methodType: 'mpesa', amount: '+$49.99', status: 'refunded', invoiceId: null },
-  { id: 'TXN-2025-0915-1234', title: 'Pro Plan - Monthly', type: 'subscription', date: 'Sep 15, 2025', method: 'M-Pesa (...4521)', methodType: 'mpesa', amount: '$29.99', status: 'failed', invoiceId: null },
-];
+const PAGE_SIZE = 10;
 
 const PaymentHistoryPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState<typeof transactions[0] | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('30days');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' as 'success' | 'warning' | 'error' });
+
+  // Fetch transactions from API
+  const { data: txnData, isLoading } = useQuery({
+    queryKey: ['learnerTransactions', statusFilter, page],
+    queryFn: () => transactionApi.getAll({
+      ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+      page,
+    }).then(r => {
+      const d = r.data;
+      if (Array.isArray(d)) return { results: d, count: d.length };
+      return d as { results: Transaction[]; count: number };
+    }),
+  });
+
+  const transactions = txnData?.results ?? (Array.isArray(txnData) ? txnData as Transaction[] : []);
+  const totalCount = (txnData as { count?: number })?.count ?? transactions.length;
+  const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  // Client-side search filter
+  const filtered = searchQuery
+    ? transactions.filter((t: Transaction) =>
+        t.transaction_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.course_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.invoice_number.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : transactions;
 
   const handleMobileMenuToggle = () => setMobileOpen(!mobileOpen);
   const showToast = (message: string, severity: 'success' | 'warning' | 'error' = 'success') => {
     setToast({ open: true, message, severity });
   };
 
-  const openTransactionDetail = (txn: typeof transactions[0]) => {
+  const openTransactionDetail = (txn: Transaction) => {
     setSelectedTransaction(txn);
     setDetailModalOpen(true);
   };
@@ -101,29 +122,41 @@ const PaymentHistoryPage: React.FC = () => {
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'subscription': return <SyncIcon sx={{ color: '#3b82f6' }} />;
-      case 'course': return <BookIcon sx={{ color: '#10b981' }} />;
-      case 'refund': return <UndoIcon sx={{ color: '#ef4444' }} />;
-      default: return <ReceiptIcon />;
-    }
+  const getTypeIcon = (txn: Transaction) => {
+    if (txn.course_title) return <BookIcon sx={{ color: '#10b981' }} />;
+    if (parseFloat(txn.amount) < 0) return <UndoIcon sx={{ color: '#ef4444' }} />;
+    return <SyncIcon sx={{ color: '#3b82f6' }} />;
   };
 
-  const getMethodIcon = (methodType: string) => {
-    switch (methodType) {
-      case 'mpesa': return <PhoneIcon sx={{ color: '#4caf50' }} />;
-      case 'mtn': return <SimCardIcon sx={{ color: '#ffcc00' }} />;
-      default: return <PhoneIcon />;
-    }
+  const getMethodIcon = (method: string) => {
+    if (method.includes('mobile_money')) return <PhoneIcon sx={{ color: '#4caf50' }} />;
+    if (method.includes('credit_card')) return <CardIcon sx={{ color: '#3b82f6' }} />;
+    if (method.includes('bank')) return <BankIcon sx={{ color: '#6366f1' }} />;
+    if (method.includes('paypal')) return <SimCardIcon sx={{ color: '#ffcc00' }} />;
+    return <PhoneIcon />;
   };
 
-  // Stats
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const formatCurrency = (amount: string, currency: string) => {
+    const symbol = currency === 'USD' ? '$' : currency === 'UGX' ? 'UGX ' : `${currency} `;
+    return `${symbol}${parseFloat(amount).toLocaleString()}`;
+  };
+
+  // Compute stats from real data
+  const completedTxns = transactions.filter((t: Transaction) => t.status === 'completed');
+  const pendingTxns = transactions.filter((t: Transaction) => t.status === 'pending');
+  const failedTxns = transactions.filter((t: Transaction) => t.status === 'failed');
+  const totalSpent = completedTxns.reduce((sum: number, t: Transaction) => sum + parseFloat(t.amount), 0);
+  const mainCurrency = transactions.length > 0 ? transactions[0].currency : 'USD';
+
   const stats = [
-    { icon: <MoneyIcon />, value: '$489.87', label: 'Total Spent (2025)', color: '#ffa424', bg: 'rgba(255, 164, 36, 0.1)' },
-    { icon: <SuccessIcon />, value: '24', label: 'Successful Payments', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
-    { icon: <PendingIcon />, value: '1', label: 'Pending', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)' },
-    { icon: <FailedIcon />, value: '2', label: 'Failed', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)' },
+    { icon: <MoneyIcon />, value: formatCurrency(totalSpent.toFixed(2), mainCurrency), label: 'Total Spent', color: '#ffa424', bg: 'rgba(255, 164, 36, 0.1)' },
+    { icon: <SuccessIcon />, value: String(completedTxns.length), label: 'Successful', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
+    { icon: <PendingIcon />, value: String(pendingTxns.length), label: 'Pending', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)' },
+    { icon: <FailedIcon />, value: String(failedTxns.length), label: 'Failed', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)' },
   ];
 
   return (
@@ -176,31 +209,11 @@ const PaymentHistoryPage: React.FC = () => {
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: { xs: '100%', sm: 'auto' }, flex: { sm: 'none' } }}>
               <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 130 } }}>
                 <Typography variant="caption" fontWeight={500} color="text.secondary" sx={{ mb: 0.5 }}>Status:</Typography>
-                <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                <Select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
                   <MenuItem value="all">All Status</MenuItem>
                   <MenuItem value="completed">Completed</MenuItem>
                   <MenuItem value="pending">Pending</MenuItem>
                   <MenuItem value="failed">Failed</MenuItem>
-                  <MenuItem value="refunded">Refunded</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 130 } }}>
-                <Typography variant="caption" fontWeight={500} color="text.secondary" sx={{ mb: 0.5 }}>Type:</Typography>
-                <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-                  <MenuItem value="all">All Types</MenuItem>
-                  <MenuItem value="subscription">Subscription</MenuItem>
-                  <MenuItem value="course">Course Purchase</MenuItem>
-                  <MenuItem value="refund">Refund</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 130 } }}>
-                <Typography variant="caption" fontWeight={500} color="text.secondary" sx={{ mb: 0.5 }}>Date Range:</Typography>
-                <Select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
-                  <MenuItem value="30days">Last 30 Days</MenuItem>
-                  <MenuItem value="3months">Last 3 Months</MenuItem>
-                  <MenuItem value="6months">Last 6 Months</MenuItem>
-                  <MenuItem value="year">Last Year</MenuItem>
-                  <MenuItem value="all">All Time</MenuItem>
                 </Select>
               </FormControl>
             </Stack>
@@ -223,80 +236,91 @@ const PaymentHistoryPage: React.FC = () => {
             <Typography variant="h6" fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1rem', md: '1.25rem' } }}>
               <ReceiptIcon sx={{ color: '#ffa424' }} /> Transaction History
             </Typography>
-            <Typography variant="body2" color="text.secondary">27 transactions</Typography>
+            <Typography variant="body2" color="text.secondary">{totalCount} transactions</Typography>
           </Box>
-          <TableContainer sx={{ overflowX: 'auto' }}>
-            <Table>
-              <TableHead>
-                <TableRow sx={{ bgcolor: '#fafafa' }}>
-                  {['Transaction', 'Date', 'Payment Method', 'Amount', 'Status', 'Actions'].map((h) => (
-                    <TableCell key={h} sx={{ fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 0.5, color: '#71717a', whiteSpace: 'nowrap' }}>{h}</TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {transactions.map((txn) => (
-                  <TableRow key={txn.id} hover sx={{ cursor: 'pointer' }} onClick={() => openTransactionDetail(txn)}>
-                    <TableCell>
-                      <Stack direction="row" spacing={2} alignItems="center">
-                        <Box sx={{ width: 40, height: 40, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: txn.type === 'subscription' ? 'rgba(59, 130, 246, 0.1)' : txn.type === 'course' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)' }}>
-                          {getTypeIcon(txn.type)}
-                        </Box>
-                        <Box>
-                          <Typography variant="body2" fontWeight={500}>{txn.title}</Typography>
-                          <Typography variant="caption" color="text.secondary">{txn.id}</Typography>
-                        </Box>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>{txn.date}</TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Box sx={{ width: 32, height: 20, borderRadius: 1, bgcolor: '#f4f4f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {getMethodIcon(txn.methodType)}
-                        </Box>
-                        <Typography variant="body2">{txn.method}</Typography>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight={600} sx={{ color: txn.status === 'refunded' ? '#10b981' : 'text.primary' }}>
-                        {txn.amount}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}
-                        size="small"
-                        sx={{ bgcolor: getStatusColor(txn.status).bg, color: getStatusColor(txn.status).color, fontWeight: 500, '&::before': { content: '""', width: 6, height: 6, borderRadius: '50%', bgcolor: getStatusColor(txn.status).color, mr: 1 } }}
-                      />
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <Stack direction="row" spacing={1}>
-                        {txn.status === 'completed' && (
-                          <>
-                            <IconButton size="small" title="View Receipt"><ViewIcon fontSize="small" /></IconButton>
-                            <IconButton size="small" title="Download"><DownloadIcon fontSize="small" /></IconButton>
-                          </>
-                        )}
-                        {(txn.status === 'pending' || txn.status === 'failed') && (
-                          <Button size="small" variant="contained" startIcon={<RefreshIcon />} sx={{ bgcolor: '#ffa424', textTransform: 'none', '&:hover': { bgcolor: '#f97316' } }}>
-                            Retry
-                          </Button>
-                        )}
-                        {txn.status === 'refunded' && (
-                          <IconButton size="small" title="View Receipt"><ViewIcon fontSize="small" /></IconButton>
-                        )}
-                      </Stack>
-                    </TableCell>
+
+          {isLoading ? (
+            <Box sx={{ p: 6, textAlign: 'center' }}>
+              <CircularProgress sx={{ color: '#ffa424' }} />
+            </Box>
+          ) : filtered.length === 0 ? (
+            <Box sx={{ p: 6, textAlign: 'center' }}>
+              <ReceiptIcon sx={{ fontSize: 48, color: 'grey.300', mb: 1 }} />
+              <Typography color="text.secondary">No transactions found.</Typography>
+            </Box>
+          ) : (
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: '#fafafa' }}>
+                    {['Transaction', 'Date', 'Payment Method', 'Amount', 'Status', 'Actions'].map((h) => (
+                      <TableCell key={h} sx={{ fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 0.5, color: '#71717a', whiteSpace: 'nowrap' }}>{h}</TableCell>
+                    ))}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {filtered.map((txn: Transaction) => (
+                    <TableRow key={txn.id} hover sx={{ cursor: 'pointer' }} onClick={() => openTransactionDetail(txn)}>
+                      <TableCell>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <Box sx={{ width: 40, height: 40, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: txn.course_title ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)' }}>
+                            {getTypeIcon(txn)}
+                          </Box>
+                          <Box>
+                            <Typography variant="body2" fontWeight={500}>{txn.course_title || 'Subscription Payment'}</Typography>
+                            <Typography variant="caption" color="text.secondary">{txn.transaction_id}</Typography>
+                          </Box>
+                        </Stack>
+                      </TableCell>
+                      <TableCell>{formatDate(txn.created_at)}</TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Box sx={{ width: 32, height: 20, borderRadius: 1, bgcolor: '#f4f4f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {getMethodIcon(txn.payment_method)}
+                          </Box>
+                          <Typography variant="body2">{txn.payment_method.replace('_', ' ')}</Typography>
+                        </Stack>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight={600}>
+                          {formatCurrency(txn.amount, txn.currency)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}
+                          size="small"
+                          sx={{ bgcolor: getStatusColor(txn.status).bg, color: getStatusColor(txn.status).color, fontWeight: 500 }}
+                        />
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Stack direction="row" spacing={1}>
+                          {txn.status === 'completed' && (
+                            <>
+                              <IconButton size="small" title="View Receipt"><ViewIcon fontSize="small" /></IconButton>
+                              <IconButton size="small" title="Download"><DownloadIcon fontSize="small" /></IconButton>
+                            </>
+                          )}
+                          {(txn.status === 'pending' || txn.status === 'failed') && (
+                            <Button size="small" variant="contained" startIcon={<RefreshIcon />} sx={{ bgcolor: '#ffa424', textTransform: 'none', '&:hover': { bgcolor: '#f97316' } }}>
+                              Retry
+                            </Button>
+                          )}
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
 
           {/* Pagination */}
           <Box sx={{ px: { xs: 2, md: 3 }, py: 2, borderTop: '1px solid #e4e4e7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
-            <Typography variant="body2" color="text.secondary">Showing 1-7 of 27 transactions</Typography>
-            <Pagination count={4} page={page} onChange={(_, p) => setPage(p)} color="primary" size="small" sx={{ '& .Mui-selected': { bgcolor: '#ffa424 !important' } }} />
+            <Typography variant="body2" color="text.secondary">
+              Showing {filtered.length > 0 ? ((page - 1) * PAGE_SIZE + 1) : 0}-{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount} transactions
+            </Typography>
+            <Pagination count={pageCount} page={page} onChange={(_, p) => setPage(p)} color="primary" size="small" sx={{ '& .Mui-selected': { bgcolor: '#ffa424 !important' } }} />
           </Box>
         </Card>
       </Box>
@@ -317,17 +341,19 @@ const PaymentHistoryPage: React.FC = () => {
                 <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
                   {selectedTransaction.status === 'completed' ? 'Payment Successful' : selectedTransaction.status === 'pending' ? 'Payment Pending' : 'Payment Failed'}
                 </Typography>
-                <Typography variant="h4" fontWeight={700} sx={{ color: '#ffa424' }}>{selectedTransaction.amount}</Typography>
+                <Typography variant="h4" fontWeight={700} sx={{ color: '#ffa424' }}>
+                  {formatCurrency(selectedTransaction.amount, selectedTransaction.currency)}
+                </Typography>
               </Box>
 
               <Box sx={{ bgcolor: '#fafafa', p: 3, borderRadius: 2, mb: 2 }}>
                 {[
-                  { label: 'Transaction ID', value: selectedTransaction.id },
-                  { label: 'Invoice Number', value: selectedTransaction.invoiceId || 'N/A' },
-                  { label: 'Date & Time', value: `${selectedTransaction.date} at 10:30 AM` },
-                  { label: 'Description', value: selectedTransaction.title },
-                  { label: 'Payment Method', value: selectedTransaction.method },
-                  { label: 'M-Pesa Receipt', value: 'QJK89XY2MP' },
+                  { label: 'Transaction ID', value: selectedTransaction.transaction_id },
+                  { label: 'Invoice Number', value: selectedTransaction.invoice_number || 'N/A' },
+                  { label: 'Date', value: formatDate(selectedTransaction.created_at) },
+                  { label: 'Description', value: selectedTransaction.course_title || 'Subscription Payment' },
+                  { label: 'Payment Method', value: selectedTransaction.payment_method.replace('_', ' ') },
+                  ...(selectedTransaction.payment_provider ? [{ label: 'Provider', value: selectedTransaction.payment_provider }] : []),
                   { label: 'Status', value: selectedTransaction.status },
                 ].map((row) => (
                   <Stack key={row.label} direction="row" justifyContent="space-between" sx={{ py: 1.5, borderBottom: '1px solid #e4e4e7', '&:last-child': { borderBottom: 'none' } }}>
@@ -344,7 +370,7 @@ const PaymentHistoryPage: React.FC = () => {
               <Box sx={{ bgcolor: 'rgba(59, 130, 246, 0.05)', p: 2, borderRadius: 2, borderLeft: '3px solid #3b82f6' }}>
                 <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <InfoIcon sx={{ color: '#3b82f6', fontSize: 18 }} />
-                  A receipt has been sent to your email: emma.chen@example.com
+                  A receipt has been sent to your registered email address.
                 </Typography>
               </Box>
             </Box>

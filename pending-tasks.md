@@ -175,6 +175,31 @@
 - **What to do:** Remove `MOCK_CERTIFICATES` fallback, ensure download button works with real `pdf_url`.
 - **Blocked?** Partially — backend PDF generation unclear
 
+### 55. Payment History Page — DONE
+- **File:** `src/pages/learner/PaymentHistoryPage.tsx`
+- **Done:** Transactions fetched from `transactionApi.getAll()` with status filter and pagination. KPI stats computed from real data. Transaction detail modal uses real fields. Removed all 7 hardcoded transaction objects.
+
+### 56. Subscription Management — DONE
+- **File:** `src/pages/learner/SubscriptionManagementPage.tsx`
+- **Done:** Payment methods fetched from `paymentMethodApi.getAll()`. Display name, method type icon, and default status from real `PaymentMethod` data. Removed hardcoded M-Pesa/MTN MoMo array.
+
+### 57. Landing Testimonials — Hardcoded
+- **File:** `src/components/landing/Testimonials.tsx`
+- **What's hardcoded:** 3 testimonial objects (names, roles, quotes)
+- **What to do:** Fetch from testimonials API or CMS, or accept as static marketing content.
+- **Blocked?** Yes — no testimonials API
+
+### 58. Business Testimonials — Hardcoded
+- **File:** `src/components/business/TestimonialsSection.tsx`
+- **What's hardcoded:** 3 testimonial objects (names, roles, quotes)
+- **Blocked?** Yes — no testimonials API
+
+### 59. Landing Courses Fallback — Hardcoded
+- **File:** `src/components/landing/Courses.tsx`
+- **What's hardcoded:** 3 fallback course objects shown if API returns empty
+- **What to do:** Remove fallback array, show empty state or nothing if API returns no featured courses.
+- **Blocked?** No
+
 ---
 
 ## LOW — Polish & Cleanup
@@ -283,6 +308,8 @@
 | 54 | Type safety: fixed `as any` casts in CourseCreationPage, QuizzesPage, BasicInfoSection; added `currency` to `CourseDetail` type | 22 Mar 2026 | — |
 | 45 | QuizPlayer: server scores override client-side, past attempts displayed on pre-start screen | 22 Mar 2026 | — |
 | 46 | FinanceExportPage: wired to `reportsApi` (types, generate, download, recent exports, status indicators) | 22 Mar 2026 | — |
+| 55 | PaymentHistoryPage: wired to `transactionApi.getAll()`, KPIs from real data, removed 7 hardcoded transactions | 22 Mar 2026 | — |
+| 56 | SubscriptionManagementPage: payment methods wired to `paymentMethodApi.getAll()`, removed hardcoded array | 22 Mar 2026 | — |
 
 ---
 
