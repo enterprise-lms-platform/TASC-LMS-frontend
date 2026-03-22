@@ -147,15 +147,13 @@
 - **What to do:** Confirm which filters backend supports and wire them up.
 - **Blocked?** Needs backend confirmation
 
-### 45. QuizPlayer — Partially Done
+### 45. QuizPlayer — DONE
 - **File:** `src/components/learner/quiz-player/QuizPlayer.tsx`
-- **Done:** Added `quizSubmissionApi.submit()` on quiz completion. Answers POSTed to server.
-- **Still pending:** Display server-returned scores instead of client-computed ones. Wire `GET /api/v1/learning/quiz-submissions/?quiz={id}` for past attempts.
+- **Done:** Server-returned scores override client-side grades when available. Past attempts fetched via `quizSubmissionApi.getAll({ quiz })` and displayed on pre-start screen with date, score %, and pass/fail chip. `previousAttempts` count drives attempt-remaining logic.
 
-### 46. Report Download — Partially Done
-- **Files:** `src/pages/manager/ManagerReportsPage.tsx`
-- **Done:** Fixed status comparison bug. Download button calls `reportsApi.download()`.
-- **Still pending:** FinanceExportPage not yet updated. No polling/refetch for report status during generation. No progress indicator.
+### 46. Report Download — DONE
+- **Files:** `src/pages/manager/ManagerReportsPage.tsx`, `src/pages/finance/FinanceExportPage.tsx`
+- **Done:** FinanceExportPage fully wired to `reportsApi` — templates from `getTypes()`, recent exports from `getAll()`, generate via `generate()`, download via `download()`. Status indicators (ready/processing/failed). Bulk export with date range params. KPIs computed from real data.
 
 ---
 
@@ -283,6 +281,8 @@
 | 32 | Landing Pricing: fetches plan name, price, billing cycle from `subscriptionApi.getAll()` | 22 Mar 2026 | — |
 | 38 | Course Details: CourseHero wired to reviews, CoursePricingCard already wired, RelatedCourses fetches from API (no hardcoded fallback) | 22 Mar 2026 | — |
 | 54 | Type safety: fixed `as any` casts in CourseCreationPage, QuizzesPage, BasicInfoSection; added `currency` to `CourseDetail` type | 22 Mar 2026 | — |
+| 45 | QuizPlayer: server scores override client-side, past attempts displayed on pre-start screen | 22 Mar 2026 | — |
+| 46 | FinanceExportPage: wired to `reportsApi` (types, generate, download, recent exports, status indicators) | 22 Mar 2026 | — |
 
 ---
 

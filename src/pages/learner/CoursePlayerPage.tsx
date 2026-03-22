@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, useLoaderData } from 'react-router-dom';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { sessionProgressApi, discussionApi, discussionReplyApi } from '../../services/learning.services';
+import { sessionProgressApi, discussionApi, discussionReplyApi, quizSubmissionApi } from '../../services/learning.services';
 import { queryKeys } from '../../hooks/queryKeys';
 import type { CourseDetail, Session, SessionProgress, Discussion, DiscussionReply } from '../../types/types';
 
@@ -672,9 +672,20 @@ const CoursePlayerPage: React.FC = () => {
   );
 };
 
-/* ── Quiz wrapper that fetches quiz data for a session ── */
+/* ── Quiz wrapper that fetches quiz data + past attempts for a session ── */
 const QuizSessionRenderer: React.FC<{ sessionId: number; onComplete?: (score: number, passed: boolean) => void }> = ({ sessionId, onComplete }) => {
   const { data: quiz, isLoading, isError } = useQuizDetail(sessionId);
+
+  // Fetch past attempts for this quiz
+  const { data: pastAttemptsData } = useQuery({
+    queryKey: ['quizSubmissions', sessionId],
+    queryFn: () => quizSubmissionApi.getAll({ quiz: sessionId }).then(r => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as { results?: typeof data })?.results ?? [];
+    }),
+    enabled: !!sessionId,
+  });
+  const pastAttempts = pastAttemptsData ?? [];
 
   if (isLoading) {
     return (
@@ -701,6 +712,8 @@ const QuizSessionRenderer: React.FC<{ sessionId: number; onComplete?: (score: nu
         sessionId={sessionId}
         settings={quiz.settings}
         questions={quiz.questions}
+        previousAttempts={pastAttempts.length}
+        pastAttempts={pastAttempts}
         onComplete={onComplete}
       />
     </Box>

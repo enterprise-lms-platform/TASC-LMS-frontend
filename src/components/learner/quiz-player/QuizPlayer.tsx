@@ -16,7 +16,7 @@ import {
   Info as InfoIcon,
 } from '@mui/icons-material';
 import type { QuizSettings, QuizQuestion } from '../../../types/types';
-import { quizSubmissionApi } from '../../../services/learning.services';
+import { quizSubmissionApi, type QuizSubmission } from '../../../services/learning.services';
 
 /* ── Types ── */
 type Answer = string | string[] | boolean | null;
@@ -35,6 +35,8 @@ interface QuizPlayerProps {
   questions: QuizQuestion[];
   /** Number of previous attempts the learner has used */
   previousAttempts?: number;
+  /** Past attempt results from the server */
+  pastAttempts?: QuizSubmission[];
   onComplete?: (score: number, passed: boolean) => void;
 }
 
@@ -125,6 +127,7 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
   settings,
   questions: rawQuestions,
   previousAttempts = 0,
+  pastAttempts = [],
   onComplete,
 }) => {
   // Possibly shuffle questions
@@ -181,17 +184,28 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
 
   const handleSubmit = useCallback(() => {
     // Client-side grading as immediate feedback
-    const score = gradeQuiz(questions, attempt.answers);
-    const passed = score >= passingScore;
-    setAttempt((prev) => ({ ...prev, score, passed, submitted: true }));
-    onComplete?.(score, passed);
+    const clientScore = gradeQuiz(questions, attempt.answers);
+    const clientPassed = clientScore >= passingScore;
+    setAttempt((prev) => ({ ...prev, score: clientScore, passed: clientPassed, submitted: true }));
+    onComplete?.(clientScore, clientPassed);
 
     const answers = questions.map((q) => ({
       question: q.id,
       selected_answer: { value: attempt.answers[q.id] ?? null },
     }));
-    quizSubmissionApi.create({ quiz: sessionId, enrollment: 0, answers }).catch(() => {
-      // Backend submission failed silently — client-side grade is already shown
+    quizSubmissionApi.create({ quiz: sessionId, enrollment: 0, answers }).then((res) => {
+      // Use server-returned score if available (more accurate for essay/matching)
+      const serverSubmission = res.data;
+      if (serverSubmission.score != null) {
+        const serverScore = serverSubmission.max_score > 0
+          ? Math.round((serverSubmission.score / serverSubmission.max_score) * 100)
+          : 0;
+        const serverPassed = serverSubmission.passed;
+        setAttempt((prev) => ({ ...prev, score: serverScore, passed: serverPassed }));
+        onComplete?.(serverScore, serverPassed);
+      }
+    }).catch(() => {
+      // Backend submission failed — client-side grade is already shown
     });
   }, [questions, attempt.answers, passingScore, onComplete, sessionId]);
 
@@ -252,6 +266,42 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
         >
           {attemptsLeft <= 0 ? 'No Attempts Remaining' : 'Start Quiz'}
         </Button>
+
+        {/* Past Attempts */}
+        {pastAttempts.length > 0 && (
+          <Box sx={{ mt: 3 }}>
+            <Divider sx={{ mb: 2 }} />
+            <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+              Previous Attempts ({pastAttempts.length})
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {pastAttempts.map((a, idx) => {
+                const pct = a.max_score > 0 && a.score != null ? Math.round((a.score / a.max_score) * 100) : null;
+                return (
+                  <Box key={a.id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, bgcolor: 'grey.50', borderRadius: 2, border: 1, borderColor: 'grey.200' }}>
+                    <Box>
+                      <Typography variant="body2" fontWeight={600}>Attempt {idx + 1}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(a.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {pct != null && (
+                        <Typography variant="body2" fontWeight={700}>{pct}%</Typography>
+                      )}
+                      <Chip
+                        label={a.passed ? 'Passed' : 'Failed'}
+                        size="small"
+                        color={a.passed ? 'success' : 'error'}
+                        sx={{ fontWeight: 600 }}
+                      />
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+        )}
       </Paper>
     );
   }
