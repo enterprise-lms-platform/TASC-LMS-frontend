@@ -286,6 +286,53 @@
 | `/api/v1/learner/my-courses/` | GET | Learner's enrolled courses (sort/filter) | Learner dashboard |
 | `/api/v1/learner/courses/{slug}/enroll/` | POST | Enroll by slug (idempotent) | Course enrollment flow |
 
+## PERFORMANCE — Scalability for 1000 Concurrent Users
+
+### 60. Route-Level Lazy Loading (Code Splitting)
+
+**File:** `src/routes/router.tsx`
+
+**Why:** All 130+ page components are statically imported, producing a single 2.4MB JavaScript chunk. Every user downloads all role pages (instructor, manager, finance, superadmin) even if they only use one role. At 1000 concurrent users, this means serving 2.4GB of JavaScript instead of ~300MB — a 8x bandwidth difference that slows initial load and strains the CDN/server.
+
+**What to do:**
+- Convert static page imports to `React.lazy()` grouped by role (5-6 chunks, not 130):
+```tsx
+// Before:
+import LearnerDashboard from '../pages/learner/LearnerDashboard';
+
+// After:
+const LearnerDashboard = lazy(() => import('../pages/learner/LearnerDashboard'));
+```
+- Wrap lazy routes in `<Suspense fallback={<CircularProgress />}>`
+- Keep shared components (Header, Footer, ProtectedRoute) in the main bundle
+- Optionally add `manualChunks` in `vite.config.ts` to split heavy vendor libs (hls.js 521KB, dash.js 992KB) into separate chunks loaded only by the course player
+
+**Expected result:** Initial bundle drops from ~2.4MB to ~300-400KB. Role-specific chunks load on first navigation (~50-150ms, then cached).
+
+**Blocked?** No — purely frontend change, no backend dependency.
+
+---
+
+### 61. Nginx Cache Headers for Static Assets
+
+**File:** `nginx.conf`
+
+**Why:** Currently no `Cache-Control` headers are set. Browsers re-download hashed static assets (`.js`, `.css`, images) on every visit even though Vite already fingerprints filenames. At 1000 users visiting repeatedly, this wastes bandwidth and slows page loads.
+
+**What to add to `nginx.conf`:**
+```nginx
+location /assets/ {
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+}
+```
+
+Vite-built files in `/assets/` include content hashes in filenames (e.g., `index-Ce5rbT16.js`), so aggressive caching is safe — changed files get new filenames.
+
+**Blocked?** No.
+
+---
+
 ## Backend Endpoints Still Missing
 
 | Endpoint | Purpose | Blocking |

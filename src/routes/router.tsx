@@ -107,6 +107,7 @@ import ManagerSettingsPage from '../pages/manager/ManagerSettingsPage';
 import ManagerNotificationsPage from '../pages/manager/ManagerNotificationsPage';
 import ManagerIntegrationsPage from '../pages/manager/ManagerIntegrationsPage';
 import ManagerBillingPage from '../pages/manager/ManagerBillingPage';
+import ManagerProfilePage from '../pages/manager/ManagerProfilePage';
 
 // Finance Pages
 import FinanceDashboard from '../pages/finance/FinanceDashboard';
@@ -126,6 +127,7 @@ import GatewayMpesaPage from '../pages/finance/GatewayMpesaPage';
 import GatewayMtnPage from '../pages/finance/GatewayMtnPage';
 import GatewayAirtelPage from '../pages/finance/GatewayAirtelPage';
 import GatewayPesapalPage from '../pages/finance/GatewayPesapalPage';
+import FinanceProfilePage from '../pages/finance/FinanceProfilePage';
 
 // Superadmin Pages
 import SuperadminDashboard from '../pages/SuperadminDashboard';
@@ -150,6 +152,7 @@ import SecurityPage from '../pages/superadmin/SecurityPage';
 import AnalyticsPage from '../pages/superadmin/AnalyticsPage';
 import NotificationsPage from '../pages/superadmin/NotificationsPage';
 import InviteUserPage from '../pages/superadmin/InviteUserPage';
+import SuperadminProfilePage from '../pages/superadmin/SuperadminProfilePage';
 
 // Import all loaders
 import * as learnerLoaders from './loaders/learnerLoaders';
@@ -635,6 +638,10 @@ export const createAppRouter = (queryClient: QueryClient) => {
       element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerBillingPage /></ProtectedRoute>,
       loader: async () => managerLoaders.managerRouteLoader(queryClient),
     },
+    {
+      path: '/manager/profile',
+      element: <ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerProfilePage /></ProtectedRoute>,
+    },
 
     // ═══════════════════════════════════════════════════════════════════════════
     // FINANCE ROUTES - Protected, role-restricted to finance personnel
@@ -724,6 +731,10 @@ export const createAppRouter = (queryClient: QueryClient) => {
       path: '/finance/gateway/pesapal',
       element: <ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><GatewayPesapalPage /></ProtectedRoute>,
       loader: async () => financeLoaders.financeRouteLoader(queryClient),
+    },
+    {
+      path: '/finance/profile',
+      element: <ProtectedRoute allowedRoles={['finance', 'tasc_admin']}><FinanceProfilePage /></ProtectedRoute>,
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -849,6 +860,10 @@ export const createAppRouter = (queryClient: QueryClient) => {
       path: '/superadmin/approvals/:requestId',
       element: <ProtectedRoute requiredRole="tasc_admin"><CourseApprovalDetailPage /></ProtectedRoute>,
       loader: async (args) => superadminLoaders.approvalDetailLoader(queryClient, args as { params: { requestId?: string } }),
+    },
+    {
+      path: '/superadmin/profile',
+      element: <ProtectedRoute requiredRole="tasc_admin"><SuperadminProfilePage /></ProtectedRoute>,
     },
   ];
 

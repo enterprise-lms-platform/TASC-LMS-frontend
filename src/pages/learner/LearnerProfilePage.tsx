@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Box, Toolbar, CssBaseline, Paper, Typography, Grid,
   Avatar, Button, TextField, Tabs, Tab, Switch, FormControlLabel,
-  IconButton, Divider, InputAdornment,
+  IconButton, Divider, InputAdornment, CircularProgress,
 } from '@mui/material';
 import {
   Edit as EditIcon, CameraAlt as CameraIcon,
@@ -17,14 +17,38 @@ import '../../styles/LearnerDashboard.css';
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUpdateProfile } from '../../hooks/useAuthQueries';
+import { uploadApi } from '../../services/upload.services';
+import { getUserInitials } from '../../utils/userHelpers';
 
 /* ── Component ── */
 
 const LearnerProfilePage: React.FC = () => {
   const { user } = useAuth();
+  const updateProfile = useUpdateProfile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) { alert('Image must be under 5MB'); return; }
+    if (!file.type.startsWith('image/')) { alert('Please select an image file'); return; }
+    try {
+      setAvatarUploading(true);
+      const publicUrl = await uploadApi.uploadAvatar(file);
+      await updateProfile.mutateAsync({ avatar: publicUrl });
+    } catch {
+      alert('Failed to upload avatar. Please try again.');
+    } finally {
+      setAvatarUploading(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
+  };
 
   // Form states
   const [formData, setFormData] = useState({
@@ -107,7 +131,7 @@ const LearnerProfilePage: React.FC = () => {
             {/* Avatar */}
             <Box sx={{ position: 'relative', mt: { xs: -8, md: -6 } }}>
               <Avatar
-                src={(user?.google_picture ?? undefined) as string | undefined}
+                src={(user?.avatar ?? user?.google_picture ?? undefined) as string | undefined}
                 sx={{
                   width: 120,
                   height: 120,
@@ -118,9 +142,12 @@ const LearnerProfilePage: React.FC = () => {
                   background: 'linear-gradient(135deg, #ffb74d, #f97316)',
                 }}
               >
-                {formData.firstName[0]}{formData.lastName[0]}
+                {getUserInitials(formData.firstName, formData.lastName)}
               </Avatar>
+              <input ref={avatarInputRef} type="file" accept="image/*" hidden onChange={handleAvatarChange} />
               <IconButton
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={avatarUploading}
                 sx={{
                   position: 'absolute',
                   bottom: 0,
@@ -132,7 +159,7 @@ const LearnerProfilePage: React.FC = () => {
                 }}
                 size="small"
               >
-                <CameraIcon fontSize="small" />
+                {avatarUploading ? <CircularProgress size={18} sx={{ color: 'white' }} /> : <CameraIcon fontSize="small" />}
               </IconButton>
             </Box>
 

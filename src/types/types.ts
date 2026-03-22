@@ -1071,7 +1071,7 @@ export interface HealthCheckResponse {
 
 // UPLOAD TYPES (DO Spaces presigned uploads)
 
-export type UploadPrefix = 'course-thumbnails' | 'course-banners' | 'session-assets';
+export type UploadPrefix = 'course-thumbnails' | 'course-banners' | 'session-assets' | 'avatars';
 
 export interface PresignRequest {
   prefix: UploadPrefix;

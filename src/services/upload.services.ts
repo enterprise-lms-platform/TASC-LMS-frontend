@@ -146,6 +146,10 @@ export const uploadApi = {
   /** Convenience: upload a course banner. */
   uploadBanner: (file: File): Promise<string> =>
     uploadApi.uploadToSpaces(file, 'course-banners'),
+
+  /** Convenience: upload a user avatar. */
+  uploadAvatar: (file: File): Promise<string> =>
+    uploadApi.uploadToSpaces(file, 'avatars'),
 };
 
 // STORAGE QUOTA
