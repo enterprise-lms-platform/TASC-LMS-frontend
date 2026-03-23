@@ -7,7 +7,7 @@ import { QueryClient } from '@tanstack/react-query';
 import type { LoaderFunctionArgs } from 'react-router-dom';
 import { redirect } from 'react-router-dom';
 import { queryKeys } from '../../hooks/queryKeys';
-import { courseApi } from '../../services/catalogue.services';
+import { courseApi, categoryApi } from '../../services/catalogue.services';
 import { enrollmentApi, submissionApi } from '../../services/learning.services';
 
 const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;
@@ -67,26 +67,29 @@ export const instructorCoursesLoader = async (
 
 /**
  * Course Creation Loader
- * Loaders for pre-fetch categories and tags for course creation form
+ * Pre-fetches categories and tags for course creation form.
+ * Uses same query key and shape as useCategories() so BasicInfoSection has data on initial render.
  */
 export const courseCreationFormLoader = async (queryClient: QueryClient) => {
   try {
-    // Load categories for dropdown
-    const categoriesData = await queryClient
-      .ensureQueryData({
-        queryKey: queryKeys.categories.all(),
-        queryFn: async () => {
-          // This depends on catalogue service having category endpoints
-          return { results: [], count: 0 };
-        },
-        staleTime: 30 * 60 * 1000,
-      })
-      .catch(() => ({ results: [], count: 0 }));
-
+    const categoriesData = await queryClient.ensureQueryData({
+      queryKey: queryKeys.categories.all(),
+      queryFn: async () => {
+        const r = await categoryApi.getAll();
+        const data = r.data;
+        if (Array.isArray(data)) {
+          return { count: data.length, next: null, previous: null, results: data };
+        }
+        return data;
+      },
+      staleTime: 30 * 60 * 1000,
+    });
     return { categories: categoriesData };
-  } catch (error) {
-    console.error('Failed to load form data:', error);
-    return { categories: { results: [], count: 0 } };
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number } };
+    if (err.response?.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
+    if (err.response?.status === 403) return redirect('/learner');
+    return { categories: { count: 0, next: null, previous: null, results: [] } };
   }
 };
 
