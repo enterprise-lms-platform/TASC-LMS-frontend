@@ -96,3 +96,22 @@ export const publicClientsApi = {
   getClients: () =>
     apiClient.get<TrustedClient[]>(`${PUBLIC_PATH}/clients/`),
 };
+
+// PUBLIC SUBSCRIPTION PLANS (for landing page pricing)
+
+export interface PublicSubscriptionPlan {
+  id: number;
+  name: string;
+  description?: string;
+  price: string;
+  currency: string;
+  billing_cycle: string;
+  features?: unknown;
+  status?: string;
+}
+
+export const publicSubscriptionPlansApi = {
+  // List active subscription plans for public pricing display (no auth required)
+  getAll: () =>
+    apiClient.get<{ count: number; results: PublicSubscriptionPlan[] }>(`${PUBLIC_PATH}/subscription-plans/`),
+};
