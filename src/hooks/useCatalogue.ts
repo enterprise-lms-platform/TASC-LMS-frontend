@@ -340,10 +340,7 @@ export const useDeleteSession = () => {
 export const useApprovalRequests = (params?: ApprovalListParams) =>
   useQuery({
     queryKey: queryKeys.approvalRequests.all(params),
-    queryFn: () => courseApprovalApi.getAll(params).then((r) => {
-      const data = r.data;
-      return Array.isArray(data) ? data : (data as any).results ?? [];
-    }),
+    queryFn: () => courseApprovalApi.getAll(params).then((r) => r.data),
   });
 
 export const useApprovalRequest = (id: number) =>
