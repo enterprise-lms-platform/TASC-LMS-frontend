@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Box, Toolbar, CssBaseline, Paper, Typography, Grid, Chip,
   Tabs, Tab, Button, CircularProgress,
+  Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert,
 } from '@mui/material';
 import {
   Assignment as AssignIcon, CheckCircle as DoneIcon,
   AccessTime as TimeIcon, TrendingUp as ScoreIcon,
   Upload as UploadIcon, Visibility as ViewIcon,
   Schedule as PendingIcon, Lock as LockIcon,
-  Description as FileIcon,
+  Description as FileIcon, CloudUpload as CloudIcon,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import '../../styles/LearnerDashboard.css';
@@ -16,6 +17,8 @@ import '../../styles/LearnerDashboard.css';
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
 import { submissionApi } from '../../services/learning.services';
+import { uploadApi } from '../../services/upload.services';
+import { useCreateSubmission } from '../../hooks/useSubmissions';
 import type { Submission } from '../../types/types';
 
 /* ── Status mapping ── */
@@ -79,6 +82,52 @@ const LearnerAssignmentsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
+  // Submit modal state
+  const [submitModalOpen, setSubmitModalOpen] = useState(false);
+  const [submitTarget, setSubmitTarget] = useState<{ enrollmentId: number; assignmentId: number; title: string } | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const createSubmission = useCreateSubmission();
+
+  const handleOpenSubmitModal = (enrollmentId: number, assignmentId: number, title: string) => {
+    setSubmitTarget({ enrollmentId, assignmentId, title });
+    setSelectedFile(null);
+    setSubmitModalOpen(true);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      setToast({ open: true, message: 'File must be under 50MB', severity: 'error' });
+      return;
+    }
+    setSelectedFile(file);
+  };
+
+  const handleSubmitAssignment = async () => {
+    if (!submitTarget || !selectedFile) return;
+    try {
+      setUploading(true);
+      const publicUrl = await uploadApi.uploadToSpaces(selectedFile, 'session-assets');
+      await createSubmission.mutateAsync({
+        enrollment: submitTarget.enrollmentId,
+        assignment: submitTarget.assignmentId,
+        submitted_file_url: publicUrl,
+        submitted_file_name: selectedFile.name,
+      });
+      setToast({ open: true, message: 'Assignment submitted successfully!', severity: 'success' });
+      setSubmitModalOpen(false);
+    } catch {
+      setToast({ open: true, message: 'Failed to submit assignment. Please try again.', severity: 'error' });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const { data: submissionsRaw, isLoading } = useQuery({
     queryKey: ['learner-submissions'],
     queryFn: () => submissionApi.getAll().then((r) => r.data),
@@ -94,6 +143,8 @@ const LearnerAssignmentsPage: React.FC = () => {
     const grade = gradeLabel(s.grade);
     return {
       id: String(s.id),
+      enrollmentId: s.enrollment,
+      assignmentId: s.assignment,
       title: s.assignment_title || s.session_title || `Assignment #${s.assignment}`,
       course: `Enrollment #${s.enrollment}`,
       type: 'Assignment',
@@ -287,10 +338,10 @@ const LearnerAssignmentsPage: React.FC = () => {
                         <Button size="small" variant="outlined" startIcon={<ViewIcon />} sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.72rem', borderRadius: '50px', borderColor: 'rgba(0,0,0,0.08)', color: 'text.secondary' }}>View</Button>
                       )}
                       {a.status === 'pending' && (
-                        <Button size="small" variant="contained" startIcon={<UploadIcon />} sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.72rem', borderRadius: '50px', boxShadow: 'none', px: 2, color: 'white', '&:hover': { boxShadow: '0 4px 12px rgba(249,115,22,0.3)' } }}>Submit</Button>
+                        <Button size="small" variant="contained" startIcon={<UploadIcon />} onClick={() => handleOpenSubmitModal(a.enrollmentId, a.assignmentId, a.title)} sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.72rem', borderRadius: '50px', boxShadow: 'none', px: 2, color: 'white', '&:hover': { boxShadow: '0 4px 12px rgba(249,115,22,0.3)' } }}>Submit</Button>
                       )}
                       {a.status === 'overdue' && (
-                        <Button size="small" variant="contained" color="error" startIcon={<UploadIcon />} sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.72rem', borderRadius: '50px', boxShadow: 'none', px: 2 }}>Late Submit</Button>
+                        <Button size="small" variant="contained" color="error" startIcon={<UploadIcon />} onClick={() => handleOpenSubmitModal(a.enrollmentId, a.assignmentId, a.title)} sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.72rem', borderRadius: '50px', boxShadow: 'none', px: 2 }}>Late Submit</Button>
                       )}
                     </Box>
                   </Box>
@@ -318,6 +369,80 @@ const LearnerAssignmentsPage: React.FC = () => {
           </Box>
         </Paper>
       </Box>
+
+      {/* Submit Assignment Modal */}
+      <Dialog open={submitModalOpen} onClose={() => !uploading && setSubmitModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 600 }}>
+          Submit Assignment
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {submitTarget?.title}
+          </Typography>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            style={{ display: 'none' }}
+          />
+          <Box
+            onClick={() => fileInputRef.current?.click()}
+            sx={{
+              border: '2px dashed',
+              borderColor: selectedFile ? 'primary.main' : 'grey.300',
+              borderRadius: 2,
+              p: 4,
+              textAlign: 'center',
+              cursor: 'pointer',
+              bgcolor: selectedFile ? 'rgba(25,118,210,0.04)' : 'grey.50',
+              '&:hover': { borderColor: 'primary.main', bgcolor: 'rgba(25,118,210,0.04)' },
+            }}
+          >
+            <CloudIcon sx={{ fontSize: 40, color: selectedFile ? 'primary.main' : 'grey.400', mb: 1 }} />
+            {selectedFile ? (
+              <>
+                <Typography variant="body2" fontWeight={600}>{selectedFile.name}</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {(selectedFile.size / 1024 / 1024).toFixed(1)} MB — Click to change
+                </Typography>
+              </>
+            ) : (
+              <>
+                <Typography variant="body2" fontWeight={500}>Click to select a file</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  PDF, ZIP, DOC, images — up to 50MB
+                </Typography>
+              </>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setSubmitModalOpen(false)} disabled={uploading} sx={{ color: 'text.secondary' }}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSubmitAssignment}
+            disabled={!selectedFile || uploading}
+            startIcon={uploading ? <CircularProgress size={16} color="inherit" /> : <UploadIcon />}
+            sx={{ textTransform: 'none', fontWeight: 600 }}
+          >
+            {uploading ? 'Uploading...' : 'Submit'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Toast */}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={4000}
+        onClose={() => setToast((t) => ({ ...t, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert severity={toast.severity} onClose={() => setToast((t) => ({ ...t, open: false }))}>
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

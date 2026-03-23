@@ -1,6 +1,6 @@
-// CheckoutPaymentPage.tsx - Updated version
+// CheckoutPaymentPage.tsx
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useLoaderData } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -39,9 +39,11 @@ import {
   Sms as OtpIcon,
 } from '@mui/icons-material';
 import { useFlutterwavePayment } from '../../hooks/useFlutterwavePayment';
+import { useAuth } from '../../hooks/useAuth';
+import type { CourseDetail } from '../../types/types';
 
 // Types
-interface Course {
+interface CheckoutCourse {
   id: string;
   title: string;
   instructor: string;
@@ -72,20 +74,38 @@ const countryCodes = [
   { code: '+255', flag: '🇹🇿', country: 'Tanzania' },
 ];
 
-const sampleCourse: Course = {
-  id: '1',
-  title: 'Advanced React Patterns',
-  instructor: 'Michael Rodriguez',
-  duration: '24 hours',
-  level: 'Advanced',
-  originalPrice: 149.99,
-  currentPrice: 129.99,
-};
+/** Map a CourseDetail from the loader/API into the checkout shape */
+function toCourseCheckout(c: CourseDetail): CheckoutCourse {
+  const price = parseFloat(c.price) || 0;
+  const discounted = parseFloat(c.discounted_price) || price;
+  return {
+    id: String(c.id),
+    title: c.title,
+    instructor: c.instructor_name || 'Instructor',
+    duration: c.duration_hours ? `${c.duration_hours} hours` : 'Self-paced',
+    level: c.level || 'All Levels',
+    originalPrice: price,
+    currentPrice: discounted,
+  };
+}
 
 const CheckoutPaymentPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const course = (location.state as { course?: Course })?.course || sampleCourse;
+  const loaderData = useLoaderData() as { course?: CourseDetail } | undefined;
+  const { user } = useAuth();
+
+  // Derive course: loader data (from URL param) > route state > redirect
+  const stateCourse = (location.state as { course?: CheckoutCourse })?.course;
+  const course: CheckoutCourse | null = loaderData?.course
+    ? toCourseCheckout(loaderData.course)
+    : stateCourse ?? null;
+
+  // If no course data at all, redirect back to catalogue
+  if (!course) {
+    navigate('/learner/courses', { replace: true });
+    return null;
+  }
 
   // Flutterwave hook
   const {
@@ -102,10 +122,10 @@ const CheckoutPaymentPage: React.FC = () => {
   // State
   const [selectedPayment, setSelectedPayment] = useState('mpesa');
   const [countryCode, setCountryCode] = useState('+254');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [firstName, setFirstName] = useState('Emma');
-  const [lastName, setLastName] = useState('Chen');
-  const [email, setEmail] = useState('emma.chen@example.com');
+  const [phoneNumber, setPhoneNumber] = useState(user?.phone_number ?? '');
+  const [firstName, setFirstName] = useState(user?.first_name ?? '');
+  const [lastName, setLastName] = useState(user?.last_name ?? '');
+  const [email, setEmail] = useState(user?.email ?? '');
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);

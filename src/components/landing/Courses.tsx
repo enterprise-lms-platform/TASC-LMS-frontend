@@ -38,41 +38,9 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
     setEnrollModalOpen(true);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const courses = [
-    {
-      category: 'Web Development',
-      title: 'Advanced React Patterns & Best Practices',
-      instructor: 'Michael Rodriguez',
-      hours: '24 hours',
-      level: 'Advanced',
-      rating: 4.8,
-      reviews: '1.2k',
-      badge: 'Bestseller',
-      image: 'https://images.unsplash.com/photo-1616400619175-5beda3a17896?q=80&w=1074',
-    },
-    {
-      category: 'Data Science',
-      title: 'Data Science & Machine Learning Fundamentals',
-      instructor: 'Emma Chen',
-      hours: '36 hours',
-      level: 'Beginner',
-      rating: 4.9,
-      reviews: '856',
-      badge: 'New',
-      image: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?q=80&w=1170',
-    },
-    {
-      category: 'Cybersecurity',
-      title: 'Cybersecurity Essentials: From Zero to Hero',
-      instructor: 'David Wilson',
-      hours: '28 hours',
-      level: 'Intermediate',
-      rating: 4.7,
-      reviews: '642',
-      image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=1171',
-    },
-  ];
+  if (!coursesData.isLoading && coursesList.length === 0) {
+    return null;
+  }
 
   return (
     <section

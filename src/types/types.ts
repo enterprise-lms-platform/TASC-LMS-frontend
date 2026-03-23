@@ -278,6 +278,7 @@ export interface Category {
   icon?: string | null;
   parent?: number | null;
   is_active: boolean;
+  courses_count?: number;
   created_at: string;
   updated_at: string;
 }

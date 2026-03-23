@@ -53,11 +53,6 @@
 - **What to do:** Wire to a messaging/inbox API if backend supports it, or mark as future feature.
 - **Blocked?** Yes — no messaging API exists
 
-### 19. Learner Checkout Payment Page
-- **File:** `src/pages/learner/CheckoutPaymentPage.tsx`
-- **What's hardcoded:** `paymentMethods[]`, `countryCodes[]`, `sampleCourse` object
-- **What to do:** Wire to real payment methods API and course detail from route params.
-- **Blocked?** No — APIs exist
 
 ### 20. Manager Bulk Enroll Page — Partially Done
 - **File:** `src/pages/manager/ManagerBulkEnrollPage.tsx`
@@ -126,16 +121,6 @@
 
 ## MEDIUM — Incomplete UI Features
 
-### 47. Curriculum Builder — Bulk Actions
-- **File:** `src/components/instructor/course-structure/CurriculumBuilder.tsx` (line 264)
-- **Issue:** "Bulk Actions" button is permanently disabled with no implementation.
-- **What to do:** Implement bulk delete, bulk move, bulk status change for lessons.
-- **Blocked?** No
-
-### 49. Learner Assignment Submission — Partially Done
-- **File:** `src/pages/learner/LearnerAssignmentsPage.tsx`
-- **Done:** Replaced all hardcoded data with real `submissionApi.getAll()` fetch. KPIs computed from live data.
-- **Still pending:** Submit/Late Submit buttons don't yet open a file upload modal — need file picker + presign upload flow via `useCreateSubmission()`.
 
 ### 50. Learner Certificates — Real Data
 - **File:** `src/pages/learner/LearnerCertificatesPage.tsx`
@@ -153,11 +138,6 @@
 - **What's hardcoded:** 3 testimonial objects (names, roles, quotes)
 - **Blocked?** Yes — no testimonials API
 
-### 59. Landing Courses Fallback — Hardcoded
-- **File:** `src/components/landing/Courses.tsx`
-- **What's hardcoded:** 3 fallback course objects shown if API returns empty
-- **What to do:** Remove fallback array, show empty state or nothing if API returns no featured courses.
-- **Blocked?** No
 
 ---
 
@@ -261,7 +241,13 @@
 | — | Learner CatalogFilterBar: search input + category dropdown + search button | 22 Mar 2026 | — |
 | — | Backend: SearchFilter + OrderingFilter on PublicCourseViewSet | 22 Mar 2026 | — |
 | — | CTA + Pricing buttons: auth-aware routing, Schedule Demo wired to /for-business | 22 Mar 2026 | — |
+| 19 | Wire CheckoutPaymentPage to real APIs | 23 Mar 2026 | — |
 | 44 | Query param support: backend filters + frontend TODO cleanup + param name alignment | 22 Mar 2026 | — |
+| 47 | Implement Curriculum Builder bulk actions | 23 Mar 2026 | — |
+| 49 | Add file upload modal to assignment submission | 23 Mar 2026 | — |
+| 59 | Remove hardcoded course fallback in Courses.tsx | 23 Mar 2026 | — |
+| 60 | Route-Level Lazy Loading: vite manualChunks by role + router React.lazy and Suspense | 23 Mar 2026 | — |
+| 61 | Nginx cache headers for static assets | 23 Mar 2026 | — |
 
 ---
 
@@ -335,48 +321,7 @@
 
 ## PERFORMANCE — Scalability for 1000 Concurrent Users
 
-### 60. Route-Level Lazy Loading (Code Splitting)
 
-**File:** `src/routes/router.tsx`
-
-**Why:** All 130+ page components are statically imported, producing a single 2.4MB JavaScript chunk. Every user downloads all role pages (instructor, manager, finance, superadmin) even if they only use one role. At 1000 concurrent users, this means serving 2.4GB of JavaScript instead of ~300MB — a 8x bandwidth difference that slows initial load and strains the CDN/server.
-
-**What to do:**
-- Convert static page imports to `React.lazy()` grouped by role (5-6 chunks, not 130):
-```tsx
-// Before:
-import LearnerDashboard from '../pages/learner/LearnerDashboard';
-
-// After:
-const LearnerDashboard = lazy(() => import('../pages/learner/LearnerDashboard'));
-```
-- Wrap lazy routes in `<Suspense fallback={<CircularProgress />}>`
-- Keep shared components (Header, Footer, ProtectedRoute) in the main bundle
-- Optionally add `manualChunks` in `vite.config.ts` to split heavy vendor libs (hls.js 521KB, dash.js 992KB) into separate chunks loaded only by the course player
-
-**Expected result:** Initial bundle drops from ~2.4MB to ~300-400KB. Role-specific chunks load on first navigation (~50-150ms, then cached).
-
-**Blocked?** No — purely frontend change, no backend dependency.
-
----
-
-### 61. Nginx Cache Headers for Static Assets
-
-**File:** `nginx.conf`
-
-**Why:** Currently no `Cache-Control` headers are set. Browsers re-download hashed static assets (`.js`, `.css`, images) on every visit even though Vite already fingerprints filenames. At 1000 users visiting repeatedly, this wastes bandwidth and slows page loads.
-
-**What to add to `nginx.conf`:**
-```nginx
-location /assets/ {
-    expires 1y;
-    add_header Cache-Control "public, immutable";
-}
-```
-
-Vite-built files in `/assets/` include content hashes in filenames (e.g., `index-Ce5rbT16.js`), so aggressive caching is safe — changed files get new filenames.
-
-**Blocked?** No.
 
 ---
 
