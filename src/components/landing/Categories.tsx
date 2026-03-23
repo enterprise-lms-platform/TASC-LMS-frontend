@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { publicCategoryApi } from '../../services/public.services';
+import type { Category } from '../../types/types';
 
 interface CategoriesProps {
   isMobile: boolean;
@@ -29,7 +30,7 @@ const Categories: React.FC<CategoriesProps> = ({ isMobile }) => {
   });
 
   const responseBody = categoriesData?.data?.data;
-  const categories = (responseBody?.results ?? []).slice(0, 8).map((cat: any, idx: number) => ({
+  const categories = (responseBody?.results ?? []).slice(0, 8).map((cat: Category, idx: number) => ({
     id: cat.id,
     slug: cat.slug,
     name: cat.name,

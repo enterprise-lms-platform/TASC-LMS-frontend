@@ -86,9 +86,9 @@ export const courseCreationFormLoader = async (queryClient: QueryClient) => {
     });
     return { categories: categoriesData };
   } catch (error: unknown) {
-    const err = error as { response?: { status?: number } };
-    if (err.response?.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
-    if (err.response?.status === 403) return redirect('/learner');
+    const err = error as { status?: number };
+    if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
+    if (err.status === 403) return redirect('/learner');
     return { categories: { count: 0, next: null, previous: null, results: [] } };
   }
 };

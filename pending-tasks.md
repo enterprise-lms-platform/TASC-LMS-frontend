@@ -286,6 +286,53 @@
 | `/api/v1/learner/my-courses/` | GET | Learner's enrolled courses (sort/filter) | Learner dashboard |
 | `/api/v1/learner/courses/{slug}/enroll/` | POST | Enroll by slug (idempotent) | Course enrollment flow |
 
+## MEDIUM — New Features
+
+### 62. Learner Badges Page + Earned Badge Modal
+
+**User story:** *"As a Learner, I want to receive completion badges so that I feel motivated to finish courses."*
+
+**Depends on:** Backend task #28 (Badge model + endpoints + auto-award signals)
+
+**Badge spec:** See `src/config/badges.md` for full definitions (22 badges, 6 categories)
+
+**What to build:**
+
+**a) `src/config/badgeDefinitions.ts`** — badge metadata config (used before backend is ready as fallback)
+
+**b) `src/hooks/useBadges.ts`** — hook that:
+- Fetches all badges from `GET /api/v1/learning/badges/`
+- Fetches user's earned badges from `GET /api/v1/learning/my-badges/`
+- Returns `{ allBadges, earnedBadges, lockedBadges, isLoading }`
+
+**c) `src/components/learner/BadgeEarnedModal.tsx`** — popup modal:
+- Confetti animation via `canvas-confetti` npm package
+- Shows badge PNG (120px), title, description
+- "View All Badges" button → navigates to `/learner/badges`
+- Tracks seen badges in `localStorage` key `tasc_seen_badges`
+- Triggered by calling `POST /api/v1/learning/badges/check/` on learner dashboard load
+- If `newly_earned` is non-empty, show modal (queue if multiple)
+
+**d) `src/pages/learner/LearnerBadgesPage.tsx`** — badges showcase:
+- Grid of badge cards grouped by category
+- Earned badges: full color, date earned below
+- Locked badges: grayscale + 40% opacity CSS filter, criteria shown as progress hint
+- Category filter tabs or section headers
+
+**e) Route + sidebar:**
+- Add `/learner/badges` route in `router.tsx`
+- Sidebar entry already exists (path: `/learner/badges`) — verify or add
+
+**f) Mount `BadgeEarnedModal` in learner layout** — so it triggers on any learner page, not just badges page
+
+**Install:** `npm install canvas-confetti` + `npm install -D @types/canvas-confetti`
+
+**Badge PNGs:** 22 images at `public/badges/{slug}.png` — Ben will provide these
+
+**Blocked?** Yes — waiting on backend task #28 and badge PNG assets
+
+---
+
 ## PERFORMANCE — Scalability for 1000 Concurrent Users
 
 ### 60. Route-Level Lazy Loading (Code Splitting)
