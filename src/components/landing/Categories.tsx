@@ -28,8 +28,8 @@ const Categories: React.FC<CategoriesProps> = ({ isMobile }) => {
     queryFn: () => publicCategoryApi.getAll(),
   });
 
-  const apiData = categoriesData?.data?.data;
-  const categories = (apiData?.results || []).slice(0, 8).map((cat: any, idx: number) => ({
+  const apiBody = categoriesData?.data;
+  const categories = (apiBody?.results || []).slice(0, 8).map((cat: any, idx: number) => ({
     id: cat.id,
     slug: cat.slug,
     name: cat.name,
