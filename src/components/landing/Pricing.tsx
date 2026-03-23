@@ -1,9 +1,8 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CircularProgress } from '@mui/material';
-import { subscriptionApi } from '../../services/payments.services';
+import { publicSubscriptionPlansApi, type PublicSubscriptionPlan } from '../../services/public.services';
 import { useAuth } from '../../hooks/useAuth';
-import type { Subscription } from '../../types/types';
 
 const roleDashboardMap: Record<string, string> = {
   learner: '/learner',
@@ -24,14 +23,14 @@ const Pricing: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const dashboardPath = user?.role ? (roleDashboardMap[user.role] || '/learner') : '/learner';
 
-  const { data: plansData, isLoading } = useQuery({
-    queryKey: ['subscriptionPlans'],
-    queryFn: () => subscriptionApi.getAll().then(r => r.data),
+  const { data: plansResponse, isLoading } = useQuery({
+    queryKey: ['publicSubscriptionPlans'],
+    queryFn: () => publicSubscriptionPlansApi.getAll().then(r => r.data),
   });
 
-  const plans: Subscription[] = Array.isArray(plansData)
-    ? plansData
-    : (plansData as unknown as { results?: Subscription[] })?.results ?? [];
+  const plans: PublicSubscriptionPlan[] = Array.isArray(plansResponse)
+    ? plansResponse
+    : (plansResponse as { results?: PublicSubscriptionPlan[] })?.results ?? [];
 
   const plan = plans.find(p => p.status === 'active') || plans[0];
 
