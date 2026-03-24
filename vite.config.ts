@@ -16,22 +16,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('hls.js')) return 'vendor-hls';
-            if (id.includes('dash.js')) return 'vendor-dash';
-            if (id.includes('@mui')) return 'vendor-mui';
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) return 'vendor-react';
-            if (id.includes('@tanstack') || id.includes('axios')) return 'vendor-data';
-            return 'vendor';
-          }
-          if (id.includes('src/pages/learner')) return 'learner-pages';
-          if (id.includes('src/pages/instructor')) return 'instructor-pages';
-          if (id.includes('src/pages/manager')) return 'manager-pages';
-          if (id.includes('src/pages/finance')) return 'finance-pages';
-          if (id.includes('src/pages/superadmin')) return 'superadmin-pages';
-          if (id.includes('src/pages/public')) return 'public-pages';
-        }
-      }
-    }
-  }
+          if (id.includes('node_modules')) return 'vendor'
+        },
+      },
+    },
+  },
 })
