@@ -62,10 +62,15 @@ const AllOrganizationsPage: React.FC = () => {
 
   const { data: organizationsData } = useQuery({
     queryKey: ['organizations'],
-    queryFn: () => organizationApi.getAll({ limit: 100 }),
+    queryFn: () => organizationApi.getAll({ limit: 100 }).then((r) => r.data),
   });
 
-  const organizations = organizationsData?.data || [];
+  const raw = organizationsData;
+  const organizations = Array.isArray(raw)
+    ? raw
+    : raw && typeof raw === 'object' && 'results' in raw
+      ? (raw as unknown as { results: typeof raw }).results
+      : [];
 
   const organizationsMapped = organizations.map((org) => ({
     id: String(org.id),
