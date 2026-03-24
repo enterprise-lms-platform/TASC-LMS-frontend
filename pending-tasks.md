@@ -57,13 +57,170 @@
 ### 20. Manager Bulk Enroll Page — Partially Done
 - **File:** `src/pages/manager/ManagerBulkEnrollPage.tsx`
 - **Done:** Course dropdown wired to `courseApi.getAll()`.
-- **Still pending:** `mockHistory[]` remains (no bulk enrollment history API).
+- **Still pending:** `mockHistory[]` remains (no bulk enrollment history API). "Enroll Learners" button has no onClick handler — needs bulk enrollment API wired.
+- **Blocked?** Yes — needs backend #20 (bulk enrollment endpoint)
+
+### 81. Manager Assignments Page — Entirely Static
+- **File:** `src/pages/manager/ManagerAssignmentsPage.tsx`
+- **What's hardcoded:** KPIs (64 total, 12 pending, 89% rate, 78% avg grade), `assignments[]` (8 mock objects), course filter list
+- **Unwired buttons:** View and Edit icon buttons in table rows — no onClick handlers
+- **What to do:** Wire to `submissionApi.getAll()` for assignment submissions, compute KPIs from real data.
+- **Blocked?** No — backend submission API exists
+
+### 82. Manager Quizzes Page — Entirely Static
+- **File:** `src/pages/manager/ManagerQuizzesPage.tsx`
+- **What's hardcoded:** KPIs (89 total, 76.3% pass rate, 4521 attempts), `quizzes[]` (8 mock objects), course filter list
+- **Unwired buttons:** View and Edit icon buttons in table rows — no onClick handlers
+- **What to do:** Wire to quiz/session API, compute stats from `quizSubmissionApi`.
+- **Blocked?** No — backend quiz API exists
+
+### 83. Manager Activity Page — Entirely Static (NOT BLOCKED)
+- **File:** `src/pages/manager/ManagerActivityPage.tsx`
+- **What's hardcoded:** `activityItems[]` (12 mock entries), summary stats (145 logins, 23 enrollments, etc.), peak hours data
+- **Unwired buttons:** Date range filter (today/7days/30days/custom) doesn't trigger any API calls
+- **What to do:** Wire to existing audit log API (`/api/v1/superadmin/audit-logs/` — managers have read access) with date/action/resource filters. Summary stats can be computed client-side.
+- **Blocked?** No — existing `AuditLogListView` supports manager role + all needed filters
+
+### 84. Manager Billing Page — Mostly Static
+- **File:** `src/pages/manager/ManagerBillingPage.tsx`
+- **What's hardcoded:** Current plan ("Enterprise $499/mo"), usage stats (347/500 users, 42GB/100GB), payment method ("Visa ****4242")
+- **Unwired buttons:** "Upgrade Plan" button — no onClick. "Update" payment method button — no onClick.
+- **Done:** Invoice list fetched from real API.
+- **Blocked?** Yes — needs org subscription/plan endpoint from backend
+
+### 85. Manager Settings Page — Entirely Static
+- **File:** `src/pages/manager/ManagerSettingsPage.tsx`
+- **What's hardcoded:** Org name ("Acme Corporation"), industry, website URL, theme settings, all toggle states, dropdown options
+- **Unwired buttons:** "Save Changes" button — no onClick handler. "Export All Data" button — no onClick.
+- **What to do:** Wire to org settings CRUD endpoint.
+- **Blocked?** Yes — needs backend org settings endpoint
+
+### 86. Manager Progress Page — Entirely Static
+- **File:** `src/pages/manager/ManagerProgressPage.tsx`
+- **What's hardcoded:** KPIs (4 metrics), `courseProgress[]` (6 courses with enrollment/completion data), `atRiskLearners[]` (6 learner records)
+- **Unwired buttons:** "Send Reminder" button in at-risk table — no onClick handler
+- **What to do:** Wire to enrollment API for progress data, add reminder endpoint.
+- **Blocked?** Partially — enrollment API exists for data, reminder feature needs backend
+
+### 87. Manager Roles Page — Entirely Static (NOT BLOCKED)
+- **File:** `src/pages/manager/ManagerRolesPage.tsx`
+- **What's hardcoded:** `roles[]` (3 roles with descriptions, user counts, permissions), `recentRoleChanges[]` (5 mock entries)
+- **What to do:** Wire role user counts from `usersApi.getAll({ role })` per role. Role changes from audit log API (`/api/v1/superadmin/audit-logs/?resource=user&action=updated`).
+- **Blocked?** No — existing user list + audit log APIs cover this
+
+### 88. Manager Schedule Session — Partially Wired (NOT BLOCKED)
+- **File:** `src/pages/manager/ManagerScheduleNewPage.tsx`
+- **Done:** Course and instructor dropdowns wired to `courseApi` and `usersApi`.
+- **Unwired buttons:** "Schedule Session" submit button — no form submission handler. "Cancel" button — no handler.
+- **What to do:** Wire submit to `livestreamApi.create()` — endpoint already exists at `POST /api/v1/livestream/livestreams/` with full platform integration (Zoom, Meet, Teams). May need to verify manager permission on the ViewSet.
+- **Blocked?** No — backend endpoint exists, frontend wiring only
+
+### 89. Manager Sessions — "View Details" Unwired
+- **File:** `src/pages/manager/ManagerSessionsPage.tsx`
+- **Done:** Session list fetched from `sessionApi.getAll()`, filters work.
+- **Unwired buttons:** "View Details" button in session cards — no onClick handler.
+- **What to do:** Add navigation to session detail page.
+
+### 90. Manager Dashboard Charts — Static Placeholders
+- **Components:** `EnrollmentChart.tsx` (static stats + "Last 90 Days"/"Export" buttons unwired), `LearningStatistics.tsx` (4 hardcoded metrics), `CourseCategories.tsx` (4 hardcoded categories)
+- **What to do:** Wire to analytics endpoints when backend provides them.
+- **Blocked?** Yes — needs backend #18 (analytics aggregation endpoints)
+
+### 91. Manager Sidebar — Hardcoded Org Name
+- **Component:** `src/components/manager/Sidebar.tsx`
+- **What's hardcoded:** Organization name "Acme Corporation" (line 362)
+- **What to do:** Pull from auth user's organization data.
 
 ### 26. Superadmin Security Page
 - **File:** `src/pages/superadmin/SecurityPage.tsx`
-- **What's hardcoded:** `kpis[]` (4 security KPIs), `activeSessions[]` (8 mock sessions)
+- **What's hardcoded:** `kpis[]` (4 security KPIs), `activeSessions[]` (8 mock sessions), password policy defaults, MFA settings
 - **What to do:** Wire to real active sessions/audit data.
-- **Blocked?** Partially — no dedicated security metrics endpoint
+- **Blocked?** Yes — needs backend #22 (security metrics endpoint)
+
+### 66. Superadmin All Courses Page — Partially Unblocked
+- **File:** `src/pages/superadmin/AllCoursesPage.tsx`
+- **What's hardcoded:** KPIs (876 total, 654 published, 178 draft, 44 archived), `courses[]` array (10 mock courses)
+- **What to do:** Wire table to `courseApi.getAll({ status, search, page_size })` — existing endpoint. KPIs need a stats action (backend #32, minor).
+- **Blocked?** Partially — table can be wired now, KPIs need minor backend addition
+
+### 67. Superadmin Assessments Page — Entirely Static
+- **File:** `src/pages/superadmin/AssessmentsPage.tsx`
+- **What's hardcoded:** KPIs (892 total, 78.5% pass rate), `assessments[]` array (10 mock assessments)
+- **What to do:** Wire to a combined quiz + assignment listing.
+- **Blocked?** Yes — needs backend #33 (assessments stats & list)
+
+### 68. Superadmin Certifications Page — Entirely Static
+- **File:** `src/pages/superadmin/CertificationsPage.tsx`
+- **What's hardcoded:** KPIs (4,567 issued, 4,123 valid), `certs[]` (8 mocks), `templates[]` (4 mock templates)
+- **What to do:** Wire to `certificateApi` list + stats endpoint.
+- **Blocked?** Yes — needs backend #34 (certification stats)
+
+### 69. Superadmin Instructors Page — Entirely Static
+- **File:** `src/pages/superadmin/InstructorsPage.tsx`
+- **What's hardcoded:** KPIs (156 total, 142 active, 4.6 avg rating), `instructors[]` (8 mock objects)
+- **What to do:** Wire to `usersApi.getAll({ role: 'instructor' })` + annotated fields.
+- **Blocked?** Partially — user list works, but needs annotated `courses_count`, `students_count`, `avg_rating` from backend #35
+
+### 70. Superadmin Invoices Page — Partially Unblocked
+- **File:** `src/pages/superadmin/InvoicesPage.tsx`
+- **What's hardcoded:** KPIs ($1.8M paid, $234K pending, $45K overdue), `invoices[]` (8 mock objects)
+- **What to do:** Wire table to `invoiceApi.getAll({ status, page_size })` — existing endpoint. KPIs need a stats action (backend #36, minor).
+- **Blocked?** Partially — table can be wired now, KPIs need minor backend addition
+
+### 71. Superadmin Revenue Page — Entirely Static
+- **File:** `src/pages/superadmin/RevenuePage.tsx`
+- **What's hardcoded:** KPIs ($2.4M total, $186K monthly), `orgs[]` (6 mock orgs with revenue), revenue charts placeholder
+- **What to do:** Wire to revenue stats + by-org breakdown endpoints.
+- **Blocked?** Yes — needs backend #37 (revenue endpoints)
+
+### 72. Superadmin Roles & Permissions Page — Entirely Static
+- **File:** `src/pages/superadmin/RolesPermissionsPage.tsx`
+- **What's hardcoded:** `roles[]` (5 roles with user counts), `permissions[]` (8 names), `permissionMatrix` (full matrix)
+- **What to do:** Wire role user counts from backend; permission matrix can stay as frontend config.
+- **Blocked?** Partially — needs backend #40 (roles with counts)
+
+### 73. Superadmin System Settings Page — Entirely Static
+- **File:** `src/pages/superadmin/SystemSettingsPage.tsx`
+- **What's hardcoded:** General settings defaults (site name, URL, timezone), SMTP config, `featureToggles[]` (8 toggles), system info (version, deploy date, uptime)
+- **What to do:** Wire to system settings CRUD + health endpoint.
+- **Blocked?** Yes — needs backend #38 (system settings & health)
+
+### 74. Superadmin Notifications Page — NOT BLOCKED
+- **File:** `src/pages/superadmin/NotificationsPage.tsx`
+- **What's hardcoded:** Stat cards (3 unread, 12 today, 47 this week), `notifications[]` (10 mock objects)
+- **What to do:** Wire to existing `notificationApi.getAll()` for list + `notificationApi.getUnreadCount()` for unread stat. Compute "today" / "this week" counts client-side from `created_at` timestamps.
+- **Blocked?** No — existing NotificationViewSet has list + is_read/type filters + unread_count action
+
+### 75. Superadmin Partnerships Page — Entirely Static
+- **File:** `src/pages/superadmin/PartnershipsPage.tsx`
+- **What's hardcoded:** KPIs (12 partners, 9 active, $45.2K revenue), `partners[]` (6 mock objects)
+- **Blocked?** Yes — Phase 2 feature, no backend models exist (backend #41)
+
+### 76. Superadmin Integrations Page — Entirely Static
+- **File:** `src/pages/superadmin/IntegrationsPage.tsx`
+- **What's hardcoded:** `integrations[]` (10 mock integrations with status, categories, sync times)
+- **Blocked?** Yes — Phase 2 feature, no backend models exist (backend #41)
+
+### 77. Superadmin Data Migration Page — Entirely Static
+- **File:** `src/pages/superadmin/DataMigrationPage.tsx`
+- **What's hardcoded:** KPIs (156K records, 142K migrated), `modules[]` (10 mock migration modules), Odoo connection details, migration logs
+- **Blocked?** Yes — specialized feature, no backend infrastructure (backend #42)
+
+### 78. Superadmin Gateway Settings Page — Entirely Static
+- **File:** `src/pages/superadmin/GatewaySettingsPage.tsx`
+- **What's hardcoded:** `gateways[]` (4 payment gateways with status, transaction counts), Flutterwave config defaults
+- **Blocked?** Yes — needs payment gateway management backend (backend #42)
+
+### 79. Superadmin Dashboard Charts — Hardcoded
+- **Components:** `RevenueChart.tsx` (6 months hardcoded data), `UserGrowthChart.tsx` (4 mock metrics + 5 acquisition channels), `SystemHealth.tsx` (5 hardcoded health items)
+- **What to do:** Wire to analytics + health endpoints when available.
+- **Blocked?** Yes — needs backend #18 (analytics), #38 (system health)
+
+### 80. Superadmin AllOrganizations — Minor Hardcoded Defaults
+- **File:** `src/pages/superadmin/AllOrganizationsPage.tsx`
+- **What's hardcoded:** Plan defaults to "Standard", users to "0", revenue to "$0", pagination text "Showing 1-8 of 142"
+- **What to do:** Wire plan/users/revenue from backend annotated fields (backend #31), fix pagination from API count.
+- **Blocked?** Partially — needs `user_count` and `course_count` from backend #31
 
 ---
 
@@ -334,15 +491,39 @@ Frontend implementation complete (`LearnerBadgesPage.tsx`, `BadgeEarnedModal.tsx
 
 ## Backend Endpoints Still Missing
 
-| Endpoint | Purpose | Blocking |
-|----------|---------|----------|
-| Analytics aggregation (enrollment trends, engagement metrics) | Time-series data for charts | Analytics pages (#2, #3, #4, #5) |
-| Messaging/inbox API | Direct messaging between users | InstructorMessagesPage (#11) |
-| Bulk enrollment endpoint (real implementation) | Enroll multiple users at once | ManagerBulkEnrollPage (#20) |
-| Security metrics endpoint | Active sessions, login attempts | SecurityPage (#26) |
-| Business-specific stats/pricing | Enterprise customer metrics, B2B plans | BusinessStatsSection (#35), PricingSection (#34) |
-| Manager-scoped bulk import | `POST /api/v1/manager/users/bulk_import/` (No 403 for managers) | ManagerBulkImportPage (#6, #43) |
-| Session attachments/resources | Files attached to lessons | CoursePlayerPage Resources (#10) |
-| Certificate PDF generation | Populate `pdf_url` on Certificate model | LearnerCertificatesPage (#8, #50) |
-| Discussion moderation | Pin and lock endpoints for existing API | Instructor/Manager discussions |
-| Saved/Favorited courses API | `GET/POST/DELETE /api/v1/learning/saved-courses/` + toggle endpoint | SavedCoursesPage, CatalogCourseCard heart icon |
+| Endpoint | Purpose | Blocking | Backend # |
+|----------|---------|----------|-----------|
+| Analytics aggregation (enrollment trends, engagement metrics) | Time-series data for charts | Analytics pages (#2, #3, #4, #5) | #18 |
+| Messaging/inbox API | Direct messaging between users | InstructorMessagesPage (#11) | #24 |
+| Bulk enrollment endpoint (real implementation) | Enroll multiple users at once | ManagerBulkEnrollPage (#20) | #20 |
+| Security metrics endpoint | Active sessions, login attempts | SecurityPage (#26) | #22 |
+| Business-specific stats/pricing | Enterprise customer metrics, B2B plans | BusinessStatsSection (#35), PricingSection (#34) | #23 |
+| Manager-scoped bulk import | `POST /api/v1/manager/users/bulk_import/` (No 403 for managers) | ManagerBulkImportPage (#6, #43) | #0b |
+| Session attachments/resources | Files attached to lessons | CoursePlayerPage Resources (#10) | #21 |
+| Certificate PDF generation | Populate `pdf_url` on Certificate model | LearnerCertificatesPage (#8, #50) | #19 |
+| Discussion moderation | Pin and lock endpoints for existing API | Instructor/Manager discussions | #4 |
+| Saved/Favorited courses API | `GET/POST/DELETE /api/v1/learning/saved-courses/` + toggle endpoint | SavedCoursesPage, CatalogCourseCard heart icon | #29 |
+| Superadmin courses stats action | `stats/` action on CourseViewSet (KPI counts) | AllCoursesPage (#66) KPIs only — table can be wired now | #32 (minor) |
+| Superadmin assessments stats + list | Quiz/assignment counts, pass rates | AssessmentsPage (#67) | #33 |
+| Superadmin certifications admin-scoped list + stats | All users' certs (current endpoint is user-scoped) | CertificationsPage (#68) | #34 |
+| Superadmin instructors annotated fields | `courses_count`, `students_count`, `avg_rating` on user list | InstructorsPage (#69) | #35 |
+| Superadmin invoice stats action | `stats/` action on InvoiceViewSet (KPI totals) | InvoicesPage (#70) KPIs only — table can be wired now | #36 (minor) |
+| Superadmin revenue stats + by-org | Revenue KPIs, per-org breakdown | RevenuePage (#71) | #37 |
+| Superadmin system settings + health | Settings CRUD, system health check | SystemSettingsPage (#73), SystemHealth widget (#79) | #38 |
+| Superadmin user stats: add `by_role` | Per-role user counts in existing stats endpoint | RolesPermissionsPage (#72) | #40 (minor) |
+| Org serializer: `user_count`, `course_count` | Annotated org fields | AllOrganizationsPage (#80) | #31 |
+| Manager org settings CRUD | Read/save org settings (name, theme, toggles) | ManagerSettingsPage (#85) | #43 |
+| Manager billing/plan info | Org subscription details + usage stats | ManagerBillingPage (#84) | #44 |
+| Bulk enrollment endpoint | `POST /api/v1/manager/enrollments/bulk/` | ManagerBulkEnrollPage (#20) | #20 |
+
+### Endpoints That Already Exist (frontend wiring only — no backend needed)
+
+| Existing Endpoint | Frontend Page | Task # |
+|-------------------|--------------|--------|
+| `POST /api/v1/livestream/livestreams/` (full CRUD + platform integration) | ManagerScheduleNewPage — wire submit button | #88 |
+| `GET /api/v1/notifications/` + `unread_count` action | SuperadminNotificationsPage — wire list + stats | #74 |
+| `GET /api/v1/superadmin/audit-logs/` (managers have access, date/action/resource filters) | ManagerActivityPage — wire activity list | #83 |
+| `GET /api/v1/catalogue/courses/` (status filter, search, ordering) | SuperadminAllCoursesPage — wire table | #66 |
+| `GET /api/v1/payments/invoices/` (status filter, date range) | SuperadminInvoicesPage — wire table | #70 |
+| `GET /api/v1/superadmin/users/?role=` (existing role filter) | ManagerRolesPage — compute role counts | #87 |
+| `GET /api/v1/learning/submissions/` + `statistics/` action | ManagerAssignmentsPage — wire table + KPIs | #81 |
