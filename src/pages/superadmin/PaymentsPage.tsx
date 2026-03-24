@@ -98,7 +98,14 @@ const PaymentsPage: React.FC = () => {
     }),
   });
 
-  const transactions = (transactionsData?.data ?? []) as Transaction[];
+  const rawTx = transactionsData?.data;
+  const transactions = (
+    Array.isArray(rawTx)
+      ? rawTx
+      : rawTx && typeof rawTx === 'object' && 'results' in rawTx
+        ? (rawTx as unknown as { results: Transaction[] }).results
+        : []
+  ) as Transaction[];
 
   const kpis = useMemo(() => {
     const completed = transactions.filter(t => t.status === 'completed');
