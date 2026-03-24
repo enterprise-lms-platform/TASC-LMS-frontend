@@ -118,6 +118,7 @@ export const courseStructureLoader = async (
   } catch (error: unknown) {
     const err = error as { status?: number };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
+    if (err.status === 401 && DEV_BYPASS_AUTH) return { course: null };
     if (err.status === 404 || err.status === 403) {
       return redirect('/instructor/courses');
     }
@@ -150,6 +151,7 @@ export const coursePreviewLoader = async (
   } catch (error: unknown) {
     const err = error as { status?: number };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
+    if (err.status === 401 && DEV_BYPASS_AUTH) return { course: null };
     if (err.status === 404 || err.status === 403) {
       return redirect('/instructor/courses');
     }

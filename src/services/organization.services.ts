@@ -10,6 +10,7 @@ export interface OrganizationListParams {
   search?: string;
   is_active?: boolean;
   page?: number;
+  page_size?: number;
   limit?: number;
 }
 

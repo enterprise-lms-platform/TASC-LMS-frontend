@@ -48,6 +48,9 @@ const FinanceDashboard: React.FC = () => {
         {/* Financial Overview - 4 Cards */}
         <FinancialOverview />
 
+        {/* Quick Actions - below stat cards */}
+        <QuickActions />
+
         {/* Charts Section */}
         <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
           <Grid size={{ xs: 12, lg: 8 }}>
@@ -67,7 +70,6 @@ const FinanceDashboard: React.FC = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <PaymentMethods />
               <RecentInvoices />
-              <QuickActions />
             </Box>
           </Grid>
         </Grid>

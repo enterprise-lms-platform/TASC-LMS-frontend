@@ -33,6 +33,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUnreadNotificationCount } from '../../hooks/useNotifications';
 import { getUserDisplayName, getUserInitials } from '../../utils/userHelpers';
 
 // Sidebar width constant
@@ -52,13 +53,13 @@ interface NavSection {
 }
 
 // Navigation sections data with routes
-const navSections: NavSection[] = [
+const buildNavSections = (unreadCount?: number): NavSection[] => [
   {
     title: 'Dashboard',
     items: [
       { text: 'Overview', icon: <DashboardIcon />, path: '/finance' },
       { text: 'Analytics', icon: <AnalyticsIcon />, path: '/finance/analytics' },
-      { text: 'Alerts', icon: <AlertsIcon />, path: '/finance/alerts', badge: 2 },
+      { text: 'Alerts', icon: <AlertsIcon />, path: '/finance/alerts', badge: unreadCount || undefined },
     ],
   },
   {
@@ -112,6 +113,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const unreadCount = useUnreadNotificationCount();
+  const navSections = buildNavSections(unreadCount);
   const userName = getUserDisplayName(user?.first_name, user?.last_name, user?.email);
   const userInitials = getUserInitials(user?.first_name, user?.last_name);
 

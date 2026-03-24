@@ -1,88 +1,78 @@
 import React from 'react';
-import { Box, Paper, Typography, Grid } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Box, Button } from '@mui/material';
 import {
   Add as AddIcon,
   Receipt as InvoiceIcon,
   FileDownload as ExportIcon,
   PieChart as ReportIcon,
+  CreditCard as PaymentsIcon,
+  People as SubscribersIcon,
 } from '@mui/icons-material';
 
-interface QuickAction {
-  label: string;
-  icon: React.ReactNode;
-  color: string;
-}
-
-const actions: QuickAction[] = [
-  { label: 'New Payment', icon: <AddIcon />, color: '#10b981' },
-  { label: 'Create Invoice', icon: <InvoiceIcon />, color: '#6366f1' },
-  { label: 'Export Data', icon: <ExportIcon />, color: '#f59e0b' },
-  { label: 'Generate Report', icon: <ReportIcon />, color: '#ef4444' },
+const quickActions = [
+  { icon: <InvoiceIcon />, label: 'Invoices', color: '#6366f1', path: '/finance/invoices' },
+  { icon: <PaymentsIcon />, label: 'Transactions', color: '#10b981', path: '/finance/transactions' },
+  { icon: <SubscribersIcon />, label: 'Subscriptions', color: '#3b82f6', path: '/finance/subscriptions' },
+  { icon: <AddIcon />, label: 'New Invoice', color: '#ffa424', path: '/finance/invoices' },
+  { icon: <ReportIcon />, label: 'Reports', color: '#ef4444', path: '/finance/reports' },
+  { icon: <ExportIcon />, label: 'Export Data', color: '#71717a', path: '/finance/reports' },
 ];
 
 const QuickActions: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
-    <Paper
-      elevation={0}
+    <Box
       sx={{
-        borderRadius: '1rem',
-        overflow: 'hidden',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
-        transition: 'box-shadow 0.3s',
-        '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' },
+        display: 'flex',
+        gap: 1.5,
+        mb: 3,
+        flexWrap: { xs: 'nowrap', md: 'wrap' },
+        overflowX: 'auto',
+        pb: 1,
+        mx: { xs: -2, md: 0 },
+        px: { xs: 2, md: 0 },
+        '&::-webkit-scrollbar': { height: 3 },
+        '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
+        '&::-webkit-scrollbar-thumb': { bgcolor: 'grey.300', borderRadius: 2 },
       }}
     >
-      <Box sx={{ p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider' }}>
-        <Typography fontWeight={700}>Quick Actions</Typography>
-      </Box>
-
-      <Box sx={{ p: 2.5 }}>
-        <Grid container spacing={1.5}>
-          {actions.map((action) => (
-            <Grid key={action.label} size={6}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  p: 2,
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  bgcolor: 'rgba(0,0,0,0.02)',
-                  '&:hover': {
-                    bgcolor: 'rgba(255,164,36,0.06)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    bgcolor: `${action.color}15`,
-                    color: action.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    mb: 1.5,
-                    '& svg': { fontSize: 20 },
-                  }}
-                >
-                  {action.icon}
-                </Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.75rem' }}>
-                  {action.label}
-                </Typography>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
-    </Paper>
+      {quickActions.map((action) => (
+        <Button
+          key={action.label}
+          variant="outlined"
+          startIcon={action.icon}
+          size="small"
+          onClick={() => navigate(action.path)}
+          sx={{
+            bgcolor: 'white',
+            borderColor: 'rgba(0,0,0,0.06)',
+            color: 'text.primary',
+            textTransform: 'none',
+            fontWeight: 600,
+            px: 2.5,
+            py: 1,
+            borderRadius: '12px',
+            fontSize: '0.82rem',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            transition: 'all 0.2s',
+            '&:hover': {
+              borderColor: action.color,
+              bgcolor: `${action.color}0a`,
+              color: action.color,
+              transform: 'translateY(-2px)',
+              boxShadow: `0 4px 12px ${action.color}20`,
+            },
+            '& .MuiButton-startIcon': { color: action.color },
+          }}
+        >
+          {action.label}
+        </Button>
+      ))}
+    </Box>
   );
 };
 

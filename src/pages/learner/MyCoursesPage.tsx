@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box, Toolbar, CssBaseline, Paper, Typography, Grid, Chip, Avatar,
-  LinearProgress, IconButton, TextField, MenuItem, Button, Tabs, Tab,
+  LinearProgress, IconButton, TextField, MenuItem, Button, Tabs, Tab, Skeleton,
 } from '@mui/material';
 import {
   MenuBook as CourseIcon, PlayArrow as PlayIcon, CheckCircle as CompletedIcon,
@@ -13,52 +14,26 @@ import '../../styles/LearnerDashboard.css';
 
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
+import { enrollmentApi } from '../../services/learning.services';
+import type { PaginatedResponse } from '../../types/types';
 
-/* ── Static data (will come from backend later) ── */
-
-/* Same color scheme as Learner Dashboard QuickStats */
-const kpis = [
-  {
-    label: 'In Progress',
-    value: '4',
-    icon: <CourseIcon />,
-    // Green Theme (matches Active Courses)
-    bgcolor: '#dcfce7',
-    iconBg: '#4ade80',
-    color: '#14532d',
-    subColor: '#166534',
-  },
-  {
-    label: 'Completed',
-    value: '8',
-    icon: <CompletedIcon />,
-    // Grey Theme (matches Learning Hours)
-    bgcolor: '#f4f4f5',
-    iconBg: '#a1a1aa',
-    color: '#27272a',
-    subColor: '#3f3f46',
-  },
-  {
-    label: 'Total Hours',
-    value: '127',
-    icon: <TimeIcon />,
-    // Orange Theme (matches Certificates)
-    bgcolor: '#fff3e0',
-    iconBg: '#ffa424',
-    color: '#7c2d12',
-    subColor: '#9a3412',
-  },
-  {
-    label: 'Avg. Rating',
-    value: '4.7',
-    icon: <StarIcon />,
-    // Green Theme alt (matches Avg. Score)
-    bgcolor: '#f0fdf4',
-    iconBg: '#86efac',
-    color: '#14532d',
-    subColor: '#166534',
-  },
-];
+interface EnrollmentResult {
+  id: number;
+  course: {
+    id: number;
+    title: string;
+    category?: { name?: string };
+    instructor_name?: string;
+    thumbnail?: string;
+    rating?: number;
+  };
+  progress_percentage: number;
+  completed_sessions: number;
+  total_sessions: number;
+  status?: string;
+  enrolled_at?: string;
+  updated_at?: string;
+}
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   'In Progress': { bg: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6' },
@@ -66,18 +41,24 @@ const statusColors: Record<string, { bg: string; color: string }> = {
   'Not Started': { bg: 'rgba(156, 163, 175, 0.08)', color: '#71717a' },
 };
 
-const courses = [
-  { id: '1', title: 'Advanced React Patterns', instructor: 'Michael Rodriguez', category: 'Web Development', progress: 65, lessons: '8/12', rating: 4.8, status: 'In Progress', lastAccessed: '2 hours ago', image: 'https://images.unsplash.com/photo-1616400619175-5beda3a17896?q=80&w=200' },
-  { id: '2', title: 'Data Science Fundamentals', instructor: 'Emily Chen', category: 'Data Science', progress: 82, lessons: '10/12', rating: 4.9, status: 'In Progress', lastAccessed: '1 day ago', image: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?q=80&w=200' },
-  { id: '3', title: 'Cybersecurity Essentials', instructor: 'David Wilson', category: 'Security', progress: 45, lessons: '5/11', rating: 4.7, status: 'In Progress', lastAccessed: '3 days ago', image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=200' },
-  { id: '4', title: 'JavaScript Fundamentals', instructor: 'Sarah Johnson', category: 'Web Development', progress: 100, lessons: '15/15', rating: 4.9, status: 'Completed', lastAccessed: '1 week ago', image: '' },
-  { id: '5', title: 'React Basics', instructor: 'Michael Rodriguez', category: 'Web Development', progress: 100, lessons: '10/10', rating: 4.8, status: 'Completed', lastAccessed: '2 weeks ago', image: '' },
-  { id: '6', title: 'HTML & CSS Mastery', instructor: 'Grace Lee', category: 'Web Development', progress: 100, lessons: '12/12', rating: 4.6, status: 'Completed', lastAccessed: '1 month ago', image: '' },
-  { id: '7', title: 'Cloud Architecture with AWS', instructor: 'James Otieno', category: 'Cloud', progress: 0, lessons: '0/14', rating: 4.7, status: 'Not Started', lastAccessed: 'Never', image: '' },
-  { id: '8', title: 'UX/UI Design Principles', instructor: 'Faith Muthoni', category: 'Design', progress: 25, lessons: '3/12', rating: 4.5, status: 'In Progress', lastAccessed: '5 days ago', image: '' },
-];
+const getStatus = (progress: number) => {
+  if (progress >= 100) return 'Completed';
+  if (progress > 0) return 'In Progress';
+  return 'Not Started';
+};
 
-/* ── Component ── */
+const getTimeAgo = (iso?: string) => {
+  if (!iso) return 'Never';
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  return `${Math.floor(days / 30)}mo ago`;
+};
 
 const MyCoursesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -86,14 +67,62 @@ const MyCoursesPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('recent');
 
+  const { data: enrollmentsRaw, isLoading } = useQuery({
+    queryKey: ['learner', 'my-courses'],
+    queryFn: () => enrollmentApi.getAll({ page_size: 50 }).then(r => r.data),
+  });
+
+  const enrollments: EnrollmentResult[] = (Array.isArray(enrollmentsRaw)
+    ? enrollmentsRaw
+    : (enrollmentsRaw as PaginatedResponse<EnrollmentResult> | undefined)?.results ?? []) as EnrollmentResult[];
+
+  const courses = useMemo(() => enrollments.map(e => ({
+    id: String(e.course?.id ?? e.id),
+    title: e.course?.title || 'Untitled Course',
+    instructor: e.course?.instructor_name || 'Instructor',
+    category: e.course?.category?.name || 'General',
+    progress: e.progress_percentage ?? 0,
+    lessons: `${e.completed_sessions ?? 0}/${e.total_sessions ?? 0}`,
+    rating: e.course?.rating ?? 0,
+    status: getStatus(e.progress_percentage ?? 0),
+    lastAccessed: getTimeAgo(e.updated_at || e.enrolled_at),
+    image: e.course?.thumbnail || '',
+  })), [enrollments]);
+
+  // Compute KPIs from real data
+  const kpiData = useMemo(() => {
+    const inProgress = courses.filter(c => c.status === 'In Progress').length;
+    const completed = courses.filter(c => c.status === 'Completed').length;
+    const avgRating = courses.length > 0
+      ? (courses.reduce((sum, c) => sum + c.rating, 0) / courses.length).toFixed(1)
+      : '0';
+    return [
+      { label: 'In Progress', value: String(inProgress), icon: <CourseIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+      { label: 'Completed', value: String(completed), icon: <CompletedIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+      { label: 'Total Courses', value: String(courses.length), icon: <TimeIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+      { label: 'Avg. Rating', value: avgRating, icon: <StarIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+    ];
+  }, [courses]);
+
   const tabLabels = ['All Courses', 'In Progress', 'Completed', 'Not Started'];
   const statusFilter = activeTab === 0 ? null : tabLabels[activeTab];
 
-  const filtered = courses.filter((c) => {
-    if (statusFilter && c.status !== statusFilter) return false;
-    if (search && !c.title.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
+  const filtered = useMemo(() => {
+    let result = courses.filter((c) => {
+      if (statusFilter && c.status !== statusFilter) return false;
+      if (search && !c.title.toLowerCase().includes(search.toLowerCase())) return false;
+      return true;
+    });
+    // Sort
+    if (sortBy === 'progress') result = [...result].sort((a, b) => b.progress - a.progress);
+    else if (sortBy === 'name') result = [...result].sort((a, b) => a.title.localeCompare(b.title));
+    else if (sortBy === 'rating') result = [...result].sort((a, b) => b.rating - a.rating);
+    return result;
+  }, [courses, statusFilter, search, sortBy]);
+
+  const completionRate = courses.length > 0
+    ? Math.round((courses.filter(c => c.status === 'Completed').length / courses.length) * 100)
+    : 0;
 
   return (
     <Box className="learner-page" sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -126,77 +155,52 @@ const MyCoursesPage: React.FC = () => {
 
         {/* KPI Row */}
         <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
-          {kpis.map((k, index) => (
+          {kpiData.map((k, index) => (
             <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
-              <Paper
-                elevation={0}
-                className={`stat-card ld-fade-in ld-fade-in-${index}`}
-                sx={{
-                  bgcolor: k.bgcolor,
-                  borderRadius: '20px',
-                  p: 3,
-                  position: 'relative',
-                  height: '100%',
-                  minHeight: 160,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  textAlign: 'center',
-                  transition: 'transform 0.2s',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                  },
-                }}
-              >
-                {/* Icon Badge */}
-                <Box
+              {isLoading ? (
+                <Skeleton variant="rounded" height={160} sx={{ borderRadius: '20px' }} />
+              ) : (
+                <Paper
+                  elevation={0}
+                  className={`stat-card ld-fade-in ld-fade-in-${index}`}
                   sx={{
-                    position: 'absolute',
-                    top: 16,
-                    right: 16,
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    bgcolor: k.iconBg,
+                    bgcolor: k.bgcolor,
+                    borderRadius: '20px',
+                    p: 3,
+                    position: 'relative',
+                    height: '100%',
+                    minHeight: 160,
                     display: 'flex',
-                    alignItems: 'center',
+                    flexDirection: 'column',
                     justifyContent: 'center',
-                    color: 'white',
-                    '& svg': { fontSize: 20 },
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    transition: 'transform 0.2s',
+                    cursor: 'pointer',
+                    '&:hover': { transform: 'translateY(-4px)' },
                   }}
                 >
-                  {k.icon}
-                </Box>
-
-                {/* Main Stat */}
-                <Typography
-                  variant="h3"
-                  sx={{
-                    fontWeight: 700,
-                    color: k.color,
-                    fontSize: { xs: '2rem', md: '2.5rem' },
-                    lineHeight: 1,
-                    mb: 1,
-                  }}
-                >
-                  {k.value}
-                </Typography>
-
-                {/* Label */}
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: k.subColor,
-                    fontWeight: 500,
-                    fontSize: '0.875rem',
-                    opacity: 0.8,
-                  }}
-                >
-                  {k.label}
-                </Typography>
-              </Paper>
+                  <Box
+                    sx={{
+                      position: 'absolute', top: 16, right: 16, width: 40, height: 40,
+                      borderRadius: '50%', bgcolor: k.iconBg, display: 'flex',
+                      alignItems: 'center', justifyContent: 'center', color: 'white',
+                      '& svg': { fontSize: 20 },
+                    }}
+                  >
+                    {k.icon}
+                  </Box>
+                  <Typography
+                    variant="h3"
+                    sx={{ fontWeight: 700, color: k.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}
+                  >
+                    {k.value}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: k.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>
+                    {k.label}
+                  </Typography>
+                </Paper>
+              )}
             </Grid>
           ))}
         </Grid>
@@ -246,10 +250,33 @@ const MyCoursesPage: React.FC = () => {
 
           {/* Course Cards */}
           <Box sx={{ px: 3, pb: 3 }}>
-            {filtered.length === 0 ? (
+            {isLoading ? (
+              [0, 1, 2, 3].map(i => (
+                <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2 }}>
+                  <Skeleton variant="rounded" width={64} height={64} sx={{ borderRadius: '12px' }} />
+                  <Box sx={{ flex: 1 }}>
+                    <Skeleton width="50%" />
+                    <Skeleton width="30%" />
+                    <Skeleton width="40%" height={8} sx={{ mt: 1 }} />
+                  </Box>
+                </Box>
+              ))
+            ) : filtered.length === 0 ? (
               <Box sx={{ py: 6, textAlign: 'center' }}>
                 <CourseIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
-                <Typography color="text.disabled">No courses found</Typography>
+                <Typography color="text.disabled">
+                  {courses.length === 0 ? 'No enrolled courses yet' : 'No courses found'}
+                </Typography>
+                {courses.length === 0 && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => navigate('/learner/courses')}
+                    sx={{ mt: 2, textTransform: 'none', borderRadius: 2 }}
+                  >
+                    Browse Courses
+                  </Button>
+                )}
               </Box>
             ) : (
               <Grid container spacing={2}>
@@ -260,27 +287,20 @@ const MyCoursesPage: React.FC = () => {
                         display: 'flex',
                         alignItems: { xs: 'flex-start', sm: 'center' },
                         flexDirection: { xs: 'column', sm: 'row' },
-                        gap: 2,
-                        p: 2,
-                        borderRadius: '12px',
-                        cursor: 'pointer',
+                        gap: 2, p: 2, borderRadius: '12px', cursor: 'pointer',
                         transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
                         '&:hover': { bgcolor: 'rgba(0,0,0,0.015)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
                       }}
+                      onClick={() => navigate(`/learner/course/${course.id}`)}
                     >
                       {/* Thumbnail */}
                       <Avatar
                         variant="rounded"
                         src={course.image || undefined}
                         sx={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: '12px',
-                          bgcolor: 'rgba(255,164,36,0.08)',
-                          color: 'primary.dark',
-                          fontSize: '0.7rem',
-                          fontWeight: 700,
-                          flexShrink: 0,
+                          width: 64, height: 64, borderRadius: '12px',
+                          bgcolor: 'rgba(255,164,36,0.08)', color: 'primary.dark',
+                          fontSize: '0.7rem', fontWeight: 700, flexShrink: 0,
                         }}
                       >
                         {!course.image && course.title.substring(0, 2)}
@@ -300,11 +320,7 @@ const MyCoursesPage: React.FC = () => {
                             variant="determinate"
                             value={course.progress}
                             sx={{
-                              flex: 1,
-                              maxWidth: 200,
-                              height: 5,
-                              borderRadius: 3,
-                              bgcolor: 'rgba(0,0,0,0.04)',
+                              flex: 1, maxWidth: 200, height: 5, borderRadius: 3, bgcolor: 'rgba(0,0,0,0.04)',
                               '& .MuiLinearProgress-bar': {
                                 borderRadius: 3,
                                 background: course.progress === 100
@@ -327,10 +343,7 @@ const MyCoursesPage: React.FC = () => {
                           sx={{
                             bgcolor: statusColors[course.status]?.bg,
                             color: statusColors[course.status]?.color,
-                            fontWeight: 600,
-                            fontSize: '0.7rem',
-                            borderRadius: '50px',
-                            height: 24,
+                            fontWeight: 600, fontSize: '0.7rem', borderRadius: '50px', height: 24,
                           }}
                         />
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
@@ -344,13 +357,8 @@ const MyCoursesPage: React.FC = () => {
                             startIcon={<PlayIcon />}
                             onClick={(e) => { e.stopPropagation(); navigate(`/learner/course/${course.id}/learn`); }}
                             sx={{
-                              textTransform: 'none',
-                              fontWeight: 600,
-                              fontSize: '0.75rem',
-                              borderRadius: '50px',
-                              boxShadow: 'none',
-                              px: 2,
-                              color: 'white',
+                              textTransform: 'none', fontWeight: 600, fontSize: '0.75rem',
+                              borderRadius: '50px', boxShadow: 'none', px: 2, color: 'white',
                               '&:hover': { boxShadow: '0 4px 12px rgba(249,115,22,0.3)' },
                             }}
                           >
@@ -373,12 +381,14 @@ const MyCoursesPage: React.FC = () => {
             <Typography color="text.disabled" sx={{ fontSize: '0.78rem' }}>
               Showing {filtered.length} of {courses.length} courses
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <TrendIcon sx={{ fontSize: 16, color: 'success.main' }} />
-              <Typography color="success.main" sx={{ fontSize: '0.78rem', fontWeight: 600 }}>
-                65% overall completion rate
-              </Typography>
-            </Box>
+            {courses.length > 0 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <TrendIcon sx={{ fontSize: 16, color: 'success.main' }} />
+                <Typography color="success.main" sx={{ fontSize: '0.78rem', fontWeight: 600 }}>
+                  {completionRate}% overall completion rate
+                </Typography>
+              </Box>
+            )}
           </Box>
         </Paper>
       </Box>

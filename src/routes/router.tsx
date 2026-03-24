@@ -54,6 +54,7 @@ const InvoiceReceiptPage = lazy(() => import('../pages/learner/InvoiceReceiptPag
 const SubscriptionManagementPage = lazy(() => import('../pages/learner/SubscriptionManagementPage'));
 const PaymentHistoryPage = lazy(() => import('../pages/learner/PaymentHistoryPage'));
 const LearnerCertificatesPage = lazy(() => import('../pages/learner/LearnerCertificatesPage'));
+const LearnerBadgesPage = lazy(() => import('../pages/learner/LearnerBadgesPage'));
 
 // Instructor Pages
 const InstructorDashboard = lazy(() => import('../pages/instructor/InstructorDashboard'));
@@ -310,6 +311,10 @@ export const createAppRouter = (queryClient: QueryClient) => {
       path: '/learner/certificates',
       element: <SuspenseWrapper><ProtectedRoute><LearnerCertificatesPage /></ProtectedRoute></SuspenseWrapper>,
       loader: async () => learnerLoaders.learnerCertificatesLoader(queryClient),
+    },
+    {
+      path: '/learner/badges',
+      element: <SuspenseWrapper><ProtectedRoute><LearnerBadgesPage /></ProtectedRoute></SuspenseWrapper>,
     },
     {
       path: '/learner/profile',

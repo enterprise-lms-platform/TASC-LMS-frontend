@@ -10,6 +10,8 @@ import { courseApi, categoryApi, sessionApi } from '../../services/catalogue.ser
 import { sessionProgressApi } from '../../services/learning.services';
 import { publicCourseApi } from '../../services/public.services';
 
+const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;
+
 /**
  * Course Detail Loader - Pre-fetch course with curriculum, reviews, enrollment data
  * Used by: Course detail page, Course player, Course preview
@@ -29,6 +31,7 @@ export const courseDetailLoader = async (
     return { course: courseData };
   } catch (error: unknown) {
     const err = error as { status?: number };
+    if (err.status === 401 && DEV_BYPASS_AUTH) return { course: null };
     if (err.status === 404) {
       return redirect('/learner/courses');
     }
@@ -112,7 +115,9 @@ export const sessionDetailLoader = async (
     });
 
     return { session };
-  } catch (error) {
+  } catch (error: unknown) {
+    const err = error as { status?: number };
+    if (err.status === 401 && DEV_BYPASS_AUTH) return { session: null };
     throw error;
   }
 };

@@ -137,6 +137,9 @@ export const learnerCourseDetailLoader = async (
     if (err.status === 401 && !DEV_BYPASS_AUTH) {
       return redirect('/learner/courses');
     }
+    if (err.status === 401 && DEV_BYPASS_AUTH) {
+      return { course: null, enrollments: [] };
+    }
     if (err.status === 404) {
       return redirect('/learner/courses');
     }
@@ -181,6 +184,10 @@ export const coursePlayerLoader = async (
     const err = error as { status?: number };
     if (err.status === 401 && !DEV_BYPASS_AUTH) {
       return redirect('/login');
+    }
+    if (err.status === 401 && DEV_BYPASS_AUTH) {
+      // In dev bypass mode, return empty data so the page can still render
+      return { course: null, progress: [] };
     }
     if (err.status === 404) {
       return redirect('/learner/courses');

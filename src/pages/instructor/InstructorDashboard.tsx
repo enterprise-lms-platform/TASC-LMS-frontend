@@ -51,6 +51,9 @@ const InstructorDashboard: React.FC = () => {
           {/* KPI Grid */}
           <KPIGrid />
 
+          {/* Quick Actions - below stat cards */}
+          <QuickActions />
+
           {/* Main Content Grid - Left (2fr) + Right (1fr) */}
           <Grid container spacing={{ xs: 2, md: 3 }}>
             {/* Left Column - Courses */}
@@ -66,9 +69,6 @@ const InstructorDashboard: React.FC = () => {
 
                 {/* Upcoming Sessions */}
                 <UpcomingSessions />
-
-                {/* Quick Actions */}
-                <QuickActions />
               </Box>
             </Grid>
           </Grid>

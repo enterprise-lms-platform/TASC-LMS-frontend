@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUnreadNotificationCount } from '../../hooks/useNotifications';
 import {
   AppBar,
   Toolbar,
@@ -36,6 +37,7 @@ const TopBar: React.FC<TopBarProps> = ({
   subtitle = 'Platform Overview & System Management',
 }) => {
   const navigate = useNavigate();
+  const unreadCount = useUnreadNotificationCount();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const handleLogout = useLogout();
   const { user } = useAuth();
@@ -124,9 +126,10 @@ const TopBar: React.FC<TopBarProps> = ({
                 '&:hover': { color: 'primary.main' },
               }}
               size="small"
+              onClick={() => navigate('/superadmin/notifications')}
             >
               <Badge
-                badgeContent={5}
+                badgeContent={unreadCount}
                 color="error"
                 sx={{ '& .MuiBadge-badge': { fontSize: '0.65rem', height: 16, minWidth: 16 } }}
               >

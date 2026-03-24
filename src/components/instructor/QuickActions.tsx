@@ -1,78 +1,78 @@
 import React from 'react';
-import { Box, Typography, Paper, Grid } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import {
   AddCircle as QuizIcon,
   CloudUpload as UploadIcon,
   Videocam as VideoIcon,
   BarChart as ReportsIcon,
+  MenuBook as CourseIcon,
+  Assignment as GradingIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
-interface QuickAction {
-  icon: React.ReactNode;
-  label: string;
-  path: string;
-}
-
-const actionsData: QuickAction[] = [
-  { icon: <QuizIcon />, label: 'New Quiz', path: '/instructor/course/1/quiz/builder' },
-  { icon: <UploadIcon />, label: 'Upload Content', path: '/instructor/course/1/upload' },
-  { icon: <VideoIcon />, label: 'Live Session', path: '/instructor/sessions/schedule' },
-  { icon: <ReportsIcon />, label: 'Reports', path: '/instructor' },
+const quickActions = [
+  { icon: <CourseIcon />, label: 'My Courses', color: '#ffa424', path: '/instructor/courses' },
+  { icon: <QuizIcon />, label: 'New Quiz', color: '#6366f1', path: '/instructor/quiz-bank' },
+  { icon: <UploadIcon />, label: 'Upload Content', color: '#8b5cf6', path: '/instructor/courses' },
+  { icon: <VideoIcon />, label: 'Live Session', color: '#3b82f6', path: '/instructor/sessions' },
+  { icon: <GradingIcon />, label: 'Grading', color: '#10b981', path: '/instructor/submissions' },
+  { icon: <ReportsIcon />, label: 'Reports', color: '#71717a', path: '/instructor/reports' },
 ];
 
 const QuickActions: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <Paper
-      elevation={0}
+    <Box
       sx={{
-        borderRadius: '1rem',
-        overflow: 'hidden',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
-        transition: 'box-shadow 0.3s',
-        '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' },
+        display: 'flex',
+        gap: 1.5,
+        mb: 3,
+        flexWrap: { xs: 'nowrap', md: 'wrap' },
+        overflowX: 'auto',
+        pb: 1,
+        mx: { xs: -2, md: 0 },
+        px: { xs: 2, md: 0 },
+        '&::-webkit-scrollbar': { height: 3 },
+        '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
+        '&::-webkit-scrollbar-thumb': { bgcolor: 'grey.300', borderRadius: 2 },
       }}
     >
-      {/* Widget Header */}
-      <Box sx={{ p: 2.5, pb: 1.5 }}>
-        <Typography variant="h6" fontWeight={600} color="text.primary">
-          Quick Actions
-        </Typography>
-      </Box>
-
-      {/* Actions Grid */}
-      <Box sx={{ px: 2.5, pb: 2.5 }}>
-        <Grid container spacing={1.5}>
-          {actionsData.map((action) => (
-            <Grid size={6} key={action.label}>
-              <Box
-                onClick={() => navigate(action.path)}
-                sx={{
-                  p: 1.5,
-                  borderRadius: '0.75rem',
-                  bgcolor: 'grey.50',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    bgcolor: 'rgba(255, 164, 36, 0.06)',
-                  },
-                }}
-              >
-                <Box sx={{ color: 'primary.dark', fontSize: 24, mb: 0.5 }}>
-                  {action.icon}
-                </Box>
-                <Typography variant="body2" fontWeight={500} color="text.secondary">
-                  {action.label}
-                </Typography>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
-    </Paper>
+      {quickActions.map((action) => (
+        <Button
+          key={action.label}
+          variant="outlined"
+          startIcon={action.icon}
+          size="small"
+          onClick={() => navigate(action.path)}
+          sx={{
+            bgcolor: 'white',
+            borderColor: 'rgba(0,0,0,0.06)',
+            color: 'text.primary',
+            textTransform: 'none',
+            fontWeight: 600,
+            px: 2.5,
+            py: 1,
+            borderRadius: '12px',
+            fontSize: '0.82rem',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            transition: 'all 0.2s',
+            '&:hover': {
+              borderColor: action.color,
+              bgcolor: `${action.color}0a`,
+              color: action.color,
+              transform: 'translateY(-2px)',
+              boxShadow: `0 4px 12px ${action.color}20`,
+            },
+            '& .MuiButton-startIcon': { color: action.color },
+          }}
+        >
+          {action.label}
+        </Button>
+      ))}
+    </Box>
   );
 };
 
