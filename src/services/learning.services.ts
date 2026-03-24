@@ -29,6 +29,7 @@ export interface EnrollmentParams {
   search?: string;              // Search by learner name/email or course title
   courseId?: number;
   page?: number;
+  page_size?: number;
   dateRange?: string;
   role?: 'instructor';
 }

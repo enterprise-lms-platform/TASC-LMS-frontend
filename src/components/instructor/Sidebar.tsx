@@ -31,10 +31,9 @@ import {
   Person as ProfileIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation, matchPath } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../contexts/AuthContext';
 import { getUserDisplayName, getUserInitials } from '../../utils/userHelpers';
-import { notificationApi } from '../../services/notifications.services';
+import { useUnreadNotificationCount } from '../../hooks/useNotifications';
 
 // Sidebar width constant — matches learner sidebar
 export const DRAWER_WIDTH = 260;
@@ -122,13 +121,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
   const location = useLocation();
   const { user } = useAuth();
 
-  const { data: unreadData } = useQuery({
-    queryKey: ['notificationsUnreadCount'],
-    queryFn: () => notificationApi.getUnreadCount(),
-    refetchInterval: 60000,
-  });
-
-  const navSections = buildNavSections(unreadData?.data?.unread_count);
+  const unreadCount = useUnreadNotificationCount();
+  const navSections = buildNavSections(unreadCount);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const SCROLL_KEY = 'instructor_sidebar_scroll';

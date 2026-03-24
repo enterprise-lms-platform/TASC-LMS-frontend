@@ -1,6 +1,6 @@
 # TASC LMS Frontend — Task Tracker
 
-**Last updated:** 22 March 2026
+**Last updated:** 24 March 2026
 **Repo:** `TASC-LMS-frontend`
 
 ---
@@ -53,11 +53,6 @@
 - **What to do:** Wire to a messaging/inbox API if backend supports it, or mark as future feature.
 - **Blocked?** Yes — no messaging API exists
 
-### 19. Learner Checkout Payment Page
-- **File:** `src/pages/learner/CheckoutPaymentPage.tsx`
-- **What's hardcoded:** `paymentMethods[]`, `countryCodes[]`, `sampleCourse` object
-- **What to do:** Wire to real payment methods API and course detail from route params.
-- **Blocked?** No — APIs exist
 
 ### 20. Manager Bulk Enroll Page — Partially Done
 - **File:** `src/pages/manager/ManagerBulkEnrollPage.tsx`
@@ -126,16 +121,6 @@
 
 ## MEDIUM — Incomplete UI Features
 
-### 47. Curriculum Builder — Bulk Actions
-- **File:** `src/components/instructor/course-structure/CurriculumBuilder.tsx` (line 264)
-- **Issue:** "Bulk Actions" button is permanently disabled with no implementation.
-- **What to do:** Implement bulk delete, bulk move, bulk status change for lessons.
-- **Blocked?** No
-
-### 49. Learner Assignment Submission — Partially Done
-- **File:** `src/pages/learner/LearnerAssignmentsPage.tsx`
-- **Done:** Replaced all hardcoded data with real `submissionApi.getAll()` fetch. KPIs computed from live data.
-- **Still pending:** Submit/Late Submit buttons don't yet open a file upload modal — need file picker + presign upload flow via `useCreateSubmission()`.
 
 ### 50. Learner Certificates — Real Data
 - **File:** `src/pages/learner/LearnerCertificatesPage.tsx`
@@ -153,11 +138,6 @@
 - **What's hardcoded:** 3 testimonial objects (names, roles, quotes)
 - **Blocked?** Yes — no testimonials API
 
-### 59. Landing Courses Fallback — Hardcoded
-- **File:** `src/components/landing/Courses.tsx`
-- **What's hardcoded:** 3 fallback course objects shown if API returns empty
-- **What to do:** Remove fallback array, show empty state or nothing if API returns no featured courses.
-- **Blocked?** No
 
 ---
 
@@ -227,7 +207,7 @@
 | 48 | Course Publish Flow: `handlePublish()` wired to `useSubmitCourseForApproval()` | 18 Mar 2026 | — |
 | 49 | Learner assignments wired to `submissionApi.getAll()` | 18 Mar 2026 | — |
 | 52 | Console.log cleanup: replaced all placeholder handlers with real actions or toasts | 22 Mar 2026 | — |
-| 53 | Instructor Sidebar: real unread badge via `notificationApi.getUnreadCount()` | 18 Mar 2026 | — |
+| 53 | All 5 Sidebars + TopBars: real unread badge via shared `useUnreadNotificationCount` hook + click-to-navigate | 24 Mar 2026 | — |
 | 54 | Type safety: fixed `as any` casts in 3 files; added `currency` to `CourseDetail` type | 22 Mar 2026 | — |
 | 55 | PaymentHistoryPage: wired to `transactionApi.getAll()`, removed 7 hardcoded transactions | 22 Mar 2026 | — |
 | 56 | SubscriptionManagementPage: payment methods wired to `paymentMethodApi.getAll()` | 22 Mar 2026 | — |
@@ -261,7 +241,24 @@
 | — | Learner CatalogFilterBar: search input + category dropdown + search button | 22 Mar 2026 | — |
 | — | Backend: SearchFilter + OrderingFilter on PublicCourseViewSet | 22 Mar 2026 | — |
 | — | CTA + Pricing buttons: auth-aware routing, Schedule Demo wired to /for-business | 22 Mar 2026 | — |
+| 19 | Wire CheckoutPaymentPage to real APIs | 23 Mar 2026 | — |
 | 44 | Query param support: backend filters + frontend TODO cleanup + param name alignment | 22 Mar 2026 | — |
+| 47 | Implement Curriculum Builder bulk actions | 23 Mar 2026 | — |
+| 49 | Add file upload modal to assignment submission | 23 Mar 2026 | — |
+| 59 | Remove hardcoded course fallback in Courses.tsx | 23 Mar 2026 | — |
+| 60 | Route-Level Lazy Loading: vite manualChunks by role + router React.lazy and Suspense | 23 Mar 2026 | — |
+| 61 | Nginx cache headers for static assets | 23 Mar 2026 | — |
+| 62 | Learner Badges Page + Earned Badge Modal + sidebar showcase icons | 23 Mar 2026 | — |
+| 63 | Wire ALL dashboard overview widgets to real APIs (11 widgets across 5 roles) | 23 Mar 2026 | — |
+| 64 | Wire all QuickActions navigation buttons across all dashboards | 23 Mar 2026 | — |
+| 65 | Wire all View All / See All / View Calendar buttons on dashboard widgets | 23 Mar 2026 | — |
+| — | MyCoursesPage: wired to `enrollmentApi`, removed 8 mock courses, real KPIs + sorting | 24 Mar 2026 | — |
+| — | Learner Sidebar: overall progress bar wired to real enrollment data (avg progress_percentage) | 24 Mar 2026 | — |
+| — | All 5 profile pages: wired Save to `updateProfile.mutateAsync()`, synced form from auth user | 24 Mar 2026 | — |
+| — | Shared `ChangePasswordForm` component: wired to `authApi.changePassword()`, used across all 5 profiles | 24 Mar 2026 | — |
+| — | Removed 2FA toggles, active sessions, and notification preferences from all 5 profile pages | 24 Mar 2026 | — |
+| — | Learner profile: removed hardcoded "Emma Chen", replaced Website with Location, removed Headline | 24 Mar 2026 | — |
+| — | Fixed DEV_BYPASS_AUTH 401 crash in route loaders (learner, instructor, shared) | 24 Mar 2026 | — |
 
 ---
 
@@ -286,50 +283,52 @@
 | `/api/v1/learner/my-courses/` | GET | Learner's enrolled courses (sort/filter) | Learner dashboard |
 | `/api/v1/learner/courses/{slug}/enroll/` | POST | Enroll by slug (idempotent) | Course enrollment flow |
 
-## PERFORMANCE — Scalability for 1000 Concurrent Users
+## MEDIUM — New Features
 
-### 60. Route-Level Lazy Loading (Code Splitting)
+### 63–65. Dashboard Overview Widgets — DONE
 
-**File:** `src/routes/router.tsx`
+All dashboard overview widgets across 5 roles have been wired to real APIs with loading skeletons, empty states, and navigation buttons:
 
-**Why:** All 130+ page components are statically imported, producing a single 2.4MB JavaScript chunk. Every user downloads all role pages (instructor, manager, finance, superadmin) even if they only use one role. At 1000 concurrent users, this means serving 2.4GB of JavaScript instead of ~300MB — a 8x bandwidth difference that slows initial load and strains the CDN/server.
+**Instructor dashboard:**
+- `UpcomingSessions.tsx` — `livestreamApi.getAll({ status: 'scheduled' })`, Edit/Join buttons wired
+- `PendingTasks.tsx` — `submissionApi` + `courseApprovalApi` for pending counts, loading skeletons
+- `CoursesSection.tsx` — `courseApi` + `enrollmentApi` for enrollment counts/progress
 
-**What to do:**
-- Convert static page imports to `React.lazy()` grouped by role (5-6 chunks, not 130):
-```tsx
-// Before:
-import LearnerDashboard from '../pages/learner/LearnerDashboard';
+**Manager dashboard:**
+- `TopCourses.tsx` — `courseApi` (uses `enrollment_count` from serializer, sorted client-side), View All → `/manager/courses`
+- `InstructorPerformance.tsx` — `usersApi.getInstructors()`, View All → `/manager/users`
+- `RecentActivity.tsx` — `notificationApi`, View All → `/manager/reports`
+- `UpcomingSessions.tsx` — `livestreamApi` (uses `attendee_count` computed field), Schedule → `/manager/sessions`, Join/View wired
+- `UsersCoursesTable.tsx` — `usersApi.getAll()`, Add User/View All → `/manager/users`
 
-// After:
-const LearnerDashboard = lazy(() => import('../pages/learner/LearnerDashboard'));
-```
-- Wrap lazy routes in `<Suspense fallback={<CircularProgress />}>`
-- Keep shared components (Header, Footer, ProtectedRoute) in the main bundle
-- Optionally add `manualChunks` in `vite.config.ts` to split heavy vendor libs (hls.js 521KB, dash.js 992KB) into separate chunks loaded only by the course player
+**Finance dashboard:**
+- `TransactionsTable.tsx` — `transactionApi.getAll()`, Export → `/finance/reports`, Filter → `/finance/transactions`
+- `RecentInvoices.tsx` — `invoiceApi.getAll()`, View All → `/finance/invoices`
 
-**Expected result:** Initial bundle drops from ~2.4MB to ~300-400KB. Role-specific chunks load on first navigation (~50-150ms, then cached).
+**Superadmin dashboard:**
+- `OrganizationsTable.tsx` — `organizationApi.getAll()`, View All/Add New → `/superadmin/organizations`
+- `RecentActivity.tsx` — `notificationApi`, View All → `/superadmin/audit-logs`
 
-**Blocked?** No — purely frontend change, no backend dependency.
+**Learner dashboard** (wired in prior session):
+- `CourseGrid.tsx` — `enrollmentApi`, View All → `/learner/my-courses`
+- `UpcomingSessions.tsx` — `livestreamApi`, View Calendar → `/learner/schedule`
+- `RecentActivity.tsx` — `notificationApi`, See All → `/learner/notifications`
+- `Certificates.tsx` — `certificateApi`, View All → `/learner/certificates`
+
+**Still hardcoded (charts — blocked on backend analytics endpoints):**
+- `EnrollmentChart.tsx`, `LearningStatistics.tsx`, `CourseCategories.tsx` (Manager)
+- `RevenueChart.tsx`, `PaymentMethodsChart.tsx`, `PaymentMethods.tsx` (Finance)
+- `RevenueChart.tsx`, `UserGrowthChart.tsx`, `SystemHealth.tsx` (Superadmin)
 
 ---
 
-### 61. Nginx Cache Headers for Static Assets
+### 62. Learner Badges Page + Earned Badge Modal — DONE
 
-**File:** `nginx.conf`
+Frontend implementation complete (`LearnerBadgesPage.tsx`, `BadgeEarnedModal.tsx`, `useBadges.ts`, `badgeDefinitions.ts`, route + sidebar).
 
-**Why:** Currently no `Cache-Control` headers are set. Browsers re-download hashed static assets (`.js`, `.css`, images) on every visit even though Vite already fingerprints filenames. At 1000 users visiting repeatedly, this wastes bandwidth and slows page loads.
+**Still needs:** Backend task #28 (Badge model + endpoints + auto-award signals) and badge PNG assets at `public/badges/{slug}.png`.
 
-**What to add to `nginx.conf`:**
-```nginx
-location /assets/ {
-    expires 1y;
-    add_header Cache-Control "public, immutable";
-}
-```
-
-Vite-built files in `/assets/` include content hashes in filenames (e.g., `index-Ce5rbT16.js`), so aggressive caching is safe — changed files get new filenames.
-
-**Blocked?** No.
+**Badge spec:** See `src/config/badges.md` for full definitions (22 badges, 6 categories)
 
 ---
 
@@ -346,3 +345,4 @@ Vite-built files in `/assets/` include content hashes in filenames (e.g., `index
 | Session attachments/resources | Files attached to lessons | CoursePlayerPage Resources (#10) |
 | Certificate PDF generation | Populate `pdf_url` on Certificate model | LearnerCertificatesPage (#8, #50) |
 | Discussion moderation | Pin and lock endpoints for existing API | Instructor/Manager discussions |
+| Saved/Favorited courses API | `GET/POST/DELETE /api/v1/learning/saved-courses/` + toggle endpoint | SavedCoursesPage, CatalogCourseCard heart icon |

@@ -11,9 +11,6 @@ import {
   Button,
   Avatar,
   TextField,
-  Divider,
-  Switch,
-  FormControlLabel,
   Alert,
   CircularProgress,
 } from '@mui/material';
@@ -27,7 +24,6 @@ import {
   Phone as PhoneIcon,
   LocationOn as LocationIcon,
   Shield as SecurityIcon,
-  Notifications as NotifIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -37,6 +33,7 @@ import { uploadApi } from '../../services/upload.services';
 import { getErrorMessage } from '../../utils/config';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import FeedbackSnackbar from '../../components/common/FeedbackSnackbar';
+import ChangePasswordForm from '../../components/common/ChangePasswordForm';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -74,9 +71,6 @@ const ManagerProfilePage: React.FC = () => {
     }
   }, [user]);
 
-  const [emailNotifs, setEmailNotifs] = useState(true);
-  const [pushNotifs, setPushNotifs] = useState(true);
-  const [twoFactor, setTwoFactor] = useState(false);
 
   const displayName = [firstName, lastName].filter(Boolean).join(' ') || user?.email || 'User';
   const displayInitials = getUserInitials(firstName || user?.first_name, lastName || user?.last_name);
@@ -205,7 +199,7 @@ const ManagerProfilePage: React.FC = () => {
                   <TextField fullWidth label="Email" value={email} disabled helperText="Email cannot be changed" InputProps={{ startAdornment: <EmailIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 20 }} /> }} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} InputProps={{ startAdornment: <PhoneIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 20 }} /> }} />
+                  <TextField fullWidth label="Phone" placeholder="+256 712345678" value={phone} onChange={(e) => setPhone(e.target.value)} InputProps={{ startAdornment: <PhoneIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 20 }} /> }} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField fullWidth label="Location" value={location} onChange={(e) => setLocation(e.target.value)} InputProps={{ startAdornment: <LocationIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 20 }} /> }} />
@@ -214,20 +208,6 @@ const ManagerProfilePage: React.FC = () => {
                   <TextField fullWidth label="Bio" value={bio} onChange={(e) => setBio(e.target.value)} multiline minRows={3} />
                 </Grid>
               </Grid>
-            </Box>
-          </Paper>
-
-          {/* Notifications */}
-          <Paper elevation={0} sx={cardSx}>
-            <Box sx={{ p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider' }}>
-              <Typography fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <NotifIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-                Notification Preferences
-              </Typography>
-            </Box>
-            <Box sx={{ p: 3 }}>
-              <FormControlLabel control={<Switch checked={emailNotifs} onChange={(e) => setEmailNotifs(e.target.checked)} color="primary" />} label="Email notifications" />
-              <FormControlLabel control={<Switch checked={pushNotifs} onChange={(e) => setPushNotifs(e.target.checked)} color="primary" />} label="Push notifications" />
             </Box>
           </Paper>
 
@@ -240,11 +220,7 @@ const ManagerProfilePage: React.FC = () => {
               </Typography>
             </Box>
             <Box sx={{ p: 3 }}>
-              <FormControlLabel control={<Switch checked={twoFactor} onChange={(e) => setTwoFactor(e.target.checked)} color="primary" />} label="Enable two-factor authentication" />
-              <Divider sx={{ my: 2 }} />
-              <Button variant="outlined" sx={{ textTransform: 'none', fontWeight: 500, borderColor: 'divider', color: 'text.secondary' }}>
-                Change Password
-              </Button>
+              <ChangePasswordForm />
             </Box>
           </Paper>
         </Box>

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useUnreadNotificationCount } from '../../hooks/useNotifications';
 import {
   Box,
   Drawer,
@@ -52,13 +53,13 @@ interface NavSection {
   items: NavItem[];
 }
 
-const navSections: NavSection[] = [
+const buildNavSections = (unreadCount?: number): NavSection[] => [
   {
     title: 'Dashboard',
     items: [
       { text: 'Overview', icon: <DashboardIcon />, path: '/superadmin' },
       { text: 'Analytics', icon: <AnalyticsIcon />, path: '/superadmin/analytics', badge: 'New' },
-      { text: 'Notifications', icon: <NotificationsIcon />, path: '/superadmin/notifications', badge: '3' },
+      { text: 'Notifications', icon: <NotificationsIcon />, path: '/superadmin/notifications', badge: unreadCount ? String(unreadCount) : undefined },
     ],
   },
   {
@@ -122,6 +123,8 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const unreadCount = useUnreadNotificationCount();
+  const navSections = buildNavSections(unreadCount);
 
   const isActive = (path?: string) => {
     if (!path) return false;

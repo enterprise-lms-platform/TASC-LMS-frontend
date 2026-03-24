@@ -71,6 +71,7 @@ export interface TransactionParams {
   status?: string;
   limit?: number;
   page?: number;
+  page_size?: number;
   from_date?: string;           // YYYY-MM-DD
   to_date?: string;             // YYYY-MM-DD
 }

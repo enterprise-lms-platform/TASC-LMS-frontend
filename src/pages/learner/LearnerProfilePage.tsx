@@ -1,16 +1,15 @@
 import React, { useState, useRef } from 'react';
 import {
   Box, Toolbar, CssBaseline, Paper, Typography, Grid,
-  Avatar, Button, TextField, Tabs, Tab, Switch, FormControlLabel,
+  Avatar, Button, TextField, Tabs, Tab,
   IconButton, Divider, InputAdornment, CircularProgress,
 } from '@mui/material';
 import {
   Edit as EditIcon, CameraAlt as CameraIcon,
-  Security as SecurityIcon, Notifications as BellIcon,
-  Person as PersonIcon, Language as WebIcon,
+  Security as SecurityIcon,
+  Person as PersonIcon,
   LocationOn as LocIcon, Email as EmailIcon,
-  Phone as PhoneIcon, Visibility, VisibilityOff,
-  Devices as DevicesIcon, Delete as DeleteIcon,
+  Phone as PhoneIcon,
 } from '@mui/icons-material';
 import '../../styles/LearnerDashboard.css';
 
@@ -18,6 +17,7 @@ import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUpdateProfile } from '../../hooks/useAuthQueries';
+import ChangePasswordForm from '../../components/common/ChangePasswordForm';
 import { uploadApi } from '../../services/upload.services';
 import { getUserInitials } from '../../utils/userHelpers';
 
@@ -28,7 +28,6 @@ const LearnerProfilePage: React.FC = () => {
   const updateProfile = useUpdateProfile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
-  const [showPassword, setShowPassword] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
@@ -52,27 +51,18 @@ const LearnerProfilePage: React.FC = () => {
 
   // Form states
   const [formData, setFormData] = useState({
-    firstName: user?.first_name || 'Emma',
-    lastName: user?.last_name || 'Chen',
+    firstName: user?.first_name || '',
+    lastName: user?.last_name || '',
     headline: user?.role === 'instructor' ? 'Instructor' : 'Learner',
-    bio: 'Passionate about building accessible and performant web applications. Currently learning advanced React patterns and data science fundamentals.',
-    email: user?.email || 'emma.chen@example.com',
-    phone: '',
-    location: '',
-    website: '',
+    bio: (user as any)?.bio || '',
+    email: user?.email || '',
+    phone: (user as any)?.phone || '',
+    location: (user as any)?.location || '',
   });
 
-  const [notifications, setNotifications] = useState({
-    emailCourse: true,
-    emailPromos: false,
-    emailSecurity: true,
-    pushNewContent: true,
-    pushMentions: true,
-  });
+  const [saving, setSaving] = useState(false);
 
-  const handleToggle = (key: keyof typeof notifications) => {
-    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
-  };
+
 
   return (
     <Box className="learner-page" sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -168,12 +158,11 @@ const LearnerProfilePage: React.FC = () => {
               <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>{formData.firstName} {formData.lastName}</Typography>
               <Typography color="text.secondary" sx={{ mb: 1 }}>{formData.headline}</Typography>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: { xs: 'center', md: 'flex-start' }, color: 'text.disabled', fontSize: '0.85rem', flexWrap: 'wrap' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <LocIcon fontSize="small" /> {formData.location}
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <WebIcon fontSize="small" /> {formData.website}
-                </Box>
+                {formData.location && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <LocIcon fontSize="small" /> {formData.location}
+                  </Box>
+                )}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <EmailIcon fontSize="small" /> {formData.email}
                 </Box>
@@ -214,7 +203,6 @@ const LearnerProfilePage: React.FC = () => {
                 >
                   <Tab icon={<PersonIcon sx={{ mr: 1 }} />} iconPosition="start" label="Personal Info" />
                   <Tab icon={<SecurityIcon sx={{ mr: 1 }} />} iconPosition="start" label="Security" />
-                  <Tab icon={<BellIcon sx={{ mr: 1 }} />} iconPosition="start" label="Notifications" />
                 </Tabs>
               </Paper>
             </Grid>
@@ -233,21 +221,41 @@ const LearnerProfilePage: React.FC = () => {
                         <TextField fullWidth label="Last Name" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} variant="outlined" />
                       </Grid>
                       <Grid size={{ xs: 12 }}>
-                        <TextField fullWidth label="Headline" value={formData.headline} onChange={(e) => setFormData({...formData, headline: e.target.value})} variant="outlined" helperText="Appears below your name on your profile" />
-                      </Grid>
-                      <Grid size={{ xs: 12 }}>
                         <TextField fullWidth multiline rows={4} label="Bio" value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} variant="outlined" />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6 }}>
-                        <TextField fullWidth label="Phone Number" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} variant="outlined" InputProps={{ startAdornment: <InputAdornment position="start"><PhoneIcon fontSize="small" /></InputAdornment> }} />
+                        <TextField fullWidth label="Phone Number" placeholder="+256 712345678" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} variant="outlined" InputProps={{ startAdornment: <InputAdornment position="start"><PhoneIcon fontSize="small" /></InputAdornment> }} />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6 }}>
-                        <TextField fullWidth label="Website" value={formData.website} onChange={(e) => setFormData({...formData, website: e.target.value})} variant="outlined" InputProps={{ startAdornment: <InputAdornment position="start"><WebIcon fontSize="small" /></InputAdornment> }} />
+                        <TextField fullWidth label="Location" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} variant="outlined" InputProps={{ startAdornment: <InputAdornment position="start"><LocIcon fontSize="small" /></InputAdornment> }} />
                       </Grid>
                       <Grid size={{ xs: 12 }}>
                          <Divider sx={{ my: 2 }} />
                          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                           <Button variant="contained" size="large" sx={{ borderRadius: '50px', px: 4, textTransform: 'none', fontWeight: 600, color: 'white' }}>Save Changes</Button>
+                           <Button
+                             variant="contained"
+                             size="large"
+                             disabled={saving}
+                             onClick={async () => {
+                               try {
+                                 setSaving(true);
+                                 await updateProfile.mutateAsync({
+                                   first_name: formData.firstName,
+                                   last_name: formData.lastName,
+                                   bio: formData.bio,
+                                   phone_number: formData.phone,
+                                   country: formData.location,
+                                 });
+                               } catch {
+                                 alert('Failed to save changes. Please try again.');
+                               } finally {
+                                 setSaving(false);
+                               }
+                             }}
+                             sx={{ borderRadius: '50px', px: 4, textTransform: 'none', fontWeight: 600, color: 'white' }}
+                           >
+                             {saving ? 'Saving...' : 'Save Changes'}
+                           </Button>
                          </Box>
                       </Grid>
                     </Grid>
@@ -256,97 +264,11 @@ const LearnerProfilePage: React.FC = () => {
 
                 {activeTab === 1 && (
                   <Box className="ld-fade-in-0">
-                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>Login & Security</Typography>
-                    
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>Change Password</Typography>
-                    <Grid container spacing={2} sx={{ mb: 4 }}>
-                       <Grid size={{ xs: 12 }}>
-                         <TextField
-                            fullWidth
-                            type={showPassword ? 'text' : 'password'}
-                            label="Current Password"
-                            variant="outlined"
-                         />
-                       </Grid>
-                       <Grid size={{ xs: 12, sm: 6 }}>
-                         <TextField
-                            fullWidth
-                            type={showPassword ? 'text' : 'password'}
-                            label="New Password"
-                            variant="outlined"
-                         />
-                       </Grid>
-                       <Grid size={{ xs: 12, sm: 6 }}>
-                         <TextField
-                            fullWidth
-                            type={showPassword ? 'text' : 'password'}
-                            label="Confirm New Password"
-                            variant="outlined"
-                            InputProps={{
-                                endAdornment: (
-                                  <InputAdornment position="end">
-                                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                                    </IconButton>
-                                  </InputAdornment>
-                                ),
-                            }}
-                         />
-                       </Grid>
-                       <Grid size={{ xs: 12 }}>
-                          <Button variant="outlined" sx={{ borderRadius: '50px', textTransform: 'none', fontWeight: 600 }}>Update Password</Button>
-                       </Grid>
-                    </Grid>
-
-                    <Divider sx={{ mb: 3 }} />
-
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>Two-Factor Authentication</Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                       <Box>
-                         <Typography variant="body2">Add an extra layer of security to your account.</Typography>
-                         <Typography variant="caption" color="text.secondary">We'll send a code to your phone number when you log in.</Typography>
-                       </Box>
-                       <Switch defaultChecked color="primary" />
-                    </Box>
-
-                    <Divider sx={{ my: 3 }} />
-                    
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>Active Sessions</Typography>
-                    <Box sx={{ bgcolor: 'rgba(0,0,0,0.02)', p: 2, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: 2 }}>
-                       <DevicesIcon color="action" />
-                       <Box sx={{ flex: 1 }}>
-                          <Typography variant="body2" fontWeight={600}>Windows PC - Chrome</Typography>
-                          <Typography variant="caption" color="text.secondary">San Francisco, US · Active now</Typography>
-                       </Box>
-                       <Button size="small" color="error" startIcon={<DeleteIcon />}>Revoke</Button>
-                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>Change Password</Typography>
+                    <ChangePasswordForm />
                   </Box>
                 )}
 
-                {activeTab === 2 && (
-                  <Box className="ld-fade-in-0">
-                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>Notification Settings</Typography>
-
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'primary.main' }}>Email Notifications</Typography>
-                    <Box sx={{ mb: 3 }}>
-                       <FormControlLabel control={<Switch checked={notifications.emailCourse} onChange={() => handleToggle('emailCourse')} />} label="Course updates and announcements" sx={{ display: 'block', mb: 1 }} />
-                       <FormControlLabel control={<Switch checked={notifications.emailPromos} onChange={() => handleToggle('emailPromos')} />} label="Promotional offers and recommendations" sx={{ display: 'block', mb: 1 }} />
-                       <FormControlLabel control={<Switch checked={notifications.emailSecurity} onChange={() => handleToggle('emailSecurity')} />} label="Security alerts and account activity" sx={{ display: 'block', mb: 1 }} />
-                    </Box>
-
-                    <Divider sx={{ mb: 3 }} />
-
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'primary.main' }}>Push Notifications</Typography>
-                    <Box sx={{ mb: 3 }}>
-                       <FormControlLabel control={<Switch checked={notifications.pushNewContent} onChange={() => handleToggle('pushNewContent')} />} label="New content available in enrolled courses" sx={{ display: 'block', mb: 1 }} />
-                       <FormControlLabel control={<Switch checked={notifications.pushMentions} onChange={() => handleToggle('pushMentions')} />} label="Mentions in discussion forums" sx={{ display: 'block', mb: 1 }} />
-                    </Box>
-
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
-                       <Button variant="contained" sx={{ borderRadius: '50px', px: 4, textTransform: 'none', fontWeight: 600, color: 'white' }}>Save Preferences</Button>
-                    </Box>
-                  </Box>
-                )}
               </Paper>
             </Grid>
           </Grid>

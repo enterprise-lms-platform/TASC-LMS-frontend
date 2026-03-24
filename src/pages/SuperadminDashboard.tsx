@@ -16,6 +16,9 @@ const SuperadminDashboard: React.FC = () => {
       <WelcomeBanner />
       <KPIGrid />
 
+      {/* Quick Actions - below stat cards */}
+      <QuickActions />
+
       <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, lg: 8 }}>
           <RevenueChart />
@@ -32,7 +35,6 @@ const SuperadminDashboard: React.FC = () => {
         <Grid size={{ xs: 12, lg: 4 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <SystemHealth />
-            <QuickActions />
             <RecentActivity />
           </Box>
         </Grid>

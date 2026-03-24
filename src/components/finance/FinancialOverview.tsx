@@ -1,57 +1,62 @@
 import React from 'react';
-import { Grid, Paper, Box, Typography } from '@mui/material';
+import { Grid, Paper, Box, Typography, Skeleton } from '@mui/material';
 import {
   AttachMoney as RevenueIcon,
   TrendingUp as MonthlyIcon,
   HourglassEmpty as PendingIcon,
   People as SubscribersIcon,
 } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
+import { transactionApi, invoiceApi, userSubscriptionApi } from '../../services/payments.services';
+import type { PaginatedResponse } from '../../types/types';
 
-// Finance stats data — styled like learner QuickStats
-const stats = [
-  {
-    label: 'Total Revenue',
-    value: '$2.4M',
-    icon: <RevenueIcon />,
-    // Green Theme
-    bgcolor: '#dcfce7',
-    iconBg: '#4ade80',
-    color: '#14532d',
-    subColor: '#166534',
-  },
-  {
-    label: 'Monthly Revenue',
-    value: '$186K',
-    icon: <MonthlyIcon />,
-    // Grey Theme
-    bgcolor: '#f4f4f5',
-    iconBg: '#a1a1aa',
-    color: '#27272a',
-    subColor: '#3f3f46',
-  },
-  {
-    label: 'Pending Payments',
-    value: '$24.9K',
-    icon: <PendingIcon />,
-    // Orange Theme
-    bgcolor: '#fff3e0',
-    iconBg: '#ffa424',
-    color: '#7c2d12',
-    subColor: '#9a3412',
-  },
-  {
-    label: 'Active Subscribers',
-    value: '1,248',
-    icon: <SubscribersIcon />,
-    // Green Theme (alt)
-    bgcolor: '#f0fdf4',
-    iconBg: '#86efac',
-    color: '#14532d',
-    subColor: '#166534',
-  },
-];
+const formatCurrency = (amount: number) => {
+  if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
+  if (amount >= 1_000) return `$${(amount / 1_000).toFixed(1)}K`;
+  return `$${amount.toFixed(0)}`;
+};
 
 const FinancialOverview: React.FC = () => {
+  const { data: txData, isLoading: lt } = useQuery({
+    queryKey: ['finance', 'transactions', 'overview'],
+    queryFn: () => transactionApi.getAll({ page_size: 200 }).then(r => r.data),
+  });
+  const { data: invoicesData, isLoading: li } = useQuery({
+    queryKey: ['finance', 'invoices', 'pending'],
+    queryFn: () => invoiceApi.getAll({ status: 'pending' }).then(r => r.data),
+  });
+  const { data: subsData, isLoading: ls } = useQuery({
+    queryKey: ['finance', 'subscriptions', 'active'],
+    queryFn: () => userSubscriptionApi.getAll({ status: 'active' }).then(r => r.data),
+  });
+
+  const transactions = (txData as PaginatedResponse<{ amount?: string; created_at?: string }> | undefined)?.results ?? [];
+  const totalRevenue = transactions.reduce((sum, t) => sum + (parseFloat(t.amount || '0') || 0), 0);
+
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const monthlyTx = transactions.filter(t => (t.created_at || '') >= monthStart);
+  const monthlyRevenue = monthlyTx.reduce((sum, t) => sum + (parseFloat(t.amount || '0') || 0), 0);
+
+  const pendingInvoices = (invoicesData as PaginatedResponse<{ total_amount?: string }> | undefined)?.results ?? [];
+  const pendingTotal = pendingInvoices.reduce((sum, inv) => sum + (parseFloat(inv.total_amount || '0') || 0), 0);
+
+  const activeSubs = (subsData as PaginatedResponse<unknown> | undefined)?.count
+    ?? (subsData as PaginatedResponse<unknown> | undefined)?.results?.length ?? 0;
+
+  const isLoading = lt || li || ls;
+
+  const stats = [
+    { label: 'Total Revenue', value: formatCurrency(totalRevenue), icon: <RevenueIcon />,
+      bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+    { label: 'Monthly Revenue', value: formatCurrency(monthlyRevenue), icon: <MonthlyIcon />,
+      bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+    { label: 'Pending Payments', value: formatCurrency(pendingTotal), icon: <PendingIcon />,
+      bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+    { label: 'Active Subscribers', value: activeSubs.toLocaleString(), icon: <SubscribersIcon />,
+      bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+  ];
+
   return (
     <Grid container spacing={2} sx={{ mb: 4 }}>
       {stats.map((stat, index) => (
@@ -98,18 +103,22 @@ const FinancialOverview: React.FC = () => {
             </Box>
 
             {/* Main Stat */}
-            <Typography
-              variant="h3"
-              sx={{
-                fontWeight: 700,
-                color: stat.color,
-                fontSize: { xs: '2rem', md: '2.5rem' },
-                lineHeight: 1,
-                mb: 1,
-              }}
-            >
-              {stat.value}
-            </Typography>
+            {isLoading ? (
+              <Skeleton variant="text" width={80} height={50} />
+            ) : (
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 700,
+                  color: stat.color,
+                  fontSize: { xs: '2rem', md: '2.5rem' },
+                  lineHeight: 1,
+                  mb: 1,
+                }}
+              >
+                {stat.value}
+              </Typography>
+            )}
 
             {/* Label */}
             <Typography

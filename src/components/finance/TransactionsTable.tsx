@@ -7,89 +7,56 @@ import {
   Avatar,
   Chip,
   IconButton,
+  Skeleton,
 } from '@mui/material';
 import {
   FileDownload as ExportIcon,
   FilterList as FilterIcon,
   Visibility as ViewIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { transactionApi } from '../../services/payments.services';
+import type { PaginatedResponse } from '../../types/types';
 
-interface Transaction {
-  id: string;
-  user: {
-    name: string;
-    email: string;
-    initials: string;
-  };
-  amount: string;
-  date: string;
-  status: 'Paid' | 'Pending' | 'Failed';
-  method: 'M-Pesa' | 'Card' | 'MTN MoMo' | 'Airtel';
-  description: string;
+interface TransactionResult {
+  id: number;
+  invoice?: number | null;
+  amount?: string | number;
+  status?: string;
+  payment_method?: string;
+  created_at?: string;
+  user_name?: string;
+  user_email?: string;
+  description?: string;
 }
 
-const transactions: Transaction[] = [
-  {
-    id: 'TXN-001',
-    user: { name: 'John Kamau', email: 'john@company.com', initials: 'JK' },
-    amount: '$128.00',
-    date: 'Jan 20, 2026',
-    status: 'Paid',
-    method: 'M-Pesa',
-    description: 'Biannual Subscription',
-  },
-  {
-    id: 'TXN-002',
-    user: { name: 'Mary Wambui', email: 'mary@company.com', initials: 'MW' },
-    amount: '$128.00',
-    date: 'Jan 19, 2026',
-    status: 'Pending',
-    method: 'Card',
-    description: 'Biannual Subscription',
-  },
-  {
-    id: 'TXN-003',
-    user: { name: 'Peter Ochieng', email: 'peter@company.com', initials: 'PO' },
-    amount: '$128.00',
-    date: 'Jan 18, 2026',
-    status: 'Paid',
-    method: 'MTN MoMo',
-    description: 'Biannual Subscription',
-  },
-  {
-    id: 'TXN-004',
-    user: { name: 'Grace Akinyi', email: 'grace@company.com', initials: 'GA' },
-    amount: '$128.00',
-    date: 'Jan 17, 2026',
-    status: 'Failed',
-    method: 'M-Pesa',
-    description: 'Biannual Subscription',
-  },
-  {
-    id: 'TXN-005',
-    user: { name: 'David Mwangi', email: 'david@company.com', initials: 'DM' },
-    amount: '$128.00',
-    date: 'Jan 16, 2026',
-    status: 'Paid',
-    method: 'Card',
-    description: 'Biannual Subscription',
-  },
-];
-
 const statusColors: Record<string, { bg: string; color: string }> = {
-  Paid: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
-  Pending: { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' },
-  Failed: { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' },
+  completed: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
+  paid: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
+  pending: { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' },
+  failed: { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' },
 };
 
 const methodColors: Record<string, { bg: string; color: string }> = {
-  'M-Pesa': { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
-  Card: { bg: 'rgba(99, 102, 241, 0.1)', color: '#6366f1' },
-  'MTN MoMo': { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' },
-  Airtel: { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' },
+  'mpesa': { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
+  'card': { bg: 'rgba(99, 102, 241, 0.1)', color: '#6366f1' },
+  'mtn_momo': { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' },
+  'airtel': { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' },
 };
 
 const TransactionsTable: React.FC = () => {
+  const navigate = useNavigate();
+
+  const { data: txnRaw, isLoading } = useQuery({
+    queryKey: ['finance', 'transactions', 'recent'],
+    queryFn: () => transactionApi.getAll({ limit: 5 }).then(r => r.data),
+  });
+
+  const transactions: TransactionResult[] = Array.isArray(txnRaw)
+    ? txnRaw
+    : (txnRaw as PaginatedResponse<TransactionResult> | undefined)?.results ?? [];
+
   return (
     <Paper
       elevation={0}
@@ -120,6 +87,7 @@ const TransactionsTable: React.FC = () => {
             size="small"
             variant="outlined"
             startIcon={<ExportIcon />}
+            onClick={() => navigate('/finance/reports')}
             sx={{ borderColor: 'divider', color: 'text.secondary', textTransform: 'none', fontSize: '0.75rem' }}
           >
             Export
@@ -128,6 +96,7 @@ const TransactionsTable: React.FC = () => {
             size="small"
             variant="outlined"
             startIcon={<FilterIcon />}
+            onClick={() => navigate('/finance/transactions')}
             sx={{ borderColor: 'divider', color: 'text.secondary', textTransform: 'none', fontSize: '0.75rem' }}
           >
             Filter
@@ -135,62 +104,88 @@ const TransactionsTable: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Row-based list (matches analytics page style) */}
-      {transactions.map((txn, i) => (
-        <Box
-          key={txn.id}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-            p: 2,
-            px: 3,
-            borderBottom: i < transactions.length - 1 ? 1 : 0,
-            borderColor: 'divider',
-            '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' },
-          }}
-        >
-          <Avatar sx={{ width: 36, height: 36, fontSize: '0.75rem', bgcolor: 'primary.main' }}>
-            {txn.user.initials}
-          </Avatar>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="body2" fontWeight={600} noWrap>{txn.user.name}</Typography>
-            <Typography variant="caption" color="text.secondary">{txn.id} · {txn.description}</Typography>
+      {/* Row-based list */}
+      {isLoading ? (
+        [0, 1, 2, 3, 4].map(i => (
+          <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, px: 3, borderBottom: i < 4 ? 1 : 0, borderColor: 'divider' }}>
+            <Skeleton variant="circular" width={36} height={36} />
+            <Box sx={{ flex: 1 }}><Skeleton width="50%" /><Skeleton width="30%" /></Box>
+            <Skeleton width={60} />
           </Box>
-          <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, minWidth: 80 }}>
-            {txn.date}
-          </Typography>
-          <Chip
-            label={txn.method}
-            size="small"
-            sx={{
-              display: { xs: 'none', md: 'flex' },
-              height: 22,
-              fontSize: '0.7rem',
-              fontWeight: 600,
-              bgcolor: methodColors[txn.method]?.bg || 'grey.100',
-              color: methodColors[txn.method]?.color || 'text.secondary',
-            }}
-          />
-          <Typography variant="body2" fontWeight={700} sx={{ minWidth: 70, textAlign: 'right', fontFamily: 'monospace' }}>
-            {txn.amount}
-          </Typography>
-          <Chip
-            label={txn.status}
-            size="small"
-            sx={{
-              height: 22,
-              fontSize: '0.7rem',
-              fontWeight: 600,
-              bgcolor: statusColors[txn.status].bg,
-              color: statusColors[txn.status].color,
-            }}
-          />
-          <IconButton size="small" sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'flex' } }}>
-            <ViewIcon fontSize="small" />
-          </IconButton>
+        ))
+      ) : transactions.length === 0 ? (
+        <Box sx={{ p: 3, textAlign: 'center' }}>
+          <Typography variant="body2" color="text.secondary">No recent transactions</Typography>
         </Box>
-      ))}
+      ) : (
+        transactions.map((txn, i) => {
+          const initials = (txn.user_name || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+          const status = (txn.status || 'pending').toLowerCase();
+          const method = (txn.payment_method || '').toLowerCase();
+          const sc = statusColors[status] || statusColors.pending;
+          const mc = methodColors[method] || { bg: 'grey.100', color: 'text.secondary' };
+          const amount = typeof txn.amount === 'number' ? `$${txn.amount.toFixed(2)}` : txn.amount || '$0.00';
+
+          return (
+            <Box
+              key={txn.id}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                p: 2,
+                px: 3,
+                borderBottom: i < transactions.length - 1 ? 1 : 0,
+                borderColor: 'divider',
+                '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' },
+              }}
+            >
+              <Avatar sx={{ width: 36, height: 36, fontSize: '0.75rem', bgcolor: 'primary.main' }}>
+                {initials}
+              </Avatar>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="body2" fontWeight={600} noWrap>{txn.user_name || `TXN-${txn.id}`}</Typography>
+                <Typography variant="caption" color="text.secondary">{txn.description || `Invoice #${txn.invoice || txn.id}`}</Typography>
+              </Box>
+              <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, minWidth: 80 }}>
+                {txn.created_at ? new Date(txn.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+              </Typography>
+              {txn.payment_method && (
+                <Chip
+                  label={txn.payment_method}
+                  size="small"
+                  sx={{
+                    display: { xs: 'none', md: 'flex' },
+                    height: 22,
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    bgcolor: mc.bg,
+                    color: mc.color,
+                  }}
+                />
+              )}
+              <Typography variant="body2" fontWeight={700} sx={{ minWidth: 70, textAlign: 'right', fontFamily: 'monospace' }}>
+                {amount}
+              </Typography>
+              <Chip
+                label={status.charAt(0).toUpperCase() + status.slice(1)}
+                size="small"
+                sx={{
+                  height: 22,
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  bgcolor: sc.bg,
+                  color: sc.color,
+                }}
+              />
+              <IconButton size="small" onClick={() => navigate('/finance/transactions')}
+                sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'flex' } }}>
+                <ViewIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          );
+        })
+      )}
     </Paper>
   );
 };

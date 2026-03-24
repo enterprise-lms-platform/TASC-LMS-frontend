@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUnreadNotificationCount } from '../../hooks/useNotifications';
 import {
   AppBar,
   Toolbar,
@@ -32,6 +33,7 @@ interface TopBarProps {
 const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const unreadCount = useUnreadNotificationCount();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -136,8 +138,8 @@ const TopBar: React.FC<TopBarProps> = ({ onMobileMenuToggle }) => {
 
         {/* Action Icons */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.5 } }}>
-          <IconButton color="inherit" size="small" sx={{ color: 'text.secondary' }}>
-            <Badge badgeContent={0} color="error">
+          <IconButton color="inherit" size="small" sx={{ color: 'text.secondary' }} onClick={() => navigate('/learner/notifications')}>
+            <Badge badgeContent={unreadCount} color="error">
               <NotificationsIcon sx={{ fontSize: 22 }} />
             </Badge>
           </IconButton>

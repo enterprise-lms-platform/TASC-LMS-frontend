@@ -42,6 +42,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUnreadNotificationCount } from '../../hooks/useNotifications';
 import { getUserDisplayName, getUserInitials, getRoleDisplayName } from '../../utils/userHelpers';
 
 // Sidebar width constant
@@ -61,7 +62,7 @@ interface NavSection {
 }
 
 // Navigation sections data with routes
-const navSections: NavSection[] = [
+const buildNavSections = (unreadCount?: number): NavSection[] => [
   {
     title: 'Dashboard',
     items: [
@@ -119,7 +120,7 @@ const navSections: NavSection[] = [
     title: 'Settings',
     items: [
       { text: 'Organization Settings', icon: <SettingsIcon />, path: '/manager/settings' },
-      { text: 'Notifications', icon: <NotificationsIcon />, path: '/manager/notifications', badge: 8 },
+      { text: 'Notifications', icon: <NotificationsIcon />, path: '/manager/notifications', badge: unreadCount || undefined },
       { text: 'Integrations', icon: <IntegrationsIcon />, path: '/manager/integrations' },
       { text: 'Billing', icon: <BillingIcon />, path: '/manager/billing' },
     ],
@@ -141,6 +142,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose = (
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const unreadCount = useUnreadNotificationCount();
+  const navSections = buildNavSections(unreadCount);
   const userName = getUserDisplayName(user?.first_name, user?.last_name, user?.email);
   const userInitials = getUserInitials(user?.first_name, user?.last_name);
   const userRole = user?.role ? getRoleDisplayName(user.role) : 'LMS Manager';

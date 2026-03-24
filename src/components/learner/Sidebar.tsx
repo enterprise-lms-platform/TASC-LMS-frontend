@@ -1,6 +1,8 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { useUnreadNotificationCount } from '../../hooks/useNotifications';
 import {
   Box,
   Drawer,
@@ -14,6 +16,9 @@ import {
   Badge,
   LinearProgress,
 } from '@mui/material';
+import { useBadges } from '../../hooks/useBadges';
+import { enrollmentApi } from '../../services/learning.services';
+import type { PaginatedResponse } from '../../types/types';
 import {
   Dashboard as DashboardIcon,
   MenuBook as MenuBookIcon,
@@ -35,14 +40,14 @@ import {
 // Sidebar width constant
 const DRAWER_WIDTH = 260;
 
-// Navigation sections data (will come from backend later)
-const navSections = [
+// Navigation sections data
+const buildNavSections = (unreadCount?: number) => [
   {
     title: 'Dashboard',
     items: [
       { text: 'Overview', icon: <DashboardIcon />, path: '/learner' },
       { text: 'My Courses', icon: <MenuBookIcon />, path: '/learner/my-courses' },
-      { text: 'Notifications', icon: <NotificationsIcon />, badge: 3, path: '/learner/notifications' },
+      { text: 'Notifications', icon: <NotificationsIcon />, badge: unreadCount || undefined, path: '/learner/notifications' },
     ],
   },
   {
@@ -79,14 +84,9 @@ const navSections = [
   },
 ];
 
-// User data (will come from backend later)
-const userData = {
-  name: 'Emma Chen',
-  plan: 'Pro Learner',
-  initials: 'EC',
-  avatar: '/avatars/female face (1).jpg',
-  overallProgress: 65,
-};
+interface SidebarEnrollment {
+  progress_percentage?: number;
+}
 
 interface SidebarProps {
   mobileOpen?: boolean;
@@ -97,6 +97,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const unreadCount = useUnreadNotificationCount();
+
+  const navSections = buildNavSections(unreadCount);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const SCROLL_KEY = 'learner_sidebar_scroll';
@@ -118,8 +121,25 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
     }
   }, [navigate, onMobileClose]);
 
-  const userName = user?.name || `${user?.first_name} ${user?.last_name}` || 'Emma Chen';
-  const userInitials = (user?.first_name && user?.last_name) ? `${user.first_name[0]}${user.last_name[0]}` : 'EC';
+  const userName = user?.name || `${user?.first_name} ${user?.last_name}` || 'Learner';
+  const userInitials = (user?.first_name && user?.last_name) ? `${user.first_name[0]}${user.last_name[0]}` : 'L';
+  const { earnedBadges } = useBadges();
+
+  const { data: enrollmentsRaw } = useQuery({
+    queryKey: ['learner', 'sidebar', 'progress'],
+    queryFn: () => enrollmentApi.getAll({ page_size: 50 }).then(r => r.data),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const overallProgress = useMemo(() => {
+    const enrollments: SidebarEnrollment[] = Array.isArray(enrollmentsRaw)
+      ? enrollmentsRaw
+      : (enrollmentsRaw as PaginatedResponse<SidebarEnrollment> | undefined)?.results ?? [];
+    if (enrollments.length === 0) return 0;
+    const total = enrollments.reduce((sum, e) => sum + (e.progress_percentage ?? 0), 0);
+    return Math.round(total / enrollments.length);
+  }, [enrollmentsRaw]);
+  const showcaseBadges = earnedBadges.slice(0, 5);
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -182,6 +202,45 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
           </Typography>
         </Box>
       </Box>
+
+      {/* Badge Showcase */}
+      {showcaseBadges.length > 0 && (
+        <Box
+          onClick={() => navigate('/learner/badges')}
+          sx={{
+            px: 2.5,
+            pb: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+            cursor: 'pointer',
+            '&:hover .badge-label': { color: 'primary.main' },
+          }}
+        >
+          {showcaseBadges.map((badge) => (
+            <Box
+              key={badge.id}
+              component="img"
+              src={badge.image_url}
+              alt={badge.title}
+              sx={{
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                border: '1.5px solid #ffa424',
+                objectFit: 'cover',
+                transition: 'transform 0.2s',
+                '&:hover': { transform: 'scale(1.2)' },
+              }}
+            />
+          ))}
+          {earnedBadges.length > 5 && (
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, ml: 0.5 }}>
+              +{earnedBadges.length - 5}
+            </Typography>
+          )}
+        </Box>
+      )}
 
       {/* Navigation Sections */}
       <Box ref={scrollRef} className="ld-scrollbar" sx={{ flex: 1, overflowY: 'auto', py: 0.5 }}>
@@ -295,7 +354,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
         </Typography>
         <LinearProgress
           variant="determinate"
-          value={userData.overallProgress}
+          value={overallProgress}
           sx={{
             height: 6,
             borderRadius: 3,
@@ -310,7 +369,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
           variant="body2"
           sx={{ fontWeight: 700, color: 'primary.dark', textAlign: 'center', mt: 1, fontSize: '0.85rem' }}
         >
-          {userData.overallProgress}%
+          {overallProgress}%
         </Typography>
       </Box>
     </Box>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Button } from '@mui/material';
 import {
   PersonAdd as PersonAddIcon,
@@ -10,15 +11,17 @@ import {
 } from '@mui/icons-material';
 
 const quickActions = [
-  { icon: <PersonAddIcon />, label: 'Add User', color: '#6366f1' },
-  { icon: <ImportIcon />, label: 'Bulk Import', color: '#8b5cf6' },
-  { icon: <NewCourseIcon />, label: 'New Course', color: '#ffa424' },
-  { icon: <BulkEnrollIcon />, label: 'Bulk Enroll', color: '#10b981' },
-  { icon: <SessionIcon />, label: 'Schedule Session', color: '#3b82f6' },
-  { icon: <ExportIcon />, label: 'Export Data', color: '#71717a' },
+  { icon: <PersonAddIcon />, label: 'Add User', color: '#6366f1', path: '/manager/users' },
+  { icon: <ImportIcon />, label: 'Bulk Import', color: '#8b5cf6', path: '/manager/bulk-import' },
+  { icon: <NewCourseIcon />, label: 'New Course', color: '#ffa424', path: '/manager/courses' },
+  { icon: <BulkEnrollIcon />, label: 'Bulk Enroll', color: '#10b981', path: '/manager/enrollments' },
+  { icon: <SessionIcon />, label: 'Schedule Session', color: '#3b82f6', path: '/manager/sessions' },
+  { icon: <ExportIcon />, label: 'Export Data', color: '#71717a', path: '/manager/reports' },
 ];
 
 const QuickActions: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <Box
       sx={{
@@ -37,10 +40,11 @@ const QuickActions: React.FC = () => {
     >
       {quickActions.map((action, idx) => (
         <Button
-          key={idx}
+          key={action.label}
           variant="outlined"
           startIcon={action.icon}
           size="small"
+          onClick={() => navigate(action.path)}
           sx={{
             bgcolor: 'white',
             borderColor: 'rgba(0,0,0,0.06)',

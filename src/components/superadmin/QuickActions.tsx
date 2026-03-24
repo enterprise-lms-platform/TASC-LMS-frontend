@@ -1,80 +1,78 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Paper, Typography, Grid } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import {
   PersonAdd as AddUserIcon,
   Business as OrgIcon,
   FileDownload as ExportIcon,
   Settings as SettingsIcon,
+  People as UsersIcon,
+  Security as AuditIcon,
 } from '@mui/icons-material';
 
-interface QuickAction {
-  label: string;
-  icon: React.ReactNode;
-  color: string;
-  path?: string;
-}
-
-const actions: QuickAction[] = [
-  { label: 'Add User', icon: <AddUserIcon />, color: '#10b981', path: '/superadmin/add-user' },
-  { label: 'New Org', icon: <OrgIcon />, color: '#6366f1' },
-  { label: 'Export Data', icon: <ExportIcon />, color: '#f59e0b' },
-  { label: 'Settings', icon: <SettingsIcon />, color: '#ef4444' },
+const quickActions = [
+  { icon: <AddUserIcon />, label: 'Add User', color: '#10b981', path: '/superadmin/add-user' },
+  { icon: <UsersIcon />, label: 'Manage Users', color: '#6366f1', path: '/superadmin/users' },
+  { icon: <OrgIcon />, label: 'Organizations', color: '#8b5cf6', path: '/superadmin/organizations' },
+  { icon: <AuditIcon />, label: 'Audit Logs', color: '#3b82f6', path: '/superadmin/audit-logs' },
+  { icon: <ExportIcon />, label: 'Export Data', color: '#f59e0b', path: '/superadmin/reports' },
+  { icon: <SettingsIcon />, label: 'Settings', color: '#ef4444', path: '/superadmin/settings' },
 ];
-
-const cardSx = {
-  borderRadius: '1rem',
-  overflow: 'hidden',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
-  transition: 'box-shadow 0.3s',
-  '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' },
-};
 
 const QuickActions: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <Paper elevation={0} sx={cardSx}>
-      <Box sx={{ p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider' }}>
-        <Typography fontWeight={700}>Quick Actions</Typography>
-      </Box>
-
-      <Box sx={{ p: 2.5 }}>
-        <Grid container spacing={1.5}>
-          {actions.map((action) => (
-            <Grid key={action.label} size={6}>
-              <Box
-                onClick={() => action.path && navigate(action.path)}
-                sx={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  p: 2, borderRadius: '12px',
-                  cursor: action.path ? 'pointer' : 'default',
-                  bgcolor: 'rgba(0,0,0,0.02)',
-                  transition: 'all 0.2s',
-                  '&:hover': action.path ? {
-                    bgcolor: 'rgba(255,164,36,0.06)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                  } : {},
-                }}
-              >
-                <Box sx={{
-                  width: 40, height: 40, borderRadius: '50%',
-                  bgcolor: `${action.color}15`, color: action.color,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  mb: 1.25, '& svg': { fontSize: 20 },
-                }}>
-                  {action.icon}
-                </Box>
-                <Typography sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.75rem' }}>
-                  {action.label}
-                </Typography>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
-    </Paper>
+    <Box
+      sx={{
+        display: 'flex',
+        gap: 1.5,
+        mb: 3,
+        flexWrap: { xs: 'nowrap', md: 'wrap' },
+        overflowX: 'auto',
+        pb: 1,
+        mx: { xs: -2, md: 0 },
+        px: { xs: 2, md: 0 },
+        '&::-webkit-scrollbar': { height: 3 },
+        '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
+        '&::-webkit-scrollbar-thumb': { bgcolor: 'grey.300', borderRadius: 2 },
+      }}
+    >
+      {quickActions.map((action) => (
+        <Button
+          key={action.label}
+          variant="outlined"
+          startIcon={action.icon}
+          size="small"
+          onClick={() => navigate(action.path)}
+          sx={{
+            bgcolor: 'white',
+            borderColor: 'rgba(0,0,0,0.06)',
+            color: 'text.primary',
+            textTransform: 'none',
+            fontWeight: 600,
+            px: 2.5,
+            py: 1,
+            borderRadius: '12px',
+            fontSize: '0.82rem',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            transition: 'all 0.2s',
+            '&:hover': {
+              borderColor: action.color,
+              bgcolor: `${action.color}0a`,
+              color: action.color,
+              transform: 'translateY(-2px)',
+              boxShadow: `0 4px 12px ${action.color}20`,
+            },
+            '& .MuiButton-startIcon': { color: action.color },
+          }}
+        >
+          {action.label}
+        </Button>
+      ))}
+    </Box>
   );
 };
 

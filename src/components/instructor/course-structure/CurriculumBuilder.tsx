@@ -8,11 +8,15 @@ import {
   InputAdornment,
   ToggleButtonGroup,
   ToggleButton,
+  Menu,
+  MenuItem,
+  Checkbox,
 } from '@mui/material';
 import {
   Add as AddIcon,
   UnfoldMore as ExpandIcon,
   CheckBoxOutlineBlank as SelectIcon,
+  CheckBox as SelectedIcon,
   SwapVert as ReorderIcon,
   MoreHoriz as BulkIcon,
   ViewList as DetailViewIcon,
@@ -21,6 +25,7 @@ import {
   Folder as FolderIcon,
   Description as LessonIcon,
   AccessTime as TimeIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import {
   DndContext,
@@ -63,6 +68,8 @@ interface CurriculumBuilderProps {
     toModuleId: string,
     overLessonId: string | null,
   ) => void;
+  onDeleteModules?: (moduleIds: string[]) => void;
+  onDeleteLessons?: (lessonIds: string[]) => void;
   // Legacy props (kept for backward compat but unused with dnd-kit)
   onDragStartLesson?: (lessonId: number) => void;
   onDragEndLesson?: () => void;
@@ -78,12 +85,18 @@ const CurriculumBuilder: React.FC<CurriculumBuilderProps> = ({
   onPreviewLesson,
   onReorderModules,
   onReorderLessons,
+  onDeleteModules,
+  onDeleteLessons,
 }) => {
   const [expandedModules, setExpandedModules] = useState<Set<string>>(
     () => new Set(data.modules.map((m) => m.id))
   );
   const [viewMode, setViewMode] = useState<'detailed' | 'compact'>('detailed');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
+  const [selectedLessons, setSelectedLessons] = useState<Set<string>>(new Set());
+  const [bulkMenuAnchor, setBulkMenuAnchor] = useState<null | HTMLElement>(null);
   const [activeDragItem, setActiveDragItem] = useState<{
     type: 'module' | 'lesson';
     data: ModuleData | LessonData;
@@ -185,6 +198,49 @@ const CurriculumBuilder: React.FC<CurriculumBuilderProps> = ({
     setExpandedModules(new Set(data.modules.map((m) => m.id)));
   };
 
+  const totalSelected = selectedModules.size + selectedLessons.size;
+
+  const toggleSelectModule = (moduleId: string) => {
+    setSelectedModules((prev) => {
+      const next = new Set(prev);
+      if (next.has(moduleId)) { next.delete(moduleId); } else { next.add(moduleId); }
+      return next;
+    });
+  };
+
+  const toggleSelectLesson = (lessonId: string) => {
+    setSelectedLessons((prev) => {
+      const next = new Set(prev);
+      if (next.has(lessonId)) { next.delete(lessonId); } else { next.add(lessonId); }
+      return next;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (totalSelected === totalModules + totalLessons) {
+      setSelectedModules(new Set());
+      setSelectedLessons(new Set());
+    } else {
+      setSelectedModules(new Set(data.modules.map((m) => m.id)));
+      setSelectedLessons(new Set(data.modules.flatMap((m) => m.lessons.map((l) => l.id))));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    setBulkMenuAnchor(null);
+    if (selectedModules.size > 0) onDeleteModules?.(Array.from(selectedModules));
+    if (selectedLessons.size > 0) onDeleteLessons?.(Array.from(selectedLessons));
+    setSelectedModules(new Set());
+    setSelectedLessons(new Set());
+    setSelectMode(false);
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedModules(new Set());
+    setSelectedLessons(new Set());
+  };
+
   const totalModules = data.modules.length;
   const totalLessons = data.modules.reduce((acc, m) => acc + m.lessons.length, 0);
   const totalDuration = '12h 30m';
@@ -255,15 +311,41 @@ const CurriculumBuilder: React.FC<CurriculumBuilderProps> = ({
         }}
       >
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button size="small" startIcon={<SelectIcon />} sx={{ color: 'text.secondary' }}>
-            Select
+          <Button
+            size="small"
+            startIcon={selectMode ? <SelectedIcon /> : <SelectIcon />}
+            onClick={() => selectMode ? exitSelectMode() : setSelectMode(true)}
+            sx={{ color: selectMode ? 'primary.main' : 'text.secondary' }}
+          >
+            {selectMode ? 'Cancel' : 'Select'}
           </Button>
+          {selectMode && (
+            <Button size="small" onClick={handleSelectAll} sx={{ color: 'text.secondary' }}>
+              {totalSelected === totalModules + totalLessons ? 'Deselect All' : 'Select All'}
+            </Button>
+          )}
           <Button size="small" startIcon={<ReorderIcon />} sx={{ color: 'text.secondary' }}>
             Reorder
           </Button>
-          <Button size="small" startIcon={<BulkIcon />} disabled sx={{ color: 'text.secondary' }}>
-            Bulk Actions
+          <Button
+            size="small"
+            startIcon={<BulkIcon />}
+            disabled={!selectMode || totalSelected === 0}
+            onClick={(e) => setBulkMenuAnchor(e.currentTarget)}
+            sx={{ color: 'text.secondary' }}
+          >
+            Bulk Actions{totalSelected > 0 ? ` (${totalSelected})` : ''}
           </Button>
+          <Menu
+            anchorEl={bulkMenuAnchor}
+            open={Boolean(bulkMenuAnchor)}
+            onClose={() => setBulkMenuAnchor(null)}
+          >
+            <MenuItem onClick={handleBulkDelete} sx={{ color: 'error.main' }}>
+              <DeleteIcon sx={{ mr: 1, fontSize: 18 }} />
+              Delete Selected ({totalSelected})
+            </MenuItem>
+          </Menu>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <ToggleButtonGroup
@@ -307,25 +389,46 @@ const CurriculumBuilder: React.FC<CurriculumBuilderProps> = ({
         <Box sx={{ p: 2, minHeight: 400 }}>
           <SortableContext items={[...moduleIds, ...allLessonIds]} strategy={verticalListSortingStrategy}>
             {data.modules.map((module) => (
-              <SortableModuleCard
-                key={module.id}
-                module={module}
-                expanded={expandedModules.has(module.id)}
-                onToggle={() => toggleModule(module.id)}
-                onEdit={() => onEditModule?.(module.id)}
-              >
-                <SortableContext items={lessonIdsByModule[module.id] ?? []} strategy={verticalListSortingStrategy}>
-                  {module.lessons.map((lesson) => (
-                    <SortableLessonItem
-                      key={lesson.id}
-                      lesson={lesson}
-                      onEdit={() => onEditLesson?.(lesson.id)}
-                      onPreview={() => onPreviewLesson?.(lesson.id)}
-                    />
-                  ))}
-                </SortableContext>
-                <AddLessonButton onClick={() => onAddLesson(module.id)} />
-              </SortableModuleCard>
+              <Box key={module.id} sx={{ display: 'flex', alignItems: 'flex-start', gap: 0 }}>
+                {selectMode && (
+                  <Checkbox
+                    checked={selectedModules.has(module.id)}
+                    onChange={() => toggleSelectModule(module.id)}
+                    sx={{ mt: 1.5 }}
+                  />
+                )}
+                <Box sx={{ flex: 1 }}>
+                  <SortableModuleCard
+                    module={module}
+                    expanded={expandedModules.has(module.id)}
+                    onToggle={() => toggleModule(module.id)}
+                    onEdit={() => onEditModule?.(module.id)}
+                  >
+                    <SortableContext items={lessonIdsByModule[module.id] ?? []} strategy={verticalListSortingStrategy}>
+                      {module.lessons.map((lesson) => (
+                        <Box key={lesson.id} sx={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                          {selectMode && (
+                            <Checkbox
+                              size="small"
+                              checked={selectedLessons.has(lesson.id)}
+                              onChange={() => toggleSelectLesson(lesson.id)}
+                              sx={{ ml: -0.5 }}
+                            />
+                          )}
+                          <Box sx={{ flex: 1 }}>
+                            <SortableLessonItem
+                              lesson={lesson}
+                              onEdit={() => onEditLesson?.(lesson.id)}
+                              onPreview={() => onPreviewLesson?.(lesson.id)}
+                            />
+                          </Box>
+                        </Box>
+                      ))}
+                    </SortableContext>
+                    <AddLessonButton onClick={() => onAddLesson(module.id)} />
+                  </SortableModuleCard>
+                </Box>
+              </Box>
             ))}
           </SortableContext>
           <AddModuleCard onClick={onAddModule} />
