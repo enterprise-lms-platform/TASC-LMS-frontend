@@ -37,36 +37,6 @@ import type { Transaction } from '../../types/types';
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Completed':
-      return { bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
-    case 'Pending':
-      return { bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
-    case 'Failed':
-      return { bgcolor: 'rgba(113, 113, 122, 0.1)', color: '#71717a' };
-    case 'Cancelled':
-      return { bgcolor: 'rgba(156, 163, 175, 0.1)', color: '#71717a' };
-    default:
-      return { bgcolor: 'grey.100', color: 'text.secondary' };
-  }
-};
-
-const getMethodColor = (method: string) => {
-  switch (method) {
-    case 'Card':
-      return { bgcolor: 'rgba(113, 113, 122, 0.1)', color: '#71717a' };
-    case 'M-Pesa':
-      return { bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
-    case 'MTN MoMo':
-      return { bgcolor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' };
-    case 'Bank Transfer':
-      return { bgcolor: 'rgba(255, 164, 36, 0.1)', color: '#e65100' };
-    default:
-      return { bgcolor: 'grey.100', color: 'text.secondary' };
-  }
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
     case 'completed':
     case 'Completed':
       return { bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' };
@@ -171,7 +141,7 @@ const PaymentsPage: React.FC = () => {
       const matchesSearch = !searchQuery ||
         tx.user_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         tx.transaction_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tx.user_email?.toLowerCase().includes(searchQuery.toLowerCase());
+        tx.user_name?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'All' || tx.status.toLowerCase() === statusFilter.toLowerCase();
       const matchesMethod = methodFilter === 'All' || tx.payment_method?.toLowerCase().includes(methodFilter.toLowerCase());
       const txDate = new Date(tx.created_at);
@@ -309,7 +279,7 @@ const PaymentsPage: React.FC = () => {
                         {tx.user_name}
                       </Typography>
                       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        {tx.user_email ?? tx.organization_name}
+                        {tx.user_name ?? tx.organization_name}
                       </Typography>
                     </Box>
                   </TableCell>

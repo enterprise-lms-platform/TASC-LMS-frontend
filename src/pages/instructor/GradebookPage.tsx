@@ -17,6 +17,10 @@ import type { GradingConfig } from '../../utils/gradingUtils';
 import { submissionApi, gradeStatisticsApi } from '../../services/learning.services';
 import { courseApi } from '../../services/catalogue.services';
 
+const sampleStudents: GradebookStudent[] = [];
+const sampleItems: GradedItem[] = [];
+const sampleGrades: GradeEntry[] = [];
+
 // ── Page Component ──
 
 const GradebookPage: React.FC = () => {
@@ -39,7 +43,7 @@ const GradebookPage: React.FC = () => {
 
   const { data: submissionsData, isLoading: submissionsLoading } = useQuery({
     queryKey: ['submissions', 'gradebook', selectedCourseId],
-    queryFn: () => submissionApi.getAll({ course: selectedCourseId ?? undefined, limit: 500 }).then(r => r.data),
+    queryFn: () => submissionApi.getAll({ course: selectedCourseId ?? undefined }).then(r => r.data),
     enabled: selectedCourseId !== null,
   });
 

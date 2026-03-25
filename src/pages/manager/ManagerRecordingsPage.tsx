@@ -76,7 +76,7 @@ const ManagerRecordingsPage: React.FC = () => {
 
   const { data: sessionsData, isLoading } = useQuery({
     queryKey: ['livestreams', 'recordings'],
-    queryFn: () => livestreamApi.getAll({ limit: 100 }).then(r => r.data),
+    queryFn: () => livestreamApi.getAll({ page_size: 100 }).then(r => r.data),
   });
 
   const sessions = sessionsData?.results ?? [];

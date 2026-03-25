@@ -10,7 +10,7 @@ import TopBar from '../../components/learner/TopBar';
 import CatalogHero from '../../components/learner/catalog/CatalogHero';
 import CatalogFilterBar from '../../components/learner/catalog/CatalogFilterBar';
 import CatalogCategoryCard, { defaultCategories } from '../../components/learner/catalog/CatalogCategoryCard';
-import CatalogCourseCard, { sampleCourses, Course as CatalogCourse } from '../../components/learner/catalog/CatalogCourseCard';
+import CatalogCourseCard, { sampleCourses, type Course as CatalogCourse } from '../../components/learner/catalog/CatalogCourseCard';
 import CatalogInstructorCard, { sampleInstructors } from '../../components/learner/catalog/CatalogInstructorCard';
 import CatalogPagination from '../../components/learner/catalog/CatalogPagination';
 import { publicCourseApi, publicCategoryApi } from '../../services/public.services';

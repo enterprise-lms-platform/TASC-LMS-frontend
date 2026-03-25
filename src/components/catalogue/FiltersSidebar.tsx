@@ -52,10 +52,10 @@ const FiltersSidebar: React.FC = () => {
 
   const { data: categoriesData } = useQuery({
     queryKey: ['publicCategories'],
-    queryFn: () => publicCategoryApi.getAll(),
+    queryFn: () => publicCategoryApi.getAll().then(r => r.data),
   });
 
-  const categories: FilterOption[] = categoriesData?.data?.map((cat) => ({
+  const categories: FilterOption[] = categoriesData?.results?.map((cat: { id: number; name: string }) => ({
     id: cat.id,
     label: cat.name,
     count: 0,

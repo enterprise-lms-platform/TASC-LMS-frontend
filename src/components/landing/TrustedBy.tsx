@@ -9,10 +9,10 @@ interface TrustedByProps {
 const TrustedBy: React.FC<TrustedByProps> = ({ isMobile }) => {
   const clientsData = useQuery({
     queryKey: ['publicClients'],
-    queryFn: () => publicClientsApi.getClients(),
+    queryFn: () => publicClientsApi.getClients().then(r => r.data),
   });
 
-  const companies = clientsData.data?.data?.map((client) => ({
+  const companies = clientsData.data?.results?.map((client: { name: string; logo_url: string }) => ({
     name: client.name,
     logoUrl: client.logo_url,
   })) || [

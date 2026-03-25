@@ -56,12 +56,6 @@ const headerSx = {
 
 // ─── Styles ────────────────────────────────────────────────
 
-const cardSx = {
-  borderRadius: '1rem',
-  overflow: 'hidden',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
-};
-
 interface BulkEnrollmentHistory {
   id: number;
   course: string;

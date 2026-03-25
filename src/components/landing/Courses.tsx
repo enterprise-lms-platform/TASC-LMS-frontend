@@ -15,10 +15,10 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
 
   const coursesData = useQuery({
     queryKey: ['publicCourses', 'featured'],
-    queryFn: () => publicCourseApi.getAll({ featured: true, page_size: 6 }),
+    queryFn: () => publicCourseApi.getAll({ featured: true, page_size: 6 }).then(r => r.data),
   });
 
-  const coursesList = coursesData.data?.data?.results?.map((course) => ({
+  const coursesList = coursesData.data?.results?.map((course) => ({
     id: course.id,
     slug: course.slug,
     category: course.category?.name || 'General',

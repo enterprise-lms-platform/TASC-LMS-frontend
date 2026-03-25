@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   Box,
   CssBaseline,
@@ -14,6 +14,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Alert,
+  CircularProgress,
+  LinearProgress,
 } from '@mui/material';
 import {
   FileUpload as FileUploadIcon,
@@ -21,9 +24,12 @@ import {
   Download as DownloadIcon,
   InsertDriveFile as FileIcon,
   ArrowForward as ArrowIcon,
+  CheckCircle as SuccessIcon,
+  Error as ErrorIcon,
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { bulkImportApi, type BulkImportResult } from '../../services/superadmin.services';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -43,25 +49,105 @@ const headerSx = {
   gap: 2,
 };
 
-// ── Column Mapping ──
-const columnMappings = [
-  { csvColumn: 'full_name', systemField: 'Name', sampleData: 'Sarah Mitchell' },
-  { csvColumn: 'email_address', systemField: 'Email', sampleData: 'sarah.m@acmecorp.com' },
-  { csvColumn: 'user_role', systemField: 'Role', sampleData: 'Learner' },
-  { csvColumn: 'department', systemField: 'Department', sampleData: 'Engineering' },
-  { csvColumn: 'manager_email', systemField: 'Reports To', sampleData: 'alex.o@acmecorp.com' },
-];
-
-// ── Import History ──
-const importHistory = [
-  { fileName: 'engineering_team_q1.csv', records: 156, successful: 152, failed: 4, date: 'Mar 6, 2026', status: 'Completed' },
-  { fileName: 'new_hires_march.csv', records: 42, successful: 42, failed: 0, date: 'Mar 1, 2026', status: 'Completed' },
-  { fileName: 'contractor_batch.csv', records: 28, successful: 0, failed: 28, date: 'Feb 22, 2026', status: 'Failed' },
-  { fileName: 'sales_onboarding.csv', records: 89, successful: 87, failed: 2, date: 'Feb 15, 2026', status: 'Completed' },
-];
+interface ImportHistoryEntry {
+  id: string;
+  fileName: string;
+  records: number;
+  successful: number;
+  failed: number;
+  date: string;
+  status: 'Completed' | 'Failed' | 'Processing';
+  errors?: Array<{ row: number; email: string; error: string }>;
+}
 
 const ManagerBulkImportPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState<BulkImportResult | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [importHistory, setImportHistory] = useState<ImportHistoryEntry[]>([
+    { id: '1', fileName: 'engineering_team_q1.csv', records: 156, successful: 152, failed: 4, date: 'Mar 6, 2026', status: 'Completed' },
+    { id: '2', fileName: 'new_hires_march.csv', records: 42, successful: 42, failed: 0, date: 'Mar 1, 2026', status: 'Completed' },
+    { id: '3', fileName: 'contractor_batch.csv', records: 28, successful: 0, failed: 28, date: 'Feb 22, 2026', status: 'Failed' },
+    { id: '4', fileName: 'sales_onboarding.csv', records: 89, successful: 87, failed: 2, date: 'Feb 15, 2026', status: 'Completed' },
+  ]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDownloadTemplate = () => {
+    bulkImportApi.downloadTemplate();
+  };
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.csv')) {
+      setSelectedFile(file);
+      setUploadResult(null);
+      setUploadError(null);
+    } else {
+      setUploadError('Please upload a CSV file');
+    }
+  }, []);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setUploadResult(null);
+      setUploadError(null);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    setUploadResult(null);
+    setUploadError(null);
+
+    try {
+      const result = await bulkImportApi.uploadCSV(selectedFile);
+      setUploadResult(result);
+
+      const newEntry: ImportHistoryEntry = {
+        id: Date.now().toString(),
+        fileName: selectedFile.name,
+        records: result.total_rows,
+        successful: result.imported,
+        failed: result.failed,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        status: result.failed === 0 && result.imported > 0 ? 'Completed' : result.imported > 0 ? 'Completed' : 'Failed',
+        errors: result.errors,
+      };
+
+      setImportHistory(prev => [newEntry, ...prev]);
+      setSelectedFile(null);
+      
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Upload failed. Please try again.';
+      setUploadError(message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -128,16 +214,27 @@ const ManagerBulkImportPage: React.FC = () => {
                     />
                     <Typography fontWeight={700}>Upload CSV File</Typography>
                   </Box>
+                  {selectedFile && (
+                    <Chip
+                      label={selectedFile.name}
+                      size="small"
+                      sx={{ fontWeight: 600, bgcolor: 'rgba(16,185,129,0.1)', color: '#10b981' }}
+                    />
+                  )}
                 </Box>
                 <Box sx={{ p: 3 }}>
                   <Box
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
                     sx={{
                       border: '2px dashed',
-                      borderColor: 'grey.300',
+                      borderColor: isDragging ? '#ffa424' : selectedFile ? '#10b981' : 'grey.300',
                       borderRadius: '12px',
                       p: 5,
                       textAlign: 'center',
-                      bgcolor: 'rgba(255,164,36,0.02)',
+                      bgcolor: isDragging ? 'rgba(255,164,36,0.08)' : selectedFile ? 'rgba(16,185,129,0.02)' : 'rgba(255,164,36,0.02)',
                       cursor: 'pointer',
                       transition: 'border-color 0.2s, background 0.2s',
                       '&:hover': {
@@ -146,17 +243,91 @@ const ManagerBulkImportPage: React.FC = () => {
                       },
                     }}
                   >
-                    <CloudUploadIcon sx={{ fontSize: 48, color: '#ffa424', mb: 1.5 }} />
+                    {isUploading ? (
+                      <CircularProgress size={48} sx={{ color: '#ffa424', mb: 1.5 }} />
+                    ) : selectedFile ? (
+                      <SuccessIcon sx={{ fontSize: 48, color: '#10b981', mb: 1.5 }} />
+                    ) : (
+                      <CloudUploadIcon sx={{ fontSize: 48, color: '#ffa424', mb: 1.5 }} />
+                    )}
                     <Typography variant="body1" fontWeight={600} sx={{ mb: 0.5 }}>
-                      Drag and drop your CSV file here
+                      {isUploading
+                        ? 'Uploading...'
+                        : selectedFile
+                        ? `${selectedFile.name} selected`
+                        : 'Drag and drop your CSV file here'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      or click to browse files
+                      {selectedFile
+                        ? `${(selectedFile.size / 1024).toFixed(1)} KB`
+                        : 'or click to browse files'}
                     </Typography>
                     <Typography variant="caption" color="text.disabled">
                       Accepted format: .csv (max 10MB, up to 5,000 records)
                     </Typography>
                   </Box>
+
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    accept=".csv"
+                    style={{ display: 'none' }}
+                  />
+
+                  {selectedFile && !uploadResult && (
+                    <Box sx={{ mt: 2.5, display: 'flex', gap: 1.5 }}>
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        onClick={handleUpload}
+                        disabled={isUploading}
+                        startIcon={isUploading ? <CircularProgress size={16} color="inherit" /> : <FileUploadIcon />}
+                        sx={{
+                          bgcolor: '#ffa424',
+                          '&:hover': { bgcolor: '#f97316' },
+                          fontWeight: 600,
+                          textTransform: 'none',
+                        }}
+                      >
+                        {isUploading ? 'Importing...' : 'Import Users'}
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        onClick={() => {
+                          setSelectedFile(null);
+                          setUploadError(null);
+                          if (fileInputRef.current) fileInputRef.current.value = '';
+                        }}
+                        disabled={isUploading}
+                        sx={{ textTransform: 'none', fontWeight: 600 }}
+                      >
+                        Clear
+                      </Button>
+                    </Box>
+                  )}
+
+                  {uploadError && (
+                    <Alert severity="error" sx={{ mt: 2 }} onClose={() => setUploadError(null)}>
+                      {uploadError}
+                    </Alert>
+                  )}
+
+                  {uploadResult && (
+                    <Alert
+                      severity={uploadResult.failed === 0 ? 'success' : 'warning'}
+                      sx={{ mt: 2 }}
+                      icon={uploadResult.failed === 0 ? <SuccessIcon /> : <ErrorIcon />}
+                    >
+                      <Typography variant="body2" fontWeight={600}>
+                        Import Complete
+                      </Typography>
+                      <Typography variant="body2">
+                        {uploadResult.imported} users imported successfully
+                        {uploadResult.failed > 0 && `, ${uploadResult.failed} failed`}
+                      </Typography>
+                    </Alert>
+                  )}
 
                   <Box sx={{ mt: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -168,6 +339,7 @@ const ManagerBulkImportPage: React.FC = () => {
                     <Button
                       size="small"
                       startIcon={<DownloadIcon />}
+                      onClick={handleDownloadTemplate}
                       sx={{
                         textTransform: 'none',
                         fontWeight: 600,
@@ -184,7 +356,7 @@ const ManagerBulkImportPage: React.FC = () => {
 
             {/* Step 2: Column Mapping */}
             <Grid size={{ xs: 12, lg: 6 }}>
-              <Paper elevation={0} sx={{ ...cardSx, opacity: 0.7 }}>
+              <Paper elevation={0} sx={{ ...cardSx, opacity: selectedFile ? 1 : 0.7 }}>
                 <Box sx={headerSx}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Chip
@@ -192,7 +364,7 @@ const ManagerBulkImportPage: React.FC = () => {
                       size="small"
                       sx={{
                         fontWeight: 700,
-                        bgcolor: 'grey.300',
+                        bgcolor: selectedFile ? '#ffa424' : 'grey.300',
                         color: 'white',
                         width: 28,
                         height: 28,
@@ -201,7 +373,16 @@ const ManagerBulkImportPage: React.FC = () => {
                     />
                     <Typography fontWeight={700}>Column Mapping</Typography>
                   </Box>
-                  <Chip label="Pending Upload" size="small" sx={{ fontWeight: 600, fontSize: '0.7rem', bgcolor: 'grey.100', color: 'text.secondary' }} />
+                  <Chip
+                    label={selectedFile ? 'Ready to Import' : 'Pending Upload'}
+                    size="small"
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: '0.7rem',
+                      bgcolor: selectedFile ? 'rgba(16,185,129,0.1)' : 'grey.100',
+                      color: selectedFile ? '#10b981' : 'text.secondary',
+                    }}
+                  />
                 </Box>
                 <TableContainer>
                   <Table size="small">
@@ -214,12 +395,24 @@ const ManagerBulkImportPage: React.FC = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {columnMappings.map((mapping, idx) => (
+                      {[
+                        { csvColumn: 'email', systemField: 'Email', sampleData: 'sarah.m@acmecorp.com', required: true },
+                        { csvColumn: 'first_name', systemField: 'First Name', sampleData: 'Sarah', required: true },
+                        { csvColumn: 'last_name', systemField: 'Last Name', sampleData: 'Mitchell', required: true },
+                        { csvColumn: 'role', systemField: 'Role', sampleData: 'learner', required: true },
+                        { csvColumn: 'department', systemField: 'Department', sampleData: 'Engineering', required: false },
+                        { csvColumn: 'phone_number', systemField: 'Phone', sampleData: '+1234567890', required: false },
+                      ].map((mapping, idx) => (
                         <TableRow key={idx} sx={{ '&:last-child td': { borderBottom: 0 } }}>
                           <TableCell>
-                            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 500, color: 'text.secondary' }}>
-                              {mapping.csvColumn}
-                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 500, color: 'text.secondary' }}>
+                                {mapping.csvColumn}
+                              </Typography>
+                              {mapping.required && (
+                                <Typography sx={{ color: '#ef4444', fontSize: '0.7rem' }}>*</Typography>
+                              )}
+                            </Box>
                           </TableCell>
                           <TableCell>
                             <ArrowIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
@@ -264,6 +457,7 @@ const ManagerBulkImportPage: React.FC = () => {
                     <Typography fontWeight={700}>Import History</Typography>
                   </Box>
                 </Box>
+                {isUploading && <LinearProgress sx={{ height: 2 }} />}
                 <TableContainer>
                   <Table>
                     <TableHead>
@@ -277,9 +471,9 @@ const ManagerBulkImportPage: React.FC = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {importHistory.map((entry, idx) => (
+                      {importHistory.map((entry) => (
                         <TableRow
-                          key={idx}
+                          key={entry.id}
                           sx={{ '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' }, '&:last-child td': { borderBottom: 0 } }}
                         >
                           <TableCell>
@@ -317,13 +511,32 @@ const ManagerBulkImportPage: React.FC = () => {
                               sx={{
                                 fontWeight: 600,
                                 fontSize: '0.75rem',
-                                bgcolor: entry.status === 'Completed' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                                color: entry.status === 'Completed' ? '#10b981' : '#ef4444',
+                                bgcolor:
+                                  entry.status === 'Completed'
+                                    ? 'rgba(16,185,129,0.1)'
+                                    : entry.status === 'Processing'
+                                    ? 'rgba(255,164,36,0.1)'
+                                    : 'rgba(239,68,68,0.1)',
+                                color:
+                                  entry.status === 'Completed'
+                                    ? '#10b981'
+                                    : entry.status === 'Processing'
+                                    ? '#ffa424'
+                                    : '#ef4444',
                               }}
                             />
                           </TableCell>
                         </TableRow>
                       ))}
+                      {importHistory.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                            <Typography variant="body2" color="text.secondary">
+                              No import history yet
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </TableContainer>

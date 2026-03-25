@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { publicCategoryApi } from '../../services/public.services';
+import { publicCategoryApi, publicCourseApi } from '../../services/public.services';
+import type { Category, CourseList } from '../../types/types';
 
 interface CategoriesProps {
   isMobile: boolean;
@@ -20,22 +21,46 @@ const gradients = [
 
 const icons = ['code', 'chart-line', 'shield-alt', 'briefcase', 'paint-brush', 'bullhorn', 'cloud', 'mobile-alt'];
 
+interface CategoryWithCount extends Category {
+  icon: string;
+  courses: number;
+  gradient: string;
+}
+
 const Categories: React.FC<CategoriesProps> = ({ isMobile }) => {
   const navigate = useNavigate();
   
-  const categoriesData = useQuery({
+  const { data: categoriesResponse, isLoading: categoriesLoading } = useQuery({
     queryKey: ['publicCategories'],
     queryFn: () => publicCategoryApi.getAll(),
   });
 
-  const categories = categoriesData.data?.data?.slice(0, 8).map((cat, idx) => ({
-    id: cat.id,
-    slug: cat.slug,
-    name: cat.name,
-    icon: icons[idx % icons.length],
-    courses: '...',
-    gradient: gradients[idx % gradients.length],
-  })) || [];
+  const { data: coursesResponse, isLoading: coursesLoading } = useQuery({
+    queryKey: ['publicCourses', 'all'],
+    queryFn: () => publicCourseApi.getAll({ page_size: 1000 }),
+  });
+
+  const categories: CategoryWithCount[] = React.useMemo(() => {
+    const categoriesData = categoriesResponse?.data?.results || [];
+    const coursesData = coursesResponse?.data?.results || [];
+    
+    const courseCountByCategory = new Map<number, number>();
+    coursesData.forEach((course: CourseList) => {
+      if (course.category?.id) {
+        const count = courseCountByCategory.get(course.category.id) || 0;
+        courseCountByCategory.set(course.category.id, count + 1);
+      }
+    });
+
+    return categoriesData.slice(0, 8).map((cat, idx) => ({
+      ...cat,
+      icon: icons[idx % icons.length],
+      courses: courseCountByCategory.get(cat.id) || 0,
+      gradient: gradients[idx % gradients.length],
+    }));
+  }, [categoriesResponse, coursesResponse]);
+
+  const isLoading = categoriesLoading || coursesLoading;
 
   const getGridColumns = () => {
     if (isMobile) return '1fr';
@@ -84,7 +109,7 @@ const Categories: React.FC<CategoriesProps> = ({ isMobile }) => {
             gap: '24px',
           }}
         >
-          {categories.map((category, index) => (
+          {categories.length > 0 ? categories.map((category, index) => (
             <a
               key={category.id || index}
               href="#"
@@ -139,10 +164,35 @@ const Categories: React.FC<CategoriesProps> = ({ isMobile }) => {
                 {category.name}
               </h3>
               <p style={{ fontSize: '0.875rem', color: '#71717a', margin: 0 }}>
-                {category.courses} Courses
+                {isLoading ? '...' : `${category.courses} Courses`}
               </p>
             </a>
-          ))}
+          )) : isLoading ? (
+            Array.from({ length: 8 }).map((_, idx) => (
+              <div
+                key={idx}
+                style={{
+                  backgroundColor: '#fafafa',
+                  border: '1px solid #e4e4e7',
+                  borderRadius: '24px',
+                  padding: '32px 24px',
+                  textAlign: 'center',
+                }}
+              >
+                <div
+                  style={{
+                    width: '72px',
+                    height: '72px',
+                    borderRadius: '16px',
+                    margin: '0 auto 20px',
+                    background: gradients[idx % gradients.length],
+                  }}
+                />
+                <div style={{ height: '20px', backgroundColor: '#e4e4e7', borderRadius: '4px', marginBottom: '8px' }} />
+                <div style={{ height: '16px', width: '60%', backgroundColor: '#e4e4e7', borderRadius: '4px', margin: '0 auto' }} />
+              </div>
+            ))
+          ) : null}
         </div>
       </div>
     </section>

@@ -66,10 +66,10 @@ const InstructorNotificationsPage: React.FC = () => {
 
   const { data: notificationsData, isLoading } = useQuery({
     queryKey: ['notifications'],
-    queryFn: () => notificationApi.getAll(),
+    queryFn: () => notificationApi.getAll().then(r => r.data),
   });
 
-  const notifications: Notification[] = notificationsData?.data?.results?.map((n) => ({
+  const notifications: Notification[] = notificationsData?.results?.map((n) => ({
     id: String(n.id),
     type: (n.type as 'submission' | 'enrollment' | 'message' | 'grade' | 'course') || 'course',
     title: n.title,

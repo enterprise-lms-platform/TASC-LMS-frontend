@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Paper, Typography, LinearProgress, CircularProgress } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
 import { quotaApi } from '../../../services/upload.services';
 
 interface StorageInfoCardProps {
@@ -12,7 +13,10 @@ const formatSize = (gb: number) => `${gb.toFixed(1)} GB`;
 
 const StorageInfoCard: React.FC<StorageInfoCardProps> = ({ used, total, wired }) => {
   if (wired) {
-    const { data, isLoading } = quotaApi.getQuota().useQuery();
+    const { data, isLoading } = useQuery({
+      queryKey: ['storage-quota'],
+      queryFn: () => quotaApi.getQuota().then(r => r.data),
+    });
 
     if (isLoading) {
       return (

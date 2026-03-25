@@ -31,10 +31,10 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({ onMobileFilterOpen, category,
   
   const { data: coursesData } = useQuery({
     queryKey: ['publicCourses', params],
-    queryFn: () => publicCourseApi.getAll(params),
+    queryFn: () => publicCourseApi.getAll(params).then(r => r.data),
   });
 
-  const courses: Course[] = coursesData?.data?.results?.map((course) => ({
+  const courses: Course[] = coursesData?.results?.map((course) => ({
     id: String(course.id),
     title: course.title,
     category: course.category?.name || 'General',
@@ -49,7 +49,7 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({ onMobileFilterOpen, category,
     badgeText: undefined,
   })) || [];
 
-  const totalResults = coursesData?.data?.count || 0;
+  const totalResults = coursesData?.count || 0;
 
   const handleEnroll = (course: Course) => {
     setSelectedCourse(course);

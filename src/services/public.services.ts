@@ -27,7 +27,7 @@ export const healthApi = {
 export const publicCategoryApi = {
   //  List all active categories (no auth required)
   getAll: () =>
-    apiClient.get<Category[]>(`${PUBLIC_PATH}/categories/`),
+    apiClient.get<PaginatedResponse<Category>>(`${PUBLIC_PATH}/categories/`),
 
   //  Get category details (no auth required)
   getById: (id: number) =>
@@ -64,8 +64,13 @@ export interface PlatformStats {
 }
 
 export interface TrustedClient {
+  id: number;
   name: string;
   logo_url: string;
+  website_url: string;
+  is_active: boolean;
+  order: number;
+  created_at: string;
 }
 
 export const publicCourseApi = {
@@ -93,5 +98,40 @@ export const publicStatsApi = {
 export const publicClientsApi = {
   // Get trusted client logos for landing page
   getClients: () =>
-    apiClient.get<TrustedClient[]>(`${PUBLIC_PATH}/clients/`),
+    apiClient.get<PaginatedResponse<TrustedClient>>(`${PUBLIC_PATH}/clients/`),
+};
+
+// BUSINESS PRICING
+
+export interface PricingPlan {
+  id: string;
+  name: string;
+  price: number;
+  billing_period: string;
+  features: string[];
+  recommended?: boolean;
+  max_users?: number;
+  storage_gb?: number;
+}
+
+export const businessPricingApi = {
+  // Get business/enterprise pricing plans
+  getPlans: () =>
+    apiClient.get<PricingPlan[]>(`${PUBLIC_PATH}/pricing/business/`),
+};
+
+// FAQS
+
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+  category?: string;
+  order?: number;
+}
+
+export const faqApi = {
+  // Get FAQs for landing pages
+  getAll: () =>
+    apiClient.get<FaqItem[]>(`${PUBLIC_PATH}/faqs/`),
 };
