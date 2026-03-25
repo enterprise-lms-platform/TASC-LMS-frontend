@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Box, Typography, Stack, Button, ToggleButtonGroup, ToggleButton, Select, MenuItem, Grid } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -11,12 +11,27 @@ import { publicCourseApi, type PublicCourseParams } from '../../services/public.
 interface CoursesGridProps {
   onMobileFilterOpen: () => void;
   category?: number;
+  /** Reserved for multi-category filters when the API supports it; parent already passes `category` for single filter. */
+  categories?: number[];
   level?: string;
+  levels?: string[];
   search?: string;
   sortBy?: string;
+  page?: number;
+  onSortChange?: (sort: string) => void;
+  onTotalCountChange?: (count: number) => void;
 }
 
-const CoursesGrid: React.FC<CoursesGridProps> = ({ onMobileFilterOpen, category, level, sortBy = 'popular' }) => {
+const CoursesGrid: React.FC<CoursesGridProps> = ({
+  onMobileFilterOpen,
+  category,
+  level,
+  search,
+  sortBy = 'popular',
+  page = 1,
+  onSortChange,
+  onTotalCountChange,
+}) => {
   const [view, setView] = React.useState('grid');
   const [sort, setSort] = React.useState(sortBy);
   const [enrollModalOpen, setEnrollModalOpen] = React.useState(false);
@@ -24,10 +39,12 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({ onMobileFilterOpen, category,
 
   const params: PublicCourseParams = {
     page_size: 12,
+    page,
   };
-  
+
   if (category) params.category = category;
   if (level && level !== 'all_levels') params.level = level as 'beginner' | 'intermediate' | 'advanced';
+  if (search?.trim()) params.search = search.trim();
   
   const { data: coursesData } = useQuery({
     queryKey: ['publicCourses', params],
@@ -50,6 +67,14 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({ onMobileFilterOpen, category,
   })) || [];
 
   const totalResults = coursesData?.count || 0;
+
+  useEffect(() => {
+    setSort(sortBy);
+  }, [sortBy]);
+
+  useEffect(() => {
+    onTotalCountChange?.(totalResults);
+  }, [totalResults, onTotalCountChange]);
 
   const handleEnroll = (course: Course) => {
     setSelectedCourse(course);
@@ -79,7 +104,17 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({ onMobileFilterOpen, category,
               </ToggleButton>
             </ToggleButtonGroup>
 
-            <Select value={sort} onChange={(e) => setSort(e.target.value)} size="small" MenuProps={{ disableScrollLock: true }} sx={{ minWidth: 160, fontSize: '0.875rem', bgcolor: 'white', '& .MuiOutlinedInput-notchedOutline': { borderColor: '#d4d4d8' } }}>
+            <Select
+              value={sort}
+              onChange={(e) => {
+                const v = e.target.value;
+                setSort(v);
+                onSortChange?.(v);
+              }}
+              size="small"
+              MenuProps={{ disableScrollLock: true }}
+              sx={{ minWidth: 160, fontSize: '0.875rem', bgcolor: 'white', '& .MuiOutlinedInput-notchedOutline': { borderColor: '#d4d4d8' } }}
+            >
               <MenuItem value="popular">Most Popular</MenuItem>
               <MenuItem value="newest">Newest</MenuItem>
               <MenuItem value="rating">Highest Rated</MenuItem>

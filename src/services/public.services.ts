@@ -9,6 +9,7 @@ import type {
   PublicCourseDetail,
   PaginatedResponse,
   HealthCheckResponse,
+  Subscription,
 } from '../types/types';
 
 const PUBLIC_PATH = '/api/v1/public';
@@ -54,7 +55,20 @@ export interface PublicCourseParams {
   level?: 'beginner' | 'intermediate' | 'advanced' | 'all_levels';
   page?: number;
   page_size?: number;
+  /** Matches public course list `search` query (title, description, instructor). */
+  search?: string;
 }
+
+/** Public landing-page subscription plan row from `/api/v1/public/subscription-plans/`. */
+export type PublicSubscriptionPlan = Pick<
+  Subscription,
+  'id' | 'name' | 'description' | 'price' | 'currency' | 'billing_cycle' | 'features' | 'status'
+>;
+
+export const publicSubscriptionPlansApi = {
+  getAll: () =>
+    apiClient.get<PaginatedResponse<PublicSubscriptionPlan>>(`${PUBLIC_PATH}/subscription-plans/`),
+};
 
 export interface PlatformStats {
   courses: number;
