@@ -29,6 +29,7 @@ import {
   TrendingUp as ProgressIcon,
   Groups as WorkshopsIcon,
   Person as ProfileIcon,
+  Chat as MessagesIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation, matchPath } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -101,6 +102,12 @@ const buildNavSections = (unreadCount?: number): NavSection[] => [
     items: [
       { text: 'My Learners', icon: <LearnersIcon />, path: '/instructor/learners' },
       { text: 'Progress Tracking', icon: <ProgressIcon />, path: '/instructor/progress' },
+    ],
+  },
+  {
+    title: 'Communication',
+    items: [
+      { text: 'Messages', icon: <MessagesIcon />, path: '/instructor/messages' },
     ],
   },
   {

@@ -79,6 +79,7 @@ const RecordingsPage = lazy(() => import('../pages/instructor/RecordingsPage'));
 const UpcomingSessionsPage = lazy(() => import('../pages/instructor/UpcomingSessionsPage'));
 const WorkshopsPage = lazy(() => import('../pages/instructor/WorkshopsPage'));
 const WorkshopDetailsPage = lazy(() => import('../pages/instructor/WorkshopDetailsPage'));
+const InstructorMessagesPage = lazy(() => import('../pages/InstructorMessagesPage'));
 
 // Manager Pages
 const ManagerDashboard = lazy(() => import('../pages/manager/ManagerDashboard'));
@@ -467,6 +468,11 @@ export const createAppRouter = (queryClient: QueryClient) => {
     {
       path: '/instructor/workshops/:workshopId',
       element: <SuspenseWrapper><ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><WorkshopDetailsPage /></ProtectedRoute></SuspenseWrapper>,
+      loader: async () => instructorLoaders.instructorRouteLoader(queryClient),
+    },
+    {
+      path: '/instructor/messages',
+      element: <SuspenseWrapper><ProtectedRoute allowedRoles={['instructor', 'tasc_admin']}><InstructorMessagesPage /></ProtectedRoute></SuspenseWrapper>,
       loader: async () => instructorLoaders.instructorRouteLoader(queryClient),
     },
 

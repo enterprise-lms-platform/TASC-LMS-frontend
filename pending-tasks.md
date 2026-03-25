@@ -1,6 +1,6 @@
 # TASC LMS Frontend — Task Tracker
 
-**Last updated:** 24 March 2026
+**Last updated:** 25 March 2026
 **Repo:** `TASC-LMS-frontend`
 
 ---
@@ -47,11 +47,8 @@
 - **Done:** Q&A tab wired to `discussionApi.getAll()` and `discussionApi.create()`. Removed `sampleQuestions[]`.
 - **Still pending:** Resources tab still uses `sampleResources[]` (no backend endpoint for session attachments). Discussion replies and upvoting not yet wired.
 
-### 11. Instructor Messages Page
-- **File:** `src/pages/InstructorMessagesPage.tsx`
-- **What's hardcoded:** `conversations[]` array (6+ mock conversation objects)
-- **What to do:** Wire to a messaging/inbox API if backend supports it, or mark as future feature.
-- **Blocked?** Yes — no messaging API exists
+### ~~11. Instructor Messages Page~~ — DONE
+- **Moved to Completed table below**
 
 
 ### 20. Manager Bulk Enroll Page — Partially Done
@@ -416,6 +413,7 @@
 | — | Removed 2FA toggles, active sessions, and notification preferences from all 5 profile pages | 24 Mar 2026 | — |
 | — | Learner profile: removed hardcoded "Emma Chen", replaced Website with Location, removed Headline | 24 Mar 2026 | — |
 | — | Fixed DEV_BYPASS_AUTH 401 crash in route loaders (learner, instructor, shared) | 24 Mar 2026 | — |
+| 11 | InstructorMessagesPage: wired to `messagingApi` (conversations list, messages, send, mark_read), added route + sidebar link | 25 Mar 2026 | — |
 
 ---
 
@@ -439,6 +437,7 @@
 | `/api/v1/superadmin/users/stats/` | GET | User stats `{ total, active, new_this_month, suspended }` | AllUsersPage (#24) |
 | `/api/v1/learner/my-courses/` | GET | Learner's enrolled courses (sort/filter) | Learner dashboard |
 | `/api/v1/learner/courses/{slug}/enroll/` | POST | Enroll by slug (idempotent) | Course enrollment flow |
+| `/api/v1/messaging/conversations/` | GET/POST | Conversations + messages + send + mark_read | InstructorMessagesPage (#11) |
 
 ## MEDIUM — New Features
 
@@ -494,7 +493,7 @@ Frontend implementation complete (`LearnerBadgesPage.tsx`, `BadgeEarnedModal.tsx
 | Endpoint | Purpose | Blocking | Backend # |
 |----------|---------|----------|-----------|
 | Analytics aggregation (enrollment trends, engagement metrics) | Time-series data for charts | Analytics pages (#2, #3, #4, #5) | #18 |
-| Messaging/inbox API | Direct messaging between users | InstructorMessagesPage (#11) | #24 |
+| ~~Messaging/inbox API~~ | ~~Direct messaging between users~~ | ~~InstructorMessagesPage (#11)~~ | ~~#24~~ **DONE** |
 | Bulk enrollment endpoint (real implementation) | Enroll multiple users at once | ManagerBulkEnrollPage (#20) | #20 |
 | Security metrics endpoint | Active sessions, login attempts | SecurityPage (#26) | #22 |
 | Business-specific stats/pricing | Enterprise customer metrics, B2B plans | BusinessStatsSection (#35), PricingSection (#34) | #23 |
@@ -527,3 +526,4 @@ Frontend implementation complete (`LearnerBadgesPage.tsx`, `BadgeEarnedModal.tsx
 | `GET /api/v1/payments/invoices/` (status filter, date range) | SuperadminInvoicesPage — wire table | #70 |
 | `GET /api/v1/superadmin/users/?role=` (existing role filter) | ManagerRolesPage — compute role counts | #87 |
 | `GET /api/v1/learning/submissions/` + `statistics/` action | ManagerAssignmentsPage — wire table + KPIs | #81 |
+| `/api/v1/messaging/conversations/` (full CRUD + messages + send + mark_read) | InstructorMessagesPage — wire conversations list + chat | #11 |

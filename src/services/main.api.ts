@@ -19,6 +19,7 @@ export * from './users.services';
 export * from './notifications.services';
 export * from './reports.services';
 export * from './livestream.services';
+export * from './messaging.services';
 
 // Re-export services as a single object for convenience
 import { authApi, adminApi } from './auth.services';
@@ -55,6 +56,7 @@ import {
 } from './public.services';
 import { uploadApi } from './upload.services';
 import { livestreamApi, livestreamAttendanceApi } from './livestream.services';
+import { messagingApi } from './messaging.services';
 
 /*
   Consolidated API object with all services
@@ -139,6 +141,9 @@ export const api = {
 
   // Reports
   reports: reportsApi,
+
+  // Messaging
+  messaging: messagingApi,
 };
 
 export default api;
