@@ -55,6 +55,7 @@ const SubscriptionManagementPage = lazy(() => import('../pages/learner/Subscript
 const PaymentHistoryPage = lazy(() => import('../pages/learner/PaymentHistoryPage'));
 const LearnerCertificatesPage = lazy(() => import('../pages/learner/LearnerCertificatesPage'));
 const LearnerBadgesPage = lazy(() => import('../pages/learner/LearnerBadgesPage'));
+const LearnerMessagesPage = lazy(() => import('../pages/learner/LearnerMessagesPage'));
 
 // Instructor Pages
 const InstructorDashboard = lazy(() => import('../pages/instructor/InstructorDashboard'));
@@ -334,6 +335,10 @@ export const createAppRouter = (queryClient: QueryClient) => {
       element: <SuspenseWrapper><ProtectedRoute><PaymentHistoryPage /></ProtectedRoute></SuspenseWrapper>,
       // changes to be made in loader once payments service is ready
       // loader: async () => learnerLoaders.paymentHistoryLoader(queryClient),
+    },
+    {
+      path: '/learner/messages',
+      element: <SuspenseWrapper><ProtectedRoute><LearnerMessagesPage /></ProtectedRoute></SuspenseWrapper>,
     },
 
     // Checkout & Payments

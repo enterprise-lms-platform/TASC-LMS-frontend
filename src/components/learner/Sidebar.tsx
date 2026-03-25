@@ -35,6 +35,7 @@ import {
   CardMembership as CardMembershipIcon,
   Receipt as ReceiptIcon,
   Settings as SettingsIcon,
+  Chat as ChatIcon,
 } from '@mui/icons-material';
 
 // Sidebar width constant
@@ -48,6 +49,7 @@ const buildNavSections = (unreadCount?: number) => [
       { text: 'Overview', icon: <DashboardIcon />, path: '/learner' },
       { text: 'My Courses', icon: <MenuBookIcon />, path: '/learner/my-courses' },
       { text: 'Notifications', icon: <NotificationsIcon />, badge: unreadCount || undefined, path: '/learner/notifications' },
+      { text: 'Messages', icon: <ChatIcon />, path: '/learner/messages' },
     ],
   },
   {
