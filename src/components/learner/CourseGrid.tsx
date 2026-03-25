@@ -4,23 +4,8 @@ import { ChevronRight } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { enrollmentApi } from '../../services/learning.services';
-import type { PaginatedResponse } from '../../types/types';
+import { normalizeEnrollmentListResponse } from '../../hooks/useLearning';
 import CourseCard from './CourseCard';
-
-interface EnrollmentResult {
-  id: number;
-  course: {
-    id: number;
-    title: string;
-    category?: { name?: string };
-    instructor_name?: string;
-    thumbnail?: string;
-    rating?: number;
-  };
-  progress_percentage: number;
-  completed_sessions: number;
-  total_sessions: number;
-}
 
 const CourseGrid: React.FC = () => {
   const navigate = useNavigate();
@@ -30,20 +15,19 @@ const CourseGrid: React.FC = () => {
     queryFn: () => enrollmentApi.getAll({ page_size: 6 }).then(r => r.data),
   });
 
-  const enrollments = (enrollmentsData as PaginatedResponse<EnrollmentResult> | undefined)?.results ?? [];
+  const enrollments = normalizeEnrollmentListResponse(enrollmentsData);
   const activeCourses = enrollments
-    .filter(e => e.progress_percentage < 100)
+    .filter(e => Number(e.progress_percentage) < 100)
     .slice(0, 3)
     .map(e => ({
-      id: String(e.course?.id ?? e.id),
-      category: e.course?.category?.name || 'General',
-      title: e.course?.title || 'Untitled Course',
-      instructor: e.course?.instructor_name || 'Instructor',
-      progress: e.progress_percentage || 0,
-      lessonsCompleted: e.completed_sessions || 0,
-      totalLessons: e.total_sessions || 0,
-      rating: e.course?.rating || 0,
-      image: e.course?.thumbnail,
+      id: String(e.course),
+      category: 'General',
+      title: e.course_title || 'Untitled Course',
+      instructor: '—',
+      progress: Number(e.progress_percentage) || 0,
+      lessonsCompleted: 0,
+      totalLessons: 0,
+      image: e.course_thumbnail || undefined,
     }));
 
   if (!isLoading && activeCourses.length === 0) return null;
