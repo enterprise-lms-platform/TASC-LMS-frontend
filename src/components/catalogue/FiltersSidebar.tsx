@@ -12,6 +12,8 @@ import {
   AccordionSummary,
   AccordionDetails,
   Stack,
+  TextField,
+  Slider,
 } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -38,53 +40,89 @@ const FilterSection: React.FC<{ title: string; children: React.ReactNode; defaul
   </Accordion>
 );
 
-export interface FilterState {
-  categories: number[];
-  levels: string[];
+interface FilterOption {
+  label: string;
+  count: number;
+  id?: number;
 }
 
-interface FiltersSidebarProps {
-  filters?: FilterState;
-  onFiltersChange?: (filters: FilterState) => void;
-  onClearAll?: () => void;
-}
-
-const FiltersSidebar: React.FC<FiltersSidebarProps> = ({ filters, onFiltersChange, onClearAll }) => {
-  const selectedCategories = filters?.categories ?? [];
-  const selectedLevels = filters?.levels ?? [];
+const FiltersSidebar: React.FC = () => {
+  const [priceRange, setPriceRange] = React.useState<number[]>([0, 200]);
+  const [selectedRating, setSelectedRating] = React.useState<number | null>(null);
 
   const { data: categoriesData } = useQuery({
     queryKey: ['publicCategories'],
-    queryFn: () => publicCategoryApi.getAll(),
+    queryFn: () => publicCategoryApi.getAll().then(r => r.data),
   });
 
-  const apiData = (categoriesData as any)?.data;
-  const categories: { id: number; label: string }[] = (apiData?.results || []).map((cat: any) => ({
+  const categories: FilterOption[] = categoriesData?.results?.map((cat: { id: number; name: string }) => ({
     id: cat.id,
     label: cat.name,
-  }));
+    count: 0,
+  })) || [];
 
-  const levels = [
-    { value: 'beginner', label: 'Beginner' },
-    { value: 'intermediate', label: 'Intermediate' },
-    { value: 'advanced', label: 'Advanced' },
+  const levels: FilterOption[] = [
+    { label: 'Beginner', count: 0 },
+    { label: 'Intermediate', count: 0 },
+    { label: 'Advanced', count: 0 },
   ];
 
-  const handleCategoryToggle = (catId: number) => {
-    const updated = selectedCategories.includes(catId)
-      ? selectedCategories.filter((id) => id !== catId)
-      : [...selectedCategories, catId];
-    onFiltersChange?.({ categories: updated, levels: selectedLevels });
-  };
+  const durations: FilterOption[] = [
+    { label: '0-5 hours', count: 0 },
+    { label: '5-20 hours', count: 0 },
+    { label: '20+ hours', count: 0 },
+  ];
 
-  const handleLevelToggle = (level: string) => {
-    const updated = selectedLevels.includes(level)
-      ? selectedLevels.filter((l) => l !== level)
-      : [...selectedLevels, level];
-    onFiltersChange?.({ categories: selectedCategories, levels: updated });
-  };
+  const features: string[] = ['Certificate Included', 'Hands-on Projects', 'Live Sessions', 'Subtitles Available'];
 
-  const hasActiveFilters = selectedCategories.length > 0 || selectedLevels.length > 0;
+  const renderFilterOption = (item: FilterOption) => (
+    <FormControlLabel
+      key={item.label}
+      control={<Checkbox size="small" sx={{ color: '#d4d4d8', '&.Mui-checked': { color: '#ffa424' } }} />}
+      label={
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+          <Typography sx={{ fontSize: '0.875rem', color: '#52525b' }}>{item.label}</Typography>
+          <Typography sx={{ fontSize: '0.75rem', color: '#a1a1aa', bgcolor: '#f4f4f5', px: 1, py: 0.25, borderRadius: 10 }}>
+            {item.count}
+          </Typography>
+        </Box>
+      }
+      sx={{ ml: 0, mr: 0, width: '100%', '& .MuiFormControlLabel-label': { width: '100%' } }}
+    />
+  );
+
+  const renderRatingOption = (rating: number) => {
+    const fullStars = Math.floor(rating);
+    const hasHalf = rating % 1 !== 0;
+
+    return (
+      <Box
+        key={rating}
+        onClick={() => setSelectedRating(rating)}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          cursor: 'pointer',
+          py: 0.5,
+          px: 0.5,
+          borderRadius: 1,
+          bgcolor: selectedRating === rating ? '#fff3e0' : 'transparent',
+          '&:hover': { bgcolor: '#fff3e0' },
+        }}
+      >
+        <Stack direction="row" spacing={0.25} sx={{ color: '#f59e0b', mr: 1 }}>
+          {[...Array(fullStars)].map((_, i) => (
+            <StarIcon key={i} sx={{ fontSize: 14 }} />
+          ))}
+          {hasHalf && <StarHalfIcon sx={{ fontSize: 14 }} />}
+          {[...Array(5 - Math.ceil(rating))].map((_, i) => (
+            <StarBorderIcon key={i} sx={{ fontSize: 14, color: '#d4d4d8' }} />
+          ))}
+        </Stack>
+        <Typography sx={{ fontSize: '0.875rem', color: '#52525b' }}>{rating} & up</Typography>
+      </Box>
+    );
+  };
 
   return (
     <Box className="filters-sidebar" sx={{ width: 280, flexShrink: 0 }}>
@@ -104,60 +142,88 @@ const FiltersSidebar: React.FC<FiltersSidebarProps> = ({ filters, onFiltersChang
             <TuneIcon sx={{ color: '#ffa424', fontSize: 20 }} />
             <Typography sx={{ fontWeight: 600, color: '#27272a' }}>Filters</Typography>
           </Stack>
-          {hasActiveFilters && (
-            <Button
-              size="small"
-              onClick={onClearAll}
-              sx={{
-                color: '#ffa424',
-                fontWeight: 600,
-                textTransform: 'none',
-                minWidth: 'auto',
-                p: 0,
-                '&:hover': { bgcolor: 'transparent', textDecoration: 'underline' },
-              }}
-            >
-              Clear All
-            </Button>
-          )}
+          <Button
+            size="small"
+            sx={{
+              color: '#ffa424',
+              fontWeight: 600,
+              textTransform: 'none',
+              minWidth: 'auto',
+              p: 0,
+              '&:hover': { bgcolor: 'transparent', textDecoration: 'underline' },
+            }}
+          >
+            Clear All
+          </Button>
         </Box>
 
         {/* Category */}
         <FilterSection title="Category">
-          <FormGroup>
-            {categories.map((cat) => (
-              <FormControlLabel
-                key={cat.id}
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={selectedCategories.includes(cat.id)}
-                    onChange={() => handleCategoryToggle(cat.id)}
-                    sx={{ color: '#d4d4d8', '&.Mui-checked': { color: '#ffa424' } }}
-                  />
-                }
-                label={<Typography sx={{ fontSize: '0.875rem', color: '#52525b' }}>{cat.label}</Typography>}
-                sx={{ ml: 0, mr: 0 }}
-              />
-            ))}
-          </FormGroup>
+          <FormGroup>{categories.map(renderFilterOption)}</FormGroup>
         </FilterSection>
 
         {/* Level */}
         <FilterSection title="Level">
+          <FormGroup>{levels.map(renderFilterOption)}</FormGroup>
+        </FilterSection>
+
+        {/* Price */}
+        <FilterSection title="Price">
+          <FormGroup sx={{ mb: 2 }}>
+            <FormControlLabel
+              control={<Checkbox size="small" sx={{ color: '#d4d4d8', '&.Mui-checked': { color: '#ffa424' } }} />}
+              label={
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                  <Typography sx={{ fontSize: '0.875rem', color: '#52525b' }}>Free</Typography>
+                  <Typography sx={{ fontSize: '0.75rem', color: '#a1a1aa', bgcolor: '#f4f4f5', px: 1, py: 0.25, borderRadius: 10 }}>87</Typography>
+                </Box>
+              }
+              sx={{ ml: 0, mr: 0, width: '100%', '& .MuiFormControlLabel-label': { width: '100%' } }}
+            />
+            <FormControlLabel
+              control={<Checkbox size="small" sx={{ color: '#d4d4d8', '&.Mui-checked': { color: '#ffa424' } }} />}
+              label={
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                  <Typography sx={{ fontSize: '0.875rem', color: '#52525b' }}>Paid</Typography>
+                  <Typography sx={{ fontSize: '0.75rem', color: '#a1a1aa', bgcolor: '#f4f4f5', px: 1, py: 0.25, borderRadius: 10 }}>626</Typography>
+                </Box>
+              }
+              sx={{ ml: 0, mr: 0, width: '100%', '& .MuiFormControlLabel-label': { width: '100%' } }}
+            />
+          </FormGroup>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+            <TextField size="small" value={`$${priceRange[0]}`} sx={{ width: 70, '& input': { textAlign: 'center', fontSize: '0.875rem' } }} />
+            <Typography sx={{ color: '#a1a1aa' }}>-</Typography>
+            <TextField size="small" value={`$${priceRange[1]}`} sx={{ width: 70, '& input': { textAlign: 'center', fontSize: '0.875rem' } }} />
+          </Stack>
+          <Slider
+            value={priceRange}
+            onChange={(_, newValue) => setPriceRange(newValue as number[])}
+            max={500}
+            sx={{ color: '#ffb74d' }}
+          />
+        </FilterSection>
+
+        {/* Duration */}
+        <FilterSection title="Duration">
+          <FormGroup>{durations.map(renderFilterOption)}</FormGroup>
+        </FilterSection>
+
+        {/* Rating */}
+        <FilterSection title="Rating">
+          <Stack spacing={0.5}>
+            {[4.5, 4.0, 3.5].map(renderRatingOption)}
+          </Stack>
+        </FilterSection>
+
+        {/* Features */}
+        <FilterSection title="Features">
           <FormGroup>
-            {levels.map((lvl) => (
+            {features.map((feature) => (
               <FormControlLabel
-                key={lvl.value}
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={selectedLevels.includes(lvl.value)}
-                    onChange={() => handleLevelToggle(lvl.value)}
-                    sx={{ color: '#d4d4d8', '&.Mui-checked': { color: '#ffa424' } }}
-                  />
-                }
-                label={<Typography sx={{ fontSize: '0.875rem', color: '#52525b' }}>{lvl.label}</Typography>}
+                key={feature}
+                control={<Checkbox size="small" sx={{ color: '#d4d4d8', '&.Mui-checked': { color: '#ffa424' } }} />}
+                label={<Typography sx={{ fontSize: '0.875rem', color: '#52525b' }}>{feature}</Typography>}
                 sx={{ ml: 0 }}
               />
             ))}

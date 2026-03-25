@@ -32,6 +32,7 @@ import {
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import KPICard from '../../components/superadmin/KPICard';
 import { transactionApi } from '../../services/main.api';
+
 import type { Transaction } from '../../types/types';
 
 const getStatusColor = (status: string) => {
@@ -98,14 +99,7 @@ const PaymentsPage: React.FC = () => {
     }),
   });
 
-  const rawTx = transactionsData?.data;
-  const transactions = (
-    Array.isArray(rawTx)
-      ? rawTx
-      : rawTx && typeof rawTx === 'object' && 'results' in rawTx
-        ? (rawTx as unknown as { results: Transaction[] }).results
-        : []
-  ) as Transaction[];
+  const transactions = (transactionsData?.data ?? []) as Transaction[];
 
   const kpis = useMemo(() => {
     const completed = transactions.filter(t => t.status === 'completed');
@@ -147,7 +141,7 @@ const PaymentsPage: React.FC = () => {
       const matchesSearch = !searchQuery ||
         tx.user_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         tx.transaction_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tx.organization_name.toLowerCase().includes(searchQuery.toLowerCase());
+        tx.user_name?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'All' || tx.status.toLowerCase() === statusFilter.toLowerCase();
       const matchesMethod = methodFilter === 'All' || tx.payment_method?.toLowerCase().includes(methodFilter.toLowerCase());
       const txDate = new Date(tx.created_at);
@@ -285,7 +279,7 @@ const PaymentsPage: React.FC = () => {
                         {tx.user_name}
                       </Typography>
                       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        {tx.organization_name}
+                        {tx.user_name ?? tx.organization_name}
                       </Typography>
                     </Box>
                   </TableCell>

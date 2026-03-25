@@ -1,19 +1,26 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { publicClientsApi } from '../../services/public.services';
 
 interface TrustedByProps {
   isMobile: boolean;
 }
 
 const TrustedBy: React.FC<TrustedByProps> = ({ isMobile }) => {
-  const companies = [
-    { name: 'GIZ', logoUrl: '/partners/logos/GIZ_Deutsche_Gesellschaft.png' },
-    { name: 'Irish Aid', logoUrl: '/partners/logos/Irish_Aid.png' },
-    { name: 'PSFU', logoUrl: '/partners/logos/PSFU.png' },
-    { name: 'SDF', logoUrl: '/partners/logos/SDF.png' },
-    { name: 'Sinohydro', logoUrl: '/partners/logos/Sinhydro.png' },
-    { name: 'TotalEnergies', logoUrl: '/partners/logos/TotalEnergies.png' },
-    { name: 'Uganda Breweries Limited', logoUrl: '/partners/logos/the_Uganda_Breweries_Limited.png' },
-    { name: 'VSO', logoUrl: '/partners/logos/the_VSO.png' },
+  const clientsData = useQuery({
+    queryKey: ['publicClients'],
+    queryFn: () => publicClientsApi.getClients().then(r => r.data),
+  });
+
+  const companies = clientsData.data?.results?.map((client: { name: string; logo_url: string }) => ({
+    name: client.name,
+    logoUrl: client.logo_url,
+  })) || [
+    { icon: 'building', name: 'Acme Corp' },
+    { icon: 'globe', name: 'Global Tech' },
+    { icon: 'rocket', name: 'Innovate' },
+    { icon: 'bolt', name: 'Future Dynamics' },
+    { icon: 'star', name: 'NextGen' },
   ];
 
   return (
@@ -56,29 +63,30 @@ const TrustedBy: React.FC<TrustedByProps> = ({ isMobile }) => {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                height: '60px',
-                width: isMobile ? '120px' : '160px',
-                transition: 'transform 0.3s ease',
+                gap: '8px',
+                color: '#a1a1aa',
+                fontSize: '1.25rem',
+                fontWeight: 700,
+                transition: 'color 0.3s',
                 cursor: 'pointer',
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.05)';
+                (e.currentTarget as HTMLDivElement).style.color = '#52525b';
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)';
+                (e.currentTarget as HTMLDivElement).style.color = '#a1a1aa';
               }}
             >
-              <img 
-                src={company.logoUrl} 
-                alt={company.name} 
-                title={company.name}
-                style={{ 
-                  maxHeight: '100%', 
-                  maxWidth: '100%', 
-                  objectFit: 'contain' 
-                }} 
-              />
+              {company.logoUrl ? (
+                <img 
+                  src={company.logoUrl} 
+                  alt={company.name} 
+                  style={{ height: '32px', objectFit: 'contain' }} 
+                />
+              ) : (
+                <i className="fas fa-building" style={{ fontSize: '1.5rem' }} />
+              )}
+              <span>{company.name}</span>
             </div>
           ))}
         </div>
