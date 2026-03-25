@@ -74,11 +74,11 @@ const LearnerCourseCatalogPage: React.FC = () => {
   };
 
   const handleEnroll = (course: any) => {
-    console.log('Enrolling in:', course.title);
+    navigate(`/learner/course/${course.id}`);
   };
 
   const handleCourseClick = (course: any) => {
-    navigate(`/course/${course.id}`);
+    navigate(`/learner/course/${course.id}`);
   };
 
   const handleCategoryClick = (category: any) => {

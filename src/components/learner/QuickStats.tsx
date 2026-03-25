@@ -3,7 +3,21 @@ import { Grid, Paper, Box, Typography, Skeleton } from '@mui/material';
 import { MenuBook, AccessTime, School, Star } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { enrollmentApi, certificateApi } from '../../services/learning.services';
-import type { PaginatedResponse } from '../../types/types';
+import { normalizeEnrollmentListResponse } from '../../hooks/useLearning';
+import type { Certificate, PaginatedResponse } from '../../types/types';
+
+function normalizeCertificateList(data: unknown): Certificate[] {
+  if (Array.isArray(data)) return data as Certificate[];
+  if (
+    data &&
+    typeof data === 'object' &&
+    'results' in data &&
+    Array.isArray((data as PaginatedResponse<Certificate>).results)
+  ) {
+    return (data as PaginatedResponse<Certificate>).results;
+  }
+  return [];
+}
 
 const QuickStats: React.FC = () => {
   const { data: enrollmentsData, isLoading: loadingEnrollments } = useQuery({
@@ -16,13 +30,15 @@ const QuickStats: React.FC = () => {
     queryFn: () => certificateApi.getAll().then(r => r.data),
   });
 
-  const enrollments = (enrollmentsData as PaginatedResponse<{ progress_percentage: number; time_spent_seconds?: number }> | undefined)?.results ?? [];
-  const activeCourses = enrollments.filter(e => e.progress_percentage < 100).length;
-  const totalHours = Math.round(enrollments.reduce((sum, e) => sum + (e.time_spent_seconds || 0), 0) / 3600);
-  const certificates = Array.isArray(certificatesData) ? certificatesData.length : (certificatesData as PaginatedResponse<unknown> | undefined)?.results?.length ?? 0;
-  const avgScore = enrollments.length > 0
-    ? (enrollments.reduce((sum, e) => sum + e.progress_percentage, 0) / enrollments.length / 20).toFixed(1)
-    : '0';
+  const enrollments = normalizeEnrollmentListResponse(enrollmentsData);
+  const activeCourses = enrollments.filter(e => Number(e.progress_percentage) < 100).length;
+  const certificates = normalizeCertificateList(certificatesData).length;
+  const avgProgress =
+    enrollments.length > 0
+      ? Math.round(
+          enrollments.reduce((sum, e) => sum + Number(e.progress_percentage || 0), 0) / enrollments.length,
+        )
+      : 0;
 
   const isLoading = loadingEnrollments || loadingCerts;
 
@@ -38,7 +54,7 @@ const QuickStats: React.FC = () => {
     },
     {
       label: 'Learning Hours',
-      value: String(totalHours),
+      value: '—',
       icon: <AccessTime />,
       bgcolor: '#f4f4f5',
       iconBg: '#a1a1aa',
@@ -55,8 +71,8 @@ const QuickStats: React.FC = () => {
       subColor: '#9a3412',
     },
     {
-      label: 'Avg. Score',
-      value: avgScore,
+      label: 'Avg. progress',
+      value: `${avgProgress}%`,
       icon: <Star />,
       bgcolor: '#f0fdf4',
       iconBg: '#86efac',

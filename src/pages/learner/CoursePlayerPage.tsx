@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useEffect, type ComponentProps } from 'react';
 import { useParams, useNavigate, useLoaderData } from 'react-router-dom';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { sessionProgressApi, discussionApi, discussionReplyApi, quizSubmissionApi } from '../../services/learning.services';
@@ -17,6 +17,23 @@ interface QuestionItem {
 import { useSessionAssetUrl } from '../../hooks/useUpload';
 import { useQuizDetail } from '../../hooks/useCatalogue';
 import ReactPlayer from 'react-player';
+
+/** Progress payload for ReactPlayer's `onProgress` (library typings merge with HTMLVideoElement and mis-type this as a native event). */
+type ReactPlayerProgressState = {
+  played: number;
+  playedSeconds: number;
+  loaded: number;
+  loadedSeconds: number;
+};
+
+/** Props for this page's player: correct `onProgress` callback plus legacy v2-style props still passed at runtime (`url`, `progressInterval`). */
+type ReactPlayerPropsWithProgress = Omit<ComponentProps<typeof ReactPlayer>, 'onProgress'> & {
+  onProgress?: (state: ReactPlayerProgressState) => void;
+  url?: string;
+  progressInterval?: number;
+};
+
+const ReactPlayerWithProgress = ReactPlayer as React.ComponentType<ReactPlayerPropsWithProgress>;
 import QuizPlayer from '../../components/learner/quiz-player/QuizPlayer';
 import {
   Box, Typography, IconButton, Button, Tabs, Tab, LinearProgress,
@@ -57,6 +74,21 @@ const groupSessions = (sessions: Session[]) => {
   ];
 };
 
+/** Normalize list-like API responses to a plain array.
+ * Supports:
+ * - `T[]`
+ * - `{ results: T[] }` paginated wrappers
+ * - `undefined | null` -> `[]`
+ */
+const normalizeList = <T,>(value: unknown): T[] => {
+  if (Array.isArray(value)) return value as T[];
+  if (value && typeof value === 'object') {
+    const maybeResults = (value as { results?: unknown }).results;
+    if (Array.isArray(maybeResults)) return maybeResults as T[];
+  }
+  return [];
+};
+
 /* ── Component ── */
 const CoursePlayerPage: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -73,7 +105,19 @@ const CoursePlayerPage: React.FC = () => {
 
   // Keep state synced via React Query
   const course = queryClient.getQueryData<CourseDetail>(queryKeys.courses.detail(Number(courseId))) || initialCourse;
-  const recordedProgress = queryClient.getQueryData<SessionProgress[]>(queryKeys.sessionProgress.all({ course: Number(courseId) })) || initialProgress;
+  const recordedProgressRaw =
+    queryClient.getQueryData<SessionProgress[] | { results: SessionProgress[] }>(
+      queryKeys.sessionProgress.all({ course: Number(courseId) })
+    ) || initialProgress;
+
+  const recordedProgressList: SessionProgress[] = useMemo(() => {
+    if (Array.isArray(recordedProgressRaw)) return recordedProgressRaw;
+    if (recordedProgressRaw && typeof recordedProgressRaw === 'object') {
+      const maybeResults = (recordedProgressRaw as { results?: unknown }).results;
+      if (Array.isArray(maybeResults)) return maybeResults as SessionProgress[];
+    }
+    return [];
+  }, [recordedProgressRaw]);
 
   const modules = useMemo(() => groupSessions(course?.sessions || []), [course?.sessions]);
   const allSessions = useMemo(() => modules.flatMap(m => m.sessions), [modules]);
@@ -89,7 +133,7 @@ const CoursePlayerPage: React.FC = () => {
   const [questionText, setQuestionText] = useState('');
 
   // Real completed sessions array based on backend progress
-  const completedSessions = recordedProgress.filter(p => p.is_completed).map(p => p.session);
+  const completedSessions = recordedProgressList.filter(p => p.is_completed).map(p => p.session);
   const progressPercent = totalSessions > 0 ? Math.round((completedSessions.length / totalSessions) * 100) : 0;
 
   const activeSession = allSessions.find(s => s.id === activeSessionId) || allSessions[0];
@@ -128,8 +172,8 @@ const CoursePlayerPage: React.FC = () => {
     createQuestionMutation.mutate({ title: questionText.trim(), content: questionText.trim() });
   };
 
-  const discussions = (discussionsData ?? []) as Discussion[];
-  const replies = (repliesData ?? []) as DiscussionReply[];
+  const discussions = normalizeList<Discussion>(discussionsData);
+  const replies = normalizeList<DiscussionReply>(repliesData);
 
   const questions: QuestionItem[] = discussions.map((d) => ({
     id: d.id,
@@ -147,14 +191,11 @@ const CoursePlayerPage: React.FC = () => {
 
   const storageKey = activeSessionId != null ? `video-pos-${activeSessionId}` : null;
 
-  const handleVideoProgress = useCallback(
-    (state: { playedSeconds: number }) => {
-      if (storageKey && state.playedSeconds > 0) {
-        localStorage.setItem(storageKey, String(Math.floor(state.playedSeconds)));
-      }
-    },
-    [storageKey],
-  );
+  const handleVideoProgress = useCallback((state: ReactPlayerProgressState) => {
+    if (storageKey && state.playedSeconds > 0) {
+      localStorage.setItem(storageKey, String(Math.floor(state.playedSeconds)));
+    }
+  }, [storageKey]);
 
   const handleVideoReady = useCallback(() => {
     if (seekedRef.current || !storageKey) return;
@@ -183,7 +224,7 @@ const CoursePlayerPage: React.FC = () => {
   };
 
   const toggleComplete = async (sessionId: number) => {
-    const progRecord = recordedProgress.find(p => p.session === sessionId) || {
+    const progRecord = recordedProgressList.find(p => p.session === sessionId) || {
         id: Date.now(),
         enrollment: 1,
         session: sessionId,
@@ -197,17 +238,24 @@ const CoursePlayerPage: React.FC = () => {
         duration_minutes: 0
     };
     
-    queryClient.setQueryData(queryKeys.sessionProgress.all({ course: Number(courseId) }), (oldData: SessionProgress[] = []) => {
-      const exists = oldData.find(p => p.session === sessionId);
+    queryClient.setQueryData(queryKeys.sessionProgress.all({ course: Number(courseId) }), (oldData: unknown) => {
+      const oldList: SessionProgress[] = Array.isArray(oldData)
+        ? oldData
+        : (oldData as { results?: unknown }).results && Array.isArray((oldData as { results?: unknown }).results)
+          ? (oldData as { results: SessionProgress[] }).results
+          : [];
+
+      const exists = oldList.find(p => p.session === sessionId);
       if (exists) {
-        return oldData.map(p => p.session === sessionId ? { ...p, is_completed: !p.is_completed } : p);
+        return oldList.map(p => p.session === sessionId ? { ...p, is_completed: !p.is_completed } : p);
       }
-      return [...oldData, { ...progRecord, is_completed: true }];
+
+      return [...oldList, { ...progRecord, is_completed: true }];
     });
   };
 
   // Notes: read from session progress `notes` field (stored as JSON array)
-  const activeProgressRecord = recordedProgress.find(p => p.session === activeSessionId);
+  const activeProgressRecord = recordedProgressList.find(p => p.session === activeSessionId);
 
   const notes: Note[] = useMemo(() => {
     if (!activeProgressRecord?.notes) return [];
@@ -233,8 +281,17 @@ const CoursePlayerPage: React.FC = () => {
 
     // Optimistic update
     if (activeProgressRecord) {
-      queryClient.setQueryData(queryKeys.sessionProgress.all({ course: Number(courseId) }), (old: SessionProgress[] = []) =>
-        old.map(p => p.id === activeProgressRecord.id ? { ...p, notes: JSON.stringify(updatedNotes) } : p),
+      queryClient.setQueryData(queryKeys.sessionProgress.all({ course: Number(courseId) }), (old: unknown) => {
+        const oldList: SessionProgress[] = Array.isArray(old)
+          ? old
+          : (old as { results?: unknown }).results && Array.isArray((old as { results?: unknown }).results)
+            ? (old as { results: SessionProgress[] }).results
+            : [];
+
+        return oldList.map(p =>
+          p.id === activeProgressRecord.id ? { ...p, notes: JSON.stringify(updatedNotes) } : p
+        );
+      },
       );
       saveNotesMutation.mutate({ progressId: activeProgressRecord.id, updatedNotes });
     }
@@ -429,18 +486,18 @@ const CoursePlayerPage: React.FC = () => {
                 </Box>
               ) : assetUrlData?.url || activeSession?.video_url ? (
                 <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
-                  {/* @ts-ignore ReactPlayer typing issues with React 19 */}
-                  {(ReactPlayer as any)({
-                    ref: playerRef,
-                    url: (assetUrlData?.url || activeSession?.video_url || '') as string,
-                    controls: true,
-                    width: "100%",
-                    height: "100%",
-                    style: { backgroundColor: '#000' },
-                    onProgress: handleVideoProgress,
-                    onReady: handleVideoReady,
-                    progressInterval: 3000,
-                  })}
+                  <ReactPlayerWithProgress
+                    // `react-player` ref type is not HTMLVideoElement; keep it permissive for this integration.
+                    ref={playerRef as any}
+                    url={(assetUrlData?.url || activeSession?.video_url || '') as string}
+                    controls
+                    width="100%"
+                    height="100%"
+                    style={{ backgroundColor: '#000' }}
+                    onProgress={handleVideoProgress}
+                    onReady={handleVideoReady}
+                    progressInterval={3000}
+                  />
                 </Box>
               ) : (
                 <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 3, textAlign: 'center' }}>

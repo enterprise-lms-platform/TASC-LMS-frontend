@@ -15,25 +15,8 @@ import '../../styles/LearnerDashboard.css';
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
 import { enrollmentApi } from '../../services/learning.services';
-import type { PaginatedResponse } from '../../types/types';
-
-interface EnrollmentResult {
-  id: number;
-  course: {
-    id: number;
-    title: string;
-    category?: { name?: string };
-    instructor_name?: string;
-    thumbnail?: string;
-    rating?: number;
-  };
-  progress_percentage: number;
-  completed_sessions: number;
-  total_sessions: number;
-  status?: string;
-  enrolled_at?: string;
-  updated_at?: string;
-}
+import { normalizeEnrollmentListResponse } from '../../hooks/useLearning';
+import type { Enrollment } from '../../types/types';
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   'In Progress': { bg: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6' },
@@ -72,35 +55,37 @@ const MyCoursesPage: React.FC = () => {
     queryFn: () => enrollmentApi.getAll({ page_size: 50 }).then(r => r.data),
   });
 
-  const enrollments: EnrollmentResult[] = (Array.isArray(enrollmentsRaw)
-    ? enrollmentsRaw
-    : (enrollmentsRaw as PaginatedResponse<EnrollmentResult> | undefined)?.results ?? []) as EnrollmentResult[];
+  const enrollments: Enrollment[] = useMemo(
+    () => normalizeEnrollmentListResponse(enrollmentsRaw),
+    [enrollmentsRaw],
+  );
 
   const courses = useMemo(() => enrollments.map(e => ({
-    id: String(e.course?.id ?? e.id),
-    title: e.course?.title || 'Untitled Course',
-    instructor: e.course?.instructor_name || 'Instructor',
-    category: e.course?.category?.name || 'General',
-    progress: e.progress_percentage ?? 0,
-    lessons: `${e.completed_sessions ?? 0}/${e.total_sessions ?? 0}`,
-    rating: e.course?.rating ?? 0,
-    status: getStatus(e.progress_percentage ?? 0),
-    lastAccessed: getTimeAgo(e.updated_at || e.enrolled_at),
-    image: e.course?.thumbnail || '',
+    id: String(e.course),
+    title: e.course_title || 'Untitled Course',
+    instructor: '—',
+    category: 'General',
+    progress: Number(e.progress_percentage) ?? 0,
+    progressLabel: `${Math.round(Number(e.progress_percentage) || 0)}% complete`,
+    status: getStatus(Number(e.progress_percentage) || 0),
+    lastAccessed: getTimeAgo(e.last_accessed_at || e.enrolled_at),
+    image: e.course_thumbnail || '',
+    sortKey: new Date(e.last_accessed_at || e.enrolled_at || 0).getTime(),
   })), [enrollments]);
 
   // Compute KPIs from real data
   const kpiData = useMemo(() => {
     const inProgress = courses.filter(c => c.status === 'In Progress').length;
     const completed = courses.filter(c => c.status === 'Completed').length;
-    const avgRating = courses.length > 0
-      ? (courses.reduce((sum, c) => sum + c.rating, 0) / courses.length).toFixed(1)
-      : '0';
+    const avgProgress =
+      courses.length > 0
+        ? Math.round(courses.reduce((sum, c) => sum + c.progress, 0) / courses.length)
+        : 0;
     return [
       { label: 'In Progress', value: String(inProgress), icon: <CourseIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
       { label: 'Completed', value: String(completed), icon: <CompletedIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
       { label: 'Total Courses', value: String(courses.length), icon: <TimeIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-      { label: 'Avg. Rating', value: avgRating, icon: <StarIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+      { label: 'Avg. progress', value: `${avgProgress}%`, icon: <StarIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
     ];
   }, [courses]);
 
@@ -116,7 +101,8 @@ const MyCoursesPage: React.FC = () => {
     // Sort
     if (sortBy === 'progress') result = [...result].sort((a, b) => b.progress - a.progress);
     else if (sortBy === 'name') result = [...result].sort((a, b) => a.title.localeCompare(b.title));
-    else if (sortBy === 'rating') result = [...result].sort((a, b) => b.rating - a.rating);
+    else if (sortBy === 'rating') result = [...result].sort((a, b) => a.title.localeCompare(b.title));
+    else if (sortBy === 'recent') result = [...result].sort((a, b) => b.sortKey - a.sortKey);
     return result;
   }, [courses, statusFilter, search, sortBy]);
 
@@ -313,7 +299,7 @@ const MyCoursesPage: React.FC = () => {
                           <Chip label={course.category} size="small" sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, borderRadius: '50px', bgcolor: 'rgba(0,0,0,0.04)' }} />
                         </Box>
                         <Typography color="text.disabled" sx={{ fontSize: '0.78rem', mb: 1 }}>
-                          {course.instructor} · {course.lessons} lessons · Last accessed {course.lastAccessed}
+                          {course.progressLabel} · Last accessed {course.lastAccessed}
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                           <LinearProgress
@@ -347,8 +333,8 @@ const MyCoursesPage: React.FC = () => {
                           }}
                         />
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-                          <StarIcon sx={{ fontSize: 14, color: '#f59e0b' }} />
-                          <Typography sx={{ fontSize: '0.78rem', fontWeight: 600 }}>{course.rating}</Typography>
+                          <StarIcon sx={{ fontSize: 14, color: 'text.disabled' }} />
+                          <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'text.disabled' }}>—</Typography>
                         </Box>
                         {course.status === 'In Progress' && (
                           <Button

@@ -11,23 +11,36 @@ import {
 } from '../services/learning.services';
 import { queryKeys } from './queryKeys';
 import type {
+  Enrollment,
   EnrollmentCreateRequest,
   SessionProgressUpdateRequest,
   DiscussionCreateRequest,
   DiscussionReplyCreateRequest,
   Discussion,
   DiscussionReply,
+  PaginatedResponse,
 } from '../types/types';
+
+/** Normalize GET /learning/enrollments/ whether the API returns a raw array or paginated { results }. */
+export function normalizeEnrollmentListResponse(data: unknown): Enrollment[] {
+  if (Array.isArray(data)) return data as Enrollment[];
+  if (
+    data &&
+    typeof data === 'object' &&
+    'results' in data &&
+    Array.isArray((data as PaginatedResponse<Enrollment>).results)
+  ) {
+    return (data as PaginatedResponse<Enrollment>).results;
+  }
+  return [];
+}
 
 // ── Enrollments ──
 
 export const useEnrollments = () =>
   useQuery({
     queryKey: queryKeys.enrollments.all,
-    queryFn: () => enrollmentApi.getAll().then((r) => {
-      const data = r.data;
-      return Array.isArray(data) ? data : (data as any).results ?? [];
-    }),
+    queryFn: () => enrollmentApi.getAll().then((r) => normalizeEnrollmentListResponse(r.data)),
   });
 
 export const useEnrollment = (id: number) =>
@@ -43,7 +56,10 @@ export const useCreateEnrollment = () => {
     mutationFn: (data: EnrollmentCreateRequest) =>
       enrollmentApi.create(data).then((r) => r.data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['enrollments'] });
+      qc.invalidateQueries({ queryKey: queryKeys.enrollments.all });
+      qc.invalidateQueries({ queryKey: ['learner', 'my-courses'] });
+      qc.invalidateQueries({ queryKey: ['learner', 'enrollments', 'active'] });
+      qc.invalidateQueries({ queryKey: ['learner', 'enrollments', 'stats'] });
     },
   });
 };

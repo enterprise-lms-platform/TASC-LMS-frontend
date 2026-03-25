@@ -11,7 +11,8 @@ interface Course {
   progress: number;
   lessonsCompleted: number;
   totalLessons: number;
-  rating: number;
+  /** Omitted when the API does not provide a course rating on enrollment. */
+  rating?: number;
   image?: string;
 }
 
@@ -118,7 +119,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
           </Box>
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.85rem' }}>
-              {course.lessonsCompleted}/{course.totalLessons}
+              {course.totalLessons > 0 ? `${course.lessonsCompleted}/${course.totalLessons}` : '—'}
             </Typography>
             <Typography variant="caption" color="text.disabled" sx={{ textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.05em' }}>
               Lessons
@@ -126,7 +127,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
           </Box>
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.85rem' }}>
-              {course.rating}
+              {course.rating != null ? course.rating : '—'}
             </Typography>
             <Typography variant="caption" color="text.disabled" sx={{ textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.05em' }}>
               Rating

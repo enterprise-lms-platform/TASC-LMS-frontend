@@ -182,18 +182,9 @@ const LearnerCourseDetailPage: React.FC = () => {
         },
       );
     } else {
-      navigate(`/checkout?courseId=${courseId}`, {
-        state: {
-          course: {
-            id: courseId,
-            title: course?.title || 'Course',
-            instructor: course?.instructor_name || 'Instructor',
-            duration: course?.duration_hours ? `${course.duration_hours} hours` : 'Self-paced',
-            level: course?.level || 'All Levels',
-            originalPrice: Number(course?.price) || 0,
-            currentPrice: Number(course?.discounted_price) || Number(course?.price) || 0,
-          },
-        },
+      // Phase 1: subscription unlocks catalog access; send learners to manage/activate subscription instead of checkout.
+      navigate('/learner/subscription', {
+        state: { fromCourseId: courseId, message: 'An active subscription is required to enroll in courses.' },
       });
     }
   };
