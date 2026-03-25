@@ -7,6 +7,7 @@ import type {
   Tag,
   CourseList,
   PublicCourseDetail,
+  PaginatedResponse,
   HealthCheckResponse,
 } from '../types/types';
 
@@ -26,7 +27,7 @@ export const healthApi = {
 export const publicCategoryApi = {
   //  List all active categories (no auth required)
   getAll: () =>
-    apiClient.get<{ count: number; results: Category[] }>(`${PUBLIC_PATH}/categories/`),
+    apiClient.get<PaginatedResponse<Category>>(`${PUBLIC_PATH}/categories/`),
 
   //  Get category details (no auth required)
   getById: (id: number) =>
@@ -51,8 +52,6 @@ export interface PublicCourseParams {
   category?: number;
   featured?: boolean;
   level?: 'beginner' | 'intermediate' | 'advanced' | 'all_levels';
-  search?: string;
-  ordering?: string;
   page?: number;
   page_size?: number;
 }
@@ -65,14 +64,19 @@ export interface PlatformStats {
 }
 
 export interface TrustedClient {
+  id: number;
   name: string;
   logo_url: string;
+  website_url: string;
+  is_active: boolean;
+  order: number;
+  created_at: string;
 }
 
 export const publicCourseApi = {
   // List published courses (no auth required)
   getAll: (params?: PublicCourseParams) =>
-    apiClient.get<{ count: number; results: CourseList[] }>(`${PUBLIC_PATH}/courses/`, {
+    apiClient.get<PaginatedResponse<CourseList>>(`${PUBLIC_PATH}/courses/`, {
       params,
     }),
 
@@ -94,24 +98,40 @@ export const publicStatsApi = {
 export const publicClientsApi = {
   // Get trusted client logos for landing page
   getClients: () =>
-    apiClient.get<TrustedClient[]>(`${PUBLIC_PATH}/clients/`),
+    apiClient.get<PaginatedResponse<TrustedClient>>(`${PUBLIC_PATH}/clients/`),
 };
 
-// PUBLIC SUBSCRIPTION PLANS (for landing page pricing)
+// BUSINESS PRICING
 
-export interface PublicSubscriptionPlan {
-  id: number;
+export interface PricingPlan {
+  id: string;
   name: string;
-  description?: string;
-  price: string;
-  currency: string;
-  billing_cycle: string;
-  features?: unknown;
-  status?: string;
+  price: number;
+  billing_period: string;
+  features: string[];
+  recommended?: boolean;
+  max_users?: number;
+  storage_gb?: number;
 }
 
-export const publicSubscriptionPlansApi = {
-  // List active subscription plans for public pricing display (no auth required)
+export const businessPricingApi = {
+  // Get business/enterprise pricing plans
+  getPlans: () =>
+    apiClient.get<PricingPlan[]>(`${PUBLIC_PATH}/pricing/business/`),
+};
+
+// FAQS
+
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+  category?: string;
+  order?: number;
+}
+
+export const faqApi = {
+  // Get FAQs for landing pages
   getAll: () =>
-    apiClient.get<{ count: number; results: PublicSubscriptionPlan[] }>(`${PUBLIC_PATH}/subscription-plans/`),
+    apiClient.get<FaqItem[]>(`${PUBLIC_PATH}/faqs/`),
 };

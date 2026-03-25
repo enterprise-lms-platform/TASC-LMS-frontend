@@ -99,13 +99,14 @@ const InstructorAnalyticsPage: React.FC = () => {
 
   const weeklyEngagement = useMemo(() => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return days.map((day) => ({
+    const baseHours = [2.5, 3.2, 2.8, 3.5, 2.1, 1.2, 0.8];
+    return days.map((day, idx) => ({
       day,
-      hours: Math.floor(Math.random() * 300) + 100,
+      hours: Math.round(baseHours[idx] * Math.max(instructorEnrollments.length / 10, 1)),
     }));
-  }, []);
+  }, [instructorEnrollments.length]);
 
-  const maxHours = Math.max(...weeklyEngagement.map((d) => d.hours));
+  const maxHours = Math.max(...weeklyEngagement.map((d) => d.hours), 1);
 
   const isLoading = coursesLoading || enrollmentsLoading;
 
