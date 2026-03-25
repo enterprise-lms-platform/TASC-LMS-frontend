@@ -375,7 +375,7 @@ const InstructorCoursesPage: React.FC = () => {
                 disabled={submitForApproval.isPending}
                 sx={{ textTransform: 'none', bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}
               >
-                {submitForApproval.isPending ? 'Submitting...' : 'Submit for Review'}
+                {submitForApproval.isPending ? 'Submitting...' : 'Submit for Approval'}
               </Button>
             </DialogActions>
           </Dialog>

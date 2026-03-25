@@ -29,7 +29,7 @@ import type { StatusItem } from '../../components/instructor/course-creation/Com
 import FormActions from '../../components/instructor/course-creation/FormActions';
 
 // API hooks
-import { useCreateCourse, usePartialUpdateCourse, useCourse, useSubmitCourseForApproval } from '../../hooks/useCatalogue';
+import { useCreateCourse, usePartialUpdateCourse, useCourse } from '../../hooks/useCatalogue';
 import { uploadApi } from '../../services/upload.services';
 import { getErrorMessage } from '../../utils/config';
 import type { CourseCreateRequest } from '../../types/types';
@@ -123,7 +123,6 @@ const CourseCreationPage: React.FC = () => {
   // API mutations
   const createCourse = useCreateCourse();
   const updateCourse = usePartialUpdateCourse();
-  const submitForApproval = useSubmitCourseForApproval();
 
   // Load existing course data for edit mode
   const {
@@ -415,6 +414,13 @@ const CourseCreationPage: React.FC = () => {
     }
   };
 
+  const handleSave = async () => {
+    const result = await saveCourse('draft');
+    if (result) {
+      setSnackbar({ open: true, message: 'Course saved.', severity: 'success' });
+    }
+  };
+
   const handleDiscard = () => {
     if (
       confirm('Are you sure you want to discard all changes? This action cannot be undone.')
@@ -431,17 +437,10 @@ const CourseCreationPage: React.FC = () => {
     }
   };
 
-  const handlePublish = async () => {
-    // Save course metadata, then submit for approval
+  const handleSaveAndBuildCurriculum = async () => {
     const result = await saveCourse('draft');
     if (result) {
-      try {
-        await submitForApproval.mutateAsync(result.id);
-        setSnackbar({ open: true, message: 'Course submitted for approval! An LMS Manager will review it.', severity: 'success' });
-        setTimeout(() => navigate(coursesPath), 1500);
-      } catch {
-        setSnackbar({ open: true, message: 'Course saved, but failed to submit for approval. You can submit later from My Courses.', severity: 'error' });
-      }
+      navigate(buildCoursePath(result.id, 'structure'));
     }
   };
 
@@ -502,7 +501,7 @@ const CourseCreationPage: React.FC = () => {
         onMobileMenuToggle={() => setMobileOpen(!mobileOpen)}
         onBack={handleBack}
         onPreview={handlePreview}
-        onPublish={handlePublish}
+        onPublish={handleSave}
       />
 
       {/* Main Content */}
@@ -619,7 +618,7 @@ const CourseCreationPage: React.FC = () => {
             onDiscard={handleDiscard}
             onPrevious={handlePrevious}
             onNext={handleNext}
-            onPublish={handlePublish}
+            onPublish={handleSaveAndBuildCurriculum}
           />
         )}
       </Box>

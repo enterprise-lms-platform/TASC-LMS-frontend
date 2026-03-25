@@ -26,6 +26,7 @@ import type { LessonType } from '../../components/instructor/course-structure/Le
 import { useAuth } from '../../hooks/useAuth';
 import { getErrorMessage } from '../../utils/config';
 import FeedbackSnackbar from '../../components/common/FeedbackSnackbar';
+import { CourseStatus } from '../../types/types';
 
 function formatDuration(totalSeconds: number): string {
   if (totalSeconds <= 0) return '';
@@ -236,6 +237,21 @@ const CourseStructurePage: React.FC = () => {
   );
 
   const courseTitle = courseData?.title ?? 'Course';
+
+  const publishDisabledReason = useMemo(() => {
+    if (courseLoading || !courseData) return 'Loading course…';
+    const status = courseData.status;
+    if (status === CourseStatus.DRAFT || status === CourseStatus.REJECTED) return '';
+    if (status === CourseStatus.PENDING_APPROVAL) return 'Already submitted and awaiting review.';
+    if (status === CourseStatus.PUBLISHED) return 'This course is already published.';
+    if (status === CourseStatus.ARCHIVED) return 'Archived courses cannot be submitted for approval.';
+    return 'Only draft or rejected courses can be submitted for approval.';
+  }, [courseLoading, courseData]);
+
+  const canSubmitForApproval = useMemo(() => {
+    if (courseLoading || !courseData) return false;
+    return courseData.status === CourseStatus.DRAFT || courseData.status === CourseStatus.REJECTED;
+  }, [courseLoading, courseData]);
 
   const handleMobileMenuToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -644,6 +660,10 @@ const CourseStructurePage: React.FC = () => {
 
   const handlePublish = () => {
     if (!id) return;
+    if (!canSubmitForApproval) {
+      setSnackError(publishDisabledReason || 'Only draft or rejected courses can be submitted for approval.');
+      return;
+    }
     if (!window.confirm('Submit this course for approval? It will be reviewed before publishing.')) return;
     submitForApproval.mutate(id, {
       onSuccess: () => {
@@ -678,6 +698,8 @@ const CourseStructurePage: React.FC = () => {
         onPreview={handlePreview}
         onSettings={handleSettings}
         onPublish={handlePublish}
+        publishDisabled={!canSubmitForApproval}
+        publishDisabledReason={publishDisabledReason}
       />
 
       {/* Main Content */}
