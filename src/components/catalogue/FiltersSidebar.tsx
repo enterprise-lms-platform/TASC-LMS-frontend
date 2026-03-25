@@ -46,7 +46,19 @@ interface FilterOption {
   id?: number;
 }
 
-const FiltersSidebar: React.FC = () => {
+/** Catalogue filter state (lifted on CourseCataloguePage; sidebar UI wiring is partial). */
+export interface FilterState {
+  categories: number[];
+  levels: string[];
+}
+
+export interface FiltersSidebarProps {
+  filters?: FilterState;
+  onFiltersChange?: (filters: FilterState) => void;
+  onClearAll?: () => void;
+}
+
+const FiltersSidebar: React.FC<FiltersSidebarProps> = ({ onClearAll }) => {
   const [priceRange, setPriceRange] = React.useState<number[]>([0, 200]);
   const [selectedRating, setSelectedRating] = React.useState<number | null>(null);
 
@@ -144,6 +156,7 @@ const FiltersSidebar: React.FC = () => {
           </Stack>
           <Button
             size="small"
+            onClick={() => onClearAll?.()}
             sx={{
               color: '#ffa424',
               fontWeight: 600,
