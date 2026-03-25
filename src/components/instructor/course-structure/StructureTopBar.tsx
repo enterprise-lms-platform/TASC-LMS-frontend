@@ -7,6 +7,7 @@ import {
   Button,
   IconButton,
   Chip,
+  Tooltip,
 } from '@mui/material';
 import {
   ArrowBack as BackIcon,
@@ -25,6 +26,8 @@ interface StructureTopBarProps {
   onPreview: () => void;
   onSettings: () => void;
   onPublish: () => void;
+  publishDisabled?: boolean;
+  publishDisabledReason?: string;
 }
 
 const StructureTopBar: React.FC<StructureTopBarProps> = ({
@@ -34,6 +37,8 @@ const StructureTopBar: React.FC<StructureTopBarProps> = ({
   onPreview,
   onSettings,
   onPublish,
+  publishDisabled = false,
+  publishDisabledReason,
 }) => {
   return (
     <AppBar
@@ -98,9 +103,23 @@ const StructureTopBar: React.FC<StructureTopBarProps> = ({
           >
             Settings
           </Button>
-          <Button variant="contained" startIcon={<PublishIcon />} onClick={onPublish}>
-            Publish Changes
-          </Button>
+          <Tooltip
+            title={publishDisabled ? (publishDisabledReason ?? 'Not available') : ''}
+            disableHoverListener={!publishDisabled}
+            disableFocusListener={!publishDisabled}
+            disableTouchListener={!publishDisabled}
+          >
+            <span>
+              <Button
+                variant="contained"
+                startIcon={<PublishIcon />}
+                onClick={onPublish}
+                disabled={publishDisabled}
+              >
+                Submit for Approval
+              </Button>
+            </span>
+          </Tooltip>
         </Box>
       </Toolbar>
     </AppBar>
