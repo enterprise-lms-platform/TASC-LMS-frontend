@@ -69,7 +69,7 @@ const AllUsersPage: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
 
-  const { data: usersData, isLoading } = useQuery({
+  const { data: usersData } = useQuery({
     queryKey: ['users', roleFilter, statusFilter, searchQuery],
     queryFn: () => usersApi.getAll({
       role: roleFilter === 'All' ? undefined : roleFilter.toLowerCase(),
