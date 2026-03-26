@@ -285,6 +285,8 @@ const ContentUploadPage: React.FC = () => {
   const completedFiles = fileEntries.filter((e) => e.status === 'complete');
   const errorFiles = fileEntries.filter((e) => e.status === 'error');
   const hasAnyComplete = completedFiles.length > 0;
+  const isExternalValid = contentType === 'video' && contentSource === 'external' && externalVideoUrl.trim().length > 0;
+  const canComplete = hasAnyComplete || isExternalValid;
   const isStillUploading = uploadingFiles.length > 0;
   const typeInfo = typeLabels[contentType];
 
@@ -509,11 +511,11 @@ const ContentUploadPage: React.FC = () => {
 
       {/* Footer */}
       <UploadFooter
-        uploadCount={completedFiles.length}
+        uploadCount={contentSource === 'external' && isExternalValid ? 1 : completedFiles.length}
         onCancel={handleCancel}
         onAddMore={() => { }}
         onComplete={handleComplete}
-        disabled={completing || isStillUploading || !hasAnyComplete}
+        disabled={completing || isStillUploading || !canComplete}
         savingLabel={completing ? 'Saving\u2026' : isStillUploading ? 'Uploading\u2026' : undefined}
       />
 
