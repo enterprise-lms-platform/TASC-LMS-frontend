@@ -1,6 +1,6 @@
 # TASC LMS Frontend — Pending Tasks
 
-**Last updated:** 26 March 2026
+**Last updated:** 27 March 2026
 **Repo:** `TASC-LMS-frontend`
 
 ---
@@ -29,18 +29,11 @@
 
 ### HIGH PRIORITY
 
-#### 1. Bulk Import CSV Format Mismatch
+#### ~~1. Bulk Import CSV Format Mismatch~~ ✅ DONE [26 Mar]
 
 **File:** `src/pages/manager/ManagerBulkImportPage.tsx`
 
-**Problem:** Frontend exports CSV with format that doesn't match backend.
-
-Frontend exports: `full_name, email_address, user_role, department, manager_email`  
-Backend expects: `email, first_name, last_name, role, department, phone_number`
-
-**Impact:** Bulk import will fail for any CSV uploaded from the page.
-
-**Fix:** Update CSV export format or coordinate with backend to handle both formats.
+**Fix:** Backend updated to accept both frontend CSV format (`full_name`, `email_address`, `user_role`) and standard format. Manager-imported users auto-scoped to manager's organization.
 
 ---
 
@@ -119,27 +112,19 @@ Backend expects: `email, first_name, last_name, role, department, phone_number`
 
 ### MEDIUM PRIORITY — Analytics Pages
 
-#### 8. Manager Analytics Page — Charts
+#### ~~8. Manager Analytics Page — Charts~~ ✅ DONE [26 Mar]
 
 **File:** `src/pages/manager/ManagerAnalyticsPage.tsx`
 
-**Status:** KPIs wired to real API. Charts still use mock data.
-
-**Reason:** No backend aggregation endpoints for time-series data.
-
-**Options:** 
-1. Frontend computes from raw enrollments data (heavy)
-2. Backend adds analytics aggregation endpoints
+**Status:** ✅ KPIs and charts wired to `useLearningStats`, `useEnrollmentTrends`, `useCoursesByCategory`, `useRevenueTrends` hooks.
 
 ---
 
-#### 9. Instructor Analytics Page — Charts
+#### ~~9. Instructor Analytics Page — Charts~~ ✅ DONE [26 Mar]
 
 **File:** `src/pages/instructor/InstructorAnalyticsPage.tsx`
 
-**Status:** KPIs wired to real API. Charts still use mock data.
-
-**Same as Manager Analytics — no time-series backend.**
+**Status:** ✅ KPIs wired to `useLearningStats` hook. Course performance computed from real enrollment data.
 
 ---
 
@@ -175,16 +160,11 @@ Backend expects: `email, first_name, last_name, role, department, phone_number`
 
 ---
 
-#### 13. Manager Bulk Import Page
+#### ~~13. Manager Bulk Import Page~~ ✅ DONE [26 Mar]
 
 **File:** `src/pages/manager/ManagerBulkImportPage.tsx`
 
-**Status:** Column mapping and import history still hardcoded.
-
-**Fix:** 
-1. Fetch CSV template from backend (has `csv_template` endpoint)
-2. Fetch real import history (no history endpoint — needs backend)
-3. Wire actual upload functionality
+**Status:** ✅ Upload wired to backend. Backend accepts both CSV formats. Hardcoded mock import history removed.
 
 ---
 
@@ -253,8 +233,8 @@ Backend expects: `email, first_name, last_name, role, department, phone_number`
 ### Dashboard Pages
 | Page | File | Priority |
 |------|------|----------|
-| Manager Analytics | `pages/manager/ManagerAnalyticsPage.tsx` | MEDIUM (charts) |
-| Instructor Analytics | `pages/instructor/InstructorAnalyticsPage.tsx` | MEDIUM (charts) |
+| ~~Manager Analytics~~ | `pages/manager/ManagerAnalyticsPage.tsx` | ✅ DONE |
+| ~~Instructor Analytics~~ | `pages/instructor/InstructorAnalyticsPage.tsx` | ✅ DONE |
 | Superadmin Analytics | `pages/superadmin/AnalyticsPage.tsx` | MEDIUM |
 
 ---
@@ -262,7 +242,7 @@ Backend expects: `email, first_name, last_name, role, department, phone_number`
 ## Implementation Plan
 
 ### Sprint 1: Critical Fixes
-1. Fix CSV format mismatch in bulk import
+1. ~~Fix CSV format mismatch in bulk import~~ ✅
 2. Wire marketing pages to existing APIs
 
 ### Sprint 2: Data Completeness
@@ -270,7 +250,7 @@ Backend expects: `email, first_name, last_name, role, department, phone_number`
 4. Remove remaining mock fallbacks
 
 ### Sprint 3: Polish
-5. Analytics charts — either backend endpoints or frontend aggregation
+5. ~~Analytics charts — backend endpoints~~ ✅ (Manager + Instructor done; Superadmin remaining)
 6. Security page wiring
 7. Remove all console.log statements
 
@@ -284,8 +264,12 @@ Backend expects: `email, first_name, last_name, role, department, phone_number`
 | Trusted Clients | ⚠️ Stubbed | `/api/v1/public/clients/` |
 | Storage Quota | ✅ Working | `/api/v1/uploads/quota/` |
 | Grade Statistics | ✅ Working | `/api/v1/learning/submissions/statistics/` |
-| Bulk Import | ✅ Working (format mismatch) | `/api/v1/superadmin/users/bulk_import/` |
-| CSV Template | ✅ Working | `/api/v1/superadmin/users/csv_template/` |
+| Bulk Import | ✅ Working (both formats) | `/api/v1/admin/users/bulk_import/` |
+| CSV Template | ✅ Working | `/api/v1/admin/users/csv_template/` |
+| Enrollment Trends | ✅ Working | `/api/v1/learning/analytics/enrollment-trends/` |
+| Learning Stats | ✅ Working | `/api/v1/learning/analytics/learning-stats/` |
+| Revenue Trends | ✅ Working | `/api/v1/payments/analytics/revenue/` |
+| Courses by Category | ✅ Working | `/api/v1/catalogue/analytics/courses-by-category/` |
 | Reports | ✅ Working (async) | `/api/v1/learning/reports/` |
 
 ---
@@ -321,3 +305,7 @@ Backend expects: `email, first_name, last_name, role, department, phone_number`
 | 26 Mar 2026 | CoursePlayerPage Q&A: Pin/Lock badges + moderator action buttons wired to `discussionApi.pin()`/`lock()` |
 | 26 Mar 2026 | LearnerAssignmentsPage: Backend validation errors (max attempts, file types) parsed and shown as toast messages |
 | 26 Mar 2026 | `DiscussionParams` search param added, `SubmissionSerializer` `attempt_number` field exposed |
+| 26 Mar 2026 | Bulk Import CSV format mismatch fixed — backend accepts both frontend and standard CSV formats |
+| 26 Mar 2026 | Manager Analytics charts wired to `useEnrollmentTrends`, `useLearningStats`, `useCoursesByCategory`, `useRevenueTrends` |
+| 26 Mar 2026 | Instructor Analytics KPIs wired to `useLearningStats`; course performance from real enrollments |
+| 26 Mar 2026 | Finance `RevenueChart` wired to `useRevenueTrends` — replaces hardcoded bar chart data |
