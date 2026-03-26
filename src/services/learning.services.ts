@@ -176,6 +176,36 @@ export const discussionApi = {
 
 // DISCUSSION REPLIES
 
+export interface DiscussionReplyData {
+  content: string;
+}
+
+export interface EnrollmentTrends {
+  labels: string[];
+  enrollments: number[];
+  completions: number[];
+}
+
+export interface LearningStats {
+  total_learners: number;
+  active_learners: number;
+  avg_completion_rate: number;
+  total_courses_in_progress: number;
+  total_completed_courses: number;
+  avg_quiz_score: number;
+}
+
+export interface CoursesByCategory {
+  name: string;
+  count: number;
+}
+
+export interface RevenueTrends {
+  labels: string[];
+  revenue: number[];
+  total_revenue: number;
+}
+
 export interface DiscussionReplyParams {
   discussion?: number;
 }
@@ -253,6 +283,25 @@ export const submissionApi = {
   //  Delete a submission (usually only drafts)
   delete: (id: number) =>
     apiClient.delete(`${BASE_PATH}/submissions/${id}/`),
+
+  // Verify a submission (instructor/admin)
+  verifySubmission: (id: number, is_verified: boolean) =>
+    apiClient.post<Submission>(`${BASE_PATH}/submissions/${id}/verify/`, { is_verified }),
+};
+
+// ANALYTICS API
+export const analyticsApi = {
+  getEnrollmentTrends: (months: number = 6) =>
+    apiClient.get<EnrollmentTrends>(`${BASE_PATH}/analytics/enrollment-trends/`, { params: { months } }),
+
+  getLearningStats: () =>
+    apiClient.get<LearningStats>(`${BASE_PATH}/analytics/learning-stats/`),
+
+  getCoursesByCategory: () =>
+    apiClient.get<CoursesByCategory[]>(`/api/v1/catalogue/analytics/courses-by-category/`),
+
+  getRevenueTrends: (months: number = 6) =>
+    apiClient.get<RevenueTrends>(`/api/v1/payments/analytics/revenue/`, { params: { months } }),
 };
 
 // QUIZ SUBMISSIONS
@@ -381,4 +430,34 @@ export const managerGradesApi = {
     apiClient.post(`${BASE_PATH}/submissions/bulk_grade/`, { submissions: data }),
 };
 
+// --- Custom Hooks ---
+import { useQuery } from '@tanstack/react-query';
+
+export const useEnrollmentTrends = (months: number = 6) => {
+  return useQuery({
+    queryKey: ['analytics', 'enrollments', months],
+    queryFn: () => analyticsApi.getEnrollmentTrends(months).then(res => res.data),
+  });
+};
+
+export const useLearningStats = () => {
+  return useQuery({
+    queryKey: ['analytics', 'stats'],
+    queryFn: () => analyticsApi.getLearningStats().then(res => res.data),
+  });
+};
+
+export const useCoursesByCategory = () => {
+  return useQuery({
+    queryKey: ['analytics', 'categories'],
+    queryFn: () => analyticsApi.getCoursesByCategory().then(res => res.data),
+  });
+};
+
+export const useRevenueTrends = (months: number = 6) => {
+  return useQuery({
+    queryKey: ['analytics', 'revenue', months],
+    queryFn: () => analyticsApi.getRevenueTrends(months).then(res => res.data),
+  });
+};
 

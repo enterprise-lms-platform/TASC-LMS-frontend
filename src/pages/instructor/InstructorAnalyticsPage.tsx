@@ -32,6 +32,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
 import { courseApi, enrollmentApi, submissionApi } from '../../services/main.api';
+import { useLearningStats } from '../../services/learning.services';
 
 const InstructorAnalyticsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -48,14 +49,10 @@ const InstructorAnalyticsPage: React.FC = () => {
     queryFn: () => enrollmentApi.getAll().then(r => r.data),
   });
 
-  const { data: submissionsData } = useQuery({
-    queryKey: ['submissions', 'instructor'],
-    queryFn: () => submissionApi.getAll().then(r => r.data),
-  });
+  const { data: stats } = useLearningStats();
 
   const courses = (coursesData?.results ?? []) as Array<{ id: number; title: string; status: string }>;
   const enrollments = (enrollmentsData ?? []) as Array<{ course: number; completed_at: string | null | undefined }>;
-  const submissions = (submissionsData ?? []) as Array<{ grade: number | null | undefined }>;
 
   const instructorCourseIds = useMemo(() => new Set(courses.map((c) => c.id)), [courses]);
 
@@ -64,22 +61,13 @@ const InstructorAnalyticsPage: React.FC = () => {
   }, [enrollments, instructorCourseIds]);
 
   const kpis = useMemo(() => {
-    const totalEnrollments = instructorEnrollments.length;
-    const completedEnrollments = instructorEnrollments.filter((e) => e.completed_at).length;
-    const completionRate = totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0;
-
-    const gradedSubmissions = submissions.filter((s) => s.grade !== null && s.grade !== undefined);
-    const avgScore = gradedSubmissions.length > 0
-      ? Math.round(gradedSubmissions.reduce((sum, s) => sum + (s.grade ?? 0), 0) / gradedSubmissions.length)
-      : 0;
-
     return [
-      { label: 'Total Enrollments', value: totalEnrollments.toLocaleString(), icon: <PeopleIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-      { label: 'Course Completion Rate', value: `${completionRate}%`, icon: <SchoolIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
-      { label: 'Average Quiz Score', value: avgScore > 0 ? `${avgScore}%` : '—', icon: <AssignmentIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+      { label: 'Total Enrollments', value: (stats?.total_learners || 0).toLocaleString(), icon: <PeopleIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+      { label: 'Course Completion Rate', value: `${stats?.avg_completion_rate || 0}%`, icon: <SchoolIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+      { label: 'Average Quiz Score', value: stats?.avg_quiz_score ? `${stats.avg_quiz_score}%` : '—', icon: <AssignmentIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
       { label: 'Published Courses', value: courses.filter((c) => c.status === 'published').length.toString(), icon: <TimerIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
     ];
-  }, [instructorEnrollments, courses, submissions]);
+  }, [stats, courses]);
 
   const coursePerformance = useMemo(() => {
     return courses.slice(0, 5).map((course) => {

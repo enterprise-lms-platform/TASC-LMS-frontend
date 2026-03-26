@@ -5,20 +5,18 @@ import {
   FilterList as FilterIcon,
   MoreVert as MoreIcon,
 } from '@mui/icons-material';
-
-// Monthly revenue data for bar chart
-const monthlyRevenue = [
-  { month: 'Jul', amount: 142000 },
-  { month: 'Aug', amount: 158000 },
-  { month: 'Sep', amount: 134000 },
-  { month: 'Oct', amount: 176000 },
-  { month: 'Nov', amount: 168000 },
-  { month: 'Dec', amount: 192000 },
-  { month: 'Jan', amount: 186000 },
-];
-const maxRevenue = Math.max(...monthlyRevenue.map((d) => d.amount));
+import { useRevenueTrends } from '../../services/learning.services';
 
 const RevenueChart: React.FC = () => {
+  const { data: trends } = useRevenueTrends(6);
+
+  const monthlyRevenue = trends ? trends.labels.map((label, i) => ({
+    month: label,
+    amount: trends.revenue[i] || 0
+  })) : [];
+
+  const maxRevenue = Math.max(...monthlyRevenue.map((d) => d.amount), 1);
+
   return (
     <Paper
       elevation={0}

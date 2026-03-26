@@ -67,12 +67,7 @@ const ManagerBulkImportPage: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<BulkImportResult | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [importHistory, setImportHistory] = useState<ImportHistoryEntry[]>([
-    { id: '1', fileName: 'engineering_team_q1.csv', records: 156, successful: 152, failed: 4, date: 'Mar 6, 2026', status: 'Completed' },
-    { id: '2', fileName: 'new_hires_march.csv', records: 42, successful: 42, failed: 0, date: 'Mar 1, 2026', status: 'Completed' },
-    { id: '3', fileName: 'contractor_batch.csv', records: 28, successful: 0, failed: 28, date: 'Feb 22, 2026', status: 'Failed' },
-    { id: '4', fileName: 'sales_onboarding.csv', records: 89, successful: 87, failed: 2, date: 'Feb 15, 2026', status: 'Completed' },
-  ]);
+  const [importHistory, setImportHistory] = useState<ImportHistoryEntry[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 

@@ -24,6 +24,7 @@ import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
 import { courseApi, categoryApi, enrollmentApi, certificateApi } from '../../services/main.api';
+import { useEnrollmentTrends, useLearningStats, useCoursesByCategory } from '../../services/learning.services';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -88,11 +89,6 @@ const ManagerAnalyticsPage: React.FC = () => {
     queryFn: () => courseApi.getAll({ limit: 100 }).then(r => r.data),
   });
 
-  const { data: categoriesData } = useQuery({
-    queryKey: ['categories', 'analytics'],
-    queryFn: () => categoryApi.getAll().then(r => r.data),
-  });
-
   const { data: enrollmentsData } = useQuery({
     queryKey: ['enrollments', 'analytics'],
     queryFn: () => enrollmentApi.getAll().then(r => r.data),
@@ -103,8 +99,15 @@ const ManagerAnalyticsPage: React.FC = () => {
     queryFn: () => certificateApi.getAll().then(r => r.data),
   });
 
+  // New Analytics API Hooks
+  const monthsMap: Record<string, number> = {
+    '7days': 1, '30days': 1, '90days': 3, '6months': 6, 'year': 12
+  };
+  const { data: trends } = useEnrollmentTrends(monthsMap[timePeriod] || 6);
+  const { data: stats } = useLearningStats();
+  const { data: categoryStats } = useCoursesByCategory();
+
   const courses = (coursesData?.results ?? []) as CourseWithCategory[];
-  const categories = (categoriesData ?? []) as Array<{ id: number; name: string }>;
   const enrollments = (enrollmentsData ?? []) as EnrollmentWithDate[];
   const certificates = (certificatesData ?? []) as Array<{ id: number }>;
 
@@ -125,78 +128,38 @@ const ManagerAnalyticsPage: React.FC = () => {
   }, [enrollments, timePeriod]);
 
   const kpis = useMemo(() => {
-    const totalCourses = courses.length;
-    const activeCourses = courses.filter((c) => c.status === 'published').length;
-    const totalEnrollments = filteredEnrollments.length;
-    const completedEnrollments = filteredEnrollments.filter((e) => e.completed_at).length;
-    const completionRate = totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0;
-    const enrollmentRate = totalCourses > 0 ? Math.round((totalEnrollments / totalCourses) * 100) : 0;
-    
     return [
-      { label: 'Total Users', value: totalEnrollments.toLocaleString(), icon: <UsersIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-      { label: 'Active Courses', value: activeCourses.toString(), icon: <CoursesIcon />, bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f', subColor: '#1e40af' },
-      { label: 'Enrollment Rate', value: `${enrollmentRate}%`, icon: <EnrollmentIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-      { label: 'Avg. Completion', value: `${completionRate}%`, icon: <CompletionIcon />, bgcolor: '#fef9c3', iconBg: '#facc15', color: '#713f12', subColor: '#854d0e' },
+      { label: 'Total Users', value: (stats?.total_learners || 0).toLocaleString(), icon: <UsersIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+      { label: 'Active Courses', value: courses.filter((c) => c.status === 'published').length.toString(), icon: <CoursesIcon />, bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f', subColor: '#1e40af' },
+      { label: 'Courses In Progress', value: (stats?.total_courses_in_progress || 0).toString(), icon: <EnrollmentIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+      { label: 'Avg. Completion', value: `${stats?.avg_completion_rate || 0}%`, icon: <CompletionIcon />, bgcolor: '#fef9c3', iconBg: '#facc15', color: '#713f12', subColor: '#854d0e' },
     ];
-  }, [courses, filteredEnrollments]);
+  }, [courses, stats]);
 
   const monthlyEnrollments = useMemo(() => {
-    const { start, end } = getDateRange(timePeriod);
-    const monthlyData: Record<string, number> = {};
-    
-    const current = new Date(start);
-    while (current <= end) {
-      const monthKey = getMonthName(current);
-      if (!monthlyData[monthKey]) {
-        monthlyData[monthKey] = 0;
-      }
-      current.setMonth(current.getMonth() + 1);
-    }
-    
-    filteredEnrollments.forEach(e => {
-      const enrolledDate = e.enrolled_at ? new Date(e.enrolled_at) : null;
-      if (enrolledDate && enrolledDate >= start && enrolledDate <= end) {
-        const monthKey = getMonthName(enrolledDate);
-        if (monthlyData[monthKey] !== undefined) {
-          monthlyData[monthKey]++;
-        }
-      }
-    });
-    
-    return Object.entries(monthlyData).map(([month, count]) => ({ month, count }));
-  }, [filteredEnrollments, timePeriod]);
+    if (!trends) return [];
+    return trends.labels.map((label, i) => ({
+      month: label,
+      count: trends.enrollments[i] || 0,
+      completions: trends.completions[i] || 0
+    }));
+  }, [trends]);
 
   const maxEnrollment = useMemo(() => {
-    const max = Math.max(...monthlyEnrollments.map(d => d.count), 1);
+    const max = Math.max(...monthlyEnrollments.map(d => Math.max(d.count, d.completions)), 1);
     return max;
   }, [monthlyEnrollments]);
 
   const categoryBreakdown = useMemo(() => {
-    const categoryStats: Record<number, { name: string; enrollments: number }> = {};
-    
-    filteredEnrollments.forEach(e => {
-      const course = courseMap.get(e.course);
-      if (course?.category) {
-        const catId = course.category.id;
-        if (!categoryStats[catId]) {
-          categoryStats[catId] = { name: course.category.name, enrollments: 0 };
-        }
-        categoryStats[catId].enrollments++;
-      }
-    });
-    
-    const total = Object.values(categoryStats).reduce((sum, cat) => sum + cat.enrollments, 0);
-    
-    return Object.entries(categoryStats)
-      .sort((a, b) => b[1].enrollments - a[1].enrollments)
-      .slice(0, 5)
-      .map(([id, data], idx) => ({
-        name: data.name,
-        enrollments: data.enrollments,
-        percentage: total > 0 ? Math.round((data.enrollments / total) * 100) : 0,
-        color: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'][idx % 5],
-      }));
-  }, [filteredEnrollments, courseMap]);
+    if (!categoryStats) return [];
+    const total = categoryStats.reduce((sum, cat) => sum + cat.count, 0);
+    return categoryStats.map((cat, idx) => ({
+      name: cat.name,
+      enrollments: cat.count,
+      percentage: total > 0 ? Math.round((cat.count / total) * 100) : 0,
+      color: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'][idx % 5],
+    }));
+  }, [categoryStats]);
 
   const topCourses = useMemo(() => {
     const courseStats: Record<string, { enrollments: number; completed: number }> = {};
