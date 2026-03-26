@@ -19,7 +19,7 @@ import type { ModuleData } from '../../components/instructor/course-structure/Mo
 import type { LessonData } from '../../components/instructor/course-structure/LessonItem';
 import type { SaveStatus } from '../../components/instructor/course-structure/StructureFooter';
 import type { CourseHeaderData } from '../../components/instructor/course-structure/CourseHeaderCard';
-import { useCourse, useSessions, useCreateSession, useModules, useCreateModule, usePartialUpdateSession, usePartialUpdateModule, useSubmitCourseForApproval } from '../../hooks/useCatalogue';
+import { useCourse, useSessions, useCreateSession, useModules, useCreateModule, usePartialUpdateSession, usePartialUpdateModule, useSubmitCourseForApproval, useReorderModules } from '../../hooks/useCatalogue';
 import { sessionApi } from '../../services/catalogue.services';
 import type { SessionType, Session, Module } from '../../types/types';
 import type { LessonType } from '../../components/instructor/course-structure/LessonItem';
@@ -205,6 +205,7 @@ const CourseStructurePage: React.FC = () => {
 
   const updateSession = usePartialUpdateSession();
   const updateModule = usePartialUpdateModule();
+  const reorderModules = useReorderModules();
   const submitForApproval = useSubmitCourseForApproval();
 
   const { data: sessions } = useSessions(id ? { course: id } : undefined);
@@ -326,11 +327,10 @@ const CourseStructurePage: React.FC = () => {
     // Persist new order
     setSaveStatus('saving');
     try {
-      await Promise.all(
-        reordered.map((mod, i) =>
-          mod.order !== i ? updateModule.mutateAsync({ id: mod.id, data: { order: i } }) : null
-        ).filter(Boolean)
-      );
+      await reorderModules.mutateAsync({
+        course: id,
+        order: reordered.map((mod, i) => ({ id: Number(mod.id), order: i })),
+      });
       setSaveStatus('saved');
     } catch {
       setSaveStatus('saved');

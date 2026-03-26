@@ -163,6 +163,9 @@ export const moduleApi = {
 
   delete: (id: number) =>
     apiClient.delete(`${BASE_PATH}/modules/${id}/`),
+
+  reorder: (data: { course: number; order: { id: number; order: number }[] }) =>
+    apiClient.post<{ updated: number }>(`${BASE_PATH}/modules/reorder/`, data),
 };
 
 // SESSIONS

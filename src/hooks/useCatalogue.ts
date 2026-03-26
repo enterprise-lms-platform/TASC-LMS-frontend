@@ -238,6 +238,18 @@ export const usePartialUpdateModule = () => {
   });
 };
 
+export const useReorderModules = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { course: number; order: { id: number; order: number }[] }) =>
+      moduleApi.reorder(data).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['modules'] });
+      qc.invalidateQueries({ queryKey: ['courses'] });
+    },
+  });
+};
+
 export const useDeleteModule = () => {
   const qc = useQueryClient();
   return useMutation({
