@@ -13,6 +13,8 @@ interface QuestionItem {
   content: string;
   reply_count: number;
   created_at: string;
+  is_pinned: boolean;
+  is_locked: boolean;
 }
 import { useSessionAssetUrl } from '../../hooks/useUpload';
 import { useQuizDetail } from '../../hooks/useCatalogue';
@@ -50,7 +52,9 @@ import {
   Download as DownloadIcon, ThumbUpAltOutlined as LikeIcon,
   Send as SendIcon, NoteAdd as NoteIcon,
   MenuOpen as MenuOpenIcon, Menu as MenuIcon,
+  PushPin as PinIcon, Lock as LockIcon,
 } from '@mui/icons-material';
+import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/LearnerDashboard.css';
 
 /* ── Types ── */
@@ -96,6 +100,8 @@ const CoursePlayerPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const isModeratorRole = user?.role === 'instructor' || user?.role === 'lms_manager' || user?.role === 'tasc_admin';
 
   // Load backend data from the router loader
   const { course: initialCourse, progress: initialProgress } = useLoaderData() as {
@@ -167,6 +173,16 @@ const CoursePlayerPage: React.FC = () => {
     },
   });
 
+  // Q&A: pin/lock mutations (instructor/admin only)
+  const pinMutation = useMutation({
+    mutationFn: (id: number) => discussionApi.pin(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['discussions', 'session', activeSessionId] }),
+  });
+  const lockMutation = useMutation({
+    mutationFn: (id: number) => discussionApi.lock(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['discussions', 'session', activeSessionId] }),
+  });
+
   const handleAskQuestion = () => {
     if (!questionText.trim()) return;
     createQuestionMutation.mutate({ title: questionText.trim(), content: questionText.trim() });
@@ -183,6 +199,8 @@ const CoursePlayerPage: React.FC = () => {
     content: d.content,
     reply_count: d.reply_count,
     created_at: d.created_at,
+    is_pinned: d.is_pinned,
+    is_locked: d.is_locked,
   }));
 
   // Video resume: persist playback position in localStorage
@@ -659,16 +677,32 @@ const CoursePlayerPage: React.FC = () => {
                 )}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   {questions.length > 0 ? questions.map(q => (
-                    <Box key={q.id} sx={{ p: 2, bgcolor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', '&:hover': { borderColor: '#ffa424' }, transition: 'border-color 0.2s' }}>
+                    <Box key={q.id} sx={{ p: 2, bgcolor: q.is_pinned ? 'rgba(255,164,36,0.04)' : '#fff', borderRadius: '12px', border: q.is_pinned ? '1px solid #ffa424' : '1px solid #e5e7eb', '&:hover': { borderColor: '#ffa424' }, transition: 'border-color 0.2s' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                         <Avatar sx={{ width: 28, height: 28, fontSize: '0.75rem', bgcolor: '#ffa424' }}>{q.user_name?.[0] || '?'}</Avatar>
                         <Typography variant="body2" fontWeight={600}>{q.user_name}</Typography>
                         <Typography variant="caption" color="text.secondary">· {new Date(q.created_at).toLocaleDateString()}</Typography>
+                        {q.is_pinned && <Chip icon={<PinIcon sx={{ fontSize: 14 }} />} label="Pinned" size="small" sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'rgba(255,164,36,0.12)', color: '#ffa424', fontWeight: 600 }} />}
+                        {q.is_locked && <Chip icon={<LockIcon sx={{ fontSize: 14 }} />} label="Locked" size="small" sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'rgba(239,68,68,0.08)', color: '#ef4444', fontWeight: 600 }} />}
                       </Box>
                       <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{q.title}</Typography>
                       <Typography variant="body2" sx={{ mb: 1.5 }}>{q.content}</Typography>
-                      <Box sx={{ display: 'flex', gap: 2 }}>
+                      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                         <Button size="small" sx={{ textTransform: 'none', color: 'text.secondary', fontSize: '0.8rem' }}>{q.reply_count} replies</Button>
+                        {isModeratorRole && (
+                          <>
+                            <Tooltip title={q.is_pinned ? 'Unpin' : 'Pin'}>
+                              <IconButton size="small" onClick={() => pinMutation.mutate(q.id)} disabled={pinMutation.isPending} sx={{ color: q.is_pinned ? '#ffa424' : 'text.disabled' }}>
+                                <PinIcon sx={{ fontSize: 18 }} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={q.is_locked ? 'Unlock' : 'Lock'}>
+                              <IconButton size="small" onClick={() => lockMutation.mutate(q.id)} disabled={lockMutation.isPending} sx={{ color: q.is_locked ? '#ef4444' : 'text.disabled' }}>
+                                <LockIcon sx={{ fontSize: 18 }} />
+                              </IconButton>
+                            </Tooltip>
+                          </>
+                        )}
                       </Box>
                     </Box>
                   )) : (

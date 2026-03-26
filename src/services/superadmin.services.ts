@@ -36,7 +36,7 @@ export const bulkImportApi = {
    * Download CSV template for bulk user import
    */
   downloadTemplate: () => {
-    window.open(`${import.meta.env.VITE_API_URL || ''}${BASE_PATH}/users/csv_template/`, '_blank');
+    window.open(`${import.meta.env.VITE_API_URL || ''}/api/v1/admin/users/csv_template/`, '_blank');
   },
 
   /**
@@ -47,7 +47,7 @@ export const bulkImportApi = {
     formData.append('file', file);
 
     const response = await apiClient.post<BulkImportResult>(
-      `${BASE_PATH}/users/bulk_import/`,
+      `/api/v1/admin/users/bulk_import/`,
       formData,
       {
         headers: {

@@ -120,8 +120,22 @@ const LearnerAssignmentsPage: React.FC = () => {
       });
       setToast({ open: true, message: 'Assignment submitted successfully!', severity: 'success' });
       setSubmitModalOpen(false);
-    } catch {
-      setToast({ open: true, message: 'Failed to submit assignment. Please try again.', severity: 'error' });
+    } catch (err: any) {
+      console.error(err);
+      const backendError = err?.response?.data;
+      let errorMsg = 'Failed to submit assignment. Please try again.';
+      
+      if (backendError) {
+        if (backendError.non_field_errors?.length) {
+          errorMsg = backendError.non_field_errors[0];
+        } else if (backendError.submitted_file_name?.length) {
+          errorMsg = backendError.submitted_file_name[0];
+        } else if (backendError.detail) {
+          errorMsg = backendError.detail;
+        }
+      }
+      
+      setToast({ open: true, message: errorMsg, severity: 'error' });
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

@@ -131,6 +131,7 @@ export const certificateApi = {
 export interface DiscussionParams {
   course?: number;
   session?: number;
+  search?: string;
 }
 
 export const discussionApi = {
@@ -163,6 +164,14 @@ export const discussionApi = {
   //  Delete a discussion
   delete: (id: number) =>
     apiClient.delete(`${BASE_PATH}/discussions/${id}/`),
+
+  //  Pin/unpin a discussion (Instructor/Admin)
+  pin: (id: number) =>
+    apiClient.post<{ is_pinned: boolean }>(`${BASE_PATH}/discussions/${id}/pin/`),
+
+  //  Lock/unlock a discussion (Instructor/Admin)
+  lock: (id: number) =>
+    apiClient.post<{ is_locked: boolean }>(`${BASE_PATH}/discussions/${id}/lock/`),
 };
 
 // DISCUSSION REPLIES

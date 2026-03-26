@@ -1,6 +1,6 @@
 # TASC LMS Frontend — Pending Tasks
 
-**Last updated:** 25 March 2026
+**Last updated:** 26 March 2026
 **Repo:** `TASC-LMS-frontend`
 
 ---
@@ -188,13 +188,11 @@ Backend expects: `email, first_name, last_name, role, department, phone_number`
 
 ---
 
-#### 14. Instructor Messages Page
+#### ~~14. Instructor Messages Page~~ ✅ DONE [25 Mar]
 
 **File:** `src/pages/InstructorMessagesPage.tsx`
 
-**Status:** Hardcoded conversations.
-
-**Fix:** No messaging API exists — mark as future feature or implement.
+**Status:** ✅ Fully wired to `messagingApi` — real conversations, messages, send, mark_read, 5s polling.
 
 ---
 
@@ -319,3 +317,7 @@ Backend expects: `email, first_name, last_name, role, department, phone_number`
 | 15 Mar 2026 | Certificate/invoice download |
 | 14 Mar 2026 | Privacy policy + cert validation |
 | 13 Mar 2026 | Manager pages wired |
+| 25 Mar 2026 | InstructorMessagesPage wired to real messaging API |
+| 26 Mar 2026 | CoursePlayerPage Q&A: Pin/Lock badges + moderator action buttons wired to `discussionApi.pin()`/`lock()` |
+| 26 Mar 2026 | LearnerAssignmentsPage: Backend validation errors (max attempts, file types) parsed and shown as toast messages |
+| 26 Mar 2026 | `DiscussionParams` search param added, `SubmissionSerializer` `attempt_number` field exposed |
