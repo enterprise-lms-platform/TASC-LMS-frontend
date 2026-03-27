@@ -17,6 +17,7 @@ import {
 } from '@mui/icons-material';
 import type { QuizSettings, QuizQuestion } from '../../../types/types';
 import { quizSubmissionApi, type QuizSubmission } from '../../../services/learning.services';
+import { sessionApi } from '../../../services/catalogue.services';
 
 /* ── Types ── */
 type Answer = string | string[] | boolean | null;
@@ -193,12 +194,15 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
       question: q.id,
       selected_answer: { value: attempt.answers[q.id] ?? null },
     }));
-    quizSubmissionApi.create({ quiz: sessionId, enrollment: 0, answers }).then((res) => {
+
+    const timeSpentSeconds = timeLimitSecs > 0 ? timeLimitSecs - remaining : 0;
+
+    sessionApi.submit(sessionId, { answers, time_spent_seconds: timeSpentSeconds }).then((res) => {
       // Use server-returned score if available (more accurate for essay/matching)
       const serverSubmission = res.data;
       if (serverSubmission.score != null) {
         const serverScore = serverSubmission.max_score > 0
-          ? Math.round((serverSubmission.score / serverSubmission.max_score) * 100)
+          ? Math.round((Number(serverSubmission.score) / Number(serverSubmission.max_score)) * 100)
           : 0;
         const serverPassed = serverSubmission.passed;
         setAttempt((prev) => ({ ...prev, score: serverScore, passed: serverPassed }));
@@ -207,7 +211,7 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
     }).catch(() => {
       // Backend submission failed — client-side grade is already shown
     });
-  }, [questions, attempt.answers, passingScore, onComplete, sessionId]);
+  }, [questions, attempt.answers, passingScore, onComplete, sessionId, timeLimitSecs, remaining]);
 
   const handleRetry = useCallback(() => {
     setAttempt({ answers: {}, flagged: new Set(), score: null, passed: null, submitted: false });

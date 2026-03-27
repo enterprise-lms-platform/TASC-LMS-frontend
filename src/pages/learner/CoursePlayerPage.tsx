@@ -28,6 +28,7 @@ type ReactPlayerProgressState = {
 };
 
 import QuizPlayer from '../../components/learner/quiz-player/QuizPlayer';
+import AssignmentPlayer from '../../components/learner/assignment-player/AssignmentPlayer';
 import {
   Box, Typography, IconButton, Button, Tabs, Tab, LinearProgress,
   Checkbox, Collapse, Drawer, Divider, TextField, Avatar, Chip,
@@ -638,6 +639,13 @@ const CoursePlayerPage: React.FC = () => {
                 toggleComplete(activeSession.id);
               }
             }} />
+          ) : activeSession?.session_type === 'assignment' ? (
+            /* Assignment Player */
+            <AssignmentSessionRenderer sessionId={activeSession.id} onComplete={() => {
+              if (!completedSessions.includes(activeSession.id)) {
+                toggleComplete(activeSession.id);
+              }
+            }} />
           ) : (
             /* Non-video content placeholder */
             <Box sx={{ width: '100%', pt: '30%', bgcolor: '#f0f2f5', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #e5e7eb' }}>
@@ -916,6 +924,18 @@ const QuizSessionRenderer: React.FC<{ sessionId: number; onComplete?: (score: nu
         questions={quiz.questions}
         previousAttempts={pastAttempts.length}
         pastAttempts={pastAttempts}
+        onComplete={onComplete}
+      />
+    </Box>
+  );
+};
+
+/* ── Assignment wrapper ── */
+const AssignmentSessionRenderer: React.FC<{ sessionId: number; onComplete?: (score: number | null, passed: boolean | null) => void }> = ({ sessionId, onComplete }) => {
+  return (
+    <Box sx={{ p: 2, bgcolor: '#f8f9fa', minHeight: 400 }}>
+      <AssignmentPlayer
+        sessionId={sessionId}
         onComplete={onComplete}
       />
     </Box>

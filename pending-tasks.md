@@ -889,8 +889,8 @@ These pages are blocked purely on backend. Once the backend task is completed, t
 <details>
 <summary>Click to expand — all completed items</summary>
 
-| Date | Item |
-|------|------|
+| 28 Mar | Phase 5: Learner Submission Player (Quiz/Assignment) wired to `SessionViewSet.submit` |
+| 28 Mar | Backend Task 6 implemented (Session quiz/assignment POST & Learner Submit) |
 | 27 Mar | F1: SavedCoursesPage wired to `savedCourseApi` + `useSavedCourses`/`useToggleSavedCourse` hooks |
 | 27 Mar | F3: Superadmin KPIs wired — AllCourses, Assessments, Certifications, Instructors, Invoices, Revenue |
 | 27 Mar | Backend Tasks 29, 30, 32-37 all implemented (SavedCourse model + 6 stats endpoints) |
@@ -945,6 +945,8 @@ These pages are blocked purely on backend. Once the backend task is completed, t
 | Saved Courses API | ✅ Working | `/api/v1/learning/saved-courses/` | 29 |
 | Course ordering | ✅ Working | `?ordering=-enrollment_count` on CourseViewSet | 30 |
 | Org user/course count | ❌ Missing | annotations on OrganizationSerializer | 31 |
+| Quiz/Assignment POST | ✅ Working | POST on `/api/v1/catalogue/sessions/{id}/quiz/` | 6 |
+| Learner Submit | ✅ Working | POST on `/api/v1/catalogue/sessions/{id}/submit/` | 6 |
 | Course stats | ✅ Working | `/api/v1/catalogue/courses/stats/` | 32 |
 | Assessment stats | ✅ Working | `/api/v1/learning/submissions/stats/` | 33 |
 | Certificate stats (admin) | ✅ Working | `/api/v1/learning/certificates/stats/` | 34 |

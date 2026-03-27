@@ -252,6 +252,10 @@ export const sessionApi = {
 
   patchAssignment: (sessionId: number, payload: Partial<AssignmentConfigCreateUpdate>) =>
     apiClient.patch<AssignmentConfig>(`${BASE_PATH}/sessions/${sessionId}/assignment/`, payload),
+
+  // Learner submission (session_type='quiz' or 'assignment')
+  submit: (sessionId: number, payload: any) =>
+    apiClient.post<any>(`${BASE_PATH}/sessions/${sessionId}/submit/`, payload),
 };
 
 // QUESTION CATEGORIES (instructor-owned)

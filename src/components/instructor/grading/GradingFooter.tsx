@@ -10,12 +10,14 @@ interface GradingFooterProps {
   lastSaved?: Date;
   onSaveDraft: () => void;
   onSubmitNext: () => void;
+  isSubmitting?: boolean;
 }
 
 const GradingFooter: React.FC<GradingFooterProps> = ({
   lastSaved,
   onSaveDraft,
   onSubmitNext,
+  isSubmitting,
 }) => {
   const formatTime = (date?: Date) => {
     if (!date) return null;
@@ -77,6 +79,7 @@ const GradingFooter: React.FC<GradingFooterProps> = ({
           variant="contained"
           startIcon={<SubmitIcon />}
           onClick={onSubmitNext}
+          disabled={isSubmitting}
           fullWidth
           sx={{
             textTransform: 'none',
@@ -86,7 +89,7 @@ const GradingFooter: React.FC<GradingFooterProps> = ({
             flex: { xs: 1, sm: 'initial' },
           }}
         >
-          Submit & Next
+          {isSubmitting ? 'Submitting...' : 'Submit & Next'}
         </Button>
       </Box>
     </Box>
