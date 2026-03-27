@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box,
   CssBaseline,
@@ -16,6 +17,9 @@ import {
   FormControlLabel,
   ToggleButtonGroup,
   ToggleButton,
+  Snackbar,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import {
   Settings as SettingsIcon,
@@ -31,6 +35,7 @@ import {
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { managerSettingsApi } from '../../services/organization.services';
 
 // ── Shared styles ──
 const cardSx = {
@@ -83,15 +88,19 @@ const retentionOptions = [
 ];
 
 const ManagerSettingsPage: React.FC = () => {
+  const queryClient = useQueryClient();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
   // ── Organization Info state ──
-  const [orgName, setOrgName] = useState('Acme Corporation');
-  const [orgDescription, setOrgDescription] = useState(
-    'A leading technology company focused on innovation and digital transformation through continuous learning.'
-  );
-  const [industry, setIndustry] = useState('Technology');
-  const [websiteUrl, setWebsiteUrl] = useState('https://www.acmecorp.com');
+  const [orgName, setOrgName] = useState('');
+  const [orgDescription, setOrgDescription] = useState('');
+  const [industry, setIndustry] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
 
   // ── Branding state ──
   const [primaryColor, setPrimaryColor] = useState('#ffa424');
@@ -107,11 +116,75 @@ const ManagerSettingsPage: React.FC = () => {
   const [dataRetention, setDataRetention] = useState('3years');
   const [gdprCompliance, setGdprCompliance] = useState(true);
 
+  // ── Fetching ──
+  const { data: org, isLoading } = useQuery({
+    queryKey: ['manager-organization'],
+    queryFn: () => managerSettingsApi.get().then((res) => res.data),
+  });
+
+  useEffect(() => {
+    if (org) {
+      setOrgName(org.name || '');
+      setOrgDescription(org.description || '');
+      setIndustry(org.industry || '');
+      setWebsiteUrl(org.website || '');
+      
+      const s = org.settings || {};
+      setPrimaryColor(s.primaryColor || '#ffa424');
+      setThemeMode(s.themeMode || 'light');
+      setDefaultLanguage(s.defaultLanguage || 'en');
+      setCertificateAutoIssue(s.certificateAutoIssue !== false);
+      setCourseApprovalRequired(!!s.courseApprovalRequired);
+      setSelfEnrollmentAllowed(s.selfEnrollmentAllowed !== false);
+      setDataRetention(s.dataRetention || '3years');
+      setGdprCompliance(s.gdprCompliance !== false);
+    }
+  }, [org]);
+
+  // ── Mutations ──
+  const updateMutation = useMutation({
+    mutationFn: managerSettingsApi.update,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['manager-organization'] });
+      setToast({ open: true, message: 'Settings updated successfully!', severity: 'success' });
+    },
+    onError: () => {
+      setToast({ open: true, message: 'Failed to update settings.', severity: 'error' });
+    },
+  });
+
+  const handleSave = () => {
+    updateMutation.mutate({
+      name: orgName,
+      description: orgDescription,
+      industry: industry,
+      website: websiteUrl,
+      settings: {
+        primaryColor,
+        themeMode,
+        defaultLanguage,
+        certificateAutoIssue,
+        courseApprovalRequired,
+        selfEnrollmentAllowed,
+        dataRetention,
+        gdprCompliance,
+      },
+    });
+  };
+
   const handleThemeChange = (_event: React.MouseEvent<HTMLElement>, newTheme: string | null) => {
     if (newTheme !== null) {
       setThemeMode(newTheme);
     }
   };
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress sx={{ color: '#ffa424' }} />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -160,7 +233,9 @@ const ManagerSettingsPage: React.FC = () => {
             </Box>
             <Button
               variant="contained"
-              startIcon={<SaveIcon />}
+              startIcon={updateMutation.isPending ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+              onClick={handleSave}
+              disabled={updateMutation.isPending}
               sx={{
                 background: 'linear-gradient(135deg, #ffa424, #f97316)',
                 borderRadius: '10px',
@@ -542,6 +617,23 @@ const ManagerSettingsPage: React.FC = () => {
           </Grid>
         </Box>
       </Box>
+
+      {/* Toast Notification */}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={6000}
+        onClose={() => setToast({ ...toast, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setToast({ ...toast, open: false })}
+          severity={toast.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

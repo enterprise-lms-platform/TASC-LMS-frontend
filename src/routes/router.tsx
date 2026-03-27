@@ -113,6 +113,7 @@ const ManagerNotificationsPage = lazy(() => import('../pages/manager/ManagerNoti
 const ManagerIntegrationsPage = lazy(() => import('../pages/manager/ManagerIntegrationsPage'));
 const ManagerBillingPage = lazy(() => import('../pages/manager/ManagerBillingPage'));
 const ManagerProfilePage = lazy(() => import('../pages/manager/ManagerProfilePage'));
+const ManagerMessagesPage = lazy(() => import('../pages/manager/ManagerMessagesPage'));
 
 // Finance Pages
 const FinanceDashboard = lazy(() => import('../pages/finance/FinanceDashboard'));
@@ -158,6 +159,7 @@ const AnalyticsPage = lazy(() => import('../pages/superadmin/AnalyticsPage'));
 const NotificationsPage = lazy(() => import('../pages/superadmin/NotificationsPage'));
 const InviteUserPage = lazy(() => import('../pages/superadmin/InviteUserPage'));
 const SuperadminProfilePage = lazy(() => import('../pages/superadmin/SuperadminProfilePage'));
+const SuperadminMessagesPage = lazy(() => import('../pages/superadmin/SuperadminMessagesPage'));
 
 // Import all loaders
 import * as learnerLoaders from './loaders/learnerLoaders';
@@ -674,6 +676,11 @@ export const createAppRouter = (queryClient: QueryClient) => {
       path: '/manager/profile',
       element: <SuspenseWrapper><ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerProfilePage /></ProtectedRoute></SuspenseWrapper>,
     },
+    {
+      path: '/manager/messages',
+      element: <SuspenseWrapper><ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerMessagesPage /></ProtectedRoute></SuspenseWrapper>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
+    },
 
     // ═══════════════════════════════════════════════════════════════════════════
     // FINANCE ROUTES - Protected, role-restricted to finance personnel
@@ -892,6 +899,10 @@ export const createAppRouter = (queryClient: QueryClient) => {
       path: '/superadmin/approvals/:requestId',
       element: <SuspenseWrapper><ProtectedRoute requiredRole="tasc_admin"><CourseApprovalDetailPage /></ProtectedRoute></SuspenseWrapper>,
       loader: async (args) => superadminLoaders.approvalDetailLoader(queryClient, args as { params: { requestId?: string } }),
+    },
+    {
+      path: '/superadmin/messages',
+      element: <SuspenseWrapper><ProtectedRoute requiredRole="tasc_admin"><SuperadminMessagesPage /></ProtectedRoute></SuspenseWrapper>,
     },
     {
       path: '/superadmin/profile',

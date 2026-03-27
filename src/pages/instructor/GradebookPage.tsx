@@ -61,6 +61,10 @@ function buildGradebookData(submissions: Submission[]) {
   };
 }
 
+const sampleStudents: GradebookStudent[] = [];
+const sampleItems: GradedItem[] = [];
+const sampleGrades: GradeEntry[] = [];
+
 // ── Page Component ──
 
 const GradebookPage: React.FC = () => {

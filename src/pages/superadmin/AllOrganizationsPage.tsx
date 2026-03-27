@@ -78,7 +78,7 @@ const AllOrganizationsPage: React.FC = () => {
     initials: org.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
     bgColor: 'linear-gradient(135deg, #ffb74d, #ffa424)',
     plan: 'Standard',
-    users: '0',
+    users: String(org.users_count || 0),
     courses: org.courses_count || 0,
     revenue: '$0',
     status: org.is_active ? 'active' : 'pending' as const,

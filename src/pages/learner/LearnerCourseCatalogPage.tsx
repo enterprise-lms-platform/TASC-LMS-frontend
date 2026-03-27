@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Box, Toolbar, CssBaseline, Typography, Grid, Stack, Link, Paper } from '@mui/material';
+import { ChevronRight, MenuBook, People, School, Star } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
-import { Box, Toolbar, CssBaseline, Typography, Grid, Stack, Link, Paper, Snackbar, Alert } from '@mui/material';
-import { ChevronRight, MenuBook, School, CheckCircle, PlayCircle, Star, People } from '@mui/icons-material';
-import { enrollmentApi, certificateApi } from '../../services/learning.services';
 import '../../styles/LearnerDashboard.css';
 
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
@@ -11,8 +10,7 @@ import TopBar from '../../components/learner/TopBar';
 import CatalogHero from '../../components/learner/catalog/CatalogHero';
 import CatalogFilterBar from '../../components/learner/catalog/CatalogFilterBar';
 import CatalogCategoryCard, { defaultCategories } from '../../components/learner/catalog/CatalogCategoryCard';
-import CatalogCourseCard, { sampleCourses } from '../../components/learner/catalog/CatalogCourseCard';
-import type { Course as CatalogCourse } from '../../components/learner/catalog/CatalogCourseCard';
+import CatalogCourseCard, { sampleCourses, type Course as CatalogCourse } from '../../components/learner/catalog/CatalogCourseCard';
 import CatalogInstructorCard, { sampleInstructors } from '../../components/learner/catalog/CatalogInstructorCard';
 import CatalogPagination from '../../components/learner/catalog/CatalogPagination';
 import { publicCourseApi, publicCategoryApi } from '../../services/public.services';
@@ -22,24 +20,10 @@ const LearnerCourseCatalogPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<number | undefined>(undefined);
-  const [toast, setToast] = useState('');
-
-  const handleSearch = (query: string, categoryId?: number) => {
-    setSearchQuery(query);
-    setSelectedCategory(categoryId);
-    setCurrentPage(1);
-  };
 
   const { data: coursesData, isLoading: coursesLoading } = useQuery({
-    queryKey: ['public-courses', currentPage, searchQuery, selectedCategory],
-    queryFn: () => publicCourseApi.getAll({
-      page: currentPage,
-      page_size: 8,
-      ...(searchQuery ? { search: searchQuery } : {}),
-      ...(selectedCategory ? { category: selectedCategory } : {}),
-    }),
+    queryKey: ['public-courses', currentPage],
+    queryFn: () => publicCourseApi.getAll({ page: currentPage, page_size: 8 }),
   });
 
   const { data: categoriesData } = useQuery({
@@ -98,12 +82,11 @@ const LearnerCourseCatalogPage: React.FC = () => {
   };
 
   const handleCategoryClick = (category: any) => {
-    setSelectedCategory(category.id);
-    setCurrentPage(1);
+    console.log('Browsing category:', category.name);
   };
 
   const handleInstructorProfile = (instructor: any) => {
-    setToast('Instructor profiles coming soon');
+    console.log('Viewing instructor:', instructor.name);
   };
 
   const SectionHeader = ({ title, viewAllText }: { title: string; viewAllText: string }) => (
@@ -244,7 +227,7 @@ const LearnerCourseCatalogPage: React.FC = () => {
         </Grid>
 
         {/* Filter Bar */}
-        <CatalogFilterBar searchQuery={searchQuery} onSearch={handleSearch} />
+        <CatalogFilterBar />
 
         {/* Browse by Category */}
         <Box sx={{ mb: 6 }}>
@@ -333,9 +316,6 @@ const LearnerCourseCatalogPage: React.FC = () => {
           </Stack>
         </Box>
       </Box>
-      <Snackbar open={!!toast} autoHideDuration={3000} onClose={() => setToast('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-        <Alert severity="info" onClose={() => setToast('')} variant="filled">{toast}</Alert>
-      </Snackbar>
     </Box>
   );
 };

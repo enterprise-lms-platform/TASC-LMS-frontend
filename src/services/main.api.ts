@@ -23,7 +23,7 @@ export * from './messaging.services';
 
 // Re-export services as a single object for convenience
 import { authApi, adminApi } from './auth.services';
-import { categoryApi, tagApi, courseApi, sessionApi, courseApprovalApi } from './catalogue.services';
+import { categoryApi, tagApi, courseApi, sessionApi, courseApprovalApi, sessionAttachmentApi } from './catalogue.services';
 import { organizationApi } from './organization.services';
 import { usersApi } from './users.services';
 import { notificationApi } from './notifications.services';
@@ -38,6 +38,8 @@ import {
   quizSubmissionApi,
   gradeStatisticsApi,
   managerGradesApi,
+  savedCourseApi,
+  statsApi,
 } from './learning.services';
 import {
   invoiceApi,
@@ -90,6 +92,7 @@ export const api = {
     course: courseApi,
     session: sessionApi,
     approval: courseApprovalApi,
+    sessionAttachment: sessionAttachmentApi,
   },
 
   // Organizations
@@ -106,6 +109,7 @@ export const api = {
     quizSubmission: quizSubmissionApi,
     gradeStatistics: gradeStatisticsApi,
     managerGrades: managerGradesApi,
+    savedCourse: savedCourseApi,
   },
 
   // Payments
@@ -144,6 +148,9 @@ export const api = {
 
   // Messaging
   messaging: messagingApi,
+
+  // Stats (Superadmin dashboard)
+  stats: statsApi,
 };
 
 export default api;

@@ -62,6 +62,7 @@ const buildNavSections = (unreadCount?: number): NavSection[] => [
       { text: 'Overview', icon: <DashboardIcon />, path: '/instructor' },
       { text: 'Analytics', icon: <AnalyticsIcon />, path: '/instructor/analytics' },
       { text: 'Notifications', icon: <NotificationsIcon />, path: '/instructor/notifications', badge: unreadCount || undefined, badgeColor: 'primary' },
+      { text: 'Messages', icon: <MessagesIcon />, path: '/instructor/messages' },
     ],
   },
   {
@@ -102,12 +103,6 @@ const buildNavSections = (unreadCount?: number): NavSection[] => [
     items: [
       { text: 'My Learners', icon: <LearnersIcon />, path: '/instructor/learners' },
       { text: 'Progress Tracking', icon: <ProgressIcon />, path: '/instructor/progress' },
-    ],
-  },
-  {
-    title: 'Communication',
-    items: [
-      { text: 'Messages', icon: <MessagesIcon />, path: '/instructor/messages' },
     ],
   },
   {

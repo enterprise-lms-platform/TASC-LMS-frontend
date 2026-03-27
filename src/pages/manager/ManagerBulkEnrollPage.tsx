@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   Box,
   CssBaseline,
@@ -23,6 +23,9 @@ import {
   TableHead,
   TableRow,
   Chip,
+  Alert,
+  Snackbar,
+  CircularProgress,
 } from '@mui/material';
 import {
   GroupWork as GroupWorkIcon,
@@ -31,7 +34,8 @@ import {
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
-import { courseApi } from '../../services/main.api';
+import { courseApi, enrollmentApi } from '../../services/main.api';
+import { usersApi } from '../../services/users.services';
 
 // ─── Styles ────────────────────────────────────────────────
 
@@ -91,6 +95,58 @@ const ManagerBulkEnrollPage: React.FC = () => {
   const [sendNotification, setSendNotification] = useState(true);
   const [setStartDate, setSetStartDate] = useState(false);
   const [grantCertificate, setGrantCertificate] = useState(true);
+  const [enrollResult, setEnrollResult] = useState<{ enrolled: number; already_enrolled: number; failed: number; errors: string[] } | null>(null);
+  const [snackOpen, setSnackOpen] = useState(false);
+
+  // Fetch org users for "select from list" mode
+  const { data: usersData } = useQuery({
+    queryKey: ['org-users'],
+    queryFn: () => usersApi.getAll({ page_size: 500 }).then(r => r.data),
+  });
+  const orgUsers = usersData?.results ?? [];
+
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvParsedIds, setCsvParsedIds] = useState<number[]>([]);
+
+  const enrollMutation = useMutation({
+    mutationFn: (data: { course: number; user_ids: number[] }) => enrollmentApi.bulkEnroll(data),
+    onSuccess: (response) => {
+      setEnrollResult(response.data);
+      setSnackOpen(true);
+    },
+    onError: () => {
+      setSnackOpen(true);
+    },
+  });
+
+  const handleCsvUpload = (file: File) => {
+    setCsvFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      // Skip header row
+      const ids: number[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(',');
+        const id = parseInt(cols[0]?.trim(), 10);
+        if (!isNaN(id)) ids.push(id);
+      }
+      setCsvParsedIds(ids);
+      setSelectedUserIds(prev => [...new Set([...prev, ...ids])]);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleEnroll = () => {
+    if (!selectedCourse) return;
+    if (selectedUserIds.length === 0) return;
+    enrollMutation.mutate({
+      course: Number(selectedCourse),
+      user_ids: selectedUserIds,
+    });
+  };
 
   const { data: coursesData } = useQuery({
     queryKey: ['courses', 'bulk-enroll'],
@@ -255,13 +311,41 @@ const ManagerBulkEnrollPage: React.FC = () => {
                         '&:hover': { borderColor: '#ffa424' },
                       }}
                     >
-                      <UploadIcon sx={{ fontSize: 36, color: '#d1d5db', mb: 1 }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Drag & drop a CSV file here, or click to browse
-                      </Typography>
-                      <Typography variant="caption" color="text.disabled">
-                        Accepted format: .csv (max 5MB)
-                      </Typography>
+                      <input
+                        type="file"
+                        accept=".csv"
+                        style={{ display: 'none' }}
+                        id="csv-upload-input"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleCsvUpload(file);
+                        }}
+                      />
+                      <label htmlFor="csv-upload-input" style={{ cursor: 'pointer', display: 'block' }}>
+                        <UploadIcon sx={{ fontSize: 36, color: '#d1d5db', mb: 1 }} />
+                        <Typography variant="body2" color="text.secondary">
+                          {csvFile ? `✅ ${csvFile.name} (${csvParsedIds.length} users found)` : 'Drag & drop a CSV file here, or click to browse'}
+                        </Typography>
+                        <Typography variant="caption" color="text.disabled">
+                          Accepted format: .csv (max 5MB)
+                        </Typography>
+                      </label>
+                      <Box sx={{ mt: 2, p: 1.5, bgcolor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb', textAlign: 'left' }}>
+                        <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+                          CSV Format Example:
+                        </Typography>
+                        <Box component="pre" sx={{ fontSize: '0.7rem', color: '#374151', m: 0, fontFamily: 'monospace', lineHeight: 1.6 }}>
+{`user_id
+12
+15
+18
+22
+31`}
+                        </Box>
+                        <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: 'block' }}>
+                          One user ID per line. First row must be the header "user_id".
+                        </Typography>
+                      </Box>
                     </Box>
                   )}
 
@@ -277,13 +361,33 @@ const ManagerBulkEnrollPage: React.FC = () => {
                         bgcolor: 'grey.50',
                       }}
                     >
-                      <SelectUsersIcon sx={{ fontSize: 36, color: '#d1d5db', mb: 1 }} />
-                      <Typography variant="body2" color="text.secondary">
-                        User selection panel will load here
+                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1, textAlign: 'left' }}>
+                        Select users ({selectedUserIds.length} selected)
                       </Typography>
-                      <Typography variant="caption" color="text.disabled">
-                        Search and select users from the organization directory
-                      </Typography>
+                      <Box sx={{ maxHeight: 200, overflow: 'auto', textAlign: 'left' }}>
+                        {orgUsers.map((u: any) => (
+                          <FormControlLabel
+                            key={u.id}
+                            control={
+                              <Checkbox
+                                size="small"
+                                checked={selectedUserIds.includes(u.id)}
+                                onChange={(e) => {
+                                  setSelectedUserIds(prev =>
+                                    e.target.checked ? [...prev, u.id] : prev.filter(id => id !== u.id)
+                                  );
+                                }}
+                                sx={{ color: '#ffa424', '&.Mui-checked': { color: '#ffa424' } }}
+                              />
+                            }
+                            label={<Typography variant="body2">{u.first_name} {u.last_name} ({u.email})</Typography>}
+                            sx={{ display: 'block' }}
+                          />
+                        ))}
+                        {orgUsers.length === 0 && (
+                          <Typography variant="body2" color="text.secondary">No users found</Typography>
+                        )}
+                      </Box>
                     </Box>
                   )}
                 </Box>

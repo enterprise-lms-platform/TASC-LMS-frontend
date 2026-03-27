@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Box, Typography, Stack, Button, ToggleButtonGroup, ToggleButton, Select, MenuItem, Grid } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -8,40 +8,32 @@ import CourseCard, { type Course } from './CourseCard';
 import EnrollmentModal from './EnrollmentModal';
 import { publicCourseApi, type PublicCourseParams } from '../../services/public.services';
 
-const SORT_TO_ORDERING: Record<string, string> = {
-  popular: '-enrollment_count',
-  newest: '-published_at',
-  rating: '-published_at', // no rating field on backend yet, fallback to newest
-  title_asc: 'title',
-  title_desc: '-title',
-};
-
 interface CoursesGridProps {
   onMobileFilterOpen: () => void;
   category?: number;
+  /** Reserved for multi-category filters when the API supports it; parent already passes `category` for single filter. */
   categories?: number[];
   level?: string;
   levels?: string[];
   search?: string;
   sortBy?: string;
-  onSortChange?: (sort: string) => void;
   page?: number;
+  onSortChange?: (sort: string) => void;
   onTotalCountChange?: (count: number) => void;
 }
 
 const CoursesGrid: React.FC<CoursesGridProps> = ({
   onMobileFilterOpen,
   category,
-  categories,
   level,
-  levels,
   search,
-  sortBy = 'newest',
-  onSortChange,
+  sortBy = 'popular',
   page = 1,
+  onSortChange,
   onTotalCountChange,
 }) => {
   const [view, setView] = React.useState('grid');
+  const [sort, setSort] = React.useState(sortBy);
   const [enrollModalOpen, setEnrollModalOpen] = React.useState(false);
   const [selectedCourse, setSelectedCourse] = React.useState<Course | null>(null);
 
@@ -50,74 +42,38 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({
     page,
   };
 
-  // Single category from hero dropdown takes priority
-  if (category) {
-    params.category = category;
-  }
-  // Single level filter (backend only supports one at a time)
-  if (level) {
-    params.level = level as PublicCourseParams['level'];
-  }
-  if (search) params.search = search;
-
-  // Map sort value to backend ordering param
-  const ordering = SORT_TO_ORDERING[sortBy] || '-published_at';
-  params.ordering = ordering;
-
-  // For multiple categories/levels, we make separate queries per category
-  // But the backend only supports one category at a time, so if multiple are selected
-  // we skip the category param and filter client-side... or just use the first one.
-  // For now: if multiple categories, don't filter by category (show all, let user narrow down)
-  if (categories && categories.length > 1) {
-    delete params.category;
-  } else if (categories && categories.length === 1) {
-    params.category = categories[0];
-  }
-
-  if (levels && levels.length > 1) {
-    // Backend only supports single level, skip filter if multiple selected
-    delete params.level;
-  } else if (levels && levels.length === 1) {
-    params.level = levels[0] as PublicCourseParams['level'];
-  }
-
+  if (category) params.category = category;
+  if (level && level !== 'all_levels') params.level = level as 'beginner' | 'intermediate' | 'advanced';
+  if (search?.trim()) params.search = search.trim();
+  
   const { data: coursesData } = useQuery({
     queryKey: ['publicCourses', params],
-    queryFn: () => publicCourseApi.getAll(params),
+    queryFn: () => publicCourseApi.getAll(params).then(r => r.data),
   });
 
-  const apiData = (coursesData as any)?.data;
-  let courses: Course[] = (apiData?.results || []).map((course: any) => ({
+  const courses: Course[] = coursesData?.results?.map((course) => ({
     id: String(course.id),
-    slug: course.slug,
     title: course.title,
     category: course.category?.name || 'General',
-    categoryId: course.category?.id,
     instructor: course.instructor_name,
-    instructorInitials: course.instructor_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || '',
+    instructorInitials: course.instructor_name.split(' ').map(n => n[0]).join('').slice(0, 2),
     duration: course.duration_hours ? `${course.duration_hours} hours` : 'N/A',
     level: course.level,
-    rating: course.rating || 0,
-    ratingCount: String(course.rating_count || 0),
+    rating: 0,
+    ratingCount: '0',
     image: course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800',
     badge: undefined,
     badgeText: undefined,
-  }));
+  })) || [];
 
-  // Client-side filtering for multi-select (when backend can't handle it)
-  if (categories && categories.length > 1) {
-    courses = courses.filter((c: any) => categories.includes(c.categoryId));
-  }
-  if (levels && levels.length > 1) {
-    courses = courses.filter((c) => levels.includes(c.level));
-  }
+  const totalResults = coursesData?.count || 0;
 
-  const totalResults = apiData?.count || 0;
+  useEffect(() => {
+    setSort(sortBy);
+  }, [sortBy]);
 
-  React.useEffect(() => {
-    if (onTotalCountChange) {
-      onTotalCountChange(totalResults);
-    }
+  useEffect(() => {
+    onTotalCountChange?.(totalResults);
   }, [totalResults, onTotalCountChange]);
 
   const handleEnroll = (course: Course) => {
@@ -127,19 +83,12 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({
 
   return (
     <Box sx={{ flex: 1 }}>
-      <EnrollmentModal
-        open={enrollModalOpen}
-        onClose={() => setEnrollModalOpen(false)}
-        courseTitle={selectedCourse?.title || ''}
-        courseSlug={selectedCourse?.slug || selectedCourse?.id}
-        courseId={selectedCourse ? Number(selectedCourse.id) : undefined}
-        isFree={selectedCourse?.isFree}
-      />
+      <EnrollmentModal open={enrollModalOpen} onClose={() => setEnrollModalOpen(false)} courseTitle={selectedCourse?.title || ''} />
 
       {/* Results Header */}
       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, mb: 3, gap: 2 }}>
         <Typography sx={{ color: '#52525b' }}>Showing <strong style={{ color: '#27272a' }}>{totalResults}</strong> results</Typography>
-
+        
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: { xs: 'stretch', sm: 'center' } }}>
           <Button variant="outlined" startIcon={<TuneIcon />} onClick={onMobileFilterOpen} sx={{ display: { xs: 'flex', lg: 'none' }, color: '#52525b', borderColor: '#d4d4d8' }}>
             Filters
@@ -156,16 +105,19 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({
             </ToggleButtonGroup>
 
             <Select
-              value={sortBy}
-              onChange={(e) => onSortChange?.(e.target.value)}
+              value={sort}
+              onChange={(e) => {
+                const v = e.target.value;
+                setSort(v);
+                onSortChange?.(v);
+              }}
               size="small"
               MenuProps={{ disableScrollLock: true }}
               sx={{ minWidth: 160, fontSize: '0.875rem', bgcolor: 'white', '& .MuiOutlinedInput-notchedOutline': { borderColor: '#d4d4d8' } }}
             >
-              <MenuItem value="newest">Newest</MenuItem>
               <MenuItem value="popular">Most Popular</MenuItem>
-              <MenuItem value="title_asc">Title: A-Z</MenuItem>
-              <MenuItem value="title_desc">Title: Z-A</MenuItem>
+              <MenuItem value="newest">Newest</MenuItem>
+              <MenuItem value="rating">Highest Rated</MenuItem>
             </Select>
           </Stack>
         </Box>
@@ -179,13 +131,6 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({
           </Grid>
         ))}
       </Grid>
-
-      {courses.length === 0 && (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Typography variant="h6" color="text.secondary">No courses found</Typography>
-          <Typography variant="body2" color="text.disabled" sx={{ mt: 1 }}>Try adjusting your filters or search query</Typography>
-        </Box>
-      )}
     </Box>
   );
 };

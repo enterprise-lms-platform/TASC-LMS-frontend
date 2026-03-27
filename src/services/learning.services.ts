@@ -53,6 +53,12 @@ export const enrollmentApi = {
   //  Generate certificate for completed enrollment
   generateCertificate: (id: number) =>
     apiClient.post<Certificate>(`${BASE_PATH}/enrollments/${id}/generate_certificate/`),
+
+  //  Bulk enroll users (Manager only)
+  bulkEnroll: (data: { course: number; user_ids: number[] }) =>
+    apiClient.post<{ enrolled: number; already_enrolled: number; failed: number; errors: string[] }>(
+      `${BASE_PATH}/enrollments/bulk/`, data
+    ),
 };
 
 // SESSION PROGRESS
@@ -131,6 +137,7 @@ export const certificateApi = {
 export interface DiscussionParams {
   course?: number;
   session?: number;
+  search?: string;
 }
 
 export const discussionApi = {
@@ -163,9 +170,47 @@ export const discussionApi = {
   //  Delete a discussion
   delete: (id: number) =>
     apiClient.delete(`${BASE_PATH}/discussions/${id}/`),
+
+  //  Pin/unpin a discussion (Instructor/Admin)
+  pin: (id: number) =>
+    apiClient.post<{ is_pinned: boolean }>(`${BASE_PATH}/discussions/${id}/pin/`),
+
+  //  Lock/unlock a discussion (Instructor/Admin)
+  lock: (id: number) =>
+    apiClient.post<{ is_locked: boolean }>(`${BASE_PATH}/discussions/${id}/lock/`),
 };
 
 // DISCUSSION REPLIES
+
+export interface DiscussionReplyData {
+  content: string;
+}
+
+export interface EnrollmentTrends {
+  labels: string[];
+  enrollments: number[];
+  completions: number[];
+}
+
+export interface LearningStats {
+  total_learners: number;
+  active_learners: number;
+  avg_completion_rate: number;
+  total_courses_in_progress: number;
+  total_completed_courses: number;
+  avg_quiz_score: number;
+}
+
+export interface CoursesByCategory {
+  name: string;
+  count: number;
+}
+
+export interface RevenueTrends {
+  labels: string[];
+  revenue: number[];
+  total_revenue: number;
+}
 
 export interface DiscussionReplyParams {
   discussion?: number;
@@ -244,6 +289,25 @@ export const submissionApi = {
   //  Delete a submission (usually only drafts)
   delete: (id: number) =>
     apiClient.delete(`${BASE_PATH}/submissions/${id}/`),
+
+  // Verify a submission (instructor/admin)
+  verifySubmission: (id: number, is_verified: boolean) =>
+    apiClient.post<Submission>(`${BASE_PATH}/submissions/${id}/verify/`, { is_verified }),
+};
+
+// ANALYTICS API
+export const analyticsApi = {
+  getEnrollmentTrends: (months: number = 6) =>
+    apiClient.get<EnrollmentTrends>(`${BASE_PATH}/analytics/enrollment-trends/`, { params: { months } }),
+
+  getLearningStats: () =>
+    apiClient.get<LearningStats>(`${BASE_PATH}/analytics/learning-stats/`),
+
+  getCoursesByCategory: () =>
+    apiClient.get<CoursesByCategory[]>(`/api/v1/catalogue/analytics/courses-by-category/`),
+
+  getRevenueTrends: (months: number = 6) =>
+    apiClient.get<RevenueTrends>(`/api/v1/payments/analytics/revenue/`, { params: { months } }),
 };
 
 // QUIZ SUBMISSIONS
@@ -372,4 +436,198 @@ export const managerGradesApi = {
     apiClient.post(`${BASE_PATH}/submissions/bulk_grade/`, { submissions: data }),
 };
 
-
+// --- Custom Hooks ---
+import { useQuery } from '@tanstack/react-query';
+
+export const useEnrollmentTrends = (months: number = 6) => {
+  return useQuery({
+    queryKey: ['analytics', 'enrollments', months],
+    queryFn: () => analyticsApi.getEnrollmentTrends(months).then(res => res.data),
+  });
+};
+
+export const useLearningStats = () => {
+  return useQuery({
+    queryKey: ['analytics', 'stats'],
+    queryFn: () => analyticsApi.getLearningStats().then(res => res.data),
+  });
+};
+
+export const useCoursesByCategory = () => {
+  return useQuery({
+    queryKey: ['analytics', 'categories'],
+    queryFn: () => analyticsApi.getCoursesByCategory().then(res => res.data),
+  });
+};
+
+export const useRevenueTrends = (months: number = 6) => {
+  return useQuery({
+    queryKey: ['analytics', 'revenue', months],
+    queryFn: () => analyticsApi.getRevenueTrends(months).then(res => res.data),
+  });
+};
+
+// SAVED COURSES
+
+export interface SavedCourseResponse {
+  id: number;
+  user: number;
+  course: number;
+  course_title: string;
+  course_thumbnail: string | null;
+  course_slug: string;
+  course_price: string;
+  course_level: string;
+  instructor_name: string | null;
+  category_name: string | null;
+  created_at: string;
+}
+
+export const savedCourseApi = {
+  getAll: (params?: { page?: number; page_size?: number }) =>
+    apiClient.get<SavedCourseResponse[]>(`${BASE_PATH}/saved-courses/`, { params }),
+
+  save: (courseId: number) =>
+    apiClient.post(`${BASE_PATH}/saved-courses/`, { course: courseId }),
+
+  unsave: (id: number) =>
+    apiClient.delete(`${BASE_PATH}/saved-courses/${id}/`),
+
+  toggle: (courseId: number) =>
+    apiClient.post<{ saved: boolean; id: number | null }>(`${BASE_PATH}/saved-courses/toggle/`, { course: courseId }),
+};
+
+// STATS APIs (Superadmin dashboard endpoints)
+
+export interface CourseStats {
+  total: number;
+  published: number;
+  draft: number;
+  archived: number;
+  pending_approval: number;
+}
+
+export interface CertificateStats {
+  total: number;
+  this_month: number;
+  total_courses_with_certs: number;
+  valid: number;
+}
+
+export interface AssessmentStats {
+  total_assignments: number;
+  graded: number;
+  pending: number;
+  average_grade: number;
+  total_quizzes: number;
+  average_quiz_score: number;
+  quiz_pass_rate: number;
+}
+
+export interface InvoiceStats {
+  total: number;
+  paid: number;
+  pending: number;
+  overdue: number;
+  total_revenue: string;
+}
+
+export interface RevenueStatsResponse {
+  total_revenue: string;
+  monthly: Array<{
+    month: string;
+    revenue: string;
+    growth_percent: number | null;
+  }>;
+}
+
+export interface InstructorStatsResponse {
+  total: number;
+  active: number;
+  avg_courses_per_instructor: number;
+  with_courses: number;
+}
+
+export const statsApi = {
+  getCourseStats: () =>
+    apiClient.get<CourseStats>('/api/v1/catalogue/courses/stats/'),
+
+  getCertificateStats: () =>
+    apiClient.get<CertificateStats>(`${BASE_PATH}/certificates/stats/`),
+
+  getAssessmentStats: () =>
+    apiClient.get<AssessmentStats>(`${BASE_PATH}/submissions/stats/`),
+
+  getInvoiceStats: () =>
+    apiClient.get<InvoiceStats>('/api/v1/payments/invoices/stats/'),
+
+  getRevenueStats: (months?: number) =>
+    apiClient.get<RevenueStatsResponse>('/api/v1/payments/transactions/revenue-stats/', { params: months ? { months } : undefined }),
+
+  getInstructorStats: () =>
+    apiClient.get<InstructorStatsResponse>('/api/v1/superadmin/users/instructor-stats/'),
+};
+
+// --- Hooks for Saved Courses ---
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+export const useSavedCourses = () => {
+  return useQuery({
+    queryKey: ['saved-courses'],
+    queryFn: () => savedCourseApi.getAll().then(res => res.data),
+  });
+};
+
+export const useToggleSavedCourse = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (courseId: number) => savedCourseApi.toggle(courseId).then(res => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['saved-courses'] });
+    },
+  });
+};
+
+// --- Hooks for Stats ---
+export const useCourseStats = () => {
+  return useQuery({
+    queryKey: ['stats', 'courses'],
+    queryFn: () => statsApi.getCourseStats().then(res => res.data),
+  });
+};
+
+export const useCertificateStats = () => {
+  return useQuery({
+    queryKey: ['stats', 'certificates'],
+    queryFn: () => statsApi.getCertificateStats().then(res => res.data),
+  });
+};
+
+export const useAssessmentStats = () => {
+  return useQuery({
+    queryKey: ['stats', 'assessments'],
+    queryFn: () => statsApi.getAssessmentStats().then(res => res.data),
+  });
+};
+
+export const useInvoiceStats = () => {
+  return useQuery({
+    queryKey: ['stats', 'invoices'],
+    queryFn: () => statsApi.getInvoiceStats().then(res => res.data),
+  });
+};
+
+export const useRevenueStats = (months?: number) => {
+  return useQuery({
+    queryKey: ['stats', 'revenue', months],
+    queryFn: () => statsApi.getRevenueStats(months).then(res => res.data),
+  });
+};
+
+export const useInstructorStats = () => {
+  return useQuery({
+    queryKey: ['stats', 'instructors'],
+    queryFn: () => statsApi.getInstructorStats().then(res => res.data),
+  });
+};
+

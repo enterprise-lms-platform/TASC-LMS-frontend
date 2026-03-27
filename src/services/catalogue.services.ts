@@ -163,6 +163,9 @@ export const moduleApi = {
 
   delete: (id: number) =>
     apiClient.delete(`${BASE_PATH}/modules/${id}/`),
+
+  reorder: (data: { course: number; order: { id: number; order: number }[] }) =>
+    apiClient.post<{ updated: number }>(`${BASE_PATH}/modules/reorder/`, data),
 };
 
 // SESSIONS
@@ -249,6 +252,10 @@ export const sessionApi = {
 
   patchAssignment: (sessionId: number, payload: Partial<AssignmentConfigCreateUpdate>) =>
     apiClient.patch<AssignmentConfig>(`${BASE_PATH}/sessions/${sessionId}/assignment/`, payload),
+
+  // Learner submission (session_type='quiz' or 'assignment')
+  submit: (sessionId: number, payload: any) =>
+    apiClient.post<any>(`${BASE_PATH}/sessions/${sessionId}/submit/`, payload),
 };
 
 // QUESTION CATEGORIES (instructor-owned)
@@ -346,6 +353,8 @@ export interface CourseReview {
   course: number;
   rating: number;
   content: string;
+  helpful_count: number;
+  report_count: number;
   is_approved: boolean;
   created_at: string;
   updated_at: string;
@@ -366,4 +375,40 @@ export const courseReviewApi = {
   // Get all reviews (with optional filters)
   getAll: (params?: { course?: number; rating?: number; page?: number; page_size?: number }) =>
     apiClient.get<PaginatedResponse<CourseReview>>(`${BASE_PATH}/course-reviews/`, { params }),
+
+  // Mark a review as helpful
+  helpful: (id: number) =>
+    apiClient.post<CourseReview>(`${BASE_PATH}/course-reviews/${id}/helpful/`),
+
+  // Report a review
+  report: (id: number) =>
+    apiClient.post<CourseReview>(`${BASE_PATH}/course-reviews/${id}/report/`),
+};
+
+// SESSION ATTACHMENTS (Resources)
+
+export interface SessionAttachment {
+  id: number;
+  session: number;
+  title: string;
+  file: string;
+  file_url: string;
+  file_type: string;
+  file_size: number;
+  uploaded_by: number | null;
+  uploaded_by_name: string | null;
+  created_at: string;
+}
+
+export const sessionAttachmentApi = {
+  getBySession: (sessionId: number) =>
+    apiClient.get<SessionAttachment[]>(`${BASE_PATH}/session-attachments/`, { params: { session: sessionId } }),
+
+  upload: (data: FormData) =>
+    apiClient.post<SessionAttachment>(`${BASE_PATH}/session-attachments/`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+
+  delete: (id: number) =>
+    apiClient.delete(`${BASE_PATH}/session-attachments/${id}/`),
 };

@@ -21,51 +21,7 @@ import type { Certificate } from '../../types/types';
 import '../../styles/LearnerDashboard.css';
 import '../../styles/CertificatePrint.css';
 
-// TODO: Remove mock data once backend is connected
-const MOCK_CERTIFICATES: Certificate[] = [
-  {
-    id: 1,
-    enrollment: 1,
-    user_name: 'Bernard Otim',
-    user_email: 'bernard@tasc.com',
-    course_title: 'Advanced React Patterns',
-    certificate_number: 'TASC-2026-00142',
-    issued_at: '2026-02-15T10:00:00Z',
-    expiry_date: '2027-02-15T10:00:00Z',
-    is_valid: true,
-    is_expired: false,
-    pdf_url: null,
-    verification_url: null,
-  },
-  {
-    id: 2,
-    enrollment: 2,
-    user_name: 'Bernard Otim',
-    user_email: 'bernard@tasc.com',
-    course_title: 'Project Management Fundamentals',
-    certificate_number: 'TASC-2025-00098',
-    issued_at: '2025-11-20T14:30:00Z',
-    expiry_date: '2026-11-20T14:30:00Z',
-    is_valid: true,
-    is_expired: false,
-    pdf_url: null,
-    verification_url: null,
-  },
-  {
-    id: 3,
-    enrollment: 3,
-    user_name: 'Bernard Otim',
-    user_email: 'bernard@tasc.com',
-    course_title: 'Introduction to Cloud Computing & AWS Services',
-    certificate_number: 'TASC-2025-00056',
-    issued_at: '2025-06-10T09:00:00Z',
-    expiry_date: '2026-01-10T09:00:00Z',
-    is_valid: false,
-    is_expired: true,
-    pdf_url: null,
-    verification_url: null,
-  },
-];
+
 
 const LearnerCertificatesPage: React.FC = () => {
   const theme = useTheme();
@@ -78,8 +34,7 @@ const LearnerCertificatesPage: React.FC = () => {
 
   const { data: apiCertificates, isLoading } = useCertificates();
 
-  // TODO: Remove MOCK_CERTIFICATES fallback once backend is connected
-  const certificates = apiCertificates && apiCertificates.length > 0 ? apiCertificates : MOCK_CERTIFICATES;
+  const certificates = apiCertificates || [];
 
   const validCount = certificates.filter((c) => c.is_valid && !c.is_expired).length;
   const expiredCount = certificates.filter((c) => c.is_expired).length;

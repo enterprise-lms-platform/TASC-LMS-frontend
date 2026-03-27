@@ -15,11 +15,10 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
 
   const coursesData = useQuery({
     queryKey: ['publicCourses', 'featured'],
-    queryFn: () => publicCourseApi.getAll({ featured: true, page_size: 6 }),
+    queryFn: () => publicCourseApi.getAll({ featured: true, page_size: 6 }).then(r => r.data),
   });
 
-  const apiData = coursesData?.data?.data;
-  const coursesList = (apiData?.results || []).map((course: any) => ({
+  const coursesList = coursesData.data?.results?.map((course) => ({
     id: course.id,
     slug: course.slug,
     category: course.category?.name || 'General',
@@ -27,20 +26,51 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
     instructor: course.instructor_name,
     hours: course.duration_hours ? `${course.duration_hours} hours` : 'N/A',
     level: course.level,
-    rating: course.rating || 0,
-    reviews: String(course.rating_count || 0),
+    rating: 0,
+    reviews: '0',
     badge: course.featured ? 'Featured' : undefined,
     image: course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800',
-  }));
+  })) || [];
 
   const handleEnroll = (course: { title: string }) => {
     setSelectedCourse(course);
     setEnrollModalOpen(true);
   };
 
-  if (!coursesData.isLoading && coursesList.length === 0) {
-    return null;
-  }
+  const courses = [
+    {
+      category: 'Web Development',
+      title: 'Advanced React Patterns & Best Practices',
+      instructor: 'Michael Rodriguez',
+      hours: '24 hours',
+      level: 'Advanced',
+      rating: 4.8,
+      reviews: '1.2k',
+      badge: 'Bestseller',
+      image: 'https://images.unsplash.com/photo-1616400619175-5beda3a17896?q=80&w=1074',
+    },
+    {
+      category: 'Data Science',
+      title: 'Data Science & Machine Learning Fundamentals',
+      instructor: 'Emma Chen',
+      hours: '36 hours',
+      level: 'Beginner',
+      rating: 4.9,
+      reviews: '856',
+      badge: 'New',
+      image: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?q=80&w=1170',
+    },
+    {
+      category: 'Cybersecurity',
+      title: 'Cybersecurity Essentials: From Zero to Hero',
+      instructor: 'David Wilson',
+      hours: '28 hours',
+      level: 'Intermediate',
+      rating: 4.7,
+      reviews: '642',
+      image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=1171',
+    },
+  ];
 
   return (
     <section
@@ -124,7 +154,7 @@ const Courses: React.FC<CoursesProps> = ({ isMobile }) => {
             <div
               key={course.id || idx}
               className="course-card"
-              onClick={() => navigate(`/course-details/${course.slug}`)}
+              onClick={() => navigate(`/course-details?slug=${course.slug}`)}
               style={{
                 borderRadius: '16px',
                 overflow: 'hidden',

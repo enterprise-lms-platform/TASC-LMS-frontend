@@ -21,3 +21,11 @@ export const organizationApi = {
   getById: (id: number) =>
     apiClient.get<Organization>(`/api/v1/superadmin/organizations/${id}/`),
 };
+
+export const managerSettingsApi = {
+  get: () =>
+    apiClient.get<Organization>(`/api/v1/auth/manager/organization-settings/`),
+
+  update: (data: Partial<Organization>) =>
+    apiClient.patch<Organization>(`/api/v1/auth/manager/organization-settings/`, data),
+};
