@@ -56,14 +56,12 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/LearnerDashboard.css';
+import { sessionAttachmentApi } from '../../services/catalogue.services';
+import type { SessionAttachment } from '../../services/catalogue.services';
 
 /* ── Types ── */
 interface Note { id: number; text: string; timestamp: string; sessionTitle: string; }
-interface Resource { id: number; name: string; type: string; size: string; }
 
-const sampleResources: Resource[] = [
-  { id: 1, name: 'Lesson Slides.pdf', type: 'PDF', size: '2.4 MB' },
-];
 
 /* ── Helper to Group Sessions into logical modules ── */
 // Note: TASC backend currently doesn't have a formal "Module" concept in the Session model,
@@ -136,6 +134,14 @@ const CoursePlayerPage: React.FC = () => {
   const [newNote, setNewNote] = useState('');
   const [newQuestion, setNewQuestion] = useState('');
   const [expandedQuestionId, setExpandedQuestionId] = useState<number | null>(null);
+
+  // Fetch session attachments (resources)
+  const { data: attachmentsData } = useQuery({
+    queryKey: ['session-attachments', activeSessionId],
+    queryFn: () => activeSessionId ? sessionAttachmentApi.getBySession(activeSessionId).then(r => r.data) : Promise.resolve([]),
+    enabled: !!activeSessionId,
+  });
+  const attachments = Array.isArray(attachmentsData) ? attachmentsData : (attachmentsData as any)?.results ?? [];
   const [questionText, setQuestionText] = useState('');
 
   // Real completed sessions array based on backend progress
@@ -717,21 +723,25 @@ const CoursePlayerPage: React.FC = () => {
             {/* ── Resources ── */}
             {activeTab === 3 && (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                {sampleResources.map(r => (
+                {(attachments ?? []).length === 0 ? (
+                  <Box sx={{ p: 3, textAlign: 'center', bgcolor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                    <Typography color="text.secondary">No resources attached to this session yet.</Typography>
+                  </Box>
+                ) : (attachments ?? []).map((r: SessionAttachment) => (
                   <Box key={r.id} sx={{
                     p: 2, bgcolor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb',
                     display: 'flex', alignItems: 'center', gap: 2,
                     '&:hover': { borderColor: '#ffa424', boxShadow: '0 2px 8px rgba(255,164,36,0.1)' },
                     transition: 'all 0.2s',
                   }}>
-                    <Box sx={{ width: 40, height: 40, borderRadius: '10px', bgcolor: r.type === 'PDF' ? '#fee2e2' : '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <ArticleIcon sx={{ color: r.type === 'PDF' ? '#ef4444' : '#3b82f6' }} />
+                    <Box sx={{ width: 40, height: 40, borderRadius: '10px', bgcolor: r.file_type === 'pdf' ? '#fee2e2' : '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <ArticleIcon sx={{ color: r.file_type === 'pdf' ? '#ef4444' : '#3b82f6' }} />
                     </Box>
                     <Box sx={{ flex: 1 }}>
-                      <Typography variant="body2" fontWeight={600}>{r.name}</Typography>
-                      <Typography variant="caption" color="text.secondary">{r.type} · {r.size}</Typography>
+                      <Typography variant="body2" fontWeight={600}>{r.title}</Typography>
+                      <Typography variant="caption" color="text.secondary">{r.file_type.toUpperCase()} · {(r.file_size / 1024 / 1024).toFixed(1)} MB</Typography>
                     </Box>
-                    <IconButton sx={{ color: '#ffa424' }}><DownloadIcon /></IconButton>
+                    <IconButton sx={{ color: '#ffa424' }} component="a" href={r.file_url || r.file} target="_blank" rel="noopener"><DownloadIcon /></IconButton>
                   </Box>
                 ))}
               </Box>

@@ -370,3 +370,31 @@ export const courseReviewApi = {
   getAll: (params?: { course?: number; rating?: number; page?: number; page_size?: number }) =>
     apiClient.get<PaginatedResponse<CourseReview>>(`${BASE_PATH}/course-reviews/`, { params }),
 };
+
+// SESSION ATTACHMENTS (Resources)
+
+export interface SessionAttachment {
+  id: number;
+  session: number;
+  title: string;
+  file: string;
+  file_url: string;
+  file_type: string;
+  file_size: number;
+  uploaded_by: number | null;
+  uploaded_by_name: string | null;
+  created_at: string;
+}
+
+export const sessionAttachmentApi = {
+  getBySession: (sessionId: number) =>
+    apiClient.get<SessionAttachment[]>(`${BASE_PATH}/session-attachments/`, { params: { session: sessionId } }),
+
+  upload: (data: FormData) =>
+    apiClient.post<SessionAttachment>(`${BASE_PATH}/session-attachments/`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+
+  delete: (id: number) =>
+    apiClient.delete(`${BASE_PATH}/session-attachments/${id}/`),
+};

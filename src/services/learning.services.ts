@@ -53,6 +53,12 @@ export const enrollmentApi = {
   //  Generate certificate for completed enrollment
   generateCertificate: (id: number) =>
     apiClient.post<Certificate>(`${BASE_PATH}/enrollments/${id}/generate_certificate/`),
+
+  //  Bulk enroll users (Manager only)
+  bulkEnroll: (data: { course: number; user_ids: number[] }) =>
+    apiClient.post<{ enrolled: number; already_enrolled: number; failed: number; errors: string[] }>(
+      `${BASE_PATH}/enrollments/bulk/`, data
+    ),
 };
 
 // SESSION PROGRESS
@@ -460,4 +466,4 @@ export const useRevenueTrends = (months: number = 6) => {
     queryFn: () => analyticsApi.getRevenueTrends(months).then(res => res.data),
   });
 };
-
+

@@ -15,13 +15,14 @@
 - ✅ LearnerCourseDetailPage — course API + modules + reviews
 - ✅ ManagerRecordingsPage — livestreamApi
 - ✅ ManagerScheduleNewPage — courseApi + usersApi
-- ✅ ManagerBulkEnrollPage — courseApi
+- ✅ ManagerBulkEnrollPage — courseApi + enrollmentApi.bulkEnroll() + user selection UI
 - ✅ Superadmin PaymentsPage — transactionApi
 - ✅ Superadmin AllOrganizationsPage — organizationApi
 - ✅ Superadmin AllUsersPage — usersApi
 - ✅ FinanceAnalyticsPage — transactionApi + invoiceApi + userSubscriptionApi
 - ✅ CourseReviews — courseReviewApi
 - ✅ CourseCurriculum, WhatYouLearn, CourseRequirements, CourseInstructor
+- ✅ CoursePlayerPage Resources tab — sessionAttachmentApi (mock data removed)
 
 ---
 
@@ -271,6 +272,8 @@
 | Revenue Trends | ✅ Working | `/api/v1/payments/analytics/revenue/` |
 | Courses by Category | ✅ Working | `/api/v1/catalogue/analytics/courses-by-category/` |
 | Reports | ✅ Working (async) | `/api/v1/learning/reports/` |
+| Bulk Enrollment | ✅ Working | `/api/v1/learning/enrollments/bulk/` |
+| Session Attachments | ✅ Working | `/api/v1/catalogue/session-attachments/` |
 
 ---
 
@@ -309,3 +312,6 @@
 | 26 Mar 2026 | Manager Analytics charts wired to `useEnrollmentTrends`, `useLearningStats`, `useCoursesByCategory`, `useRevenueTrends` |
 | 26 Mar 2026 | Instructor Analytics KPIs wired to `useLearningStats`; course performance from real enrollments |
 | 26 Mar 2026 | Finance `RevenueChart` wired to `useRevenueTrends` — replaces hardcoded bar chart data |
+| 27 Mar 2026 | ManagerBulkEnrollPage wired to `enrollmentApi.bulkEnroll()` — real user selection with checkboxes |
+| 27 Mar 2026 | CoursePlayerPage Resources tab wired to `sessionAttachmentApi.getBySession()` — mock data removed |
+| 27 Mar 2026 | LearnerCertificatesPage mock data removed — relies on auto-created certificates via signals |

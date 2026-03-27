@@ -23,7 +23,7 @@ export * from './messaging.services';
 
 // Re-export services as a single object for convenience
 import { authApi, adminApi } from './auth.services';
-import { categoryApi, tagApi, courseApi, sessionApi, courseApprovalApi } from './catalogue.services';
+import { categoryApi, tagApi, courseApi, sessionApi, courseApprovalApi, sessionAttachmentApi } from './catalogue.services';
 import { organizationApi } from './organization.services';
 import { usersApi } from './users.services';
 import { notificationApi } from './notifications.services';
@@ -90,6 +90,7 @@ export const api = {
     course: courseApi,
     session: sessionApi,
     approval: courseApprovalApi,
+    sessionAttachment: sessionAttachmentApi,
   },
 
   // Organizations
