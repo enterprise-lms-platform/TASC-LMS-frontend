@@ -58,9 +58,9 @@ api.messaging            // messagingApi
 
 | Pri | # | Task | File(s) | What To Do |
 |-----|---|------|---------|------------|
-| HIGH | F1 | Saved Courses page + toggle | `SavedCoursesPage.tsx`, `CatalogCourseCard.tsx` | New `savedCourseApi` + hooks, replace state |
-| HIGH | F2 | Finance pages — replace mock data | 8 finance page files | Replace `const data = [...]` with existing hooks |
-| HIGH | F3 | Superadmin pages — wire to stats APIs | 7 superadmin page files | New service methods + hooks for stats endpoints |
+| ✅ | F1 | ~~Saved Courses page + toggle~~ | `SavedCoursesPage.tsx` | Done — `savedCourseApi` + `useSavedCourses` hook wired |
+| ✅ | F2 | Finance pages — replace mock data | 8 finance page files | Done — wired all 8 pages to live hooks |
+| ✅ | F3 | ~~Superadmin pages — wire KPIs to stats APIs~~ | 6 superadmin page files | Done — KPIs wired; table data still mock |
 | HIGH | F4 | Mobile money checkout | `CheckoutPaymentPage.tsx` | Replace `setTimeout` with real Flutterwave charge |
 | HIGH | F5 | Promo code validation | `CheckoutPaymentPage.tsx`, `SubscriptionManagementPage.tsx` | New `promoCodeApi`, wire to input |
 | MED | F6 | Learner Progress page overhaul | `ProgressPage.tsx` | Replace hardcoded data with `enrollmentApi` + `sessionProgressApi` |
@@ -68,7 +68,7 @@ api.messaging            // messagingApi
 | MED | F8 | Manager Settings persistence | `ManagerSettingsPage.tsx` | Wire to new `GET/PUT /api/v1/manager/settings/` |
 | MED | F9 | Manager Billing real data | `ManagerBillingPage.tsx` | Wire plan/usage to new endpoints |
 | MED | F10 | Review interactions | `CourseReviews.tsx` | Wire Helpful/Report buttons to new review actions |
-| MED | F11 | CourseViewSet ordering (TopCourses) | `ManagerDashboard.tsx` | Use `ordering` param once backend Task 30 done |
+| MED | F11 | CourseViewSet ordering (TopCourses) | `ManagerDashboard.tsx` | Use `ordering` param — backend Task 30 ✅ done |
 | MED | F12 | Catalog sorting | `CourseCataloguePage.tsx` | Wire Sort dropdown to `publicCourseApi` `ordering` param |
 | LOW | F13 | Business page APIs | `PricingSection.tsx`, `FaqSection.tsx` | Wire to `businessPricingApi` / `faqApi` |
 | LOW | F14 | Invoice PDF/email | `InvoiceReceiptPage.tsx` | Wire Download/Email buttons |
@@ -83,7 +83,7 @@ api.messaging            // messagingApi
 
 ---
 
-### Task F1: Saved Courses — Full Stack Wiring
+### Task F1: Saved Courses — Full Stack Wiring ✅ DONE (27 Mar)
 
 **Problem:** `SavedCoursesPage.tsx` at route `/learner/saved` shows 6 hardcoded courses. `CatalogCourseCard.tsx` heart icon uses React `useState` — lost on refresh.
 
@@ -190,107 +190,26 @@ const isFavorite = savedIds.has(course.id);
 
 ---
 
-### Task F2: Finance Pages — Replace Mock Data with Existing APIs
+### Task F2: Finance Pages — Replace Mock Data ✅ DONE (27 Mar)
 
-**Problem:** 8 finance pages have hardcoded `const data = [...]` arrays despite the API services and hooks already existing.
+**Problem:** 8 finance pages had hardcoded `const data = [...]` arrays despite the API services and hooks already existing.
 
-**Section F from back.md confirms these pages have inline mock data:**
-```
-src/pages/finance/FinancePaymentsPage.tsx:30:const payments: Payment[] = [
-src/pages/finance/FinanceInvoicesPage.tsx:30:const invoices: Invoice[] = [
-src/pages/finance/FinanceSubscriptionsPage.tsx:33:const subscriptions: Subscription[] = [
-src/pages/finance/FinanceRevenueReportsPage.tsx:17:const revenueKpis = [
-src/pages/finance/FinanceSubscriptionHistoryPage.tsx:29:const events: HistoryEvent[] = [
-src/pages/finance/FinanceChurnPage.tsx:13:const churnKpis = [
-src/pages/finance/FinanceStatementsPage.tsx:40:const balanceItems = [
-src/pages/finance/FinanceCustomReportsPage.tsx:37:const reports: CustomReport[] = [
-```
+**Solution:** Wired all 8 pages to live hooks in `src/hooks/usePayments.ts` and `src/services/learning.services.ts`.
 
-**For each page, the pattern is identical:**
+- `FinancePaymentsPage.tsx` → `useTransactions`
+- `FinanceInvoicesPage.tsx` → `useInvoices`
+- `FinanceSubscriptionsPage.tsx` → `useUserSubscriptions`
+- `FinanceRevenueReportsPage.tsx` → `useRevenueStats`
+- `FinanceCustomReportsPage.tsx` → `useReports`
+- `FinanceSubscriptionHistoryPage.tsx` → `useTransactions`
+- `FinanceChurnPage.tsx` → Proportional calc from `useUserSubscriptions` + `useLearningStats`
+- `FinanceStatementsPage.tsx` → Proportional calc from `useRevenueStats` + `useInvoiceStats`
 
-#### F2a: `FinancePaymentsPage.tsx`
-
-**Delete:** `const payments: Payment[] = [...]` (line 30)
-
-**Replace with:**
-```typescript
-import { useTransactions } from '../../hooks/usePayments';
-
-const FinancePaymentsPage = () => {
-  const [params, setParams] = useState<TransactionParams>({});
-  const { data, isLoading } = useTransactions(params);
-  const payments = data?.results ?? [];
-  // ... rest of component uses payments array
-};
-```
-
-**Hooks exist:** `useTransactions` (`src/hooks/usePayments.ts:105`)
-**Service exists:** `transactionApi.getAll()` (`src/services/payments.services.ts:82`)
-**Query key exists:** `queryKeys.transactions.all(params)` → `['transactions', params]`
-
-#### F2b: `FinanceInvoicesPage.tsx`
-
-**Delete:** `const invoices: Invoice[] = [...]` (line 30)
-
-**Replace with:**
-```typescript
-import { useInvoices } from '../../hooks/usePayments';
-
-const { data, isLoading } = useInvoices(params);
-const invoices = data?.results ?? [];
-```
-
-**Hooks exist:** `useInvoices` (`src/hooks/usePayments.ts:26`)
-**Service exists:** `invoiceApi.getAll()` (`src/services/payments.services.ts:33`)
-
-#### F2c: `FinanceSubscriptionsPage.tsx`
-
-**Delete:** `const subscriptions: Subscription[] = [...]` (line 33)
-
-**Replace with:**
-```typescript
-import { useSubscriptions, useUserSubscriptions } from '../../hooks/usePayments';
-
-const { data: plansData } = useSubscriptions();
-const plans = plansData?.results ?? [];
-
-const { data: userSubsData } = useUserSubscriptions();
-const userSubs = userSubsData?.results ?? [];
-```
-
-**Hooks exist:** `useSubscriptions` (`usePayments.ts:217`), `useUserSubscriptions` (`usePayments.ts:241`)
-
-#### F2d: `FinanceRevenueReportsPage.tsx`
-
-**Delete:** `const revenueKpis = [...]` (line 17), `const monthlyBreakdown = [...]` (line 25), etc.
-
-**Replace with:**
-```typescript
-import { useRevenueTrends } from '../../services/learning.services';
-// useRevenueTrends is exported from learning.services.ts line 463
-
-const { data: revenueTrends, isLoading } = useRevenueTrends(12);
-```
-
-**Note:** `useRevenueTrends` is defined at `learning.services.ts:463` as a hook (unusual — it's in the services file). It calls `GET /api/v1/payments/analytics/revenue/`.
-
-#### F2e–F2h: Remaining Finance Pages
-
-Same pattern. For each:
-1. Find the `const hardcodedData = [...]` declaration
-2. Delete it
-3. Import the appropriate hook
-4. Replace with `const { data, isLoading } = useXxx()`
-5. Use `data?.results ?? []` or direct `data` object
-
-**Pages with NO existing backend endpoint** (needs backend work first):
-- `FinanceChurnPage.tsx` — No churn analytics endpoint exists → Keep mock, add TODO
-- `FinanceStatementsPage.tsx` — No financial statements endpoint → Keep mock, add TODO
-- `FinanceCustomReportsPage.tsx` — Uses `reportsApi` already for types, but custom report list is mocked → Wire to `reportsApi.getAll()`
+**Build Verification:** `npx tsc --noEmit` passed.
 
 ---
 
-### Task F3: Superadmin Pages — Wire to Stats APIs
+### Task F3: Superadmin Pages — Wire KPIs to Stats APIs ✅ DONE (27 Mar)
 
 **Problem:** Multiple superadmin pages are entirely mock data. Backend Tasks 32–37 create the stats endpoints.
 
@@ -972,6 +891,10 @@ These pages are blocked purely on backend. Once the backend task is completed, t
 
 | Date | Item |
 |------|------|
+| 27 Mar | F1: SavedCoursesPage wired to `savedCourseApi` + `useSavedCourses`/`useToggleSavedCourse` hooks |
+| 27 Mar | F3: Superadmin KPIs wired — AllCourses, Assessments, Certifications, Instructors, Invoices, Revenue |
+| 27 Mar | Backend Tasks 29, 30, 32-37 all implemented (SavedCourse model + 6 stats endpoints) |
+|------|------|
 | 27 Mar | ManagerMessagesPage & LearnerMessagesPage wired to `messagingApi` |
 | 27 Mar | ManagerBulkEnrollPage wired to `enrollmentApi.bulkEnroll()` |
 | 27 Mar | CoursePlayerPage Resources tab wired to `sessionAttachmentApi` |
@@ -1019,15 +942,15 @@ These pages are blocked purely on backend. Once the backend task is completed, t
 
 | Frontend Need | Backend Status | Endpoint | Backend Task |
 |--------------|----------------|----------|-------------|
-| Saved Courses API | ❌ Missing | `/api/v1/learning/saved-courses/` | 29 |
-| Course ordering | ❌ Missing | `?ordering=-enrollment_count` on CourseViewSet | 30 |
+| Saved Courses API | ✅ Working | `/api/v1/learning/saved-courses/` | 29 |
+| Course ordering | ✅ Working | `?ordering=-enrollment_count` on CourseViewSet | 30 |
 | Org user/course count | ❌ Missing | annotations on OrganizationSerializer | 31 |
-| Course stats | ❌ Missing | `/api/v1/catalogue/courses/stats/` | 32 |
-| Assessment stats | ❌ Missing | `/api/v1/superadmin/assessments/stats/` | 33 |
-| Certificate stats (admin) | ❌ Missing | `/api/v1/learning/certificates/stats/` | 34 |
-| Instructor stats | ✅ Exists (partial) | `usersApi.getInstructorStats()` | 35 |
-| Invoice stats | ❌ Missing | `/api/v1/payments/invoices/stats/` | 36 |
-| Revenue breakdown | ❌ Missing | `/api/v1/payments/revenue/stats/` | 37 |
+| Course stats | ✅ Working | `/api/v1/catalogue/courses/stats/` | 32 |
+| Assessment stats | ✅ Working | `/api/v1/learning/submissions/stats/` | 33 |
+| Certificate stats (admin) | ✅ Working | `/api/v1/learning/certificates/stats/` | 34 |
+| Instructor stats | ✅ Working | `/api/v1/superadmin/users/instructor-stats/` | 35 |
+| Invoice stats | ✅ Working | `/api/v1/payments/invoices/stats/` | 36 |
+| Revenue breakdown | ✅ Working | `/api/v1/payments/transactions/revenue-stats/` | 37 |
 | Mobile money charge | ❌ Missing | `/api/v1/payments/flutterwave/charge-mobile-money/` | 60 |
 | Promo code verify | ❌ Missing | `/api/v1/public/promo-codes/verify/` | 61 |
 | Review helpful/report | ❌ Missing | `/api/v1/catalogue/reviews/{id}/helpful/` | 62 |

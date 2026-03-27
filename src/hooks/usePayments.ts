@@ -11,6 +11,7 @@ import {
   type TransactionParams,
   type UserSubscriptionParams,
 } from '../services/payments.services';
+import { reportsApi, type ReportListParams } from '../services/reports.services';
 import { queryKeys } from './queryKeys';
 import type {
   InvoiceCreateRequest,
@@ -329,6 +330,34 @@ export const useRenewUserSubscription = () => {
         queryKey: queryKeys.userSubscriptions.detail(id),
       });
       qc.invalidateQueries({ queryKey: ['invoices'] });
+    },
+  });
+};
+
+// ── Reports ──
+
+export const useReportTypes = () =>
+  useQuery({
+    queryKey: ['reports', 'types'],
+    queryFn: () => reportsApi.getTypes().then((r) => r.data),
+  });
+
+export const useReports = (params?: ReportListParams) =>
+  useQuery({
+    queryKey: ['reports', 'list', params],
+    queryFn: () => reportsApi.getAll(params).then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
+  });
+
+export const useCreateReport = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof reportsApi.generate>[0]) =>
+      reportsApi.generate(data).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['reports', 'list'] });
     },
   });
 };
