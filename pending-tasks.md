@@ -62,7 +62,7 @@
 
 ---
 
-#### 4. Landing Page Categories
+#### ~~4. Landing Page Categories~~ ✅ DONE
 
 **File:** `src/components/landing/Categories.tsx`
 
@@ -70,11 +70,11 @@
 
 **Status:** ✅ API exists (`publicCategoryApi.getAll()`)
 
-**Fix:** Fetch real categories, compute real counts.
+**Fix:** ✅ Already wired to `publicCategoryApi.getAll()` + `publicCourseApi.getAll()` with real `courses_count` computation via `useMemo`.
 
 ---
 
-#### 5. Landing Page Featured Courses
+#### ~~5. Landing Page Featured Courses~~ ✅ DONE
 
 **File:** `src/components/landing/Courses.tsx`
 
@@ -82,19 +82,19 @@
 
 **Status:** ✅ API exists (`publicCourseApi.getAll({ featured: true })`)
 
-**Fix:** Fetch real featured courses.
+**Fix:** ✅ Already wired to `publicCourseApi.getAll()` via `useQuery`.
 
 ---
 
-#### 6. Landing Page Pricing
+#### ~~6. Landing Page Pricing~~ ✅ DONE
 
 **File:** `src/components/landing/Pricing.tsx`
 
 **Problem:** Hardcoded "$99 / 6 months" price.
 
-**Status:** ⚠️ Subscription API exists but not wired here.
+**Status:** ✅ Wired to `publicSubscriptionPlansApi.getAll()` via `useQuery`.
 
-**Fix:** Fetch from `subscriptionApi.getAll()`.
+**Fix:** ✅ Already fetching real subscription plans.
 
 ---
 
@@ -215,9 +215,9 @@
 | Component | File | Priority |
 |-----------|------|----------|
 | TrustedBy | `components/landing/TrustedBy.tsx` | HIGH (backend issue) |
-| Categories | `components/landing/Categories.tsx` | MEDIUM |
-| Featured Courses | `components/landing/Courses.tsx` | MEDIUM |
-| Pricing | `components/landing/Pricing.tsx` | MEDIUM |
+| ~~Categories~~ | `components/landing/Categories.tsx` | ✅ DONE |
+| ~~Featured Courses~~ | `components/landing/Courses.tsx` | ✅ DONE |
+| ~~Pricing~~ | `components/landing/Pricing.tsx` | ✅ DONE |
 | Business Stats | `components/business/BusinessStatsSection.tsx` | MEDIUM |
 | Business Pricing | `components/business/PricingSection.tsx` | MEDIUM |
 | FAQ | `components/business/FaqSection.tsx` | LOW |
@@ -244,10 +244,10 @@
 
 ### Sprint 1: Critical Fixes
 1. ~~Fix CSV format mismatch in bulk import~~ ✅
-2. Wire marketing pages to existing APIs
+2. ~~Wire marketing pages to existing APIs~~ ✅ (Categories, Courses, Pricing all wired)
 
 ### Sprint 2: Data Completeness
-3. Fetch real categories, featured courses, pricing
+3. ~~Fetch real categories, featured courses, pricing~~ ✅ DONE
 4. Remove remaining mock fallbacks
 
 ### Sprint 3: Polish
@@ -281,6 +281,7 @@
 
 | Date | Item |
 |------|------|
+| 27 Mar 2026 | ManagerMessagesPage & LearnerMessagesPage wired |
 | 18 Mar 2026 | CoursePlayerPage Q&A wired |
 | 18 Mar 2026 | Instructor WorkshopsPage wired |
 | 18 Mar 2026 | Instructor LearnersPage wired |

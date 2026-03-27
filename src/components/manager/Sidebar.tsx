@@ -12,6 +12,7 @@ import {
   Badge,
 } from '@mui/material';
 import {
+  Chat as MessagesIcon,
   Dashboard as DashboardIcon,
   Analytics as AnalyticsIcon,
   Description as ReportsIcon,
@@ -69,6 +70,8 @@ const buildNavSections = (unreadCount?: number): NavSection[] => [
       { text: 'Overview', icon: <DashboardIcon />, path: '/manager' },
       { text: 'Analytics', icon: <AnalyticsIcon />, path: '/manager/analytics' },
       { text: 'Reports', icon: <ReportsIcon />, path: '/manager/reports' },
+      { text: 'Notifications', icon: <NotificationsIcon />, path: '/manager/notifications', badge: unreadCount || undefined },
+      { text: 'Messages', icon: <MessagesIcon />, path: '/manager/messages' },
     ],
   },
   {
@@ -120,7 +123,6 @@ const buildNavSections = (unreadCount?: number): NavSection[] => [
     title: 'Settings',
     items: [
       { text: 'Organization Settings', icon: <SettingsIcon />, path: '/manager/settings' },
-      { text: 'Notifications', icon: <NotificationsIcon />, path: '/manager/notifications', badge: unreadCount || undefined },
       { text: 'Integrations', icon: <IntegrationsIcon />, path: '/manager/integrations' },
       { text: 'Billing', icon: <BillingIcon />, path: '/manager/billing' },
     ],

@@ -113,6 +113,7 @@ const ManagerNotificationsPage = lazy(() => import('../pages/manager/ManagerNoti
 const ManagerIntegrationsPage = lazy(() => import('../pages/manager/ManagerIntegrationsPage'));
 const ManagerBillingPage = lazy(() => import('../pages/manager/ManagerBillingPage'));
 const ManagerProfilePage = lazy(() => import('../pages/manager/ManagerProfilePage'));
+const ManagerMessagesPage = lazy(() => import('../pages/manager/ManagerMessagesPage'));
 
 // Finance Pages
 const FinanceDashboard = lazy(() => import('../pages/finance/FinanceDashboard'));
@@ -673,6 +674,11 @@ export const createAppRouter = (queryClient: QueryClient) => {
     {
       path: '/manager/profile',
       element: <SuspenseWrapper><ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerProfilePage /></ProtectedRoute></SuspenseWrapper>,
+    },
+    {
+      path: '/manager/messages',
+      element: <SuspenseWrapper><ProtectedRoute allowedRoles={['lms_manager', 'tasc_admin']}><ManagerMessagesPage /></ProtectedRoute></SuspenseWrapper>,
+      loader: async () => managerLoaders.managerRouteLoader(queryClient),
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
