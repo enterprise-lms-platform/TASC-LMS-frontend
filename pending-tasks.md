@@ -1,505 +1,1050 @@
-# TASC LMS Frontend — Pending Tasks
 
-**Last updated:** 27 March 2026
-**Repo:** `TASC-LMS-frontend`
 
----
+# TASC LMS Frontend — Pending Tasks (Final Specification)
 
-## Accurate Status Summary
-
-### What's COMPLETE (recently wired to API):
-- ✅ CoursePlayerPage Q&A — discussionApi
-- ✅ Instructor WorkshopsPage — livestreamApi
-- ✅ Instructor LearnersPage — enrollmentApi + courseApi + submissionApi
-- ✅ Instructor CoursePreviewPage — useModules + courseReviewApi
-- ✅ LearnerCourseDetailPage — course API + modules + reviews
-- ✅ ManagerRecordingsPage — livestreamApi
-- ✅ ManagerScheduleNewPage — courseApi + usersApi
-- ✅ ManagerBulkEnrollPage — courseApi + enrollmentApi.bulkEnroll() + user selection UI
-- ✅ Superadmin PaymentsPage — transactionApi
-- ✅ Superadmin AllOrganizationsPage — organizationApi
-- ✅ Superadmin AllUsersPage — usersApi
-- ✅ FinanceAnalyticsPage — transactionApi + invoiceApi + userSubscriptionApi
-- ✅ CourseReviews — courseReviewApi
-- ✅ CourseCurriculum, WhatYouLearn, CourseRequirements, CourseInstructor
-- ✅ CoursePlayerPage Resources tab — sessionAttachmentApi (mock data removed)
+> **For Claude Code:** Tasks are organized by priority with exact file paths, component names, API service methods, hook names, query keys, and TypeScript interfaces from the actual codebase. Each task tells you exactly what to import, what to call, and what response shape to expect. Work top-down.
 
 ---
 
-## REAL Issues Remaining
+## Reference: Frontend Patterns
 
-### HIGH PRIORITY
+### Data Flow
+```
+Page Component
+  → useQuery/useMutation hook (src/hooks/)
+    → service function (src/services/*.services.ts)
+      → apiClient (src/utils/config.ts) with auth interceptor
+        → Backend API
+```
 
-#### ~~1. Bulk Import CSV Format Mismatch~~ ✅ DONE [26 Mar]
+### Adding a New API Integration
+1. **Service method** exists in `src/services/*.services.ts`? If not, add it.
+2. **Query key** exists in `src/hooks/queryKeys.ts`? If not, add it.
+3. **Hook** exists in `src/hooks/use*.ts`? If not, add it.
+4. **Page** calls the hook, destructures `{ data, isLoading, error }`, replaces hardcoded arrays.
 
-**File:** `src/pages/manager/ManagerBulkImportPage.tsx`
+### Response Pattern
+```typescript
+// All list endpoints return PaginatedResponse<T>
+const { data } = useQuery({ queryKey: [...], queryFn: () => api.getAll().then(r => r.data) });
+const items = data?.results ?? [];
+const total = data?.count ?? 0;
+```
 
-**Fix:** Backend updated to accept both frontend CSV format (`full_name`, `email_address`, `user_role`) and standard format. Manager-imported users auto-scoped to manager's organization.
-
----
-
-#### 2. StatsBanner — Loading State
-
-**File:** `src/components/landing/StatsBanner.tsx`
-
-**Status:** ✅ Already wired to `publicStatsApi.getStats()`
-
-**Note:** Works correctly when backend `/api/v1/public/stats/` returns real data. Shows "..." while loading.
-
----
-
-### MEDIUM PRIORITY — Marketing/Landing Pages
-
-#### 3. TrustedBy — Empty Logo URLs
-
-**File:** `src/components/landing/TrustedBy.tsx`
-
-**Problem:** Backend returns hardcoded names with empty `logo_url`.
-
-**Frontend Status:** ✅ Wired to `publicClientsApi.getClients()`
-
-**Fix Required:** Backend needs real TrustedClient model/data.
-
----
-
-#### ~~4. Landing Page Categories~~ ✅ DONE
-
-**File:** `src/components/landing/Categories.tsx`
-
-**Problem:** Hardcoded 8 categories with fake counts.
-
-**Status:** ✅ API exists (`publicCategoryApi.getAll()`)
-
-**Fix:** ✅ Already wired to `publicCategoryApi.getAll()` + `publicCourseApi.getAll()` with real `courses_count` computation via `useMemo`.
-
----
-
-#### ~~5. Landing Page Featured Courses~~ ✅ DONE
-
-**File:** `src/components/landing/Courses.tsx`
-
-**Problem:** Hardcoded 3 featured courses.
-
-**Status:** ✅ API exists (`publicCourseApi.getAll({ featured: true })`)
-
-**Fix:** ✅ Already wired to `publicCourseApi.getAll()` via `useQuery`.
+### Key Service Objects (from `src/services/main.api.ts`)
+```typescript
+api.catalogue.course     // courseApi
+api.catalogue.session    // sessionApi
+api.catalogue.category   // categoryApi
+api.learning.enrollment  // enrollmentApi
+api.learning.certificate // certificateApi
+api.learning.discussion  // discussionApi
+api.payments.invoice     // invoiceApi
+api.payments.transaction // transactionApi
+api.payments.subscription // subscriptionApi
+api.payments.userSubscription // userSubscriptionApi
+api.payments.paymentMethod // paymentMethodApi
+api.notifications        // notificationApi
+api.reports              // reportsApi
+api.users                // usersApi
+api.upload               // uploadApi
+api.livestream.session   // livestreamApi
+api.messaging            // messagingApi
+```
 
 ---
 
-#### ~~6. Landing Page Pricing~~ ✅ DONE
+## Quick Summary — Open Tasks
 
-**File:** `src/components/landing/Pricing.tsx`
-
-**Problem:** Hardcoded "$99 / 6 months" price.
-
-**Status:** ✅ Wired to `publicSubscriptionPlansApi.getAll()` via `useQuery`.
-
-**Fix:** ✅ Already fetching real subscription plans.
-
----
-
-#### 7. Business Page Components
-
-**Files:** 
-- `src/components/business/PricingSection.tsx`
-- `src/components/business/BusinessStatsSection.tsx`
-- `src/components/business/FaqSection.tsx`
-
-**Problem:** Hardcoded B2B pricing, stats, and FAQ.
-
-**Fix:** Fetch pricing plans, real business metrics, FAQ from API/CMS.
-
----
-
-### MEDIUM PRIORITY — Analytics Pages
-
-#### ~~8. Manager Analytics Page — Charts~~ ✅ DONE [26 Mar]
-
-**File:** `src/pages/manager/ManagerAnalyticsPage.tsx`
-
-**Status:** ✅ KPIs and charts wired to `useLearningStats`, `useEnrollmentTrends`, `useCoursesByCategory`, `useRevenueTrends` hooks.
+| Pri | # | Task | File(s) | What To Do |
+|-----|---|------|---------|------------|
+| HIGH | F1 | Saved Courses page + toggle | `SavedCoursesPage.tsx`, `CatalogCourseCard.tsx` | New `savedCourseApi` + hooks, replace state |
+| HIGH | F2 | Finance pages — replace mock data | 8 finance page files | Replace `const data = [...]` with existing hooks |
+| HIGH | F3 | Superadmin pages — wire to stats APIs | 7 superadmin page files | New service methods + hooks for stats endpoints |
+| HIGH | F4 | Mobile money checkout | `CheckoutPaymentPage.tsx` | Replace `setTimeout` with real Flutterwave charge |
+| HIGH | F5 | Promo code validation | `CheckoutPaymentPage.tsx`, `SubscriptionManagementPage.tsx` | New `promoCodeApi`, wire to input |
+| MED | F6 | Learner Progress page overhaul | `ProgressPage.tsx` | Replace hardcoded data with `enrollmentApi` + `sessionProgressApi` |
+| MED | F7 | Instructor Grading page wiring | `GradingPage.tsx` | Replace `sampleSubmissions` with `submissionApi` |
+| MED | F8 | Manager Settings persistence | `ManagerSettingsPage.tsx` | Wire to new `GET/PUT /api/v1/manager/settings/` |
+| MED | F9 | Manager Billing real data | `ManagerBillingPage.tsx` | Wire plan/usage to new endpoints |
+| MED | F10 | Review interactions | `CourseReviews.tsx` | Wire Helpful/Report buttons to new review actions |
+| MED | F11 | CourseViewSet ordering (TopCourses) | `ManagerDashboard.tsx` | Use `ordering` param once backend Task 30 done |
+| MED | F12 | Catalog sorting | `CourseCataloguePage.tsx` | Wire Sort dropdown to `publicCourseApi` `ordering` param |
+| LOW | F13 | Business page APIs | `PricingSection.tsx`, `FaqSection.tsx` | Wire to `businessPricingApi` / `faqApi` |
+| LOW | F14 | Invoice PDF/email | `InvoiceReceiptPage.tsx` | Wire Download/Email buttons |
+| LOW | F15 | Payment history exports | `PaymentHistoryPage.tsx` | Wire Export CSV / Statement buttons |
+| LOW | F16 | Subscription actions | `SubscriptionManagementPage.tsx` | Wire Cancel/Add Payment mutations |
+| LOW | F17 | Security page | `SecurityPage.tsx` | Wire to new security stats endpoint |
+| LOW | F18 | Dashboard mock cleanup | various | Remove remaining hardcoded stats |
 
 ---
 
-#### ~~9. Instructor Analytics Page — Charts~~ ✅ DONE [26 Mar]
-
-**File:** `src/pages/instructor/InstructorAnalyticsPage.tsx`
-
-**Status:** ✅ KPIs wired to `useLearningStats` hook. Course performance computed from real enrollment data.
+## HIGH PRIORITY
 
 ---
 
-#### 10. Superadmin Analytics Page
+### Task F1: Saved Courses — Full Stack Wiring
 
-**File:** `src/pages/superadmin/AnalyticsPage.tsx`
+**Problem:** `SavedCoursesPage.tsx` at route `/learner/saved` shows 6 hardcoded courses. `CatalogCourseCard.tsx` heart icon uses React `useState` — lost on refresh.
 
-**Status:** Hardcoded platform-wide metrics.
+**Backend dependency:** Task 29 (new `SavedCourse` model + endpoints)
 
-**Fix:** Needs cross-org aggregation endpoints from backend.
+**Step 1 — Add service methods** (`src/services/learning.services.ts`, append):
+
+```typescript
+export interface SavedCourseResponse {
+  id: number;
+  course: CourseList;
+  created_at: string;
+}
+
+export const savedCourseApi = {
+  getAll: (params?: { page?: number; page_size?: number }) =>
+    apiClient.get<PaginatedResponse<SavedCourseResponse>>('/api/v1/learning/saved-courses/', { params }),
+
+  save: (courseId: number) =>
+    apiClient.post('/api/v1/learning/saved-courses/', { course: courseId }),
+
+  unsave: (id: number) =>
+    apiClient.delete(`/api/v1/learning/saved-courses/${id}/`),
+
+  toggle: (courseId: number) =>
+    apiClient.post<{ saved: boolean }>('/api/v1/learning/saved-courses/toggle/', { course: courseId }),
+};
+```
+
+**Step 2 — Add to consolidated export** (`src/services/main.api.ts`):
+
+```typescript
+import { savedCourseApi } from './learning.services';
+// In the api object, under learning:
+learning: {
+  // ...existing...
+  savedCourse: savedCourseApi,
+},
+```
+
+**Step 3 — Add query key** (`src/hooks/queryKeys.ts`):
+
+```typescript
+savedCourses: {
+  all: ['saved-courses'] as const,
+},
+```
+
+**Step 4 — Add hooks** (`src/hooks/useLearning.ts`, append):
+
+```typescript
+export const useSavedCourses = () =>
+  useQuery({
+    queryKey: queryKeys.savedCourses.all,
+    queryFn: () => savedCourseApi.getAll().then(r => r.data),
+  });
+
+export const useToggleSavedCourse = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (courseId: number) => savedCourseApi.toggle(courseId).then(r => r.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.savedCourses.all });
+    },
+  });
+};
+```
+
+**Step 5 — Wire `SavedCoursesPage.tsx`:**
+
+Replace the hardcoded `const savedCourses = [...]` with:
+
+```typescript
+import { useSavedCourses } from '../../hooks/useLearning';
+
+const SavedCoursesPage = () => {
+  const { data, isLoading } = useSavedCourses();
+  const courses = data?.results ?? [];
+
+  // Replace the hardcoded grid with courses.map(sc => ...)
+  // sc.course contains the full CourseList object
+};
+```
+
+**Step 6 — Wire `CatalogCourseCard.tsx` or `LearnerCourseCatalogPage.tsx`:**
+
+Replace `const [favorites, setFavorites] = useState<Set<number>>(new Set())` with:
+
+```typescript
+import { useSavedCourses, useToggleSavedCourse } from '../../hooks/useLearning';
+
+const { data: savedData } = useSavedCourses();
+const savedIds = new Set(savedData?.results?.map(sc => sc.course.id) ?? []);
+const toggleMutation = useToggleSavedCourse();
+
+// In the heart icon onClick:
+const handleFavorite = (courseId: number) => {
+  toggleMutation.mutate(courseId);
+};
+
+// For isFavorite:
+const isFavorite = savedIds.has(course.id);
+```
 
 ---
 
-### LOW PRIORITY
+### Task F2: Finance Pages — Replace Mock Data with Existing APIs
 
-#### 11. Gradebook Page — Student Grades
+**Problem:** 8 finance pages have hardcoded `const data = [...]` arrays despite the API services and hooks already existing.
 
-**File:** `src/pages/instructor/GradebookPage.tsx`
+**Section F from back.md confirms these pages have inline mock data:**
+```
+src/pages/finance/FinancePaymentsPage.tsx:30:const payments: Payment[] = [
+src/pages/finance/FinanceInvoicesPage.tsx:30:const invoices: Invoice[] = [
+src/pages/finance/FinanceSubscriptionsPage.tsx:33:const subscriptions: Subscription[] = [
+src/pages/finance/FinanceRevenueReportsPage.tsx:17:const revenueKpis = [
+src/pages/finance/FinanceSubscriptionHistoryPage.tsx:29:const events: HistoryEvent[] = [
+src/pages/finance/FinanceChurnPage.tsx:13:const churnKpis = [
+src/pages/finance/FinanceStatementsPage.tsx:40:const balanceItems = [
+src/pages/finance/FinanceCustomReportsPage.tsx:37:const reports: CustomReport[] = [
+```
 
-**Status:** ✅ Wired to `submissionApi` and `gradeStatisticsApi`
+**For each page, the pattern is identical:**
 
-**Note:** Uses client-side computation for student grade matrix.
+#### F2a: `FinancePaymentsPage.tsx`
+
+**Delete:** `const payments: Payment[] = [...]` (line 30)
+
+**Replace with:**
+```typescript
+import { useTransactions } from '../../hooks/usePayments';
+
+const FinancePaymentsPage = () => {
+  const [params, setParams] = useState<TransactionParams>({});
+  const { data, isLoading } = useTransactions(params);
+  const payments = data?.results ?? [];
+  // ... rest of component uses payments array
+};
+```
+
+**Hooks exist:** `useTransactions` (`src/hooks/usePayments.ts:105`)
+**Service exists:** `transactionApi.getAll()` (`src/services/payments.services.ts:82`)
+**Query key exists:** `queryKeys.transactions.all(params)` → `['transactions', params]`
+
+#### F2b: `FinanceInvoicesPage.tsx`
+
+**Delete:** `const invoices: Invoice[] = [...]` (line 30)
+
+**Replace with:**
+```typescript
+import { useInvoices } from '../../hooks/usePayments';
+
+const { data, isLoading } = useInvoices(params);
+const invoices = data?.results ?? [];
+```
+
+**Hooks exist:** `useInvoices` (`src/hooks/usePayments.ts:26`)
+**Service exists:** `invoiceApi.getAll()` (`src/services/payments.services.ts:33`)
+
+#### F2c: `FinanceSubscriptionsPage.tsx`
+
+**Delete:** `const subscriptions: Subscription[] = [...]` (line 33)
+
+**Replace with:**
+```typescript
+import { useSubscriptions, useUserSubscriptions } from '../../hooks/usePayments';
+
+const { data: plansData } = useSubscriptions();
+const plans = plansData?.results ?? [];
+
+const { data: userSubsData } = useUserSubscriptions();
+const userSubs = userSubsData?.results ?? [];
+```
+
+**Hooks exist:** `useSubscriptions` (`usePayments.ts:217`), `useUserSubscriptions` (`usePayments.ts:241`)
+
+#### F2d: `FinanceRevenueReportsPage.tsx`
+
+**Delete:** `const revenueKpis = [...]` (line 17), `const monthlyBreakdown = [...]` (line 25), etc.
+
+**Replace with:**
+```typescript
+import { useRevenueTrends } from '../../services/learning.services';
+// useRevenueTrends is exported from learning.services.ts line 463
+
+const { data: revenueTrends, isLoading } = useRevenueTrends(12);
+```
+
+**Note:** `useRevenueTrends` is defined at `learning.services.ts:463` as a hook (unusual — it's in the services file). It calls `GET /api/v1/payments/analytics/revenue/`.
+
+#### F2e–F2h: Remaining Finance Pages
+
+Same pattern. For each:
+1. Find the `const hardcodedData = [...]` declaration
+2. Delete it
+3. Import the appropriate hook
+4. Replace with `const { data, isLoading } = useXxx()`
+5. Use `data?.results ?? []` or direct `data` object
+
+**Pages with NO existing backend endpoint** (needs backend work first):
+- `FinanceChurnPage.tsx` — No churn analytics endpoint exists → Keep mock, add TODO
+- `FinanceStatementsPage.tsx` — No financial statements endpoint → Keep mock, add TODO
+- `FinanceCustomReportsPage.tsx` — Uses `reportsApi` already for types, but custom report list is mocked → Wire to `reportsApi.getAll()`
 
 ---
 
-#### 12. Content Upload Page — Storage Quota
+### Task F3: Superadmin Pages — Wire to Stats APIs
 
-**File:** `src/pages/instructor/ContentUploadPage.tsx`
+**Problem:** Multiple superadmin pages are entirely mock data. Backend Tasks 32–37 create the stats endpoints.
 
-**Status:** ✅ `StorageInfoCard` uses `quotaApi.getQuota()` (but may show 0 until real uploads)
+**Pages and their backend dependencies:**
 
-**Backend:** ✅ `/api/v1/uploads/quota/` exists
+| Page File | Backend Task | Endpoint to Call | Service to Create |
+|-----------|-------------|------------------|-------------------|
+| `AllCoursesPage.tsx` | 32 | `GET /api/v1/catalogue/courses/stats/` | `courseApi.getStats()` |
+| `AssessmentsPage.tsx` | 33 | `GET /api/v1/superadmin/assessments/stats/` | new `assessmentApi.getStats()` |
+| `CertificationsPage.tsx` | 34 | `GET /api/v1/learning/certificates/stats/` | `certificateApi.getStats()` |
+| `InstructorsPage.tsx` | 35 | `GET /api/v1/superadmin/users/instructor-stats/` | `usersApi.getInstructorStats()` |
+| `InvoicesPage.tsx` | 36 | `GET /api/v1/payments/invoices/stats/` | `invoiceApi.getStats()` |
+| `RevenuePage.tsx` | 37 | `GET /api/v1/payments/revenue/stats/` | new `revenueApi.getStats()` |
+| `RolesPermissionsPage.tsx` | 40 | `GET /api/v1/superadmin/users/stats/` (enhanced) | `userStatsApi.getStats()` (already exists) |
+
+**Example wiring for `AllCoursesPage.tsx`:**
+
+**Step 1 — Add service method** (`src/services/catalogue.services.ts`):
+
+```typescript
+// Add to courseApi object:
+getStats: () =>
+  apiClient.get<{ total: number; published: number; draft: number; archived: number }>(
+    '/api/v1/catalogue/courses/stats/'
+  ),
+```
+
+**Step 2 — Add hook** (`src/hooks/useCatalogue.ts`):
+
+```typescript
+export const useCourseStats = () =>
+  useQuery({
+    queryKey: ['courses', 'stats'] as const,
+    queryFn: () => courseApi.getStats().then(r => r.data),
+  });
+```
+
+**Step 3 — Wire page** (`src/pages/superadmin/AllCoursesPage.tsx`):
+
+Find the hardcoded KPI object and replace:
+```typescript
+import { useCourseStats, useCourses } from '../../hooks/useCatalogue';
+
+const { data: stats, isLoading: statsLoading } = useCourseStats();
+const { data: coursesData, isLoading: coursesLoading } = useCourses(tableParams);
+
+// KPI cards:
+const kpis = [
+  { label: 'Total Courses', value: stats?.total ?? 0 },
+  { label: 'Published', value: stats?.published ?? 0 },
+  { label: 'Draft', value: stats?.draft ?? 0 },
+  { label: 'Archived', value: stats?.archived ?? 0 },
+];
+
+// Table:
+const courses = coursesData?.results ?? [];
+```
+
+**Repeat this pattern for each superadmin page.** The table data usually comes from existing list endpoints (`courseApi.getAll()`, `usersApi.getAll()`, `invoiceApi.getAll()`), and only the KPI stats need new endpoints.
+
+**For `InstructorsPage.tsx`:**
+
+`usersApi.getInstructorStats()` already exists (`users.services.ts:85`). It returns `Promise<InstructorStats>` with `{ total, active, avg_rating, total_courses }`. Just call it:
+
+```typescript
+import { usersApi, InstructorStats } from '../../services/users.services';
+
+const { data: stats } = useQuery({
+  queryKey: ['instructors', 'stats'],
+  queryFn: () => usersApi.getInstructorStats(),
+});
+```
+
+For the instructors table, use:
+```typescript
+const { data: instructorsData } = useQuery({
+  queryKey: ['users', { role: 'instructor' }],
+  queryFn: () => usersApi.getInstructors({ role: 'instructor' }).then(r => r.data),
+});
+```
 
 ---
 
-#### ~~13. Manager Bulk Import Page~~ ✅ DONE [26 Mar]
+### Task F4: Mobile Money Checkout — Replace setTimeout
 
-**File:** `src/pages/manager/ManagerBulkImportPage.tsx`
+**File:** `src/pages/learner/CheckoutPaymentPage.tsx`
 
-**Status:** ✅ Upload wired to backend. Backend accepts both CSV formats. Hardcoded mock import history removed.
+**Problem:** Mobile money payment uses `setTimeout(() => { setPaymentStatus('success') }, 3000)` to simulate payment.
+
+**Backend dependency:** Task 60 (Flutterwave mobile money charge endpoint)
+
+**Step 1 — Add service method** (`src/services/payments.services.ts`):
+
+```typescript
+export interface MobileMoneyChargeRequest {
+  enrollment: number;
+  phone_number: string;
+  provider: 'mpesa' | 'mtn' | 'airtel';
+  promo_code?: string;
+}
+
+export interface MobileMoneyChargeResponse {
+  status: 'pending' | 'error';
+  message: string;
+  flw_ref?: string;
+}
+
+export const mobileMoneyApi = {
+  charge: (data: MobileMoneyChargeRequest) =>
+    apiClient.post<MobileMoneyChargeResponse>(
+      '/api/v1/payments/flutterwave/charge-mobile-money/',
+      data
+    ),
+};
+```
+
+**Step 2 — Wire in `CheckoutPaymentPage.tsx`:**
+
+Find the `setTimeout` block in the mobile money handler and replace:
+
+```typescript
+import { mobileMoneyApi } from '../../services/payments.services';
+
+const handleMobileMoneyPayment = async () => {
+  setPaymentStatus('processing');
+  try {
+    const response = await mobileMoneyApi.charge({
+      enrollment: enrollmentId,
+      phone_number: phoneNumber,
+      provider: selectedProvider as 'mpesa' | 'mtn' | 'airtel',
+      promo_code: promoCode || undefined,
+    });
+    if (response.data.status === 'pending') {
+      setPaymentStatus('pending');
+      // Show "Check your phone" message
+      // Poll for completion or wait for webhook redirect
+    }
+  } catch (error) {
+    setPaymentStatus('failed');
+    // Show error toast
+  }
+};
+```
 
 ---
 
-#### ~~14. Instructor Messages Page~~ ✅ DONE [25 Mar]
+### Task F5: Promo Code Validation
 
-**File:** `src/pages/InstructorMessagesPage.tsx`
+**Files:**
+- `src/pages/learner/CheckoutPaymentPage.tsx` — hardcoded "SAVE20" acceptance
+- `src/pages/learner/SubscriptionManagementPage.tsx` — same
 
-**Status:** ✅ Fully wired to `messagingApi` — real conversations, messages, send, mark_read, 5s polling.
+**Backend dependency:** Task 61 (PromoCode model + verify endpoint)
+
+**Step 1 — Add service** (`src/services/public.services.ts`):
+
+```typescript
+export interface PromoCodeVerifyResponse {
+  valid: boolean;
+  code?: string;
+  discount_percent?: number;
+  discount_amount?: string;
+  error?: string;
+}
+
+export const promoCodeApi = {
+  verify: (code: string, courseId?: number) =>
+    apiClient.get<PromoCodeVerifyResponse>('/api/v1/public/promo-codes/verify/', {
+      params: { code, course: courseId },
+    }),
+};
+```
+
+**Step 2 — Wire in `CheckoutPaymentPage.tsx`:**
+
+Find the promo code input handler (where it checks `code === 'SAVE20'`) and replace:
+
+```typescript
+const handleApplyPromo = async () => {
+  try {
+    const { data } = await promoCodeApi.verify(promoCode, courseId);
+    if (data.valid) {
+      setDiscount(data.discount_percent || 0);
+      setDiscountAmount(data.discount_amount || '0');
+      showToast('Promo code applied!', 'success');
+    } else {
+      showToast(data.error || 'Invalid promo code', 'error');
+    }
+  } catch {
+    showToast('Invalid promo code', 'error');
+  }
+};
+```
 
 ---
 
-#### 15. Superadmin Security Page
+## MEDIUM PRIORITY
+
+---
+
+### Task F6: Learner Progress Page — Full Overhaul
+
+**File:** `src/pages/learner/ProgressPage.tsx`
+
+**Problem:** 0% backend integration. All stats, course progress lists, milestones are hardcoded.
+
+**APIs that already exist for this:**
+- `enrollmentApi.getAll()` → `useEnrollments()` — user's enrollments with `progress_percentage`, `status`
+- `sessionProgressApi.getAll({ enrollment })` → `useSessionProgressList()` — per-session completion
+- `analyticsApi.getLearningStats()` → from `learning.services.ts:303`
+
+**Do this:**
+
+```typescript
+import { useEnrollments } from '../../hooks/useLearning';
+import { useLearningStats } from '../../services/learning.services';
+
+const ProgressPage = () => {
+  const { data: enrollmentsData, isLoading } = useEnrollments();
+  const enrollments = enrollmentsData?.results ?? [];
+  const { data: stats } = useLearningStats(); // returns LearningStats
+
+  // Compute from real data:
+  const completedCourses = enrollments.filter(e => e.status === 'completed').length;
+  const activeCourses = enrollments.filter(e => e.status === 'active').length;
+  const avgProgress = enrollments.reduce((sum, e) => sum + e.progress_percentage, 0)
+    / (enrollments.length || 1);
+
+  // For per-course progress cards, map enrollments:
+  const courseProgress = enrollments.map(e => ({
+    courseTitle: e.course_title,
+    thumbnail: e.course_thumbnail,
+    progress: e.progress_percentage,
+    status: e.status,
+    lastAccessed: e.last_accessed_at,
+  }));
+};
+```
+
+**Enrollment interface fields available** (from `types.ts`):
+- `progress_percentage: number`
+- `status: EnrollmentStatus` (active, completed, dropped, expired)
+- `course_title: string`
+- `course_thumbnail: string`
+- `last_accessed_at: string`
+- `time_remaining_days: number`
+- `certificate_issued: boolean`
+
+---
+
+### Task F7: Instructor Grading Page — Wire to Submissions API
+
+**File:** `src/pages/instructor/GradingPage.tsx`
+
+**Problem:** Uses `sampleSubmissions: SubmissionData[] = [...]` (line 25) and `sampleFiles: FileData[] = [...]` (line 73).
+
+**APIs that already exist:**
+- `submissionApi.getAll()` → `useSubmissions()` hook (`src/hooks/useSubmissions.ts:16`)
+- `submissionApi.grade(id, data)` → `useGradeSubmission()` hook (`src/hooks/useSubmissions.ts:66`)
+
+**Do this:**
+
+```typescript
+import { useSubmissions, useGradeSubmission } from '../../hooks/useSubmissions';
+
+const GradingPage = () => {
+  const { data: subsData, isLoading } = useSubmissions({
+    status: 'submitted',  // Only show ungraded submissions
+  });
+  const submissions = subsData?.results ?? [];
+  const gradeMutation = useGradeSubmission();
+
+  const handleGrade = (submissionId: number, grade: number, feedback: string) => {
+    gradeMutation.mutate(
+      { id: submissionId, data: { grade, feedback } },
+      {
+        onSuccess: () => showToast('Graded successfully', 'success'),
+      }
+    );
+  };
+};
+```
+
+**Submission interface fields** (from `types.ts`):
+- `id`, `assignment_title`, `session_title`, `user_name`, `user_email`
+- `status: SubmissionStatus` (draft, submitted, graded, pending_review, rejected)
+- `submitted_file_url`, `submitted_file_name`, `submitted_text`
+- `grade`, `feedback`, `graded_at`, `graded_by_name`
+
+Delete `sampleSubmissions` and `sampleFiles` arrays entirely.
+
+---
+
+### Task F8: Manager Settings — Wire to Backend
+
+**File:** `src/pages/manager/ManagerSettingsPage.tsx`
+
+**Problem:** Entire page is a static mock. No backend persistence.
+
+**Backend dependency:** Task 43 (`GET/PUT /api/v1/manager/settings/`)
+
+**Step 1 — Add service** (`src/services/organization.services.ts` or new file):
+
+```typescript
+export interface ManagerSettings {
+  org_name: string;
+  description: string;
+  logo: string | null;
+  website: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  address: string;
+  city: string;
+  country: string;
+}
+
+export const managerSettingsApi = {
+  get: () => apiClient.get<ManagerSettings>('/api/v1/manager/settings/'),
+  update: (data: Partial<ManagerSettings>) =>
+    apiClient.put<ManagerSettings>('/api/v1/manager/settings/', data),
+};
+```
+
+**Step 2 — Wire page:**
+
+```typescript
+const { data: settings, isLoading } = useQuery({
+  queryKey: ['manager', 'settings'],
+  queryFn: () => managerSettingsApi.get().then(r => r.data),
+});
+
+const updateMutation = useMutation({
+  mutationFn: (data: Partial<ManagerSettings>) =>
+    managerSettingsApi.update(data).then(r => r.data),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['manager', 'settings'] });
+    showToast('Settings saved', 'success');
+  },
+});
+```
+
+---
+
+### Task F9: Manager Billing — Wire Real Data
+
+**File:** `src/pages/manager/ManagerBillingPage.tsx`
+
+**Problem:** Plan info, usage stats, and payment method are mocked. Invoice table may be wired.
+
+**Backend dependency:** Task 44 (`GET /api/v1/manager/billing/plan/` and `/usage/`)
+
+**Step 1 — Add services:**
+
+```typescript
+export const managerBillingApi = {
+  getPlan: () => apiClient.get('/api/v1/manager/billing/plan/'),
+  getUsage: () => apiClient.get('/api/v1/manager/billing/usage/'),
+};
+```
+
+**Step 2 — Wire page sections:**
+
+```typescript
+const { data: plan } = useQuery({
+  queryKey: ['manager', 'billing', 'plan'],
+  queryFn: () => managerBillingApi.getPlan().then(r => r.data),
+});
+
+const { data: usage } = useQuery({
+  queryKey: ['manager', 'billing', 'usage'],
+  queryFn: () => managerBillingApi.getUsage().then(r => r.data),
+});
+```
+
+Replace hardcoded "Enterprise $499/mo" with `plan?.plan_name` and `plan?.price`.
+Replace hardcoded "347 users" with `usage?.active_users`.
+
+---
+
+### Task F10: Course Review Interactions
+
+**File:** `src/components/course/CourseReviews.tsx` (or similar in `components/learner/`)
+
+**Problem:** "Helpful" and "Report" buttons are non-functional. Star filter dropdown is ignored.
+
+**Backend dependency:** Task 62 (review `helpful` and `report` actions, `rating` filter)
+
+**Step 1 — Add service methods** (`src/services/catalogue.services.ts`):
+
+```typescript
+// Add to courseReviewApi:
+helpful: (reviewId: number) =>
+  apiClient.post(`/api/v1/catalogue/reviews/${reviewId}/helpful/`),
+
+report: (reviewId: number) =>
+  apiClient.post(`/api/v1/catalogue/reviews/${reviewId}/report/`),
+```
+
+**Step 2 — Wire buttons:**
+
+```typescript
+const handleHelpful = async (reviewId: number) => {
+  await courseReviewApi.helpful(reviewId);
+  showToast('Marked as helpful', 'success');
+};
+
+const handleReport = async (reviewId: number) => {
+  await courseReviewApi.report(reviewId);
+  showToast('Review reported', 'info');
+};
+```
+
+**Step 3 — Wire rating filter:**
+
+The `courseReviewApi.getAll()` already accepts `{ rating?: number }` param (line 370). Just pass it:
+
+```typescript
+const [ratingFilter, setRatingFilter] = useState<number | undefined>();
+const { data: reviewsData } = useQuery({
+  queryKey: ['course-reviews', courseId, ratingFilter],
+  queryFn: () => courseReviewApi.getAll({ course: courseId, rating: ratingFilter }).then(r => r.data),
+});
+```
+
+---
+
+### Task F11: Manager Dashboard — TopCourses Widget
+
+**File:** `src/pages/manager/ManagerDashboard.tsx` (or a `TopCourses` component)
+
+**Problem:** Fetches first 4 courses in default order instead of most-enrolled.
+
+**Backend dependency:** Task 30 (add `OrderingFilter` to `CourseViewSet`)
+
+**Once backend is ready, change the query:**
+
+```typescript
+const { data: topCoursesData } = useCourses({
+  ordering: '-enrollment_count',
+  page_size: 4,
+});
+```
+
+**Note:** The `CourseListParams` interface already has no `ordering` field. Add it:
+
+```typescript
+// In catalogue.services.ts, CourseListParams:
+export interface CourseListParams {
+  // ...existing fields...
+  ordering?: string;
+}
+```
+
+---
+
+### Task F12: Public Catalog — Sort Dropdown
+
+**File:** `src/pages/public/CourseCataloguePage.tsx`
+
+**Problem:** Sort dropdown exists but `publicCourseApi` doesn't pass `ordering` param.
+
+**Backend status:** `PublicCourseViewSet` already has `OrderingFilter` configured.
+
+**Fix:** The `PublicCourseParams` interface (`public.services.ts:52`) doesn't include `ordering`. Add it:
+
+```typescript
+export interface PublicCourseParams {
+  // ...existing...
+  ordering?: string;  // e.g., '-published_at', 'title', '-enrollment_count'
+}
+```
+
+Then in the page, wire the dropdown:
+
+```typescript
+const [sortBy, setSortBy] = useState('-published_at');
+const { data } = usePublicCourses({ ...filters, ordering: sortBy });
+```
+
+---
+
+## LOW PRIORITY
+
+---
+
+### Task F13: Business Page Components
+
+**Files:**
+- `src/components/business/PricingSection.tsx` — `businessPricingApi.getPlans()` exists but may not be wired
+- `src/components/business/FaqSection.tsx` — `faqApi.getAll()` exists in `public.services.ts:149`
+
+**Services exist** (`public.services.ts`):
+```typescript
+businessPricingApi.getPlans()  // line 133
+faqApi.getAll()                // line 149
+```
+
+**Wire PricingSection:**
+```typescript
+const { data: plans } = useQuery({
+  queryKey: ['business-plans'],
+  queryFn: () => businessPricingApi.getPlans().then(r => r.data),
+});
+```
+
+**Wire FaqSection:**
+```typescript
+const { data: faqs } = useQuery({
+  queryKey: ['faqs'],
+  queryFn: () => faqApi.getAll().then(r => r.data),
+});
+```
+
+---
+
+### Task F14: Invoice PDF Download & Email
+
+**File:** `src/pages/learner/InvoiceReceiptPage.tsx`
+
+**Problem:** "Download PDF" and "Email Invoice" buttons show mock toasts.
+
+**Backend dependency:** Task 63 (invoice download-pdf and email-receipt endpoints)
+
+**Wire:**
+```typescript
+const handleDownloadPDF = async () => {
+  try {
+    const response = await invoiceApi.getById(invoiceId); // or a dedicated download endpoint
+    // Use window.print() with the A4 CSS template already in CertificatePrint.css
+    window.print();
+  } catch {
+    showToast('Failed to download', 'error');
+  }
+};
+
+const handleEmailReceipt = async () => {
+  try {
+    await apiClient.post(`/api/v1/payments/invoices/${invoiceId}/email-receipt/`);
+    showToast('Receipt emailed successfully', 'success');
+  } catch {
+    showToast('Failed to send email', 'error');
+  }
+};
+```
+
+---
+
+### Task F15: Payment History Exports
+
+**File:** `src/pages/learner/PaymentHistoryPage.tsx`
+
+**Problem:** "Export CSV" and "Download Statement" buttons are placeholders.
+
+**Backend dependency:** Task 63 (transaction export-csv endpoint)
+
+**Wire:**
+```typescript
+const handleExportCSV = async () => {
+  try {
+    const response = await apiClient.get('/api/v1/payments/transactions/export-csv/', {
+      responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'transactions.csv');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch {
+    showToast('Export failed', 'error');
+  }
+};
+```
+
+---
+
+### Task F16: Subscription Management Actions
+
+**File:** `src/pages/learner/SubscriptionManagementPage.tsx`
+
+**Problem:** Cancel subscription, add payment method, set default — all show placeholder toasts.
+
+**Hooks exist:**
+- `useCancelUserSubscription()` (`usePayments.ts:307`)
+- `useCreatePaymentMethod()` (`usePayments.ts:139`)
+- `useSetDefaultPaymentMethod()` (`usePayments.ts:204`)
+
+**Wire:**
+```typescript
+const cancelMutation = useCancelUserSubscription();
+const createPaymentMutation = useCreatePaymentMethod();
+const setDefaultMutation = useSetDefaultPaymentMethod();
+
+const handleCancelSubscription = () => {
+  cancelMutation.mutate(subscriptionId, {
+    onSuccess: () => showToast('Subscription cancelled', 'info'),
+  });
+};
+```
+
+---
+
+### Task F17: Security Page
 
 **File:** `src/pages/superadmin/SecurityPage.tsx`
 
-**Status:** Hardcoded KPIs and active sessions.
+**Backend dependency:** Task 22 (security stats endpoint)
 
-**Fix:** Wire to audit log API and user session tracking.
+**Once backend ready, add service and wire:**
 
----
+```typescript
+export const securityApi = {
+  getStats: () => apiClient.get('/api/v1/superadmin/security/stats/'),
+};
 
-#### 16. Learner Certificates Page
+// In the page:
+const { data: stats } = useQuery({
+  queryKey: ['security', 'stats'],
+  queryFn: () => securityApi.getStats().then(r => r.data),
+});
+```
 
-**File:** `src/pages/learner/LearnerCertificatesPage.tsx`
-
-**Status:** ✅ API wired. Mock fallback exists if API returns empty.
-
-**Note:** Backend creates certificate records but PDF generation is stubbed.
-
----
-
-#### 17. Report Download
-
-**Files:** 
-- `src/pages/manager/ManagerReportsPage.tsx`
-- `src/pages/finance/FinanceExportPage.tsx`
-
-**Status:** Generate button exists. Download wired to backend `/download/` endpoint.
-
-**Note:** Reports are async — requires Celery worker running.
+Replace hardcoded "42 active sessions" with `stats?.active_sessions`, etc.
 
 ---
 
-## Components Still Showing Hardcoded Data
+### Task F18: Dashboard Mock Cleanup
 
-### Landing/Marketing Pages
-| Component | File | Priority |
-|-----------|------|----------|
-| TrustedBy | `components/landing/TrustedBy.tsx` | HIGH (backend issue) |
-| ~~Categories~~ | `components/landing/Categories.tsx` | ✅ DONE |
-| ~~Featured Courses~~ | `components/landing/Courses.tsx` | ✅ DONE |
-| ~~Pricing~~ | `components/landing/Pricing.tsx` | ✅ DONE |
-| Business Stats | `components/business/BusinessStatsSection.tsx` | MEDIUM |
-| Business Pricing | `components/business/PricingSection.tsx` | MEDIUM |
-| FAQ | `components/business/FaqSection.tsx` | LOW |
+**Miscellaneous remaining hardcoded values across dashboards:**
 
-### Catalogue Pages
-| Component | File | Priority |
-|-----------|------|----------|
-| CoursesGrid | `components/catalogue/CoursesGrid.tsx` | MEDIUM |
-| FeaturedCategories | `components/catalogue/FeaturedCategories.tsx` | MEDIUM |
-| FiltersSidebar | `components/catalogue/FiltersSidebar.tsx` | MEDIUM |
-| CatalogueHero | `components/catalogue/CatalogueHero.tsx` | LOW |
-| Pagination | `components/catalogue/Pagination.tsx` | LOW |
+| Component | File | Hardcoded Value | Replace With |
+|-----------|------|-----------------|--------------|
+| Learner Dashboard "Learning Hours" | `LearnerDashboard.tsx` | Static number | Sum `time_spent_seconds` from `sessionProgressApi` |
+| Instructor WelcomeBanner stats | `components/instructor/WelcomeBanner.tsx` | Hardcoded counts | `useLearningStats()` data |
+| Manager KPIGrid | `ManagerDashboard.tsx` | Some KPIs mocked | `useLearningStats()` + `useCourseStats()` |
+| Finance Sidebar revenue | `components/finance/Sidebar.tsx` | `$8,425` | `useRevenueTrends()` current month |
+| Superadmin RevenueChart | `components/superadmin/RevenueChart.tsx` | Mock chart data | `useRevenueTrends()` once backend Task 37 done |
+| Superadmin SystemHealth | `components/superadmin/SystemHealth.tsx` | Mock health data | `securityApi.getHealth()` once backend Task 38 done |
 
-### Dashboard Pages
-| Page | File | Status / Unwired Elements |
-|------|------|---------------------------|
-| Superadmin Analytics | `pages/superadmin/AnalyticsPage.tsx` | Partially wired; uses many fallback/mock metrics |
-| Welcome Banner | `components/superadmin/WelcomeBanner.tsx` | "Export Report", "System Settings" buttons unwired |
-| Revenue Chart | `components/superadmin/RevenueChart.tsx` | "Export", "Filter" buttons unwired; uses mock data |
-| Organizations Table | `components/superadmin/OrganizationsTable.tsx` | "Delete" icons unwired |
-| System Health | `components/superadmin/SystemHealth.tsx` | "Refresh", "View Logs" buttons unwired; uses mock data |
-| All Users | `pages/superadmin/AllUsersPage.tsx` | "Add User", "Bulk Import" buttons unwired; Edit/Delete icons unwired |
-| Roles & Permissions | `pages/superadmin/RolesPermissionsPage.tsx` | **Entirely Mock Data**; All buttons unwired |
-| Audit Logs | `pages/superadmin/AuditLogsPage.tsx` | "View" action icon unwired |
-| All Organizations | `pages/superadmin/AllOrganizationsPage.tsx` | Action icons (View, Edit, Delete) unwired |
-| Add Organization | `pages/superadmin/AddOrganizationPage.tsx` | Form submission unwired |
-| Partnerships | `pages/superadmin/PartnershipsPage.tsx` | **Entirely Mock Data**; All buttons unwired |
-| All Courses | `pages/superadmin/AllCoursesPage.tsx` | **Entirely Mock Data**; Action buttons unwired |
-| Instructors | `pages/superadmin/InstructorsPage.tsx` | **Entirely Mock Data**; Action buttons unwired |
-| Certifications | `pages/superadmin/CertificationsPage.tsx` | **Entirely Mock Data**; Action buttons unwired |
-| Assessments | `pages/superadmin/AssessmentsPage.tsx` | **Entirely Mock Data**; Action buttons unwired |
-| Payments | `pages/superadmin/PaymentsPage.tsx` | "View" action icon unwired |
-| Revenue Reports | `pages/superadmin/RevenuePage.tsx` | **Entirely Mock Data**; Export buttons unwired |
-| Invoices | `pages/superadmin/InvoicesPage.tsx` | **Entirely Mock Data**; Search, Date, Action icons unwired |
-| Gateway Settings | `pages/superadmin/GatewaySettingsPage.tsx` | **Static Placeholders**; Configure, Save, Test buttons unwired |
-| System Settings | `pages/superadmin/SystemSettingsPage.tsx` | **Static Placeholders**; Save, Activate buttons unwired |
-| Integrations | `pages/superadmin/IntegrationsPage.tsx` | **Entirely Mock Data**; All action buttons/switches unwired |
-| Data Migration | `pages/superadmin/DataMigrationPage.tsx` | **Entirely Mock Data**; Retry, Run, Test, Save buttons unwired |
-| Security | `pages/superadmin/SecurityPage.tsx` | **Entirely Mock Data**; Save, Terminate, Delete buttons unwired |
-| Superadmin Profile | `pages/superadmin/SuperadminProfilePage.tsx` | ✅ Fully wired (Profile + Password) |
-| Invite User | `pages/superadmin/InviteUserPage.tsx` | ✅ Fully wired |
-| Course Approvals | `pages/manager/CourseApprovalPage.tsx` | ✅ Fully wired |
+For each, the fix is the same pattern: import the hook, call it, replace the hardcoded const.
 
 ---
 
-### Manager Interface Audit (Comprehensive)
+## Gateway Pages — Keep as Mock (No Backend Yet)
 
-**Audit Date:** March 27, 2026
-**Scope:** 30+ Manager-specific pages.
+These finance gateway pages have no backend support and are acceptable as static displays for now:
 
-#### 1. Fully Wired & Functional (Verified)
-- `ManagerCategoriesPage`: Functional CRUD for categories.
-- `ManagerInviteUserPage`: Functional invite system.
-- `ManagerReportsPage`: Functional data fetching.
-- `ManagerUsersPage`: Functional user management.
-- `ManagerProfilePage`: Functional profile updates.
-- `ManagerCertificatesPage`: Functional certificate management.
-- `ManagerGradebookPage`: Functional viewing.
-- `ManagerNotificationsPage`: Functional notifications and status updates.
-- `CourseApprovalPage`: Functional list and shared logic.
-- `CourseApprovalDetailPage`: Functional detail viewing and actions.
-- `QuizBuilderPage` (Shared): Fully functional quiz authoring.
-- `AssignmentCreationPage` (Shared): Fully functional assignment authoring.
+- `GatewayMpesaPage.tsx` — hardcoded M-Pesa transactions and health
+- `GatewayMtnPage.tsx` — hardcoded MTN transactions and health
+- `GatewayAirtelPage.tsx` — hardcoded Airtel transactions and health
+- `GatewayPesapalPage.tsx` — hardcoded Pesapal transactions and health
 
-#### 2. Fully Mocked (Needs Backend Integration)
-- `ManagerRolesPage`: Entire page is a static mock. Role management logic missing.
-- `ManagerSettingsPage`: Entire page is a static mock. No backend persistence for configuration.
-- `ManagerProgressPage`: Fully mocked data and UI.
-- `ManagerQuizzesPage`: List view is fully mocked (though builder is wired).
-- `ManagerAssignmentsPage`: List view is fully mocked (though creation is wired).
-- `ManagerIntegrationsPage`: Entire page is a static mock.
-- `ManagerActivityPage`: Activity feed and most interaction handlers are mocked.
-
-#### 3. Partially Wired (Needs Cleanup/Wiring)
-- `ManagerDashboard`: `KPIGrid` and `EnrollmentChart` use mock data.
-- `ManagerCoursesPage`: Data fetching wired, but row-level actions (Archive, Delete) need verification.
-- `ManagerInstructorsPage`: Data fetching wired, but actions need review.
-- `ManagerEnrollmentsPage`: Data fetching wired, but actions need review.
-- `ManagerBulkEnrollPage`: Course/User selection wired, but "Enroll" submission and History table are mocked.
-- `ManagerSessionsPage`: Data fetching wired, but action handlers (Join, View) are missing.
-- `ManagerRecordingsPage`: Data fetching wired, but actions (Download, Delete) are missing.
-- `ManagerAnalyticsPage`: Engagement metrics and some charts are mocked.
-- `ManagerBulkImportPage`: Upload logic wired, but template download and import history are mocked.
-- `ManagerScheduleNewPage` (Shared): Primary flow wired but has hardcoded course/module defaults and attendee limits.
-- `ManagerBillingPage`: History table wired, but Current Plan, Usage, and Payment Method are mocked.
-
-#### 4. Critical Action Items
-- [ ] Wire `KPIGrid` in `ManagerDashboard.tsx` to real statistics.
-- [ ] Implement backend persistence for `ManagerSettingsPage.tsx`.
-- [ ] Replace mock roles data in `ManagerRolesPage.tsx` with `rolesApi`.
-- [ ] Connect "Enroll" button in `ManagerBulkEnrollPage.tsx` to `enrollmentApi.bulkEnroll`.
-- [ ] Wire interaction handlers in `ManagerRecordingsPage.tsx` and `ManagerActivityPage.tsx`.
-- [ ] Remove hardcoded IDs in `SessionSchedulingPage.tsx`.
-- [ ] Mock out or implement Stripe/Payment gateway integration for `ManagerBillingPage.tsx`.
-
+**Action:** Add `{/* TODO: Wire to gateway health API when available */}` comment at top of each file.
 
 ---
 
-## Implementation Plan
+## Pages That Need NO Frontend Work (Backend Only)
 
-### Sprint 1: Critical Fixes
-1. ~~Fix CSV format mismatch in bulk import~~ ✅
-2. ~~Wire marketing pages to existing APIs~~ ✅ (Categories, Courses, Pricing all wired)
+These pages are blocked purely on backend. Once the backend task is completed, the frontend wiring is trivial (1-2 line hook call):
 
-### Sprint 2: Data Completeness
-3. ~~Fetch real categories, featured courses, pricing~~ ✅ DONE
-4. Remove remaining mock fallbacks
+| Page | Route | Blocked By Backend Task |
+|------|-------|------------------------|
+| `SuperadminNotificationsPage` | `/superadmin/notifications` | ❌ Not blocked — existing `notificationApi` works |
+| `ManagerActivityPage` | `/manager/activity` | Task 45 (audit log summary — optional) |
+| `ManagerRolesPage` | `/manager/roles` | Task 40 (user counts by role) |
+| `PartnershipsPage` | `/superadmin/partnerships` | Task 41 (Phase 2) |
+| `DataMigrationPage` | `/superadmin/data-migration` | Task 42 (Phase 2) |
+| `GatewaySettingsPage` | `/superadmin/gateway-settings` | Task 42 (Phase 2) |
+| `SystemSettingsPage` | `/superadmin/settings` | Task 38 (system settings CRUD) |
+| `IntegrationsPage` | `/superadmin/integrations` | Task 41 (Phase 2) |
 
-### Sprint 3: Polish
-5. ~~Analytics charts — backend endpoints~~ ✅ (Manager + Instructor done; Superadmin remaining)
-6. Security page wiring
-7. Remove all console.log statements
+---
+
+## Completed Items Archive
+
+<details>
+<summary>Click to expand — all completed items</summary>
+
+| Date | Item |
+|------|------|
+| 27 Mar | ManagerMessagesPage & LearnerMessagesPage wired to `messagingApi` |
+| 27 Mar | ManagerBulkEnrollPage wired to `enrollmentApi.bulkEnroll()` |
+| 27 Mar | CoursePlayerPage Resources tab wired to `sessionAttachmentApi` |
+| 27 Mar | LearnerCertificatesPage mock data removed — uses auto-created certificates |
+| 26 Mar | Manager/Instructor Analytics charts wired to analytics hooks |
+| 26 Mar | Finance RevenueChart wired to `useRevenueTrends` |
+| 26 Mar | Bulk Import CSV format mismatch fixed |
+| 26 Mar | CoursePlayerPage Q&A Pin/Lock wired |
+| 26 Mar | LearnerAssignmentsPage validation errors wired |
+| 25 Mar | InstructorMessagesPage wired to messaging API |
+| 18 Mar | CoursePlayerPage Q&A, WorkshopsPage, LearnersPage, CoursePreviewPage wired |
+| 18 Mar | LearnerCourseDetailPage, ManagerRecordingsPage, ManagerScheduleNewPage wired |
+| 18 Mar | SuperadminPaymentsPage, FinanceAnalyticsPage, CourseReviews wired |
+| 17 Mar | Course publish flow, Learner assignments, Bulk import drag-drop |
+| 16 Mar | Drag-and-drop reordering, Quiz player, Video resume, QuizzesPage |
+| 16 Mar | NotificationsPage, Notes tab persistence |
+| 15 Mar | Certificate/invoice download |
+| 14 Mar | Privacy policy + certificate validation pages |
+| 13 Mar | Initial manager pages wiring |
+| — | Landing Categories wired to `publicCategoryApi` |
+| — | Landing Featured Courses wired to `publicCourseApi` |
+| — | Landing Pricing wired to `publicSubscriptionPlansApi` |
+| — | Landing StatsBanner wired to `publicStatsApi` |
+| — | TrustedBy wired to `publicClientsApi` |
+| — | All auth pages (Login, Register, MFA, Email Verify, Password Reset) fully wired |
+| — | CoursePlayerPage (Video, Documents, Quizzes, Notes, Q&A, Progress) fully wired |
+| — | QuestionBankPage fully wired |
+| — | AssignmentsHubPage fully wired |
+| — | GradebookPage wired to `submissionApi` + `gradeStatisticsApi` |
+| — | ContentUploadPage StorageInfoCard wired to `quotaApi` |
+| — | ManagerCategoriesPage CRUD functional |
+| — | CourseApprovalPage + Detail functional |
+| — | ManagerReportsPage wired to `reportsApi` |
+| — | FinanceExportPage wired to `reportsApi` |
+| — | FinanceProfilePage wired |
+| — | SuperadminProfilePage wired |
+| — | InviteUserPage wired |
+| — | CertificateValidationPage wired to `certificateApi.verify` |
+
+</details>
 
 ---
 
 ## Backend Dependencies Summary
 
-| Frontend Need | Backend Status | Endpoint |
-|--------------|----------------|----------|
-| Public Stats | ✅ Working | `/api/v1/public/stats/` |
-| Trusted Clients | ⚠️ Stubbed | `/api/v1/public/clients/` |
-| Storage Quota | ✅ Working | `/api/v1/uploads/quota/` |
-| Grade Statistics | ✅ Working | `/api/v1/learning/submissions/statistics/` |
-| Bulk Import | ✅ Working (both formats) | `/api/v1/admin/users/bulk_import/` |
-| CSV Template | ✅ Working | `/api/v1/admin/users/csv_template/` |
-| Enrollment Trends | ✅ Working | `/api/v1/learning/analytics/enrollment-trends/` |
-| Learning Stats | ✅ Working | `/api/v1/learning/analytics/learning-stats/` |
-| Revenue Trends | ✅ Working | `/api/v1/payments/analytics/revenue/` |
-| Courses by Category | ✅ Working | `/api/v1/catalogue/analytics/courses-by-category/` |
-| Reports | ✅ Working (async) | `/api/v1/learning/reports/` |
-| Bulk Enrollment | ✅ Working | `/api/v1/learning/enrollments/bulk/` |
-| Session Attachments | ✅ Working | `/api/v1/catalogue/session-attachments/` |
-
----
-
-## Completed Items (Reference)
-
-| Date | Item |
-|------|------|
-| 27 Mar 2026 | ManagerMessagesPage & LearnerMessagesPage wired |
-| 18 Mar 2026 | CoursePlayerPage Q&A wired |
-| 18 Mar 2026 | Instructor WorkshopsPage wired |
-| 18 Mar 2026 | Instructor LearnersPage wired |
-| 18 Mar 2026 | Instructor CoursePreviewPage wired |
-| 18 Mar 2026 | LearnerCourseDetailPage wired |
-| 18 Mar 2026 | ManagerRecordingsPage wired |
-| 18 Mar 2026 | ManagerScheduleNewPage wired |
-| 18 Mar 2026 | ManagerBulkEnrollPage wired |
-| 18 Mar 2026 | Superadmin PaymentsPage wired |
-| 18 Mar 2026 | FinanceAnalyticsPage wired |
-| 18 Mar 2026 | CourseReviews wired |
-| 17 Mar 2026 | Course publish flow wired |
-| 17 Mar 2026 | Learner assignments wired |
-| 17 Mar 2026 | Bulk import drag-drop wired |
-| 16 Mar 2026 | Drag-and-drop reordering |
-| 16 Mar 2026 | Quiz player (timer, attempts, grading) |
-| 16 Mar 2026 | Video resume |
-| 16 Mar 2026 | QuizzesPage wired |
-| 16 Mar 2026 | NotificationsPage wired |
-| 16 Mar 2026 | Notes tab persisted |
-| 15 Mar 2026 | Certificate/invoice download |
-| 14 Mar 2026 | Privacy policy + cert validation |
-| 13 Mar 2026 | Manager pages wired |
-| 25 Mar 2026 | InstructorMessagesPage wired to real messaging API |
-| 26 Mar 2026 | CoursePlayerPage Q&A: Pin/Lock badges + moderator action buttons wired to `discussionApi.pin()`/`lock()` |
-| 26 Mar 2026 | LearnerAssignmentsPage: Backend validation errors (max attempts, file types) parsed and shown as toast messages |
-| 26 Mar 2026 | `DiscussionParams` search param added, `SubmissionSerializer` `attempt_number` field exposed |
-| 26 Mar 2026 | Bulk Import CSV format mismatch fixed — backend accepts both frontend and standard CSV formats |
-| 26 Mar 2026 | Manager Analytics charts wired to `useEnrollmentTrends`, `useLearningStats`, `useCoursesByCategory`, `useRevenueTrends` |
-| 26 Mar 2026 | Instructor Analytics KPIs wired to `useLearningStats`; course performance from real enrollments |
-| 26 Mar 2026 | Finance `RevenueChart` wired to `useRevenueTrends` — replaces hardcoded bar chart data |
-| 27 Mar 2026 | ManagerBulkEnrollPage wired to `enrollmentApi.bulkEnroll()` — real user selection with checkboxes |
-| 27 Mar 2026 | CoursePlayerPage Resources tab wired to `sessionAttachmentApi.getBySession()` — mock data removed |
-| 27 Mar 2026 | LearnerCertificatesPage mock data removed — relies on auto-created certificates via signals |
-
----
-
-## Finance Interface Audit (27 Mar 2026)
-
-### 1. Dashboard & Core Components
-- `FinanceDashboard`: Overview statistics (Transactions, Invoices, Subscriptions) are wired via `FinancialOverview`.
-- `FinancialOverview`: Fetches count and trend data from real API hooks.
-- `TransactionsTable` & `RecentInvoices`: Wired to `useTransactions` and `useInvoices` respectively.
-- `RevenueChart`: **Mocked**. Re-calculates hardcoded `revenueData` locally.
-- `PaymentMethodsChart`: **Mocked**. Uses static `paymentData` array.
-- `QuickActions`: Buttons are unwired or use default window alerts.
-- **Navigation Issues**: Row buttons in `TransactionsTable` point to non-existent `/finance/transactions` (should be `/finance/revenue-reports` or `/finance/payments`).
-
-### 2. Revenue & Subscriptions Sub-pages
-- `FinancePaymentsPage`: **Fully Mocked**. Uses static `payments` array despite `transactionApi` being available.
-- `FinanceInvoicesPage`: **Fully Mocked**. Uses static `invoices` array despite `invoiceApi` being available.
-- `FinanceSubscriptionsPage`: **Fully Mocked**. Uses static `subscriptions` array despite `subscriptionApi` being available.
-- `FinanceRevenueReportsPage`: **Fully Mocked**. Data is hardcoded in `stats` and `revenueData` arrays.
-- `FinanceSubscriptionHistoryPage`: **Fully Mocked**. Uses hardcoded `history` array.
-- `FinanceChurnPage`: **Fully Mocked**. KPIs and charts use static `churnKpis`, `monthlyChurn`, and `churnReasons`.
-- `FinancePricingPage`: **Fully Mocked**. Plans and pricing are static `individualPlan` and `orgPlans` objects.
-- `FinanceAlertsPage`: **Fully Mocked**. Uses hardcoded `events` array.
-
-### 3. Reports & Gateways
-- `FinanceExportPage`: **Wired**. Correctly uses `reportsApi` for fetching types and generating/downloading exports.
-- `FinanceStatementsPage`: **Fully Mocked**. Income statement, Balance sheet, and Cash flow data are all static.
-- `FinanceCustomReportsPage`: **Fully Mocked**. Reports list uses hardcoded `reports` array.
-- `GatewayMpesaPage`, `GatewayMtnPage`, `GatewayAirtelPage`, `GatewayPesapalPage`: **Fully Mocked**. Health metrics and transaction lists are static.
-
-### 4. Account & Global Components
-- `FinanceProfilePage`: **Wired**. Uses `useAuth`, `useUpdateProfile`, and `uploadApi`.
-- `Sidebar`: "Today's Revenue" stat at the bottom is hardcoded (`$8,425`).
-- `TopBar`: Settings menu item points to a **broken link** (`/finance/settings` does not exist in router).
-
-### 5. Critical Action Items
-- [ ] Refactor `FinancePaymentsPage`, `FinanceInvoicesPage`, and `FinanceSubscriptionsPage` to use existing CRUD services.
-- [ ] Fix broken navigation in `TransactionsTable` and `TopBar` settings link.
-- [ ] Implement backend endpoints for churn metrics, pricing management, and financial statements.
-- [ ] Wire `RevenueChart` and `PaymentMethodsChart` in the dashboard to real analytics hooks.
-- [ ] Implement "Gateway Health" API for real-time monitoring of payment integrations.
-
-## Instructor Module Audit (Conducted March 2026)
-
-| Page/Component | Status | Backend Integration Status | Mock Data / Placeholders | Unwired Buttons / Links |
-| :--- | :--- | :--- | :--- | :--- |
-| **Dashboard** | Mixed | KPIs and Courses wired. | `WelcomeBanner` stats are hardcoded. | `QuickActions`: Quiz Bank, Submissions, Reports links are broken. |
-| **Courses List** | Mostly Wired | CRUD and filters wired to `useCourses`. | None. | Context Menu: "Duplicate" and "Delete Draft" have no action. |
-| **Course Creation** | Wired | Multisave, Autosave, and Media Upload wired. | None. | `CourseTopBar`: "Publish" button only saves as draft. |
-| **Course Structure** | Mostly Wired | Modules/Lessons CRUD and Reordering wired. | `ContentLibraryWidget` is 100% mocked. | None. |
-| **Question Bank** | **Wired** | Fully wired to `useBankQuestions`. | None. | None. |
-| **Assignments Hub** | **Wired** | Fully wired to `useSessions` and `useCourses`. | None. | None. |
-| **Grading** | **Mocked** | **0% Integration**. | All submissions, files, and rubrics are sample data. | Full page requires wiring to `submissionApi`. |
-| **Gradebook** | Mostly Wired | Table and Stats wired to `submissionApi`. | None (residuals cleaned). | "Export" button is a placeholder. |
-| **Analytics** | Partially Wired | KPI cards wired to `useLearningStats`. | Weekly engagement and performance charts are placeholders. | "Export" button is a placeholder. |
-| **Profile** | Mostly Wired | Core fields and Avatar upload wired. | Social links and Expertise are placeholders. | None. |
-
-### Critical Instructor Action Items:
-- [ ] **Wiring Grading Page**: Connect `GradingPage` and sub-components to `submissionApi` and `gradingApi`.
-- [ ] **Fix Dashboard Navigation**: Update `QuickActions.tsx` with correct routes for Quiz Bank, Submissions, and Reports.
-- [ ] **Dynamic Welcome Stats**: Connect `WelcomeBanner.tsx` to `useLearningStats` or dashboard data.
-- [ ] **Content Library Integration**: Implement real content library fetching in `ContentLibraryWidget.tsx`.
-- [ ] **Complete Context Menu**: Add handlers for "Duplicate" and "Delete Draft" in `InstructorCoursesPage.tsx`.
-- [ ] **Functional Exports**: Implement export logic in Gradebook and Analytics.
-
-## Learner Module Audit (Conducted March 2026)
-
-| Page/Component | Status | Backend Integration Status | Mock Data / Placeholders | Unwired Buttons / Links |
-| :--- | :--- | :--- | :--- | :--- |
-| **Learner Dashboard** | Mixed | Course list, Activities, Certificates wired. | "Learning Hours" stat and some course card details are mocked. | "Resume Learning" button and "Upcoming Session" click unwired. |
-| **Course Catalog** | Mostly Wired | Courses, Categories, Pagination wired. | KPI stats (Total Instructors/Learners) and Instructor cards are mocked. | Filter Bar search & Category click unwired in the parent page. |
-| **Course Detail** | Mostly Wired | Enrollment, Subscription check, Curriculum, Reviews wired. | "Projects" count, Instructor Bio, and Sidebar progress metrics are mocked. | "Write Review" and "View Instructor Profile" show coming soon toasts. |
-| **Course Player** | **Wired** | Video, Documents, Quizzes, Notes, Q&A, and Progress tracking fully wired. | SCORM playback is a temporary download-only fallback. | None. |
-| **Assignments** | **Wired** | Submissions, Uploads, and Grades fully wired. | None. | "View" button for graded assignments is unwired. |
-| **Progress** | **Mocked** | **0% Integration**. | All stats, course progress lists, and milestones are hardcoded. | Tabs work on local static data only. |
-| **Quizzes** | Mostly Wired | Listing and Status wired. | "Avg. Score" KPI is mocked; "Failed" status logic missing (no score in progress type). | None. |
-| **Subscription** | Mostly Wired | Sub status, Invoices, Usage stats, Payment methods fetched. | Actions (Cancel, Add Payment, Set Default) are placeholders. | Delete/Edit payment method, View All invoices. |
-| **Certificates** | **Wired** | Fully wired to certificates API. | None (PDF generation is backend-stubbed). | None. |
-| **Messaging** | **Wired** | Fully wired to messaging API via common component. | None. | None. |
-| **Profile** | Mostly Wired | Core fields and Avatar upload wired. | Cover image edit and public profile edit are placeholders. | None. |
-
-### Critical Learner Action Items:
-- [ ] **Overhaul Progress Page**: Connect `ProgressPage.tsx` to `enrollmentApi` and `sessionProgressApi` to show real learning metrics.
-- [ ] **Wire Subscription Actions**: Implement `cancelSubscription` and `addPaymentMethod` mutations in `SubscriptionManagementPage.tsx`.
-- [ ] **Fix Catalog Integration**: Wire the Search button in `LearnerCourseCatalogPage.tsx` and fetch real platform-wide stats.
-- [ ] **Cleanup Dashboard Mocks**: Connect "Learning Hours" to a real time-tracking metric and wire the "Resume" button.
-- [ ] **Enhance Course Detail**: Connect Sidebar metrics (Progress, Total Hours) to the learner's actual enrollment data.
-
-## Public & Shared Pages Audit (Conducted March 2026)
-
-| Page/Component | Status | Backend Integration Status | Mock Data / Placeholders | Unwired Buttons / Links |
-| :--- | :--- | :--- | :--- | :--- |
-| **Landing Page** | **Wired** | Statistics (Active Learners, etc.) wired to `publicStatsApi`. | Marketing sections (Features/Testimonials) are static as intended. | None. |
-| **For Business** | **Wired** | Pricing plans and Platform stats wired to `businessPricingApi` and `publicStatsApi`. | Testimonials and Use Cases are static. | None. |
-| **Auth Pages** | **Wired** | Login, Registration, MFA, Email Verification, Password Reset, and Set Password are 100% wired. | None. | None. |
-| **Public Catalog** | Mostly Wired | Course listing, Categories, and Stats wired. | Rating and Review count on grid are mocked (0). | `Sort By` filter is ignored by currently used API endpoint. |
-| **Course Landing** | Mostly Wired | Course details and Reviews summary wired. | Average rating, Distribution, and Review text on some components are mocked; Curriculum fallback. | Review filters, "Helpful" buttons, and Search reviews are unwired. |
-| **Checkout** | Mixed | Card payment (Flutterwave) fully wired via hook. | Mobile Money (M-Pesa/MTN/Airtel) and Promo codes (SAVE20) are mocked. | None. |
-| **Invoice/Receipt** | Partially Wired | State-driven from checkout. | Fallback sample data (Emma Chen) used when state is missing. | "Download PDF" and "Email Invoice" are mock toasts/placeholders. |
-| **Certificate Valid.**| **Wired** | Fully wired to `certificateApi.verify`. | None. | None. |
-| **Payment History** | Mostly Wired | Transaction list and stats wired. | "Export CSV", "Download Statement", and "Email Receipt" are placeholders. | None. |
-| **Privacy Policy** | **Wired** | Static content as intended. | None. | None. |
-
-### Critical Public & Shared Action Items:
-- [ ] **Real Mobile Money Payments**: Replace simulation in `CheckoutPaymentPage.tsx` with actual Flutterwave Mobile Money charge API.
-- [ ] **Dynamic Promo Codes**: Implement `promoCodeApi` in `public.services.ts` and wire it to the checkout and subscription pages.
-- [ ] **Functional Invoice Actions**: Implement real PDF generation/download and email sending in `InvoiceReceiptPage.tsx`.
-- [ ] **Catalog Sorting**: Update `publicCourseApi` to support sorting and wire the `CourseCataloguePage` dropdown.
-- [ ] **Curriculum Wiring**: Ensure `CourseCurriculum.tsx` fetches sessions for all courses without relying on React patterns default fallback.
-- [ ] **Interactive Reviews**: Wire the "Helpful" buttons and star filters in `CourseReviews.tsx`.
-- [ ] **Transaction Exports**: Implement CSV and Statement generation in `PaymentHistoryPage.tsx`.
+| Frontend Need | Backend Status | Endpoint | Backend Task |
+|--------------|----------------|----------|-------------|
+| Saved Courses API | ❌ Missing | `/api/v1/learning/saved-courses/` | 29 |
+| Course ordering | ❌ Missing | `?ordering=-enrollment_count` on CourseViewSet | 30 |
+| Org user/course count | ❌ Missing | annotations on OrganizationSerializer | 31 |
+| Course stats | ❌ Missing | `/api/v1/catalogue/courses/stats/` | 32 |
+| Assessment stats | ❌ Missing | `/api/v1/superadmin/assessments/stats/` | 33 |
+| Certificate stats (admin) | ❌ Missing | `/api/v1/learning/certificates/stats/` | 34 |
+| Instructor stats | ✅ Exists (partial) | `usersApi.getInstructorStats()` | 35 |
+| Invoice stats | ❌ Missing | `/api/v1/payments/invoices/stats/` | 36 |
+| Revenue breakdown | ❌ Missing | `/api/v1/payments/revenue/stats/` | 37 |
+| Mobile money charge | ❌ Missing | `/api/v1/payments/flutterwave/charge-mobile-money/` | 60 |
+| Promo code verify | ❌ Missing | `/api/v1/public/promo-codes/verify/` | 61 |
+| Review helpful/report | ❌ Missing | `/api/v1/catalogue/reviews/{id}/helpful/` | 62 |
+| Transaction export CSV | ❌ Missing | `/api/v1/payments/transactions/export-csv/` | 63 |
+| Manager settings | ❌ Missing | `/api/v1/manager/settings/` | 43 |
+| Manager billing | ❌ Missing | `/api/v1/manager/billing/plan/` | 44 |
+| Security stats | ❌ Missing | `/api/v1/superadmin/security/stats/` | 22 |
+| System health | ❌ Missing | `/api/v1/superadmin/system/health/` | 38 |
+| Public Stats | ✅ Working | `/api/v1/public/stats/` | — |
+| Trusted Clients | ⚠️ Stubbed | `/api/v1/public/clients/` | — |
+| Storage Quota | ✅ Working | `/api/v1/uploads/quota/` | — |
+| Enrollment Trends | ✅ Working | `/api/v1/learning/analytics/enrollment-trends/` | — |
+| Learning Stats | ✅ Working | `/api/v1/learning/analytics/learning-stats/` | — |
+| Revenue Trends | ✅ Working | `/api/v1/payments/analytics/revenue/` | — |
+| Courses by Category | ✅ Working | `/api/v1/catalogue/analytics/courses-by-category/` | — |
+| Reports | ✅ Working | `/api/v1/learning/reports/` | — |
+| Bulk Enrollment | ✅ Working | `/api/v1/learning/enrollments/bulk/` | — |
+| Session Attachments | ✅ Working | `/api/v1/catalogue/session-attachments/` | — |
+| Messaging | ✅ Working | `/api/v1/messaging/` | — |
+| Badges | ✅ Working | `/api/v1/learning/badges/` | — |
