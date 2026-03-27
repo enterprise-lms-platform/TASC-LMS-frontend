@@ -183,6 +183,9 @@ const QuestionBankPage: React.FC = () => {
     try {
       await createQuestion.mutateAsync(payload);
       setCreateModalOpen(false);
+      if (payload.category == null) {
+        setSelectedCategory('all');
+      }
       setSnackbar({ open: true, message: 'Question created successfully.', severity: 'success' });
     } catch (err) {
       setSnackbar({

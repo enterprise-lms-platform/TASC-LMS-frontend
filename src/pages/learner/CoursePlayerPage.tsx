@@ -634,18 +634,15 @@ const CoursePlayerPage: React.FC = () => {
             </Box>
           ) : activeSession?.session_type === 'quiz' ? (
             /* Quiz Player */
-            <QuizSessionRenderer sessionId={activeSession.id} onComplete={(score, passed) => {
+            <QuizSessionRenderer
+              sessionId={activeSession.id}
+              enrollmentId={(course as unknown as { enrollment_id?: number | null })?.enrollment_id ?? null}
+              onComplete={(score, passed) => {
               if (passed && !completedSessions.includes(activeSession.id)) {
                 toggleComplete(activeSession.id);
               }
-            }} />
-          ) : activeSession?.session_type === 'assignment' ? (
-            /* Assignment Player */
-            <AssignmentSessionRenderer sessionId={activeSession.id} onComplete={() => {
-              if (!completedSessions.includes(activeSession.id)) {
-                toggleComplete(activeSession.id);
-              }
-            }} />
+              }}
+            />
           ) : (
             /* Non-video content placeholder */
             <Box sx={{ width: '100%', pt: '30%', bgcolor: '#f0f2f5', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #e5e7eb' }}>
@@ -883,17 +880,24 @@ const CoursePlayerPage: React.FC = () => {
 };
 
 /* ── Quiz wrapper that fetches quiz data + past attempts for a session ── */
-const QuizSessionRenderer: React.FC<{ sessionId: number; onComplete?: (score: number, passed: boolean) => void }> = ({ sessionId, onComplete }) => {
+const QuizSessionRenderer: React.FC<{
+  sessionId: number;
+  enrollmentId: number | null;
+  onComplete?: (score: number, passed: boolean) => void;
+}> = ({ sessionId, enrollmentId, onComplete }) => {
   const { data: quiz, isLoading, isError } = useQuizDetail(sessionId);
 
   // Fetch past attempts for this quiz
   const { data: pastAttemptsData } = useQuery({
-    queryKey: ['quizSubmissions', sessionId],
-    queryFn: () => quizSubmissionApi.getAll({ quiz: sessionId }).then(r => {
+    queryKey: ['quizSubmissions', quiz?.quiz_id, enrollmentId],
+    queryFn: () => quizSubmissionApi.getAll({
+      ...(quiz?.quiz_id ? { quiz: quiz.quiz_id } : {}),
+      ...(enrollmentId ? { enrollment: enrollmentId } : {}),
+    }).then(r => {
       const data = r.data;
       return Array.isArray(data) ? data : (data as { results?: typeof data })?.results ?? [];
     }),
-    enabled: !!sessionId,
+    enabled: !!quiz?.quiz_id,
   });
   const pastAttempts = pastAttemptsData ?? [];
 
@@ -920,6 +924,8 @@ const QuizSessionRenderer: React.FC<{ sessionId: number; onComplete?: (score: nu
     <Box sx={{ p: 2, bgcolor: '#f8f9fa', minHeight: 400 }}>
       <QuizPlayer
         sessionId={sessionId}
+        quizId={quiz.quiz_id}
+        enrollmentId={enrollmentId}
         settings={quiz.settings}
         questions={quiz.questions}
         previousAttempts={pastAttempts.length}
