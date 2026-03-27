@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useCallback, useEffect, type ComponentProps } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, useLoaderData } from 'react-router-dom';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { sessionProgressApi, discussionApi, discussionReplyApi, quizSubmissionApi } from '../../services/learning.services';
@@ -16,7 +16,6 @@ interface QuestionItem {
 }
 import { useSessionAssetUrl } from '../../hooks/useUpload';
 import { useQuizDetail } from '../../hooks/useCatalogue';
-import ReactPlayer from 'react-player';
 
 /** Progress payload for ReactPlayer's `onProgress` (library typings merge with HTMLVideoElement and mis-type this as a native event). */
 type ReactPlayerProgressState = {
@@ -26,14 +25,6 @@ type ReactPlayerProgressState = {
   loadedSeconds: number;
 };
 
-/** Props for this page's player: correct `onProgress` callback plus legacy v2-style props still passed at runtime (`url`, `progressInterval`). */
-type ReactPlayerPropsWithProgress = Omit<ComponentProps<typeof ReactPlayer>, 'onProgress'> & {
-  onProgress?: (state: ReactPlayerProgressState) => void;
-  url?: string;
-  progressInterval?: number;
-};
-
-const ReactPlayerWithProgress = ReactPlayer as React.ComponentType<ReactPlayerPropsWithProgress>;
 import QuizPlayer from '../../components/learner/quiz-player/QuizPlayer';
 import {
   Box, Typography, IconButton, Button, Tabs, Tab, LinearProgress,
@@ -140,7 +131,7 @@ const CoursePlayerPage: React.FC = () => {
   const activeSessionIndex = allSessions.findIndex(s => s.id === activeSessionId);
 
   // Use the presigned URL hook — only triggers if the activeSession needs it and has an ID
-  const isPrivateAsset = activeSession?.content_source === 'upload' && !!activeSession?.asset_bucket;
+  const isPrivateAsset = activeSession?.content_source === 'upload' && !!activeSession?.asset_object_key;
   const { data: assetUrlData, isLoading: isAssetLoading } = useSessionAssetUrl(isPrivateAsset ? activeSessionId || undefined : undefined);
 
   // Q&A: fetch discussions for the active session
@@ -486,17 +477,34 @@ const CoursePlayerPage: React.FC = () => {
                 </Box>
               ) : assetUrlData?.url || activeSession?.video_url ? (
                 <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
-                  <ReactPlayerWithProgress
-                    // `react-player` ref type is not HTMLVideoElement; keep it permissive for this integration.
-                    ref={playerRef as any}
-                    url={(assetUrlData?.url || activeSession?.video_url || '') as string}
+                  <video
+                    ref={playerRef}
+                    src={(assetUrlData?.url || activeSession?.video_url || '') as string}
                     controls
-                    width="100%"
-                    height="100%"
-                    style={{ backgroundColor: '#000' }}
-                    onProgress={handleVideoProgress}
-                    onReady={handleVideoReady}
-                    progressInterval={3000}
+                    style={{ width: '100%', height: '100%', backgroundColor: '#000' }}
+                    onLoadedMetadata={handleVideoReady}
+                    onCanPlay={handleVideoReady}
+                    onTimeUpdate={(e) => {
+                      const el = e.currentTarget;
+                      const playedSeconds = el.currentTime || 0;
+                      const duration = Number.isFinite(el.duration) && el.duration > 0 ? el.duration : 0;
+                      const played = duration > 0 ? playedSeconds / duration : 0;
+                      handleVideoProgress({
+                        played,
+                        playedSeconds,
+                        loaded: played,
+                        loadedSeconds: playedSeconds,
+                      });
+                    }}
+                    onError={(e) => {
+                      const el = e.currentTarget;
+                      console.error('Learner uploaded video playback error', {
+                        sessionId: activeSession?.id,
+                        src: el.currentSrc || el.src,
+                        mediaErrorCode: el.error?.code,
+                        mediaErrorMessage: el.error?.message,
+                      });
+                    }}
                   />
                 </Box>
               ) : (
