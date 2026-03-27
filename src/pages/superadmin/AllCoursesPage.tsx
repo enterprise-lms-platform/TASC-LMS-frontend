@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useCourseStats } from '../../services/learning.services';
 import {
   Box, Paper, Typography, Grid, TextField, MenuItem, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Chip, IconButton, Avatar,
@@ -12,36 +13,37 @@ import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 
 import KPICard from '../../components/superadmin/KPICard';
 
-const kpis = [
-  { 
-    label: 'Total Courses', 
-    value: '876', 
-    icon: <CoursesIcon />, 
-    // Warm Orange Theme
-    bgColor: '#fff3e0', badgeColor: '#ffb74d', valueColor: '#e65100', labelColor: '#bf360c'
-  },
-  { 
-    label: 'Published', 
-    value: '654', 
-    icon: <PublishIcon />, 
-    // Mint Green Theme
-    bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
-  },
-  { 
-    label: 'Draft', 
-    value: '178', 
-    icon: <DraftIcon />, 
-    // Light Amber Theme
-    bgColor: '#fff8e1', badgeColor: '#ffd54f', valueColor: '#f57f17', labelColor: '#ff6f00'
-  },
-  { 
-    label: 'Archived', 
-    value: '44', 
-    icon: <ArchiveIcon />, 
-    // Cool Gray-Blue Theme
-    bgColor: '#eceff1', badgeColor: '#90a4ae', valueColor: '#37474f', labelColor: '#263238'
-  },
-];
+const AllCoursesPage: React.FC = () => {
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const { data: stats } = useCourseStats();
+
+  const kpis = [
+    { 
+      label: 'Total Courses', 
+      value: String(stats?.total ?? '—'), 
+      icon: <CoursesIcon />, 
+      bgColor: '#fff3e0', badgeColor: '#ffb74d', valueColor: '#e65100', labelColor: '#bf360c'
+    },
+    { 
+      label: 'Published', 
+      value: String(stats?.published ?? '—'), 
+      icon: <PublishIcon />, 
+      bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
+    },
+    { 
+      label: 'Draft', 
+      value: String(stats?.draft ?? '—'), 
+      icon: <DraftIcon />, 
+      bgColor: '#fff8e1', badgeColor: '#ffd54f', valueColor: '#f57f17', labelColor: '#ff6f00'
+    },
+    { 
+      label: 'Archived', 
+      value: String(stats?.archived ?? '—'), 
+      icon: <ArchiveIcon />, 
+      bgColor: '#eceff1', badgeColor: '#90a4ae', valueColor: '#37474f', labelColor: '#263238'
+    },
+  ];
 
 // ... (statusColors and catColors dictionaries remain unchanged)
 
@@ -71,10 +73,6 @@ const courses = [
   { title: 'Project Management Pro', instructor: 'John Kamau', category: 'Business', enrollments: 0, rating: 0, status: 'Draft' },
   { title: 'Machine Learning Basics', instructor: 'Mary Wambui', category: 'Data Science', enrollments: 45, rating: 4.2, status: 'Archived' },
 ];
-
-const AllCoursesPage: React.FC = () => {
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [categoryFilter, setCategoryFilter] = useState('All');
 
   const filtered = courses.filter((c) => {
     if (statusFilter !== 'All' && c.status !== statusFilter) return false;

@@ -1,45 +1,22 @@
 import React, { useState } from 'react';
 import {
   Box, Toolbar, CssBaseline, Paper, Typography, Grid, Chip,
-  IconButton, Button, Card, CardContent, LinearProgress,
+  IconButton, Button, Card, CardContent, CircularProgress,
 } from '@mui/material';
 import {
   Bookmark as SavedIcon, BookmarkBorder as UnsaveIcon,
-  PlayArrow as PlayIcon, Star as StarIcon, Person as PersonIcon,
-  AccessTime as TimeIcon, MenuBook as LessonsIcon,
+  PlayArrow as PlayIcon,
+  Person as PersonIcon,
+  AccessTime as TimeIcon,
   Delete as RemoveIcon, FolderOpen as EmptyIcon,
 } from '@mui/icons-material';
 import '../../styles/LearnerDashboard.css';
 
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
+import { useSavedCourses, useToggleSavedCourse } from '../../services/learning.services';
 
-/* ── Static data ── */
-
-interface SavedCourse {
-  id: string;
-  title: string;
-  instructor: string;
-  category: string;
-  rating: number;
-  reviews: number;
-  lessons: number;
-  duration: string;
-  image: string;
-  savedDate: string;
-  enrolled: boolean;
-  progress?: number;
-}
-
-const initialSaved: SavedCourse[] = [
-  { id: '1', title: 'Advanced React Patterns', instructor: 'Michael Rodriguez', category: 'Web Development', rating: 4.8, reviews: 1245, lessons: 12, duration: '18h 30m', image: 'https://images.unsplash.com/photo-1616400619175-5beda3a17896?q=80&w=300', savedDate: '2 days ago', enrolled: true, progress: 65 },
-  { id: '2', title: 'Machine Learning A-Z', instructor: 'Dr. Sarah Kim', category: 'Data Science', rating: 4.9, reviews: 3256, lessons: 24, duration: '42h', image: 'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?q=80&w=300', savedDate: '1 week ago', enrolled: false },
-  { id: '3', title: 'Cloud Architecture with AWS', instructor: 'James Otieno', category: 'Cloud', rating: 4.7, reviews: 876, lessons: 14, duration: '22h', image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=300', savedDate: '2 weeks ago', enrolled: false },
-  { id: '4', title: 'UX/UI Design Principles', instructor: 'Faith Muthoni', category: 'Design', rating: 4.6, reviews: 1102, lessons: 16, duration: '28h', image: '', savedDate: '3 weeks ago', enrolled: false },
-  { id: '5', title: 'Python for Data Analysis', instructor: 'Emily Chen', category: 'Data Science', rating: 4.8, reviews: 2341, lessons: 20, duration: '35h', image: '', savedDate: '1 month ago', enrolled: true, progress: 25 },
-  { id: '6', title: 'Digital Marketing Strategy', instructor: 'Grace Akinyi', category: 'Marketing', rating: 4.5, reviews: 789, lessons: 10, duration: '15h', image: '', savedDate: '1 month ago', enrolled: false },
-];
-
+/* ── Category Colors ── */
 const catColors: Record<string, { bg: string; color: string }> = {
   'Web Development': { bg: 'rgba(59,130,246,0.08)', color: '#3b82f6' },
   'Data Science': { bg: 'rgba(16,185,129,0.08)', color: '#10b981' },
@@ -52,10 +29,29 @@ const catColors: Record<string, { bg: string; color: string }> = {
 
 const SavedCoursesPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [saved, setSaved] = useState(initialSaved);
 
-  const removeCourse = (id: string) => setSaved((prev) => prev.filter((c) => c.id !== id));
-  const enrolledCount = saved.filter((c) => c.enrolled).length;
+  // Wire to real API
+  const { data: savedData, isLoading } = useSavedCourses();
+  const toggleMutation = useToggleSavedCourse();
+
+  // Handle both paginated { results: [...] } and plain array responses
+  const saved = Array.isArray(savedData) ? savedData : (savedData as any)?.results ?? [];
+
+  const removeCourse = (courseId: number) => {
+    toggleMutation.mutate(courseId);
+  };
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return 'today';
+    if (diffDays === 1) return '1 day ago';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`;
+    return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) > 1 ? 's' : ''} ago`;
+  };
 
   return (
     <Box className="learner-page" sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -82,7 +78,7 @@ const SavedCoursesPage: React.FC = () => {
             Saved Courses
           </Typography>
           <Typography color="text.disabled" sx={{ fontSize: '0.85rem' }}>
-            {saved.length} saved · {enrolledCount} enrolled · {saved.length - enrolledCount} wishlisted
+            {saved.length} saved
           </Typography>
         </Box>
 
@@ -93,41 +89,19 @@ const SavedCoursesPage: React.FC = () => {
               label: 'Total Saved', 
               value: String(saved.length), 
               icon: <SavedIcon />,
-              // Light Blue Theme
               bgcolor: '#dbeafe',
               iconBg: '#93c5fd',
               color: '#1e3a8a',
               subColor: '#1e40af',
             },
             { 
-              label: 'Enrolled', 
-              value: String(enrolledCount), 
-              icon: <PlayIcon />,
-              // Mint Green Theme
-              bgcolor: '#dcfce7',
-              iconBg: '#86efac',
-              color: '#14532d',
-              subColor: '#166534',
-            },
-            { 
               label: 'Wishlist', 
-              value: String(saved.length - enrolledCount), 
+              value: String(saved.length), 
               icon: <UnsaveIcon />,
-              // Warm Peach Theme
               bgcolor: '#ffedd5',
               iconBg: '#fdba74',
               color: '#7c2d12',
               subColor: '#9a3412',
-            },
-            { 
-              label: 'Total Hours', 
-              value: `${saved.reduce((s, c) => s + parseFloat(c.duration), 0).toFixed(0)}h`, 
-              icon: <TimeIcon />,
-              // Dusty Lavender Theme
-              bgcolor: '#f3e8ff',
-              iconBg: '#d8b4fe',
-              color: '#581c87',
-              subColor: '#6b21a8',
             },
           ].map((k, index) => (
             <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
@@ -153,7 +127,6 @@ const SavedCoursesPage: React.FC = () => {
                   },
                 }}
               >
-                {/* Icon Badge */}
                 <Box
                   sx={{
                     position: 'absolute',
@@ -173,7 +146,6 @@ const SavedCoursesPage: React.FC = () => {
                   {k.icon}
                 </Box>
 
-                {/* Main Stat */}
                 <Typography
                   variant="h3"
                   sx={{
@@ -187,7 +159,6 @@ const SavedCoursesPage: React.FC = () => {
                   {k.value}
                 </Typography>
 
-                {/* Label */}
                 <Typography
                   variant="body2"
                   sx={{
@@ -204,8 +175,12 @@ const SavedCoursesPage: React.FC = () => {
           ))}
         </Grid>
 
-        {/* Course Cards Grid */}
-        {saved.length === 0 ? (
+        {/* Loading state */}
+        {isLoading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+            <CircularProgress />
+          </Box>
+        ) : saved.length === 0 ? (
           <Paper elevation={0} sx={{ p: 6, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', textAlign: 'center' }}>
             <EmptyIcon sx={{ fontSize: 56, color: 'text.disabled', mb: 1 }} />
             <Typography color="text.disabled" sx={{ mb: 1 }}>No saved courses yet</Typography>
@@ -213,8 +188,8 @@ const SavedCoursesPage: React.FC = () => {
           </Paper>
         ) : (
           <Grid container spacing={{ xs: 2, md: 3 }}>
-            {saved.map((course) => (
-              <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={course.id}>
+            {saved.map((sc: any) => (
+              <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={sc.id}>
                 <Card
                   className="course-card"
                   sx={{
@@ -231,23 +206,28 @@ const SavedCoursesPage: React.FC = () => {
                   <Box
                     sx={{
                       height: 140,
-                      background: course.image ? `url(${course.image}) center/cover` : 'linear-gradient(135deg, #ffb74d, #f97316)',
+                      background: sc.course_thumbnail
+                        ? `url(${sc.course_thumbnail}) center/cover`
+                        : 'linear-gradient(135deg, #ffb74d, #f97316)',
                       position: 'relative',
                     }}
                   >
-                    <Chip
-                      label={course.category}
-                      size="small"
-                      sx={{
-                        position: 'absolute', top: 10, left: 10,
-                        bgcolor: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(4px)',
-                        fontWeight: 600, fontSize: '0.65rem', height: 22, borderRadius: '50px',
-                        color: catColors[course.category]?.color || 'text.primary',
-                      }}
-                    />
+                    {sc.category_name && (
+                      <Chip
+                        label={sc.category_name}
+                        size="small"
+                        sx={{
+                          position: 'absolute', top: 10, left: 10,
+                          bgcolor: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(4px)',
+                          fontWeight: 600, fontSize: '0.65rem', height: 22, borderRadius: '50px',
+                          color: catColors[sc.category_name]?.color || 'text.primary',
+                        }}
+                      />
+                    )}
                     <IconButton
                       size="small"
-                      onClick={() => removeCourse(course.id)}
+                      onClick={() => removeCourse(sc.course)}
+                      disabled={toggleMutation.isPending}
                       sx={{
                         position: 'absolute', top: 8, right: 8,
                         bgcolor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)',
@@ -256,62 +236,38 @@ const SavedCoursesPage: React.FC = () => {
                     >
                       <RemoveIcon sx={{ fontSize: 16 }} />
                     </IconButton>
-                    {course.enrolled && course.progress !== undefined && (
-                      <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 4, bgcolor: 'rgba(0,0,0,0.15)' }}>
-                        <Box sx={{ width: `${course.progress}%`, height: '100%', bgcolor: 'white', borderRadius: '0 2px 2px 0' }} />
-                      </Box>
-                    )}
                   </Box>
 
                   <CardContent sx={{ flexGrow: 1, p: 2.5, display: 'flex', flexDirection: 'column' }}>
                     <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', mb: 0.5, lineHeight: 1.3 }}>
-                      {course.title}
+                      {sc.course_title}
                     </Typography>
-                    <Typography color="text.disabled" sx={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 1.5 }}>
-                      <PersonIcon sx={{ fontSize: 14 }} /> {course.instructor}
-                    </Typography>
+                    {sc.instructor_name && (
+                      <Typography color="text.disabled" sx={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 1.5 }}>
+                        <PersonIcon sx={{ fontSize: 14 }} /> {sc.instructor_name}
+                      </Typography>
+                    )}
 
                     {/* Meta */}
                     <Box sx={{ display: 'flex', gap: 2, mb: 1.5 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.disabled', fontSize: '0.72rem' }}>
-                        <LessonsIcon sx={{ fontSize: 14 }} /> {course.lessons} lessons
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.disabled', fontSize: '0.72rem' }}>
-                        <TimeIcon sx={{ fontSize: 14 }} /> {course.duration}
-                      </Box>
-                    </Box>
-
-                    {/* Rating */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 2 }}>
-                      <StarIcon sx={{ fontSize: 16, color: '#f59e0b' }} />
-                      <Typography sx={{ fontWeight: 600, fontSize: '0.82rem' }}>{course.rating}</Typography>
-                      <Typography color="text.disabled" sx={{ fontSize: '0.72rem' }}>({course.reviews.toLocaleString()})</Typography>
-                    </Box>
-
-                    {/* Progress bar if enrolled */}
-                    {course.enrolled && course.progress !== undefined && (
-                      <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                          <Typography color="text.disabled" sx={{ fontSize: '0.7rem' }}>Progress</Typography>
-                          <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'primary.dark' }}>{course.progress}%</Typography>
+                      {sc.course_level && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.disabled', fontSize: '0.72rem' }}>
+                          {sc.course_level}
                         </Box>
-                        <LinearProgress
-                          variant="determinate"
-                          value={course.progress}
-                          sx={{
-                            height: 4, borderRadius: 2, bgcolor: 'rgba(0,0,0,0.04)',
-                            '& .MuiLinearProgress-bar': { borderRadius: 2, background: 'linear-gradient(90deg, #ffb74d, #ffa424)' },
-                          }}
-                        />
-                      </Box>
-                    )}
+                      )}
+                      {sc.course_price && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.disabled', fontSize: '0.72rem' }}>
+                          ${sc.course_price}
+                        </Box>
+                      )}
+                    </Box>
 
                     {/* Footer */}
                     <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                       <Button
                         size="small"
                         variant="contained"
-                        startIcon={course.enrolled ? <PlayIcon /> : undefined}
+                        startIcon={<PlayIcon />}
                         sx={{
                           textTransform: 'none',
                           fontWeight: 600,
@@ -323,13 +279,13 @@ const SavedCoursesPage: React.FC = () => {
                           '&:hover': { boxShadow: '0 4px 12px rgba(249,115,22,0.3)' },
                         }}
                       >
-                        {course.enrolled ? 'Resume' : 'Enroll Now'}
+                        View Course
                       </Button>
                     </Box>
 
                     {/* Saved date */}
                     <Typography color="text.disabled" sx={{ fontSize: '0.68rem', mt: 1 }}>
-                      Saved {course.savedDate}
+                      Saved {formatDate(sc.created_at)}
                     </Typography>
                   </CardContent>
                 </Card>

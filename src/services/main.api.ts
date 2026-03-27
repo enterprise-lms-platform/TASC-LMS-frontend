@@ -38,6 +38,8 @@ import {
   quizSubmissionApi,
   gradeStatisticsApi,
   managerGradesApi,
+  savedCourseApi,
+  statsApi,
 } from './learning.services';
 import {
   invoiceApi,
@@ -107,6 +109,7 @@ export const api = {
     quizSubmission: quizSubmissionApi,
     gradeStatistics: gradeStatisticsApi,
     managerGrades: managerGradesApi,
+    savedCourse: savedCourseApi,
   },
 
   // Payments
@@ -145,6 +148,9 @@ export const api = {
 
   // Messaging
   messaging: messagingApi,
+
+  // Stats (Superadmin dashboard)
+  stats: statsApi,
 };
 
 export default api;

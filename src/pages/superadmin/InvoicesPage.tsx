@@ -8,39 +8,9 @@ import {
   Warning as OverdueIcon, Visibility as ViewIcon, Download as DownloadIcon,
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
+import { useInvoiceStats } from '../../services/learning.services';
 
 import KPICard from '../../components/superadmin/KPICard';
-
-const kpis = [
-  { 
-    label: 'Total Invoices', 
-    value: '3,245', 
-    icon: <InvoiceIcon />, 
-    // Grey Theme
-    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
-  },
-  { 
-    label: 'Paid', 
-    value: '$1.8M', 
-    icon: <PaidIcon />, 
-    // Mint Green Theme
-    bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
-  },
-  { 
-    label: 'Pending', 
-    value: '$234K', 
-    icon: <PendingIcon />, 
-    // Light Amber Theme
-    bgColor: '#fff8e1', badgeColor: '#ffd54f', valueColor: '#f57f17', labelColor: '#ff6f00'
-  },
-  { 
-    label: 'Overdue', 
-    value: '$45K', 
-    icon: <OverdueIcon />, 
-    // Orange Theme
-    bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412'
-  },
-];
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   Paid: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
@@ -62,23 +32,22 @@ const invoices = [
 
 const InvoicesPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('All');
+  const { data: stats } = useInvoiceStats();
   const filtered = invoices.filter((i) => statusFilter === 'All' || i.status === statusFilter);
+
+  const kpis = [
+    { label: 'Total Invoices', value: String(stats?.total ?? '—'), icon: <InvoiceIcon />, bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46' },
+    { label: 'Paid', value: String(stats?.paid ?? '—'), icon: <PaidIcon />, bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20' },
+    { label: 'Pending', value: String(stats?.pending ?? '—'), icon: <PendingIcon />, bgColor: '#fff8e1', badgeColor: '#ffd54f', valueColor: '#f57f17', labelColor: '#ff6f00' },
+    { label: 'Overdue', value: String(stats?.overdue ?? '—'), icon: <OverdueIcon />, bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412' },
+  ];
 
   return (
     <SuperadminLayout title="Invoices" subtitle="Invoice management and tracking">
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {kpis.map((k, index) => (
           <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
-            <KPICard
-              title={k.label}
-              value={k.value}
-              icon={k.icon}
-              bgColor={k.bgColor}
-              badgeColor={k.badgeColor}
-              valueColor={k.valueColor}
-              labelColor={k.labelColor}
-              index={index}
-            />
+            <KPICard title={k.label} value={k.value} icon={k.icon} bgColor={k.bgColor} badgeColor={k.badgeColor} valueColor={k.valueColor} labelColor={k.labelColor} index={index} />
           </Grid>
         ))}
       </Grid>

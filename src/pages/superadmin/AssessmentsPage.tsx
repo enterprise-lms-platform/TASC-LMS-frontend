@@ -9,13 +9,9 @@ import {
   Assignment as AssignmentIcon, Timer as TimerIcon,
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
+import { useAssessmentStats } from '../../services/learning.services';
 
-const kpis = [
-  { label: 'Total Assessments', value: '892', icon: <QuizIcon />, gradient: 'linear-gradient(135deg, #71717a, #a1a1aa)', trend: '+45 this month' },
-  { label: 'Avg Pass Rate', value: '78.5%', icon: <PassIcon />, gradient: 'linear-gradient(135deg, #10b981, #34d399)', trend: '+2.3% vs last month' },
-  { label: 'Active Exams', value: '34', icon: <TimerIcon />, gradient: 'linear-gradient(135deg, #3f3f46, #71717a)', trend: '12 scheduled today' },
-  { label: 'Total Attempts', value: '24,567', icon: <AssignmentIcon />, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', trend: '+1,234 this week' },
-];
+const kpis_unused = null; // old hardcoded kpis removed — now computed inside component
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   Active: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
@@ -45,7 +41,17 @@ const typeColors: Record<string, string> = {
   Project: '#a1a1aa',
 };
 
-const AssessmentsPage: React.FC = () => (
+const AssessmentsPage: React.FC = () => {
+  const { data: stats } = useAssessmentStats();
+
+  const kpis = [
+    { label: 'Total Quizzes', value: String(stats?.total_quizzes ?? '—'), icon: <QuizIcon />, gradient: 'linear-gradient(135deg, #71717a, #a1a1aa)', trend: `${stats?.total_assignments ?? 0} assignments` },
+    { label: 'Quiz Pass Rate', value: stats ? `${stats.quiz_pass_rate}%` : '—', icon: <PassIcon />, gradient: 'linear-gradient(135deg, #10b981, #34d399)', trend: `Avg score: ${stats?.average_quiz_score ?? 0}` },
+    { label: 'Pending Grading', value: String(stats?.pending ?? '—'), icon: <TimerIcon />, gradient: 'linear-gradient(135deg, #3f3f46, #71717a)', trend: `${stats?.graded ?? 0} graded` },
+    { label: 'Total Assignments', value: String(stats?.total_assignments ?? '—'), icon: <AssignmentIcon />, gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', trend: `Avg grade: ${stats?.average_grade ?? 0}` },
+  ];
+
+  return (
   <SuperadminLayout title="Assessments" subtitle="Assessment management and performance analytics">
     <Grid container spacing={3} sx={{ mb: 4 }}>
       {kpis.map((k) => (
@@ -108,6 +114,7 @@ const AssessmentsPage: React.FC = () => (
       </TableContainer>
     </Paper>
   </SuperadminLayout>
-);
+  );
+};
 
 export default AssessmentsPage;
