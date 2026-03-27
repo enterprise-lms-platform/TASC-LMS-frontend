@@ -425,6 +425,7 @@ export interface QuizQuestion {
 }
 
 export interface QuizDetailResponse {
+  quiz_id: number;
   session: {
     id: number;
     title: string;

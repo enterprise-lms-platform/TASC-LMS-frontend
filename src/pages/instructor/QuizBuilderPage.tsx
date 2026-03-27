@@ -165,6 +165,14 @@ function builderQuestionToPayload(q: Question): Record<string, unknown> {
   }
 }
 
+/** Integer ≥ 0 for API payloads; never NaN/null on the wire. */
+function normalizeQuestionPoints(p: number): number {
+  if (typeof p !== 'number' || !Number.isFinite(p) || Number.isNaN(p)) {
+    return 0;
+  }
+  return Math.max(0, Math.floor(p));
+}
+
 /** Build QuizSettings from builder state */
 function buildSettingsPayload(state: {
   timeLimit: number;
@@ -237,10 +245,51 @@ const QuizBuilderPage: React.FC = () => {
   const [showFeedback, setShowFeedback] = useState<'immediate' | 'after-submit' | 'never'>('after-submit');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
 
   const isSaving =
     patchQuiz.isPending || putQuestions.isPending || updateSession.isPending;
-  const lastSaved: string | null = null;
+
+  const buildSaveErrorMessage = (err: unknown) => {
+    if (axios.isAxiosError(err)) {
+      const data = err.response?.data as unknown;
+      if (data && typeof data === 'object') {
+        const anyData = data as Record<string, unknown>;
+        const detail = anyData.detail;
+        if (typeof detail === 'string' && detail.trim()) return detail;
+
+        const errors = anyData.errors;
+        if (Array.isArray(errors)) {
+          const msg = errors
+            .map((e) => {
+              if (!e || typeof e !== 'object') return null;
+              const r = e as Record<string, unknown>;
+              const field = typeof r.field === 'string' ? r.field : undefined;
+              const message = typeof r.message === 'string' ? r.message : undefined;
+              return [field, message].filter(Boolean).join(': ') || message || field || null;
+            })
+            .filter(Boolean)
+            .join('\n');
+          if (msg) return msg;
+        }
+
+        const fieldErrors = anyData as Record<string, unknown>;
+        const pairs = Object.entries(fieldErrors)
+          .filter(([, v]) => Array.isArray(v) && (v as unknown[]).every((x) => typeof x === 'string'))
+          .map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`);
+        if (pairs.length) return pairs.join('\n');
+      }
+    }
+    return getErrorMessage(err, 'Failed to save quiz. Please try again.');
+  };
+
+  useEffect(() => {
+    // If the user navigates between different quiz sessions without unmounting,
+    // allow hydration to run again for the new session context.
+    setHasInitialized(false);
+    setQuestions([]);
+    setLastSavedAt(null);
+  }, [sessionId]);
 
   useEffect(() => {
     if (quizData && !hasInitialized) {
@@ -262,7 +311,7 @@ const QuizBuilderPage: React.FC = () => {
       setQuestions(sorted.map(apiQuestionToBuilder));
       setHasInitialized(true);
     }
-  }, [quizData, hasInitialized]);
+  }, [quizData, hasInitialized, sessionId]);
 
   const createDefaultQuestion = useCallback((type: QuestionType): Question => {
     const baseQuestion = {
@@ -364,7 +413,7 @@ const QuizBuilderPage: React.FC = () => {
           order: i,
           question_type: q.type,
           question_text: q.questionText,
-          points: q.points,
+          points: normalizeQuestionPoints(q.points),
           answer_payload: builderQuestionToPayload(q),
         })),
       });
@@ -375,68 +424,18 @@ const QuizBuilderPage: React.FC = () => {
         })
       );
       queryClient.invalidateQueries({ queryKey: queryKeys.quiz.detail(sessionId) });
-      setSnackbar({ open: true, message: 'Quiz saved as draft.', severity: 'success' });
+      setLastSavedAt(new Date().toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }));
+      setSnackbar({ open: true, message: 'Quiz saved.', severity: 'success' });
     } catch (err) {
       setSnackbar({
         open: true,
-        message: getErrorMessage(err, 'Failed to save quiz. Please try again.'),
+        message: buildSaveErrorMessage(err),
         severity: 'error',
       });
     }
   };
 
-  const publishQuiz = async () => {
-    if (!sessionId || !Number.isFinite(sessionId) || sessionId <= 0) return;
-    try {
-      await updateSession.mutateAsync({
-        id: sessionId,
-        data: { title: quizTitle, description: quizDescription },
-      });
-      await patchQuiz.mutateAsync({
-        settings: buildSettingsPayload({
-          timeLimit,
-          passingScore,
-          maxAttempts,
-          shuffleQuestions,
-          showCorrectAnswers,
-          showTimer,
-          allowBackNavigation,
-          shuffleAnswers,
-          showFeedback,
-        }),
-      });
-      const { questions: savedQuestions } = await putQuestions.mutateAsync({
-        questions: questions.map((q, i) => ({
-          ...(q.backendId != null && { id: q.backendId }),
-          order: i,
-          question_type: q.type,
-          question_text: q.questionText,
-          points: q.points,
-          answer_payload: builderQuestionToPayload(q),
-        })),
-      });
-      setQuestions((prev) =>
-        prev.map((q, i) => {
-          const server = savedQuestions?.[i];
-          return server ? { ...q, id: `q-${server.id}`, backendId: server.id } : q;
-        })
-      );
-      await updateSession.mutateAsync({
-        id: sessionId,
-        data: { status: 'published', title: quizTitle, description: quizDescription },
-      });
-      queryClient.invalidateQueries({ queryKey: queryKeys.quiz.detail(sessionId) });
-      setSnackbar({ open: true, message: 'Quiz published successfully.', severity: 'success' });
-    } catch (err) {
-      setSnackbar({
-        open: true,
-        message: getErrorMessage(err, 'Failed to publish quiz. Please try again.'),
-        severity: 'error',
-      });
-    }
-  };
-
-  const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
+  const totalPoints = questions.reduce((sum, q) => sum + normalizeQuestionPoints(q.points), 0);
 
   // Render question content based on type
   const renderQuestionContent = (question: Question) => {
@@ -694,9 +693,8 @@ const QuizBuilderPage: React.FC = () => {
         {/* Footer */}
         <QuizBuilderFooter
           isSaving={isSaving}
-          lastSaved={lastSaved}
+          lastSaved={lastSavedAt}
           onSaveDraft={saveDraft}
-          onPublish={publishQuiz}
           onCancel={() => navigate(-1)}
         />
       </Box>

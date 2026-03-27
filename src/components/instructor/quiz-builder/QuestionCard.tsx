@@ -23,6 +23,15 @@ interface QuestionCardProps {
   children?: React.ReactNode;
 }
 
+/** Non-negative integer from number input; empty or invalid → 0 (avoids NaN → JSON null). */
+function parsePointsFromInput(raw: string): number {
+  const t = raw.trim();
+  if (t === '' || t === '-') return 0;
+  const n = Number(t);
+  if (!Number.isFinite(n) || Number.isNaN(n)) return 0;
+  return Math.max(0, Math.floor(n));
+}
+
 const typeLabels: Record<QuestionType, { label: string; bg: string; color: string }> = {
   'multiple-choice': { label: 'Multiple Choice', bg: '#dbeafe', color: '#3b82f6' },
   'true-false': { label: 'True/False', bg: '#d1fae5', color: '#10b981' },
@@ -168,7 +177,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                 size="small"
                 type="number"
                 value={points}
-                onChange={(e) => onPointsChange(Number(e.target.value))}
+                onChange={(e) => onPointsChange(parsePointsFromInput(e.target.value))}
                 sx={{ width: 70 }}
                 inputProps={{ min: 0 }}
               />

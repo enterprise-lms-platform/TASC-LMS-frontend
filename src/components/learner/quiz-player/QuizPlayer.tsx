@@ -31,6 +31,8 @@ interface QuizAttempt {
 
 interface QuizPlayerProps {
   sessionId: number;
+  quizId: number | null;
+  enrollmentId: number | null;
   settings: QuizSettings;
   questions: QuizQuestion[];
   /** Number of previous attempts the learner has used */
@@ -124,6 +126,8 @@ const gradeQuiz = (
 /* ── Component ── */
 const QuizPlayer: React.FC<QuizPlayerProps> = ({
   sessionId,
+  quizId,
+  enrollmentId,
   settings,
   questions: rawQuestions,
   previousAttempts = 0,
@@ -189,11 +193,59 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
     setAttempt((prev) => ({ ...prev, score: clientScore, passed: clientPassed, submitted: true }));
     onComplete?.(clientScore, clientPassed);
 
-    const answers = questions.map((q) => ({
-      question: q.id,
-      selected_answer: { value: attempt.answers[q.id] ?? null },
-    }));
-    quizSubmissionApi.create({ quiz: sessionId, enrollment: 0, answers }).then((res) => {
+    const answers = questions.map((q) => {
+      const rawAnswer = attempt.answers[q.id];
+      let selected_answer: Record<string, unknown>;
+
+      switch (q.question_type) {
+        case 'multiple-choice': {
+          const options = (q.answer_payload.options as Array<{ text?: string }> | undefined) ?? [];
+          const selectedText = Array.isArray(rawAnswer) ? (rawAnswer[0] ?? null) : rawAnswer;
+          const selected_option = typeof selectedText === 'string'
+            ? options.findIndex((o) => o?.text === selectedText)
+            : -1;
+          selected_answer = { selected_option: selected_option >= 0 ? selected_option : null };
+          break;
+        }
+        case 'true-false':
+          selected_answer = { value: typeof rawAnswer === 'boolean' ? rawAnswer : null };
+          break;
+        case 'short-answer':
+          selected_answer = { text: typeof rawAnswer === 'string' ? rawAnswer : '' };
+          break;
+        case 'fill-blank':
+          selected_answer = { blanks: Array.isArray(rawAnswer) ? rawAnswer : [] };
+          break;
+        case 'matching': {
+          const pairs = (q.answer_payload.pairs as Array<{ left?: string }> | undefined) ?? [];
+          const userValues = Array.isArray(rawAnswer) ? rawAnswer : [];
+          selected_answer = {
+            pairs: pairs.map((pair, idx) => ({
+              key: pair?.left ?? '',
+              value: userValues[idx] ?? '',
+            })),
+          };
+          break;
+        }
+        case 'essay':
+          selected_answer = { text: typeof rawAnswer === 'string' ? rawAnswer : '' };
+          break;
+        default:
+          selected_answer = { value: rawAnswer ?? null };
+          break;
+      }
+
+      return {
+        question: q.id,
+        selected_answer,
+      };
+    });
+
+    if (!quizId || !enrollmentId) {
+      return;
+    }
+
+    quizSubmissionApi.create({ quiz: quizId, enrollment: enrollmentId, answers }).then((res) => {
       // Use server-returned score if available (more accurate for essay/matching)
       const serverSubmission = res.data;
       if (serverSubmission.score != null) {
@@ -207,7 +259,7 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
     }).catch(() => {
       // Backend submission failed — client-side grade is already shown
     });
-  }, [questions, attempt.answers, passingScore, onComplete, sessionId]);
+  }, [questions, attempt.answers, passingScore, onComplete, quizId, enrollmentId]);
 
   const handleRetry = useCallback(() => {
     setAttempt({ answers: {}, flagged: new Set(), score: null, passed: null, submitted: false });

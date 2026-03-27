@@ -31,6 +31,7 @@ import type {
   PaginatedResponse,
   CourseApprovalActionRequest,
   BankQuestionListParams,
+  BankQuestion,
 } from '../types/types';
 
 // ── Categories ──
@@ -520,10 +521,20 @@ export const useDeleteQuestionCategory = () => {
 export const useBankQuestions = (params?: BankQuestionListParams) =>
   useQuery({
     queryKey: queryKeys.bankQuestions.list(params),
-    queryFn: () => bankQuestionApi.list(params).then((r) => {
-      const data = r.data;
-      return Array.isArray(data) ? data : (data as any).results ?? [];
-    }),
+    queryFn: () =>
+      bankQuestionApi.list(params).then((r) => {
+        const data = r.data;
+        // Align with QuestionBankPage: { count, results } (paginated API or legacy array)
+        if (Array.isArray(data)) {
+          return {
+            count: data.length,
+            next: null,
+            previous: null,
+            results: data,
+          } as PaginatedResponse<BankQuestion>;
+        }
+        return data as PaginatedResponse<BankQuestion>;
+      }),
   });
 
 export const useBankQuestion = (id: number | null | undefined) =>

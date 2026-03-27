@@ -2,7 +2,6 @@ import React from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import {
   Check as SaveIcon,
-  Publish as PublishIcon,
   Sync as SyncIcon,
 } from '@mui/icons-material';
 
@@ -10,7 +9,6 @@ interface QuizBuilderFooterProps {
   isSaving: boolean;
   lastSaved: string | null;
   onSaveDraft: () => void;
-  onPublish: () => void;
   onCancel: () => void;
 }
 
@@ -18,7 +16,6 @@ const QuizBuilderFooter: React.FC<QuizBuilderFooterProps> = ({
   isSaving,
   lastSaved,
   onSaveDraft,
-  onPublish,
   onCancel,
 }) => {
   return (
@@ -42,7 +39,8 @@ const QuizBuilderFooter: React.FC<QuizBuilderFooterProps> = ({
             display: 'flex',
             alignItems: 'center',
             gap: 1,
-            color: isSaving ? 'text.secondary' : 'success.main',
+            color:
+              isSaving ? 'text.secondary' : lastSaved ? 'success.main' : 'text.secondary',
           }}
         >
           {isSaving ? (
@@ -51,7 +49,7 @@ const QuizBuilderFooter: React.FC<QuizBuilderFooterProps> = ({
             <SaveIcon fontSize="small" />
           )}
           <Typography variant="body2">
-            {isSaving ? 'Saving...' : lastSaved ? `Saved ${lastSaved}` : 'All changes saved'}
+            {isSaving ? 'Saving...' : lastSaved ? `Saved ${lastSaved}` : 'Unsaved changes'}
           </Typography>
         </Box>
       </Box>
@@ -65,20 +63,13 @@ const QuizBuilderFooter: React.FC<QuizBuilderFooterProps> = ({
           Cancel
         </Button>
         <Button
-          variant="outlined"
+          variant="contained"
+          color="success"
+          startIcon={<SaveIcon />}
           onClick={onSaveDraft}
           sx={{ textTransform: 'none' }}
         >
-          Save Draft
-        </Button>
-        <Button
-          variant="contained"
-          color="success"
-          startIcon={<PublishIcon />}
-          onClick={onPublish}
-          sx={{ textTransform: 'none' }}
-        >
-          Publish Quiz
+          Save Quiz
         </Button>
       </Box>
     </Box>
