@@ -159,6 +159,7 @@ const AnalyticsPage = lazy(() => import('../pages/superadmin/AnalyticsPage'));
 const NotificationsPage = lazy(() => import('../pages/superadmin/NotificationsPage'));
 const InviteUserPage = lazy(() => import('../pages/superadmin/InviteUserPage'));
 const SuperadminProfilePage = lazy(() => import('../pages/superadmin/SuperadminProfilePage'));
+const SuperadminMessagesPage = lazy(() => import('../pages/superadmin/SuperadminMessagesPage'));
 
 // Import all loaders
 import * as learnerLoaders from './loaders/learnerLoaders';
@@ -898,6 +899,10 @@ export const createAppRouter = (queryClient: QueryClient) => {
       path: '/superadmin/approvals/:requestId',
       element: <SuspenseWrapper><ProtectedRoute requiredRole="tasc_admin"><CourseApprovalDetailPage /></ProtectedRoute></SuspenseWrapper>,
       loader: async (args) => superadminLoaders.approvalDetailLoader(queryClient, args as { params: { requestId?: string } }),
+    },
+    {
+      path: '/superadmin/messages',
+      element: <SuspenseWrapper><ProtectedRoute requiredRole="tasc_admin"><SuperadminMessagesPage /></ProtectedRoute></SuspenseWrapper>,
     },
     {
       path: '/superadmin/profile',
