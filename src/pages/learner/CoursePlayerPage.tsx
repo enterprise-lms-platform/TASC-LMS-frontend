@@ -514,6 +514,51 @@ const CoursePlayerPage: React.FC = () => {
                 </Box>
               )}
             </Box>
+          ) : activeSession?.session_type === 'document' ? (
+            /* Document/PDF Viewer via signed asset URL */
+            <Box
+              sx={{
+                position: 'relative',
+                width: '100%',
+                minHeight: { xs: 420, md: 560 },
+                bgcolor: '#f8f9fa',
+                borderBottom: '1px solid #e5e7eb',
+                flexShrink: 0,
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              {isAssetLoading ? (
+                <Box sx={{ flex: 1, minHeight: { xs: 420, md: 560 }, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CircularProgress sx={{ color: '#ffa424' }} />
+                </Box>
+              ) : assetUrlData?.url || activeSession?.video_url ? (
+                <>
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1.5, borderBottom: '1px solid #e5e7eb', bgcolor: '#fff' }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => window.open((assetUrlData?.url || activeSession?.video_url || '') as string, '_blank', 'noopener,noreferrer')}
+                      sx={{ textTransform: 'none', fontWeight: 600 }}
+                    >
+                      Open document in new tab
+                    </Button>
+                  </Box>
+                  <Box sx={{ flex: 1, minHeight: { xs: 360, md: 500 }, bgcolor: '#f8f9fa' }}>
+                    <iframe
+                      src={(assetUrlData?.url || activeSession?.video_url || '') as string}
+                      title={activeSession?.title || 'Document'}
+                      style={{ width: '100%', height: '100%', minHeight: 'inherit', border: 'none', background: '#fff' }}
+                    />
+                  </Box>
+                </>
+              ) : (
+                <Box sx={{ flex: 1, minHeight: { xs: 420, md: 560 }, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 3, textAlign: 'center' }}>
+                  <ArticleIcon sx={{ fontSize: 64, color: 'rgba(0,0,0,0.2)', mb: 2 }} />
+                  <Typography variant="body1" sx={{ color: 'text.secondary' }}>Document is not available.</Typography>
+                </Box>
+              )}
+            </Box>
           ) : activeSession?.session_type === 'quiz' ? (
             /* Quiz Player */
             <QuizSessionRenderer sessionId={activeSession.id} onComplete={(score, passed) => {
