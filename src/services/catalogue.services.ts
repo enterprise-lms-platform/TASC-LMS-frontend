@@ -353,6 +353,8 @@ export interface CourseReview {
   course: number;
   rating: number;
   content: string;
+  helpful_count: number;
+  report_count: number;
   is_approved: boolean;
   created_at: string;
   updated_at: string;
@@ -373,6 +375,14 @@ export const courseReviewApi = {
   // Get all reviews (with optional filters)
   getAll: (params?: { course?: number; rating?: number; page?: number; page_size?: number }) =>
     apiClient.get<PaginatedResponse<CourseReview>>(`${BASE_PATH}/course-reviews/`, { params }),
+
+  // Mark a review as helpful
+  helpful: (id: number) =>
+    apiClient.post<CourseReview>(`${BASE_PATH}/course-reviews/${id}/helpful/`),
+
+  // Report a review
+  report: (id: number) =>
+    apiClient.post<CourseReview>(`${BASE_PATH}/course-reviews/${id}/report/`),
 };
 
 // SESSION ATTACHMENTS (Resources)

@@ -65,9 +65,9 @@ api.messaging            // messagingApi
 | HIGH | F5 | Promo code validation | `CheckoutPaymentPage.tsx`, `SubscriptionManagementPage.tsx` | New `promoCodeApi`, wire to input |
 | MED | F6 | Learner Progress page overhaul | `ProgressPage.tsx` | Replace hardcoded data with `enrollmentApi` + `sessionProgressApi` |
 | MED | F7 | Instructor Grading page wiring | `GradingPage.tsx` | Replace `sampleSubmissions` with `submissionApi` |
-| MED | F8 | Manager Settings persistence | `ManagerSettingsPage.tsx` | Wire to new `GET/PUT /api/v1/manager/settings/` |
+| ✅ | F8 | ~~Manager Settings persistence~~ | `ManagerSettingsPage.tsx` | Done — wired to `GET/PATCH /api/v1/accounts/manager/organization-settings/` |
 | MED | F9 | Manager Billing real data | `ManagerBillingPage.tsx` | Wire plan/usage to new endpoints |
-| MED | F10 | Review interactions | `CourseReviews.tsx` | Wire Helpful/Report buttons to new review actions |
+| ✅ | F10 | ~~Review interactions~~ | `CourseReviews.tsx` | Done — wired to Helpful/Report buttons and rating filter |
 | MED | F11 | CourseViewSet ordering (TopCourses) | `ManagerDashboard.tsx` | Use `ordering` param — backend Task 30 ✅ done |
 | MED | F12 | Catalog sorting | `CourseCataloguePage.tsx` | Wire Sort dropdown to `publicCourseApi` `ordering` param |
 | LOW | F13 | Business page APIs | `PricingSection.tsx`, `FaqSection.tsx` | Wire to `businessPricingApi` / `faqApi` |

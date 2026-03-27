@@ -98,7 +98,7 @@ const FinanceRevenueReportsPage: React.FC = () => {
 
               <Grid container spacing={3} sx={{ mb: 3 }}>
                 {/* Monthly Breakdown Chart */}
-                <Grid item xs={12} lg={8}>
+                <Grid size={{ xs: 12, lg: 8 }}>
                   <Paper elevation={0} sx={cardSx}>
                     <Box sx={{ ...headerSx, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Typography fontWeight={700}>Monthly Revenue Breakdown</Typography>
@@ -125,7 +125,7 @@ const FinanceRevenueReportsPage: React.FC = () => {
                 </Grid>
 
                 {/* Revenue by Gateway (Mocking based on total) */}
-                <Grid item xs={12} lg={4}>
+                <Grid size={{ xs: 12, lg: 4 }}>
                   <Paper elevation={0} sx={{ ...cardSx, height: '100%' }}>
                     <Box sx={headerSx}>
                       <Typography fontWeight={700}>Revenue by Gateway</Typography>
@@ -170,7 +170,7 @@ const FinanceRevenueReportsPage: React.FC = () => {
                 </Box>
                 <Grid container>
                   {categories?.map((cat, i, arr) => (
-                    <Grid item xs={12} sm={6} md={4} key={cat.name}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={cat.name}>
                       <Box sx={{
                         p: 2.5, px: 3,
                         borderBottom: i < arr.length - (arr.length % 3 || 3) ? 1 : 0,

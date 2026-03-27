@@ -11,7 +11,7 @@ import {
   AutoGraph as TrendUpIcon,
   People as UsersIcon,
   WorkspacePremium as PremiumIcon,
-  HistoryTime as HistoryIcon,
+  AccessTime as HistoryIcon,
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';

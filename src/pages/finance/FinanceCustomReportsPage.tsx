@@ -88,7 +88,7 @@ const FinanceCustomReportsPage: React.FC = () => {
               { label: 'Recently Run', value: (reports || []).filter(r => r.status === 'ready').length.toString(), icon: <RunIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
               { label: 'Failed Reports', value: (reports || []).filter(r => r.status === 'failed').length.toString(), icon: <EditIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
             ].map((s) => (
-              <Grid item xs={6} md={3} key={s.label}>
+              <Grid size={{ xs: 6, md: 3 }} key={s.label}>
                 <Paper elevation={0} sx={{
                   bgcolor: s.bgcolor, borderRadius: '20px', p: 3,
                   position: 'relative', minHeight: 160, display: 'flex',

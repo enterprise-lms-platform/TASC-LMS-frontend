@@ -1112,9 +1112,20 @@ export interface Organization {
   id: number;
   name: string;
   slug: string;
+  description?: string;
+  logo?: string | null;
   logo_url?: string | null;
+  website?: string | null;
+  industry?: string;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
   is_active: boolean;
+  settings?: Record<string, any>;
   created_at: string;
+  updated_at?: string;
   courses_count?: number;
   users_count?: number;
 }
