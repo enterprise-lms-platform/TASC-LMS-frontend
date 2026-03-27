@@ -559,6 +559,54 @@ const CoursePlayerPage: React.FC = () => {
                 </Box>
               )}
             </Box>
+          ) : activeSession?.session_type === 'scorm' ? (
+            /* SCORM: temporary fallback — package download only; no in-app playback yet */
+            <Box
+              sx={{
+                position: 'relative',
+                width: '100%',
+                minHeight: { xs: 420, md: 560 },
+                bgcolor: '#f8f9fa',
+                borderBottom: '1px solid #e5e7eb',
+                flexShrink: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                px: 3,
+                py: 4,
+                textAlign: 'center',
+              }}
+            >
+              {isAssetLoading ? (
+                <CircularProgress sx={{ color: '#ffa424' }} />
+              ) : assetUrlData?.url || activeSession?.video_url ? (
+                <>
+                  <ArticleIcon sx={{ fontSize: 56, color: 'rgba(0,0,0,0.2)', mb: 2 }} />
+                  <Typography variant="body1" sx={{ color: 'text.primary', fontWeight: 600, mb: 1, maxWidth: 480 }}>
+                    SCORM playback is not available in the player yet.
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 480 }}>
+                    You can download the uploaded package to open it in a compatible tool or LMS.
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    startIcon={<DownloadIcon />}
+                    onClick={() => window.open((assetUrlData?.url || activeSession?.video_url || '') as string, '_blank', 'noopener,noreferrer')}
+                    sx={{ textTransform: 'none', fontWeight: 600, bgcolor: '#ffa424', color: '#fff', '&:hover': { bgcolor: '#e6931f' } }}
+                  >
+                    Download SCORM package
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <ArticleIcon sx={{ fontSize: 56, color: 'rgba(0,0,0,0.2)', mb: 2 }} />
+                  <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 480 }}>
+                    SCORM package is not available for this session.
+                  </Typography>
+                </>
+              )}
+            </Box>
           ) : activeSession?.session_type === 'quiz' ? (
             /* Quiz Player */
             <QuizSessionRenderer sessionId={activeSession.id} onComplete={(score, passed) => {
