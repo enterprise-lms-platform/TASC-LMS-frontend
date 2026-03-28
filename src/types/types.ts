@@ -103,7 +103,11 @@ export const PaymentMethodType = {
   CREDIT_CARD: 'credit_card',
   DEBIT_CARD: 'debit_card',
   PAYPAL: 'paypal',
-  BANK_ACCOUNT: 'bank_account',
+  BANK_TRANSFER: 'bank_transfer',
+  MOBILE_MONEY: 'mobile_money',
+  GOOGLE_PAY: 'google_pay',
+  APPLE_PAY: 'apple_pay',
+  OTHER: 'other',
 } as const;
 export type PaymentMethodType = typeof PaymentMethodType[keyof typeof PaymentMethodType];
 

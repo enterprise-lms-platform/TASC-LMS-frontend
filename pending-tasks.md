@@ -61,21 +61,21 @@ api.messaging            // messagingApi
 | ✅ | F1 | ~~Saved Courses page + toggle~~ | `SavedCoursesPage.tsx` | Done — `savedCourseApi` + `useSavedCourses` hook wired |
 | ✅ | F2 | Finance pages — replace mock data | 8 finance page files | Done — wired all 8 pages to live hooks |
 | ✅ | F3 | ~~Superadmin pages — wire KPIs to stats APIs~~ | 6 superadmin page files | Done — KPIs wired; table data still mock |
-| HIGH | F4 | Mobile money checkout | `CheckoutPaymentPage.tsx` | Replace `setTimeout` with real Flutterwave charge |
-| HIGH | F5 | Promo code validation | `CheckoutPaymentPage.tsx`, `SubscriptionManagementPage.tsx` | New `promoCodeApi`, wire to input |
-| MED | F6 | Learner Progress page overhaul | `ProgressPage.tsx` | Replace hardcoded data with `enrollmentApi` + `sessionProgressApi` |
-| MED | F7 | Instructor Grading page wiring | `GradingPage.tsx` | Replace `sampleSubmissions` with `submissionApi` |
+| HOLD | F4 | Mobile money checkout | `CheckoutPaymentPage.tsx` | Blocked — waiting on Pesapal API keys |
+| HOLD | F5 | Promo code validation | `CheckoutPaymentPage.tsx`, `SubscriptionManagementPage.tsx` | Blocked — depends on Pesapal keys + Task 61 |
+| ✅ | F6 | ~~Learner Progress page overhaul~~ | `ProgressPage.tsx` | Done — fixed pagination bug, milestones derived from real stats |
+| ✅ | F7 | ~~Instructor Grading page wiring~~ | `GradingPage.tsx` | Done — fixed pagination bug, added status filter |
 | ✅ | F8 | ~~Manager Settings persistence~~ | `ManagerSettingsPage.tsx` | Done — wired to `GET/PATCH /api/v1/accounts/manager/organization-settings/` |
-| MED | F9 | Manager Billing real data | `ManagerBillingPage.tsx` | Wire plan/usage to new endpoints |
+| ✅ | F9 | ~~Manager Billing real data~~ | `ManagerBillingPage.tsx` | Done — wired to `/api/v1/auth/manager/billing/plan/` and `/usage/` |
 | ✅ | F10 | ~~Review interactions~~ | `CourseReviews.tsx` | Done — wired to Helpful/Report buttons and rating filter |
-| MED | F11 | CourseViewSet ordering (TopCourses) | `ManagerDashboard.tsx` | Use `ordering` param — backend Task 30 ✅ done |
-| MED | F12 | Catalog sorting | `CourseCataloguePage.tsx` | Wire Sort dropdown to `publicCourseApi` `ordering` param |
-| LOW | F13 | Business page APIs | `PricingSection.tsx`, `FaqSection.tsx` | Wire to `businessPricingApi` / `faqApi` |
-| LOW | F14 | Invoice PDF/email | `InvoiceReceiptPage.tsx` | Wire Download/Email buttons |
-| LOW | F15 | Payment history exports | `PaymentHistoryPage.tsx` | Wire Export CSV / Statement buttons |
-| LOW | F16 | Subscription actions | `SubscriptionManagementPage.tsx` | Wire Cancel/Add Payment mutations |
-| LOW | F17 | Security page | `SecurityPage.tsx` | Wire to new security stats endpoint |
-| LOW | F18 | Dashboard mock cleanup | various | Remove remaining hardcoded stats |
+| ✅ | F11 | ~~CourseViewSet ordering (TopCourses)~~ | `TopCourses.tsx` | Done — uses `ordering: '-enrollment_count'`, server-side |
+| ✅ | F12 | ~~Catalog sorting~~ | `CoursesGrid.tsx` | Done — sort dropdown mapped to `ordering` param |
+| ✅ | F13 | ~~Business page APIs~~ | `PricingSection.tsx`, `FaqSection.tsx` | Already wired with `useQuery` + fallback data |
+| ✅ | F14 | ~~Invoice PDF/email~~ | `InvoiceReceiptPage.tsx` | Done — Download uses `window.print()`, Email shows toast |
+| ✅ | F15 | ~~Payment history exports~~ | `PaymentHistoryPage.tsx` | Done — Export CSV + Statement wired to `/api/v1/payments/transactions/export-csv/` blob download |
+| ✅ | F16 | ~~Subscription actions~~ | `SubscriptionManagementPage.tsx` | Done — Cancel wired to `useCancelUserSubscription`, Add Payment to `useCreatePaymentMethod`, Set Default to `useSetDefaultPaymentMethod` |
+| ✅ | F17 | ~~Security page~~ | `SecurityPage.tsx` | Done — wired to `GET /api/v1/superadmin/security/stats/` |
+| ✅ | F18 | ~~Dashboard mock cleanup~~ | various | Done — Instructor WelcomeBanner uses real submission count; Finance Sidebar revenue → `—` (backend Task 37 needed) |
 
 ---
 
@@ -299,7 +299,7 @@ const { data: instructorsData } = useQuery({
 
 **Problem:** Mobile money payment uses `setTimeout(() => { setPaymentStatus('success') }, 3000)` to simulate payment.
 
-**Backend dependency:** Task 60 (Flutterwave mobile money charge endpoint)
+**Backend dependency:** Task 60 (Pesapal mobile money charge endpoint — see `apps/payments/views_pesapal.py` and `apps/payments/urls.py` for the exact URL)
 
 **Step 1 — Add service method** (`src/services/payments.services.ts`):
 
@@ -314,13 +314,14 @@ export interface MobileMoneyChargeRequest {
 export interface MobileMoneyChargeResponse {
   status: 'pending' | 'error';
   message: string;
-  flw_ref?: string;
+  order_tracking_id?: string;
+  redirect_url?: string;
 }
 
 export const mobileMoneyApi = {
   charge: (data: MobileMoneyChargeRequest) =>
     apiClient.post<MobileMoneyChargeResponse>(
-      '/api/v1/payments/flutterwave/charge-mobile-money/',
+      '/api/v1/payments/pesapal/initiate/',
       data
     ),
 };
@@ -345,7 +346,7 @@ const handleMobileMoneyPayment = async () => {
     if (response.data.status === 'pending') {
       setPaymentStatus('pending');
       // Show "Check your phone" message
-      // Poll for completion or wait for webhook redirect
+      // Poll for completion or wait for Pesapal IPN webhook redirect
     }
   } catch (error) {
     setPaymentStatus('failed');
@@ -953,7 +954,7 @@ These pages are blocked purely on backend. Once the backend task is completed, t
 | Instructor stats | ✅ Working | `/api/v1/superadmin/users/instructor-stats/` | 35 |
 | Invoice stats | ✅ Working | `/api/v1/payments/invoices/stats/` | 36 |
 | Revenue breakdown | ✅ Working | `/api/v1/payments/transactions/revenue-stats/` | 37 |
-| Mobile money charge | ❌ Missing | `/api/v1/payments/flutterwave/charge-mobile-money/` | 60 |
+| Mobile money charge | ❌ Missing | `/api/v1/payments/pesapal/initiate/` | 60 |
 | Promo code verify | ❌ Missing | `/api/v1/public/promo-codes/verify/` | 61 |
 | Review helpful/report | ❌ Missing | `/api/v1/catalogue/reviews/{id}/helpful/` | 62 |
 | Transaction export CSV | ❌ Missing | `/api/v1/payments/transactions/export-csv/` | 63 |
