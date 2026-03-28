@@ -126,8 +126,6 @@ const CheckoutPaymentPage: React.FC = () => {
   const [firstName, setFirstName] = useState(user?.first_name ?? '');
   const [lastName, setLastName] = useState(user?.last_name ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
-  const [promoCode, setPromoCode] = useState('');
-  const [promoApplied, setPromoApplied] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -148,26 +146,11 @@ const CheckoutPaymentPage: React.FC = () => {
 
   // Calculate prices
   const subtotal = course.currentPrice;
-  const discount = promoApplied ? subtotal * 0.2 : 0;
   const processingFee = 0;
-  const total = subtotal - discount + processingFee;
+  const total = subtotal + processingFee;
 
   const showToast = (message: string, severity: 'success' | 'error') => {
     setToast({ open: true, message, severity });
-  };
-
-  const handleApplyPromo = () => {
-    if (promoCode.toUpperCase() === 'SAVE20') {
-      setPromoApplied(true);
-      showToast('Promo code applied successfully!', 'success');
-    } else if (promoCode) {
-      showToast('Invalid promo code', 'error');
-    }
-  };
-
-  const handleRemovePromo = () => {
-    setPromoApplied(false);
-    setPromoCode('');
   };
 
   // Open auth dialog when PIN or OTP is needed
@@ -197,8 +180,6 @@ const CheckoutPaymentPage: React.FC = () => {
               originalPrice: course.currentPrice,
             },
             subtotal: subtotal,
-            discount: discount,
-            discountCode: promoApplied ? 'SAVE20' : undefined,
             total: total,
             paymentMethod: paymentMethods.find(m => m.id === selectedPayment)?.name,
             transactionId: transactionId,
@@ -206,7 +187,7 @@ const CheckoutPaymentPage: React.FC = () => {
         });
       }, 1500);
     }
-  }, [countryCode, course.currentPrice, course.instructor, course.title, discount, email, firstName, flwStep, lastName, navigate, phoneNumber, promoApplied, selectedPayment, subtotal, total, transactionId]);
+  }, [countryCode, course.currentPrice, course.instructor, course.title, email, firstName, flwStep, lastName, navigate, phoneNumber, selectedPayment, subtotal, total, transactionId]);
 
   // Handle errors
   React.useEffect(() => {
@@ -278,8 +259,6 @@ const CheckoutPaymentPage: React.FC = () => {
             originalPrice: course.currentPrice,
           },
           subtotal: subtotal,
-          discount: discount,
-          discountCode: promoApplied ? 'SAVE20' : undefined,
           total: total,
           paymentMethod: paymentMethods.find(m => m.id === selectedPayment)?.name,
         }
@@ -654,56 +633,6 @@ const CheckoutPaymentPage: React.FC = () => {
                   </Grid>
                 </Box>
 
-                {/* Promo Code - same as before */}
-                <Box sx={{ pt: 3, borderTop: '1px solid #e4e4e7' }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    Promo Code
-                  </Typography>
-                  <Stack direction="row" spacing={1}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      placeholder="Enter promo code"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                      disabled={promoApplied}
-                    />
-                    <Button
-                      variant="outlined"
-                      onClick={handleApplyPromo}
-                      disabled={promoApplied}
-                      sx={{
-                        borderColor: '#d4d4d8',
-                        color: '#3f3f46',
-                        textTransform: 'none',
-                        '&:hover': { borderColor: '#ffa424', color: '#ffa424' },
-                      }}
-                    >
-                      Apply
-                    </Button>
-                  </Stack>
-                  {promoApplied && (
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      sx={{
-                        mt: 1.5,
-                        p: 1.5,
-                        bgcolor: 'rgba(16, 185, 129, 0.1)',
-                        border: '1px solid #10b981',
-                        borderRadius: 1,
-                      }}
-                    >
-                      <CheckIcon sx={{ color: '#10b981', mr: 1, fontSize: 18 }} />
-                      <Typography variant="body2" sx={{ color: '#10b981', fontWeight: 500, flex: 1 }}>
-                        SAVE20 applied - 20% off
-                      </Typography>
-                      <Button size="small" sx={{ color: '#71717a', minWidth: 'auto' }} onClick={handleRemovePromo}>
-                        ✕
-                      </Button>
-                    </Stack>
-                  )}
-                </Box>
               </Box>
             </Box>
           </Grid>
@@ -777,12 +706,6 @@ const CheckoutPaymentPage: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">Subtotal</Typography>
                     <Typography variant="body2" fontWeight={500} color="text.primary">${subtotal.toFixed(2)}</Typography>
                   </Stack>
-                  {promoApplied && (
-                    <Stack direction="row" justifyContent="space-between">
-                      <Typography variant="body2" color="text.secondary">Promo Discount (20%)</Typography>
-                      <Typography variant="body2" fontWeight={500} sx={{ color: '#10b981' }}>-${discount.toFixed(2)}</Typography>
-                    </Stack>
-                  )}
                   <Stack direction="row" justifyContent="space-between">
                     <Typography variant="body2" color="text.secondary">Processing Fee</Typography>
                     <Typography variant="body2" fontWeight={500} color="text.primary">$0.00</Typography>

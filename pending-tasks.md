@@ -62,7 +62,7 @@ api.messaging            // messagingApi
 | ✅ | F2 | Finance pages — replace mock data | 8 finance page files | Done — wired all 8 pages to live hooks |
 | ✅ | F3 | ~~Superadmin pages — wire KPIs to stats APIs~~ | 6 superadmin page files | Done — KPIs wired; table data still mock |
 | HOLD | F4 | Mobile money checkout | `CheckoutPaymentPage.tsx` | Blocked — waiting on Pesapal API keys |
-| HOLD | F5 | Promo code validation | `CheckoutPaymentPage.tsx`, `SubscriptionManagementPage.tsx` | Blocked — depends on Pesapal keys + Task 61 |
+| ~~REMOVED~~ | F5 | ~~Promo code validation~~ — removed from scope | — | Hardcoded SAVE20 logic removed from CheckoutPaymentPage |
 | ✅ | F6 | ~~Learner Progress page overhaul~~ | `ProgressPage.tsx` | Done — fixed pagination bug, milestones derived from real stats |
 | ✅ | F7 | ~~Instructor Grading page wiring~~ | `GradingPage.tsx` | Done — fixed pagination bug, added status filter |
 | ✅ | F8 | ~~Manager Settings persistence~~ | `ManagerSettingsPage.tsx` | Done — wired to `GET/PATCH /api/v1/accounts/manager/organization-settings/` |
@@ -308,7 +308,6 @@ export interface MobileMoneyChargeRequest {
   enrollment: number;
   phone_number: string;
   provider: 'mpesa' | 'mtn' | 'airtel';
-  promo_code?: string;
 }
 
 export interface MobileMoneyChargeResponse {
@@ -341,7 +340,6 @@ const handleMobileMoneyPayment = async () => {
       enrollment: enrollmentId,
       phone_number: phoneNumber,
       provider: selectedProvider as 'mpesa' | 'mtn' | 'airtel',
-      promo_code: promoCode || undefined,
     });
     if (response.data.status === 'pending') {
       setPaymentStatus('pending');
@@ -357,7 +355,7 @@ const handleMobileMoneyPayment = async () => {
 
 ---
 
-### Task F5: Promo Code Validation
+### Task F5: ~~Promo Code Validation~~ — REMOVED FROM SCOPE
 
 **Files:**
 - `src/pages/learner/CheckoutPaymentPage.tsx` — hardcoded "SAVE20" acceptance
@@ -955,7 +953,7 @@ These pages are blocked purely on backend. Once the backend task is completed, t
 | Invoice stats | ✅ Working | `/api/v1/payments/invoices/stats/` | 36 |
 | Revenue breakdown | ✅ Working | `/api/v1/payments/transactions/revenue-stats/` | 37 |
 | Mobile money charge | ❌ Missing | `/api/v1/payments/pesapal/initiate/` | 60 |
-| Promo code verify | ❌ Missing | `/api/v1/public/promo-codes/verify/` | 61 |
+| ~~Promo code verify~~ | Removed | — | — |
 | Review helpful/report | ❌ Missing | `/api/v1/catalogue/reviews/{id}/helpful/` | 62 |
 | Transaction export CSV | ❌ Missing | `/api/v1/payments/transactions/export-csv/` | 63 |
 | Manager settings | ❌ Missing | `/api/v1/manager/settings/` | 43 |
