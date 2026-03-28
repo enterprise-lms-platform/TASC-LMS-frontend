@@ -58,6 +58,7 @@ import {
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
 import { transactionApi } from '../../services/payments.services';
+import { apiClient } from '../../utils/config';
 import type { Transaction } from '../../types/types';
 
 const PAGE_SIZE = 10;
@@ -100,6 +101,45 @@ const PaymentHistoryPage: React.FC = () => {
   const handleMobileMenuToggle = () => setMobileOpen(!mobileOpen);
   const showToast = (message: string, severity: 'success' | 'warning' | 'error' = 'success') => {
     setToast({ open: true, message, severity });
+  };
+
+  const handleExportCsv = async () => {
+    try {
+      const params: Record<string, string> = {};
+      if (statusFilter !== 'all') params.status = statusFilter;
+      const response = await apiClient.get('/api/v1/payments/transactions/export-csv/', {
+        responseType: 'blob',
+        params,
+      });
+      const url = URL.createObjectURL(response.data as Blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'transactions.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      showToast('Failed to export CSV', 'error');
+    }
+  };
+
+  const handleDownloadStatement = async () => {
+    try {
+      const response = await apiClient.get('/api/v1/payments/transactions/export-csv/', {
+        responseType: 'blob',
+      });
+      const url = URL.createObjectURL(response.data as Blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'statement.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      showToast('Failed to download statement', 'error');
+    }
   };
 
   const openTransactionDetail = (txn: Transaction) => {
@@ -175,10 +215,10 @@ const PaymentHistoryPage: React.FC = () => {
             <Typography variant="body2" color="text.secondary">View and manage your payment transactions</Typography>
           </Box>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: { xs: '100%', sm: 'auto' } }}>
-            <Button variant="outlined" startIcon={<DownloadIcon />} sx={{ borderColor: '#d4d4d8', color: '#3f3f46', textTransform: 'none' }}>
+            <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExportCsv} sx={{ borderColor: '#d4d4d8', color: '#3f3f46', textTransform: 'none' }}>
               Export CSV
             </Button>
-            <Button variant="contained" startIcon={<DescriptionIcon />} sx={{ bgcolor: '#ffa424', textTransform: 'none', '&:hover': { bgcolor: '#f97316' } }}>
+            <Button variant="contained" startIcon={<DescriptionIcon />} onClick={handleDownloadStatement} sx={{ bgcolor: '#ffa424', textTransform: 'none', '&:hover': { bgcolor: '#f97316' } }}>
               Download Statement
             </Button>
           </Stack>

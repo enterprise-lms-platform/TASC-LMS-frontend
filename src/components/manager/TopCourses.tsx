@@ -33,16 +33,12 @@ const TopCourses: React.FC = () => {
 
   const { data: coursesRaw, isLoading } = useQuery({
     queryKey: ['manager', 'courses', 'top'],
-    queryFn: () => courseApi.getAll({ page_size: 20 }).then(r => r.data),
+    queryFn: () => courseApi.getAll({ ordering: '-enrollment_count', page_size: 4 }).then(r => r.data),
   });
 
   const courses = (coursesRaw as PaginatedResponse<CourseResult> | undefined)?.results ?? [];
 
-  // Sort by enrollment_count descending, take top 4
-  const coursesData = [...courses]
-    .sort((a, b) => (b.enrollment_count || 0) - (a.enrollment_count || 0))
-    .slice(0, 4)
-    .map((c, i) => ({
+  const coursesData = courses.map((c, i) => ({
       rank: i + 1,
       rankBg: rankStyles[i] || '#e5e7eb',
       name: c.title,

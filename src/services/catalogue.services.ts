@@ -98,6 +98,7 @@ export interface CourseListParams {
   instructor_courses?: boolean;
   limit?: number;
   status?: string;
+  ordering?: string;            // e.g. '-enrollment_count', 'title', '-created_at'
 }
 
 export const courseApi = {

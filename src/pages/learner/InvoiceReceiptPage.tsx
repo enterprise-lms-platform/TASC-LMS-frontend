@@ -112,17 +112,11 @@ const InvoiceReceiptPage: React.FC = () => {
   };
 
   const handleDownload = () => {
-    showToast('Downloading invoice as PDF...');
-    setTimeout(() => {
-      showToast('Invoice downloaded successfully!');
-    }, 1500);
+    window.print();
   };
 
   const handleEmail = () => {
-    showToast(`Sending invoice to ${invoice.customer.email}...`);
-    setTimeout(() => {
-      showToast('Invoice sent to your email!');
-    }, 1500);
+    showToast(`Invoice sent to ${invoice.customer.email}`);
   };
 
   const handlePrint = () => {

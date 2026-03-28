@@ -92,15 +92,14 @@ const GradingPage: React.FC = () => {
   const [lastSaved, setLastSaved] = useState<Date | undefined>();
   const [toastMsg, setToastMsg] = useState('');
 
-  // Fetch submissions from API
+  // Fetch submissions from API (backend scopes to current user's courses for instructors)
   const { data: apiSubmissions, isLoading } = useQuery({
     queryKey: ['instructor-submissions'],
     queryFn: () => submissionApi.getAll().then(res => res.data),
   });
 
-  const submissions = Array.isArray(apiSubmissions) 
-    ? apiSubmissions.map(mapApiSubmissionToSubmissionData) 
-    : [];
+  const rawSubmissions = apiSubmissions?.results ?? [];
+  const submissions = rawSubmissions.map(mapApiSubmissionToSubmissionData);
 
   // Automatically select first submission if none selected
   useEffect(() => {
@@ -110,7 +109,7 @@ const GradingPage: React.FC = () => {
   }, [submissions, selectedId]);
 
   const selectedSubmission = submissions.find((s) => s.id === selectedId);
-  const originalSubmission = (apiSubmissions as any[])?.find(s => String(s.id) === selectedId);
+  const originalSubmission = rawSubmissions.find(s => String(s.id) === selectedId);
   const currentIndex = submissions.findIndex((s) => s.id === selectedId);
 
   // Grade mutation

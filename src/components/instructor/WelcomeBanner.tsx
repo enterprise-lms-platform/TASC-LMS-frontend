@@ -2,17 +2,20 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import { Add as AddIcon, Videocam as VideoIcon } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../contexts/AuthContext';
-
-const instructorData = {
-  assignmentsToGrade: 12,
-  sessionsThisWeek: 2,
-};
+import { submissionApi } from '../../services/learning.services';
 
 const WelcomeBanner: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const firstName = user?.first_name || 'there';
+
+  const { data: submissionsData } = useQuery({
+    queryKey: ['instructor', 'submissions', 'count'],
+    queryFn: () => submissionApi.getAll({ page_size: 1 }).then(r => r.data),
+  });
+  const assignmentsToGrade = (submissionsData as { count?: number } | undefined)?.count ?? 0;
   return (
     <Paper
       elevation={0}
@@ -78,7 +81,7 @@ const WelcomeBanner: React.FC = () => {
             display: { xs: 'none', sm: 'block' },
           }}
         >
-          You have {instructorData.assignmentsToGrade} assignments to grade and {instructorData.sessionsThisWeek} live sessions scheduled for this week.
+          You have {assignmentsToGrade} submission{assignmentsToGrade !== 1 ? 's' : ''} to review. Keep up the great work!
         </Typography>
         <Typography
           variant="body2"
@@ -87,7 +90,7 @@ const WelcomeBanner: React.FC = () => {
             display: { xs: 'block', sm: 'none' },
           }}
         >
-          {instructorData.assignmentsToGrade} assignments to grade, {instructorData.sessionsThisWeek} sessions this week.
+          {assignmentsToGrade} submission{assignmentsToGrade !== 1 ? 's' : ''} to review.
         </Typography>
       </Box>
       <Box

@@ -37,15 +37,22 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({
   const [enrollModalOpen, setEnrollModalOpen] = React.useState(false);
   const [selectedCourse, setSelectedCourse] = React.useState<Course | null>(null);
 
+  const sortToOrdering: Record<string, string> = {
+    popular: '-enrollment_count',
+    newest: '-published_at',
+    rating: '-rating',
+  };
+
   const params: PublicCourseParams = {
     page_size: 12,
     page,
+    ordering: sortToOrdering[sort] ?? '-published_at',
   };
 
   if (category) params.category = category;
   if (level && level !== 'all_levels') params.level = level as 'beginner' | 'intermediate' | 'advanced';
   if (search?.trim()) params.search = search.trim();
-  
+
   const { data: coursesData } = useQuery({
     queryKey: ['publicCourses', params],
     queryFn: () => publicCourseApi.getAll(params).then(r => r.data),

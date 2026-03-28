@@ -29,15 +29,16 @@ const ProgressPage: React.FC = () => {
     queryFn: () => enrollmentApi.getAll().then(res => res.data),
   });
 
-  const enrollments = Array.isArray(enrollmentsData) ? enrollmentsData : [];
+  const enrollments = enrollmentsData?.results ?? [];
+
+  // Use enrollments (user-scoped) for milestones, not stats (platform-wide)
+  const userCompletedCount = enrollments.filter(e => e.status === 'completed').length;
 
   const milestones = [
-    { label: 'First Course Completed', date: 'Sep 10, 2025', icon: <CheckIcon />, done: true },
-    { label: '50 Learning Hours', date: 'Oct 5, 2025', icon: <TimeIcon />, done: true },
-    { label: '3 Certificates Earned', date: 'Nov 15, 2025', icon: <TrophyIcon />, done: true },
-    { label: '100 Learning Hours', date: 'Jan 8, 2026', icon: <TimeIcon />, done: true },
-    { label: '5 Courses Completed', date: 'In Progress', icon: <CourseIcon />, done: false },
-    { label: 'Top 10% Learner', date: 'Locked', icon: <StarIcon />, done: false },
+    { label: 'First Course Completed', icon: <CheckIcon />, done: userCompletedCount >= 1 },
+    { label: '3 Courses Completed', icon: <CourseIcon />, done: userCompletedCount >= 3 },
+    { label: '5 Courses Completed', icon: <TrophyIcon />, done: userCompletedCount >= 5 },
+    { label: '10 Courses Completed', icon: <StarIcon />, done: userCompletedCount >= 10 },
   ];
 
   const kpis = [
@@ -231,7 +232,7 @@ const ProgressPage: React.FC = () => {
                   </Box>
                   <Box>
                     <Typography sx={{ fontWeight: m.done ? 600 : 500, fontSize: '0.82rem', color: m.done ? 'text.primary' : 'text.disabled' }}>{m.label}</Typography>
-                    <Typography sx={{ fontSize: '0.7rem', color: 'text.disabled' }}>{m.date}</Typography>
+                    <Typography sx={{ fontSize: '0.7rem', color: 'text.disabled' }}>{m.done ? 'Achieved' : 'Locked'}</Typography>
                   </Box>
                 </Box>
               ))}

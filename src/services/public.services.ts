@@ -57,6 +57,7 @@ export interface PublicCourseParams {
   page_size?: number;
   /** Matches public course list `search` query (title, description, instructor). */
   search?: string;
+  ordering?: string;            // e.g. '-published_at', 'title', '-enrollment_count'
 }
 
 /** Public landing-page subscription plan row from `/api/v1/public/subscription-plans/`. */

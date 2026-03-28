@@ -1,4 +1,5 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Chip, Button, Switch, FormControlLabel, TextField,
@@ -10,39 +11,8 @@ import {
   Block as BlockIcon, Delete as DeleteIcon,
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
-
 import KPICard from '../../components/superadmin/KPICard';
-
-const kpis = [
-  { 
-    label: 'Security Score', 
-    value: '87/100', 
-    icon: <ShieldIcon />, 
-    // Mint Green Theme
-    bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20'
-  },
-  { 
-    label: 'MFA Enabled', 
-    value: '72.4%', 
-    icon: <MFAIcon />, 
-    // Grey Theme
-    bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46'
-  },
-  { 
-    label: 'Failed Logins (24h)', 
-    value: '156', 
-    icon: <BlockIcon />, 
-    // Orange Theme
-    bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412'
-  },
-  { 
-    label: 'Active Sessions', 
-    value: '3,456', 
-    icon: <SessionIcon />, 
-    // Green Alt Theme
-    bgColor: '#f0fdf4', badgeColor: '#86efac', valueColor: '#14532d', labelColor: '#166534'
-  },
-];
+import { securityApi } from '../../services/organization.services';
 
 const activeSessions = [
   { user: 'John Kamau', role: 'Super Admin', ip: '196.201.214.xx', device: 'Chrome / macOS', location: 'Nairobi, KE', started: '2 hours ago', status: 'Active' },
@@ -60,7 +30,40 @@ const sessionStatusColors: Record<string, { bg: string; color: string }> = {
   Idle: { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' },
 };
 
-const SecurityPage: React.FC = () => (
+const SecurityPage: React.FC = () => {
+  const { data: stats } = useQuery({
+    queryKey: ['security', 'stats'],
+    queryFn: () => securityApi.getStats().then(r => r.data),
+  });
+
+  const kpis = [
+    {
+      label: 'Security Score',
+      value: '—',
+      icon: <ShieldIcon />,
+      bgColor: '#e8f5e9', badgeColor: '#81c784', valueColor: '#2e7d32', labelColor: '#1b5e20',
+    },
+    {
+      label: 'MFA Enabled',
+      value: stats ? `${stats.mfa_adoption_percent}%` : '—',
+      icon: <MFAIcon />,
+      bgColor: '#f4f4f5', badgeColor: '#a1a1aa', valueColor: '#27272a', labelColor: '#3f3f46',
+    },
+    {
+      label: 'Failed Logins (24h)',
+      value: stats ? String(stats.failed_logins_today) : '—',
+      icon: <BlockIcon />,
+      bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412',
+    },
+    {
+      label: 'Active Sessions',
+      value: stats ? stats.active_sessions.toLocaleString() : '—',
+      icon: <SessionIcon />,
+      bgColor: '#f0fdf4', badgeColor: '#86efac', valueColor: '#14532d', labelColor: '#166534',
+    },
+  ];
+
+  return (
   <SuperadminLayout title="Security" subtitle="Security settings, MFA configuration, and session management">
     <Grid container spacing={3} sx={{ mb: 4 }}>
       {kpis.map((k, index) => (
@@ -201,6 +204,7 @@ const SecurityPage: React.FC = () => (
       </TableContainer>
     </Paper>
   </SuperadminLayout>
-);
+  );
+};
 
 export default SecurityPage;
