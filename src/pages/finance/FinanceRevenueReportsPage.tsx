@@ -13,6 +13,7 @@ import {
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
 import { useRevenueStats, useCoursesByCategory } from '../../services/learning.services';
+import { useTransactions } from '../../hooks/usePayments';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -29,6 +30,7 @@ const FinanceRevenueReportsPage: React.FC = () => {
 
   const { data: stats, isLoading } = useRevenueStats(period);
   const { data: categories } = useCoursesByCategory();
+  const { data: transactions } = useTransactions();
 
   const monthlyBreakdown = stats?.monthly || [];
   const maxRevenue = Math.max(...monthlyBreakdown.map((m) => parseFloat(m.revenue) || 0), 1);
@@ -36,7 +38,7 @@ const FinanceRevenueReportsPage: React.FC = () => {
   const revenueKpis = [
     { label: 'Total Revenue', value: stats?.total_revenue ? `$${parseFloat(stats.total_revenue).toLocaleString()}` : '$0', change: '+15.3%', icon: <RevenueIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
     { label: 'Recurring Revenue', value: stats?.total_revenue ? `$${(parseFloat(stats.total_revenue) * 0.75).toLocaleString()}` : '$0', change: '+22.1%', icon: <RecurringIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
-    { label: 'Avg Rev / User', value: '$128', change: '+8.4%', icon: <UsersIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+    { label: 'Avg Rev / User', value: (() => { const txns = transactions || []; const uniqueUsers = new Set(txns.map(t => t.user).filter(Boolean)).size; const total = parseFloat(stats?.total_revenue || '0'); return uniqueUsers > 0 ? `$${Math.round(total / uniqueUsers).toLocaleString()}` : '$0'; })(), change: '+8.4%', icon: <UsersIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
     { label: 'Growth Rate', value: monthlyBreakdown.length > 0 ? `${monthlyBreakdown[monthlyBreakdown.length - 1].growth_percent || 0}%` : '0%', change: '+3.2%', icon: <TrendIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
   ];
 
@@ -124,29 +126,46 @@ const FinanceRevenueReportsPage: React.FC = () => {
                   </Paper>
                 </Grid>
 
-                {/* Revenue by Gateway (Mocking based on total) */}
+                {/* Revenue by Gateway */}
                 <Grid size={{ xs: 12, lg: 4 }}>
                   <Paper elevation={0} sx={{ ...cardSx, height: '100%' }}>
                     <Box sx={headerSx}>
                       <Typography fontWeight={700}>Revenue by Gateway</Typography>
                     </Box>
                     <Box sx={{ p: 0 }}>
-                      {[
-                        { gateway: 'Card Payments', percentage: 37, color: '#6366f1' },
-                        { gateway: 'M-Pesa', percentage: 26, color: '#10b981' },
-                        { gateway: 'MTN MoMo', percentage: 18, color: '#f59e0b' },
-                        { gateway: 'Airtel Money', percentage: 12, color: '#ef4444' },
-                        { gateway: 'Pesapal Direct', percentage: 7, color: '#8b5cf6' },
-                      ].map((gw, i, arr) => {
-                        const amount = (parseFloat(stats?.total_revenue || '0') * gw.percentage / 100);
-                        return (
+                      {(() => {
+                        const gwColors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#71717a'];
+                        const gwLabels: Record<string, string> = {
+                          credit_card: 'Credit Card', debit_card: 'Debit Card', mobile_money: 'Mobile Money',
+                          bank_transfer: 'Bank Transfer', paypal: 'PayPal', google_pay: 'Google Pay',
+                          apple_pay: 'Apple Pay', other: 'Other',
+                        };
+                        const txns = transactions || [];
+                        const gwMap = new Map<string, number>();
+                        let gwTotal = 0;
+                        for (const t of txns) {
+                          const amt = parseFloat(t.amount) || 0;
+                          const method = t.payment_method || 'other';
+                          gwMap.set(method, (gwMap.get(method) || 0) + amt);
+                          gwTotal += amt;
+                        }
+                        const gwData = Array.from(gwMap.entries())
+                          .map(([method, amount], i) => ({
+                            gateway: gwLabels[method] || method,
+                            amount,
+                            percentage: gwTotal > 0 ? Math.round(amount / gwTotal * 100) : 0,
+                            color: gwColors[i % gwColors.length],
+                          }))
+                          .sort((a, b) => b.amount - a.amount);
+                        if (gwData.length === 0) return <Box sx={{ p: 3, textAlign: 'center' }}><Typography variant="body2" color="text.secondary">No transaction data</Typography></Box>;
+                        return gwData.map((gw, i, arr) => (
                           <Box key={gw.gateway} sx={{
                             p: 2, px: 3, borderBottom: i < arr.length - 1 ? 1 : 0, borderColor: 'divider',
                             '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' },
                           }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                               <Typography variant="body2" fontWeight={600}>{gw.gateway}</Typography>
-                              <Typography variant="body2" fontWeight={700}>${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
+                              <Typography variant="body2" fontWeight={700}>${gw.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
                             </Box>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <LinearProgress variant="determinate" value={gw.percentage} sx={{
@@ -156,8 +175,8 @@ const FinanceRevenueReportsPage: React.FC = () => {
                               <Typography variant="caption" fontWeight={600} sx={{ minWidth: 28 }}>{gw.percentage}%</Typography>
                             </Box>
                           </Box>
-                        );
-                      })}
+                        ));
+                      })()}
                     </Box>
                   </Paper>
                 </Grid>

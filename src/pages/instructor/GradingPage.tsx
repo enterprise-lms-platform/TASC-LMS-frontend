@@ -294,7 +294,15 @@ const GradingPage: React.FC = () => {
                                   type: originalSubmission.submitted_file_name?.split('.').pop() || 'file'
                                 }}
                                 onView={() => window.open(originalSubmission.submitted_file_url, '_blank')}
-                                onDownload={() => window.open(originalSubmission.submitted_file_url, '_blank')}
+                                onDownload={() => {
+                                  const link = document.createElement('a');
+                                  link.href = originalSubmission.submitted_file_url;
+                                  link.download = originalSubmission.submitted_file_name || 'attachment';
+                                  link.rel = 'noopener noreferrer';
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                }}
                               />
                             ) : (
                               <Typography variant="body2" color="text.disabled">No files attached.</Typography>

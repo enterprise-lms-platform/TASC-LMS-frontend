@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
 import {
-  Box, CssBaseline, Toolbar, Typography, Paper, Chip, Grid, LinearProgress, CircularProgress,
+  Box, CssBaseline, Toolbar, Typography, Paper, Grid, CircularProgress,
 } from '@mui/material';
 import {
   TrendingDown as ChurnIcon,
-  Warning as WarningIcon,
-  People as UsersIcon,
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
 import { useUserSubscriptions } from '../../hooks/usePayments';
 import { useLearningStats } from '../../services/learning.services';
-
-const riskColors = { high: '#ef4444', medium: '#f59e0b', low: '#ffa424' };
 
 const cardSx = {
   borderRadius: '1rem', overflow: 'hidden',
@@ -29,15 +25,14 @@ const FinanceChurnPage: React.FC = () => {
   const { data: learningStats, isLoading: statsLoading } = useLearningStats();
 
   const totalSubs = (subscriptions || []).length;
-  const activeSubs = (subscriptions || []).filter(s => s.status === 'active').length;
   const cancelledSubs = (subscriptions || []).filter(s => s.status === 'cancelled').length;
   const churnRate = totalSubs > 0 ? (cancelledSubs / totalSubs * 100).toFixed(1) : '0.0';
 
   const churnKpis = [
-    { label: 'Current Churn Rate', value: `${churnRate}%`, change: '-0.4%', positive: true, color: '#10b981', bg: '#dcfce7' },
-    { label: 'Total Subscribers', value: totalSubs.toString(), change: '+12', positive: true, color: '#6366f1', bg: 'rgba(99,102,241,0.08)' },
-    { label: 'Active Learners', value: learningStats?.active_learners.toString() || '0', change: '+3', positive: true, color: '#ffa424', bg: '#fff3e0' },
-    { label: 'Cancelled Subs', value: cancelledSubs.toString(), change: '+2', positive: false, color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
+    { label: 'Current Churn Rate', value: `${churnRate}%`, color: '#10b981', bg: '#dcfce7' },
+    { label: 'Total Subscribers', value: totalSubs.toString(), color: '#6366f1', bg: 'rgba(99,102,241,0.08)' },
+    { label: 'Active Learners', value: learningStats?.active_learners?.toString() || '0', color: '#ffa424', bg: '#fff3e0' },
+    { label: 'Cancelled Subs', value: cancelledSubs.toString(), color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
   ];
 
   return (
@@ -70,43 +65,21 @@ const FinanceChurnPage: React.FC = () => {
                     }}>
                       <Typography variant="h5" fontWeight={700} sx={{ color: kpi.color, lineHeight: 1, mb: 0.5 }}>{kpi.value}</Typography>
                       <Typography variant="caption" fontWeight={500} sx={{ color: kpi.color, opacity: 0.7 }}>{kpi.label}</Typography>
-                      <Chip label={kpi.change} size="small" sx={{
-                        display: 'block', mx: 'auto', mt: 1, height: 20, fontSize: '0.65rem', fontWeight: 600,
-                        bgcolor: kpi.positive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
-                        color: kpi.positive ? '#10b981' : '#ef4444',
-                      }} />
                     </Paper>
                   </Grid>
                 ))}
               </Grid>
 
-              {/* Simplified Churn Reasons (Mocked proportional data) */}
+              {/* Churn Reasons */}
               <Paper elevation={0} sx={cardSx}>
                 <Box sx={headerSx}>
                   <Typography fontWeight={700}>Churn Reasons</Typography>
                 </Box>
-                {[
-                  { reason: 'Price too high', percentage: 32, color: '#ef4444' },
-                  { reason: 'Switched to competitor', percentage: 24, color: '#f59e0b' },
-                  { reason: 'Not using enough', percentage: 18, color: '#ffa424' },
-                  { reason: 'Missing features', percentage: 14, color: '#6366f1' },
-                  { reason: 'Other', percentage: 12, color: '#71717a' },
-                ].map((r, i, arr) => (
-                  <Box key={r.reason} sx={{
-                    p: 1.5, px: 3,
-                    borderBottom: i < arr.length - 1 ? 1 : 0, borderColor: 'divider',
-                    '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' },
-                  }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                      <Typography variant="body2" fontWeight={500} sx={{ fontSize: '0.8rem' }}>{r.reason}</Typography>
-                      <Typography variant="caption" fontWeight={600}>{r.percentage}%</Typography>
-                    </Box>
-                    <LinearProgress variant="determinate" value={r.percentage} sx={{
-                      height: 5, borderRadius: 3, bgcolor: 'grey.100',
-                      '& .MuiLinearProgress-bar': { borderRadius: 3, bgcolor: r.color },
-                    }} />
-                  </Box>
-                ))}
+                <Box sx={{ p: 4, textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Churn reason tracking is not yet available. Cancellation reasons will appear here once enabled.
+                  </Typography>
+                </Box>
               </Paper>
             </>
           )}

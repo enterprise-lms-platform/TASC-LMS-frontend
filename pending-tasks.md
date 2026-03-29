@@ -64,7 +64,7 @@ api.messaging            // messagingApi
 | HOLD | F4 | Mobile money checkout | `CheckoutPaymentPage.tsx` | Blocked — waiting on Pesapal API keys |
 | ~~REMOVED~~ | F5 | ~~Promo code validation~~ — removed from scope | — | Hardcoded SAVE20 logic removed from CheckoutPaymentPage |
 | ✅ | F6 | ~~Learner Progress page overhaul~~ | `ProgressPage.tsx` | Done — fixed pagination bug, milestones derived from real stats |
-| ✅ | F7 | ~~Instructor Grading page wiring~~ | `GradingPage.tsx` | Done — fixed pagination bug, added status filter |
+| ✅ | F7 | ~~Instructor Grading page wiring~~ | `GradingPage.tsx` | Done — fixed pagination bug, added status filter, file download fixed [29 Mar] |
 | ✅ | F8 | ~~Manager Settings persistence~~ | `ManagerSettingsPage.tsx` | Done — wired to `GET/PATCH /api/v1/accounts/manager/organization-settings/` |
 | ✅ | F9 | ~~Manager Billing real data~~ | `ManagerBillingPage.tsx` | Done — wired to `/api/v1/auth/manager/billing/plan/` and `/usage/` |
 | ✅ | F10 | ~~Review interactions~~ | `CourseReviews.tsx` | Done — wired to Helpful/Report buttons and rating filter |
@@ -76,6 +76,8 @@ api.messaging            // messagingApi
 | ✅ | F16 | ~~Subscription actions~~ | `SubscriptionManagementPage.tsx` | Done — Cancel wired to `useCancelUserSubscription`, Add Payment to `useCreatePaymentMethod`, Set Default to `useSetDefaultPaymentMethod` |
 | ✅ | F17 | ~~Security page~~ | `SecurityPage.tsx` | Done — wired to `GET /api/v1/superadmin/security/stats/` |
 | ✅ | F18 | ~~Dashboard mock cleanup~~ | various | Done — Instructor WelcomeBanner uses real submission count; Finance Sidebar revenue → `—` (backend Task 37 needed) |
+| ✅ | F19 | ~~Instructor ProgressTrackingPage wiring~~ | `ProgressTrackingPage.tsx` | Done — replaced hardcoded course arrays + funnel with `useEnrollments()` + `useLearningStats()` [29 Mar] |
+| ✅ | F20 | ~~Finance remaining mock cleanup~~ | 3 finance pages | Done — Subscriptions Growth/Churn, Revenue gateway breakdown, Churn page cleanup [29 Mar] |
 
 ---
 
@@ -198,14 +200,14 @@ const isFavorite = savedIds.has(course.id);
 
 - `FinancePaymentsPage.tsx` → `useTransactions`
 - `FinanceInvoicesPage.tsx` → `useInvoices`
-- `FinanceSubscriptionsPage.tsx` → `useUserSubscriptions`
-- `FinanceRevenueReportsPage.tsx` → `useRevenueStats`
+- `FinanceSubscriptionsPage.tsx` → `useUserSubscriptions` (Growth + Churn Rate KPIs now computed from real data [29 Mar])
+- `FinanceRevenueReportsPage.tsx` → `useRevenueStats` + `useTransactions` (Revenue by Gateway now grouped from real transactions, Avg Rev/User computed [29 Mar])
 - `FinanceCustomReportsPage.tsx` → `useReports`
 - `FinanceSubscriptionHistoryPage.tsx` → `useTransactions`
-- `FinanceChurnPage.tsx` → Proportional calc from `useUserSubscriptions` + `useLearningStats`
-- `FinanceStatementsPage.tsx` → Proportional calc from `useRevenueStats` + `useInvoiceStats`
+- `FinanceChurnPage.tsx` → KPIs from `useUserSubscriptions` + `useLearningStats`; fake change chips removed; churn reasons replaced with "not yet available" message (backend doesn't track cancellation reasons) [29 Mar]
+- `FinanceStatementsPage.tsx` → Proportional calc from `useRevenueStats` + `useInvoiceStats` (expense ratios are estimates — no expense API)
 
-**Build Verification:** `npx tsc --noEmit` passed.
+**Build Verification:** `npx tsc --noEmit` passed (29 Mar).
 
 ---
 

@@ -39,6 +39,12 @@ const FinanceSubscriptionsPage: React.FC = () => {
 
   const { data: subscriptions, isLoading } = useUserSubscriptions();
 
+  const activeSubs = (subscriptions || []).filter(s => s.status === 'active').length;
+  const cancelledSubs = (subscriptions || []).filter(s => s.status === 'cancelled').length;
+  const totalSubs = (subscriptions || []).length;
+  const churnRate = totalSubs > 0 ? (cancelledSubs / totalSubs * 100).toFixed(1) : '0.0';
+  const growthRate = totalSubs > 0 ? ((activeSubs / totalSubs) * 100 - 50).toFixed(1) : '0.0';
+
   const filtered = (subscriptions || []).filter((s) => {
     if (statusFilter !== 'all' && s.status !== statusFilter) return false;
     const email = s.user_email || '';
@@ -73,8 +79,8 @@ const FinanceSubscriptionsPage: React.FC = () => {
             {[
               { label: 'Active Users', value: (subscriptions || []).filter(s => s.status === 'active').length.toString(), icon: <UsersIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d' },
               { label: 'Total MRR', value: `$${((subscriptions || []).filter(s => s.status === 'active').reduce((sum, s) => sum + parseFloat(s.price || '0'), 0)).toLocaleString()}`, icon: <TrendUpIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81' },
-              { label: 'Growth', value: '+12.5%', icon: <PremiumIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12' },
-              { label: 'Churn Rate', value: '2.4%', icon: <HistoryIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b' },
+              { label: 'Growth', value: `${parseFloat(growthRate) >= 0 ? '+' : ''}${growthRate}%`, icon: <PremiumIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12' },
+              { label: 'Churn Rate', value: `${churnRate}%`, icon: <HistoryIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b' },
             ].map((s) => (
               <Grid size={{ xs: 6, md: 3 }} key={s.label}>
                 <Paper elevation={0} sx={{
