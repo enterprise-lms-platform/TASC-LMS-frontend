@@ -1,6 +1,7 @@
 import React from 'react';
 import {
-  Box, Paper, Typography, Grid,
+  Box, Paper, Typography, Grid, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, Chip, Skeleton,
 } from '@mui/material';
 import {
   Quiz as QuizIcon, CheckCircle as PassIcon,
@@ -8,10 +9,30 @@ import {
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import { useAssessmentStats } from '../../services/learning.services';
+import { useQuery } from '@tanstack/react-query';
+import { submissionApi } from '../../services/learning.services';
+import type { Submission } from '../../types/types';
 
+const thSx = { fontWeight: 600, fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: '#71717a', py: 1.5 };
+
+const statusStyle: Record<string, { bg: string; color: string }> = {
+  graded:         { bg: '#dcfce7', color: '#10b981' },
+  submitted:      { bg: 'rgba(59,130,246,0.08)', color: '#3b82f6' },
+  pending_review: { bg: '#fff3e0', color: '#f59e0b' },
+  draft:          { bg: 'rgba(156,163,175,0.1)', color: '#71717a' },
+};
 
 const AssessmentsPage: React.FC = () => {
   const { data: stats } = useAssessmentStats();
+
+  const { data: subsRaw, isLoading } = useQuery({
+    queryKey: ['superadmin', 'submissions', 'recent'],
+    queryFn: () => submissionApi.getAll({ page_size: 10 }).then(r => r.data),
+  });
+
+  const submissions: Submission[] = Array.isArray(subsRaw)
+    ? subsRaw
+    : (subsRaw as any)?.results ?? [];
 
   const kpis = [
     { label: 'Total Quizzes', value: String(stats?.total_quizzes ?? '—'), icon: <QuizIcon />, gradient: 'linear-gradient(135deg, #71717a, #a1a1aa)', trend: `${stats?.total_assignments ?? 0} assignments` },
@@ -38,12 +59,64 @@ const AssessmentsPage: React.FC = () => {
     </Grid>
 
     <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
-      <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>All Assessments</Typography>
-      <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
-        <QuizIcon sx={{ fontSize: 48, color: 'grey.300', mb: 1 }} />
-        <Typography variant="body2">Assessment list endpoint pending backend implementation</Typography>
-        <Typography variant="caption">Stats above are live — detailed list coming soon</Typography>
-      </Box>
+      <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>Recent Submissions</Typography>
+
+      {isLoading ? (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          {[0,1,2,3,4].map(i => <Skeleton key={i} height={52} sx={{ borderRadius: 1 }} />)}
+        </Box>
+      ) : submissions.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
+          <QuizIcon sx={{ fontSize: 48, color: 'grey.300', mb: 1 }} />
+          <Typography variant="body2">No submissions yet</Typography>
+        </Box>
+      ) : (
+        <TableContainer sx={{ overflowX: 'auto' }}>
+          <Table sx={{ minWidth: 500 }}>
+            <TableHead>
+              <TableRow sx={{ bgcolor: 'grey.50' }}>
+                <TableCell sx={thSx}>Learner</TableCell>
+                <TableCell sx={thSx}>Assignment</TableCell>
+                <TableCell sx={{ ...thSx, display: { xs: 'none', md: 'table-cell' } }}>Submitted</TableCell>
+                <TableCell sx={{ ...thSx, display: { xs: 'none', sm: 'table-cell' } }}>Grade</TableCell>
+                <TableCell sx={thSx}>Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {submissions.map(sub => {
+                const ss = statusStyle[sub.status] ?? statusStyle.draft;
+                return (
+                  <TableRow key={sub.id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.01)' } }}>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight={600}>{sub.user_name || sub.user_email}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {sub.assignment_title || `Assignment #${sub.assignment}`}
+                      </Typography>
+                    </TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                      <Typography variant="body2" color="text.secondary">
+                        {new Date(sub.submitted_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </Typography>
+                    </TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                      <Typography variant="body2">{sub.grade != null ? `${sub.grade}%` : '—'}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={sub.status.replace('_', ' ').replace(/^\w/, c => c.toUpperCase())}
+                        size="small"
+                        sx={{ height: 22, fontSize: '0.7rem', fontWeight: 600, bgcolor: ss.bg, color: ss.color }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
     </Paper>
   </SuperadminLayout>
   );

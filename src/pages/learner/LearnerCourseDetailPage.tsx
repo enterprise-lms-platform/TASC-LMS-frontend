@@ -277,7 +277,6 @@ const LearnerCourseDetailPage: React.FC = () => {
               {instructorData && (
                 <CourseInstructor
                   instructor={instructorData}
-                  onViewProfile={() => setToast('Instructor profiles coming soon')}
                 />
               )}
 

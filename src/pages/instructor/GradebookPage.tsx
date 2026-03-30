@@ -377,7 +377,62 @@ const GradebookPage: React.FC = () => {
       <ExportDialog
         open={exportOpen}
         onClose={() => setExportOpen(false)}
-        onExport={(options) => { setToast('Export coming soon'); setExportOpen(false); }}
+        onExport={(options) => {
+          if (options.format === 'csv') {
+            const headers: string[] = ['Student Name'];
+            if (options.includeEmails) headers.push('Email');
+            if (options.includeGrades) allItems.forEach(item => headers.push(item.title));
+            if (options.includeCategoryTotals) gradingConfig.categories.forEach(cat => headers.push(`${cat.name} Total`));
+            if (options.includeFinalGrade) headers.push('Final Grade (%)');
+
+            const rows = allStudents.map(student => {
+              const row: (string | number)[] = [student.name];
+              if (options.includeEmails) row.push(student.email);
+              if (options.includeGrades) {
+                allItems.forEach(item => {
+                  const g = allGrades.find(gr => gr.studentId === student.id && gr.itemId === item.id);
+                  row.push(g?.earned ?? '');
+                });
+              }
+              if (options.includeCategoryTotals) {
+                gradingConfig.categories.forEach(cat => {
+                  const catItems = allItems.filter(i => i.categoryId === cat.id);
+                  const catGrades = catItems
+                    .map(item => allGrades.find(gr => gr.studentId === student.id && gr.itemId === item.id))
+                    .filter((g): g is GradeEntry => g !== undefined && g.earned !== null);
+                  const total = catGrades.reduce((s, g) => s + (g.earned ?? 0), 0);
+                  const possible = catItems.reduce((s, i) => s + i.maxScore, 0);
+                  row.push(possible > 0 ? `${total}/${possible}` : '—');
+                });
+              }
+              if (options.includeFinalGrade) {
+                const sg = allGrades.filter(gr => gr.studentId === student.id && gr.earned !== null);
+                const catGrades = gradingConfig.categories.map(cat => {
+                  const catItems = allItems.filter(i => i.categoryId === cat.id);
+                  const cg = catItems.map(item => sg.find(gr => gr.itemId === item.id)).filter((g): g is GradeEntry => g !== undefined && g.earned !== null);
+                  return { categoryId: cat.id, earned: cg.reduce((s, g) => s + (g.earned ?? 0), 0), possible: catItems.reduce((s, i) => s + i.maxScore, 0) };
+                }).filter(cg => cg.possible > 0);
+                row.push(calculateFinalGrade(catGrades, gradingConfig).toFixed(1));
+              }
+              return row;
+            });
+
+            const csv = [headers, ...rows]
+              .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+              .join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gradebook${selectedCourse ? `-${selectedCourse.title.replace(/\s+/g, '-')}` : ''}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            setToast('Gradebook exported as CSV');
+          } else {
+            window.print();
+          }
+          setExportOpen(false);
+        }}
       />
       <Snackbar open={!!toast} autoHideDuration={3000} onClose={() => setToast('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
         <Alert severity="info" onClose={() => setToast('')} variant="filled">{toast}</Alert>
