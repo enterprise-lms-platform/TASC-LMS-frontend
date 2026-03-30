@@ -37,6 +37,7 @@ import {
   Security as SecurityIcon,
   SettingsApplications as GatewayIcon,
   Person as ProfileIcon,
+  Chat as MessagesIcon,
 } from '@mui/icons-material';
 
 const DRAWER_WIDTH = 280;
@@ -60,6 +61,7 @@ const buildNavSections = (unreadCount?: number): NavSection[] => [
       { text: 'Overview', icon: <DashboardIcon />, path: '/superadmin' },
       { text: 'Analytics', icon: <AnalyticsIcon />, path: '/superadmin/analytics', badge: 'New' },
       { text: 'Notifications', icon: <NotificationsIcon />, path: '/superadmin/notifications', badge: unreadCount ? String(unreadCount) : undefined },
+      { text: 'Messages', icon: <MessagesIcon />, path: '/superadmin/messages' },
     ],
   },
   {

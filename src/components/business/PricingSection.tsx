@@ -1,12 +1,15 @@
 import React from 'react';
-import { Box, Container, Typography, Chip, Grid, Paper, Button, Stack } from '@mui/material';
+import { Box, Container, Typography, Chip, Grid, Paper, Button, Stack, Skeleton } from '@mui/material';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import StarIcon from '@mui/icons-material/Star';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { businessPricingApi } from '../../services/public.services';
+import type { PricingPlan } from '../../services/public.services';
 
-interface PricingPlan {
+interface MappedPlan {
   name: string;
   description: string;
   price: number;
@@ -17,7 +20,7 @@ interface PricingPlan {
   buttonVariant: 'contained' | 'outlined';
 }
 
-const plans: PricingPlan[] = [
+const fallbackPlans: MappedPlan[] = [
   {
     name: 'Team',
     description: 'For small teams getting started',
@@ -76,6 +79,28 @@ const plans: PricingPlan[] = [
 ];
 
 const PricingSection: React.FC = () => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['businessPricing'],
+    queryFn: () => businessPricingApi.getPlans(),
+  });
+
+  const plans: MappedPlan[] = React.useMemo(() => {
+    if (error || !data?.data || data.data.length === 0) {
+      return fallbackPlans;
+    }
+
+    return data.data.map((plan: PricingPlan, index: number) => ({
+      name: plan.name,
+      description: plan.billing_period || `${plan.max_users || 'Unlimited'} users`,
+      price: plan.price,
+      seats: `${plan.billing_period || 'Custom billing'}`,
+      features: plan.features.map((feature: string) => ({ text: feature, included: true })),
+      popular: index === 1,
+      buttonText: plan.name === 'Enterprise' ? 'Contact Sales' : 'Start Free Trial',
+      buttonVariant: 'contained' as const,
+    }));
+  }, [data, error]);
+
   return (
     <Box id="pricing" sx={{ py: { xs: 8, md: 12 }, bgcolor: '#fafafa' }}>
       <Container maxWidth="lg">
@@ -90,76 +115,92 @@ const PricingSection: React.FC = () => {
         </Box>
 
         <Grid container spacing={4} justifyContent="center" alignItems="flex-start">
-          {plans.map((plan) => (
-            <Grid key={plan.name} size={{ xs: 12, md: 4 }}>
-              <Paper
-                elevation={plan.popular ? 8 : 0}
-                className={plan.popular ? 'pricing-card-popular' : ''}
-                sx={{
-                  p: 4,
-                  border: plan.popular ? '2px solid #ffa424' : '2px solid #e4e4e7',
-                  borderRadius: 3,
-                  position: 'relative',
-                  transition: 'all 0.3s',
-                  '&:hover': { transform: 'translateY(-8px)', boxShadow: 6 },
-                }}
-              >
-                {plan.popular && (
-                  <Chip
-                    icon={<StarIcon sx={{ fontSize: 14 }} />}
-                    label="Most Popular"
-                    sx={{
-                      position: 'absolute',
-                      top: -14,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      background: 'linear-gradient(135deg, #ffa424, #f97316)',
-                      color: 'white',
-                      fontWeight: 600,
-                      '& .MuiChip-icon': { color: 'white' },
-                    }}
-                  />
-                )}
-
-                <Box sx={{ textAlign: 'center', mb: 4, pb: 4, borderBottom: '1px solid #e4e4e7' }}>
-                  <Typography sx={{ fontSize: '1.25rem', fontWeight: 700, color: '#27272a', mb: 0.5 }}>{plan.name}</Typography>
-                  <Typography sx={{ fontSize: '0.875rem', color: '#71717a', mb: 3 }}>{plan.description}</Typography>
-                  <Stack direction="row" alignItems="flex-end" justifyContent="center" spacing={0.5}>
-                    <Typography sx={{ fontSize: '1.25rem', fontWeight: 600, color: '#27272a', alignSelf: 'flex-start', mt: 1 }}>$</Typography>
-                    <Typography sx={{ fontSize: '3rem', fontWeight: 800, color: '#18181b', lineHeight: 1 }}>{plan.price}</Typography>
-                    <Typography sx={{ fontSize: '1rem', color: '#71717a', mb: 0.5 }}>/user/month</Typography>
-                  </Stack>
-                  <Typography sx={{ fontSize: '0.875rem', color: '#71717a', mt: 1 }}>{plan.seats}</Typography>
-                </Box>
-
-                <Stack spacing={1.5} sx={{ mb: 4 }}>
-                  {plan.features.map((f) => (
-                    <Stack key={f.text} direction="row" alignItems="center" spacing={1.5}>
-                      {f.included ? <CheckIcon sx={{ color: '#10b981', fontSize: 18 }} /> : <CloseIcon sx={{ color: '#d4d4d8', fontSize: 18 }} />}
-                      <Typography sx={{ fontSize: '0.875rem', color: f.included ? '#52525b' : '#a1a1aa' }}>{f.text}</Typography>
-                    </Stack>
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, idx) => (
+              <Grid key={idx} size={{ xs: 12, md: 4 }}>
+                <Paper elevation={0} sx={{ p: 4, border: '2px solid #e4e4e7', borderRadius: 3 }}>
+                  <Skeleton variant="text" width="60%" height={32} sx={{ mb: 1 }} />
+                  <Skeleton variant="text" width="80%" height={20} sx={{ mb: 3 }} />
+                  <Skeleton variant="text" width="40%" height={60} sx={{ mb: 2 }} />
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Skeleton key={i} variant="text" width="90%" height={24} sx={{ mb: 1 }} />
                   ))}
-                </Stack>
-
-                <Button
-                  component={Link}
-                  to="#demo"
-                  variant={plan.buttonVariant}
-                  fullWidth
-                  size="large"
+                  <Skeleton variant="rectangular" height={48} sx={{ mt: 3, borderRadius: 1 }} />
+                </Paper>
+              </Grid>
+            ))
+          ) : (
+            plans.map((plan) => (
+              <Grid key={plan.name} size={{ xs: 12, md: 4 }}>
+                <Paper
+                  elevation={plan.popular ? 8 : 0}
+                  className={plan.popular ? 'pricing-card-popular' : ''}
                   sx={{
-                    fontWeight: 600,
-                    textTransform: 'none',
-                    ...(plan.buttonVariant === 'contained'
-                      ? { bgcolor: plan.name === 'Enterprise' ? '#18181b' : '#ffa424', color: 'white', '&:hover': { bgcolor: plan.name === 'Enterprise' ? '#27272a' : '#f97316' } }
-                      : { borderColor: '#ffa424', color: '#ffa424', borderWidth: 2, '&:hover': { bgcolor: '#ffa424', color: 'white' } }),
+                    p: 4,
+                    border: plan.popular ? '2px solid #ffa424' : '2px solid #e4e4e7',
+                    borderRadius: 3,
+                    position: 'relative',
+                    transition: 'all 0.3s',
+                    '&:hover': { transform: 'translateY(-8px)', boxShadow: 6 },
                   }}
                 >
-                  {plan.buttonText}
-                </Button>
-              </Paper>
-            </Grid>
-          ))}
+                  {plan.popular && (
+                    <Chip
+                      icon={<StarIcon sx={{ fontSize: 14 }} />}
+                      label="Most Popular"
+                      sx={{
+                        position: 'absolute',
+                        top: -14,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: 'linear-gradient(135deg, #ffa424, #f97316)',
+                        color: 'white',
+                        fontWeight: 600,
+                        '& .MuiChip-icon': { color: 'white' },
+                      }}
+                    />
+                  )}
+
+                  <Box sx={{ textAlign: 'center', mb: 4, pb: 4, borderBottom: '1px solid #e4e4e7' }}>
+                    <Typography sx={{ fontSize: '1.25rem', fontWeight: 700, color: '#27272a', mb: 0.5 }}>{plan.name}</Typography>
+                    <Typography sx={{ fontSize: '0.875rem', color: '#71717a', mb: 3 }}>{plan.description}</Typography>
+                    <Stack direction="row" alignItems="flex-end" justifyContent="center" spacing={0.5}>
+                      <Typography sx={{ fontSize: '1.25rem', fontWeight: 600, color: '#27272a', alignSelf: 'flex-start', mt: 1 }}>$</Typography>
+                      <Typography sx={{ fontSize: '3rem', fontWeight: 800, color: '#18181b', lineHeight: 1 }}>{plan.price}</Typography>
+                      <Typography sx={{ fontSize: '1rem', color: '#71717a', mb: 0.5 }}>/user/month</Typography>
+                    </Stack>
+                    <Typography sx={{ fontSize: '0.875rem', color: '#71717a', mt: 1 }}>{plan.seats}</Typography>
+                  </Box>
+
+                  <Stack spacing={1.5} sx={{ mb: 4 }}>
+                    {plan.features.map((f) => (
+                      <Stack key={f.text} direction="row" alignItems="center" spacing={1.5}>
+                        {f.included ? <CheckIcon sx={{ color: '#10b981', fontSize: 18 }} /> : <CloseIcon sx={{ color: '#d4d4d8', fontSize: 18 }} />}
+                        <Typography sx={{ fontSize: '0.875rem', color: f.included ? '#52525b' : '#a1a1aa' }}>{f.text}</Typography>
+                      </Stack>
+                    ))}
+                  </Stack>
+
+                  <Button
+                    component={Link}
+                    to="#demo"
+                    variant={plan.buttonVariant}
+                    fullWidth
+                    size="large"
+                    sx={{
+                      fontWeight: 600,
+                      textTransform: 'none',
+                      ...(plan.buttonVariant === 'contained'
+                        ? { bgcolor: plan.name === 'Enterprise' ? '#18181b' : '#ffa424', color: 'white', '&:hover': { bgcolor: plan.name === 'Enterprise' ? '#27272a' : '#f97316' } }
+                        : { borderColor: '#ffa424', color: '#ffa424', borderWidth: 2, '&:hover': { bgcolor: '#ffa424', color: 'white' } }),
+                    }}
+                  >
+                    {plan.buttonText}
+                  </Button>
+                </Paper>
+              </Grid>
+            ))
+          )}
         </Grid>
 
         <Typography sx={{ textAlign: 'center', mt: 6, fontSize: '0.875rem', color: '#71717a' }}>

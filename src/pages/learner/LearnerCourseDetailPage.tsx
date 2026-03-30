@@ -282,11 +282,11 @@ const LearnerCourseDetailPage: React.FC = () => {
               )}
 
               <CourseReviews
+                courseId={courseNumericId}
                 averageRating={reviewData?.average || 0}
                 totalReviews={reviewData?.total || 0}
                 ratingDistribution={reviewDistribution}
                 reviews={reviewsList}
-                onWriteReview={() => setToast('Review submission coming soon')}
               />
 
               <CourseFAQ faqs={[]} />

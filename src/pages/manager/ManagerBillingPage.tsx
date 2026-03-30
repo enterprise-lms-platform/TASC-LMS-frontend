@@ -29,6 +29,7 @@ import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
 import { invoiceApi } from '../../services/main.api';
+import { managerBillingApi } from '../../services/organization.services';
 
 // ─── Styles ────────────────────────────────────────────────
 
@@ -59,6 +60,16 @@ const ManagerBillingPage: React.FC = () => {
   const { data: invoicesData } = useQuery({
     queryKey: ['invoices', 'billing'],
     queryFn: () => invoiceApi.getAll({}).then(r => r.data),
+  });
+
+  const { data: plan } = useQuery({
+    queryKey: ['manager', 'billing', 'plan'],
+    queryFn: () => managerBillingApi.getPlan().then(r => r.data),
+  });
+
+  const { data: usage } = useQuery({
+    queryKey: ['manager', 'billing', 'usage'],
+    queryFn: () => managerBillingApi.getUsage().then(r => r.data),
   });
 
   const invoices = Array.isArray(invoicesData) ? invoicesData : (invoicesData as any)?.results ?? [];
@@ -141,27 +152,31 @@ const ManagerBillingPage: React.FC = () => {
                 <Box sx={{ p: 3 }}>
                   <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 2 }}>
                     <Typography variant="h4" fontWeight={800} color="text.primary">
-                      Enterprise
+                      {plan?.plan_name ?? '—'}
                     </Typography>
                   </Box>
 
                   <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5, mb: 3 }}>
                     <Typography variant="h3" fontWeight={800} sx={{ color: '#ffa424' }}>
-                      $499
+                      {plan ? `${plan.currency} ${plan.price}` : '—'}
                     </Typography>
                     <Typography variant="body1" color="text.secondary" fontWeight={500}>
-                      /mo
+                      {plan?.billing_cycle ? `/${plan.billing_cycle}` : ''}
                     </Typography>
                   </Box>
 
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Typography variant="body2" color="text.secondary">Renewal Date</Typography>
-                      <Typography variant="body2" fontWeight={600}>Apr 15, 2026</Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        {plan?.renewal_date ? new Date(plan.renewal_date).toLocaleDateString() : '—'}
+                      </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Typography variant="body2" color="text.secondary">User Limit</Typography>
-                      <Typography variant="body2" fontWeight={600}>500 users</Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        {plan?.user_limit != null ? `${plan.user_limit} users` : 'Unlimited'}
+                      </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Typography variant="body2" color="text.secondary">Storage</Typography>
@@ -202,11 +217,17 @@ const ManagerBillingPage: React.FC = () => {
                   <Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Typography variant="body2" fontWeight={600}>Users</Typography>
-                      <Typography variant="body2" color="text.secondary">347 / 500</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {usage?.active_users ?? '—'}{plan?.user_limit != null ? ` / ${plan.user_limit}` : ''}
+                      </Typography>
                     </Box>
                     <LinearProgress
                       variant="determinate"
-                      value={(347 / 500) * 100}
+                      value={
+                        usage && plan?.user_limit
+                          ? Math.min((usage.active_users / plan.user_limit) * 100, 100)
+                          : 0
+                      }
                       sx={{
                         height: 10,
                         borderRadius: 5,
@@ -218,7 +239,9 @@ const ManagerBillingPage: React.FC = () => {
                       }}
                     />
                     <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: 'block' }}>
-                      69.4% of plan limit
+                      {usage && plan?.user_limit
+                        ? `${((usage.active_users / plan.user_limit) * 100).toFixed(1)}% of plan limit`
+                        : 'Usage data unavailable'}
                     </Typography>
                   </Box>
 
@@ -249,8 +272,10 @@ const ManagerBillingPage: React.FC = () => {
                   {/* Courses */}
                   <Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body2" fontWeight={600}>Courses</Typography>
-                      <Typography variant="body2" color="text.secondary">156 / Unlimited</Typography>
+                      <Typography variant="body2" fontWeight={600}>Active Courses</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {usage?.active_courses ?? '—'} / Unlimited
+                      </Typography>
                     </Box>
                     <LinearProgress
                       variant="determinate"

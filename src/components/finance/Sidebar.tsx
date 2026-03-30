@@ -145,6 +145,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
     return location.pathname.startsWith(path);
   };
 
+  // Revenue trends for sidebar widget — backend Task 37 needed for real data
+  const revenueDisplay = '—';
+
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo */}
@@ -328,7 +331,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
           variant="h6"
           sx={{ fontWeight: 700, color: 'success.main', textAlign: 'center' }}
         >
-          $8,425
+          {revenueDisplay}
         </Typography>
       </Box>
     </Box>

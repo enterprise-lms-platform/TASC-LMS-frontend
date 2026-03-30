@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Box, CssBaseline, Toolbar, Typography, Paper, Chip, IconButton,
   Button, TextField, InputAdornment, Select, MenuItem, FormControl, InputLabel, Grid,
+  CircularProgress,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -13,32 +14,10 @@ import {
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
+import { useInvoices } from '../../hooks/usePayments';
+import { invoiceApi } from '../../services/payments.services';
 
-type InvoiceStatus = 'paid' | 'pending' | 'overdue' | 'draft';
-
-interface Invoice {
-  id: string;
-  customer: string;
-  email: string;
-  amount: string;
-  issueDate: string;
-  dueDate: string;
-  status: InvoiceStatus;
-  items: number;
-}
-
-const invoices: Invoice[] = [
-  { id: 'INV-2405', customer: 'TechCorp Ltd', email: 'billing@techcorp.com', amount: '$4,200', issueDate: 'Feb 20, 2026', dueDate: 'Mar 20, 2026', status: 'pending', items: 3 },
-  { id: 'INV-2404', customer: 'Startup Hub', email: 'finance@startuphub.io', amount: '$1,890', issueDate: 'Feb 18, 2026', dueDate: 'Feb 22, 2026', status: 'overdue', items: 2 },
-  { id: 'INV-2403', customer: 'Global Academy', email: 'pay@globalacademy.org', amount: '$6,400', issueDate: 'Feb 15, 2026', dueDate: 'Mar 15, 2026', status: 'pending', items: 5 },
-  { id: 'INV-2402', customer: 'EduPro Inc', email: 'ap@edupro.com', amount: '$850', issueDate: 'Feb 12, 2026', dueDate: 'Feb 15, 2026', status: 'paid', items: 1 },
-  { id: 'INV-2401', customer: 'Acme Corporation', email: 'invoices@acme.co', amount: '$12,600', issueDate: 'Feb 10, 2026', dueDate: 'Mar 10, 2026', status: 'paid', items: 8 },
-  { id: 'INV-2400', customer: 'NextGen Partners', email: 'billing@nextgen.com', amount: '$3,200', issueDate: 'Feb 8, 2026', dueDate: 'Mar 8, 2026', status: 'paid', items: 4 },
-  { id: 'INV-2399', customer: 'Digital Futures', email: 'finance@digifutures.co', amount: '$2,100', issueDate: 'Feb 5, 2026', dueDate: 'Feb 20, 2026', status: 'overdue', items: 2 },
-  { id: 'INV-2398', customer: 'InnovateTech', email: 'ap@innovatetech.io', amount: '$5,800', issueDate: 'Feb 1, 2026', dueDate: 'Mar 1, 2026', status: 'draft', items: 6 },
-];
-
-const statusColors: Record<InvoiceStatus, { bg: string; color: string }> = {
+const statusColors: Record<string, { bg: string; color: string }> = {
   paid: { bg: 'rgba(16,185,129,0.1)', color: '#10b981' },
   pending: { bg: 'rgba(99,102,241,0.1)', color: '#6366f1' },
   overdue: { bg: 'rgba(239,68,68,0.1)', color: '#ef4444' },
@@ -58,17 +37,26 @@ const FinanceInvoicesPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
 
-  const filtered = invoices.filter((inv) => {
+  const { data: invoices, isLoading } = useInvoices();
+
+  const filtered = (invoices || []).filter((inv) => {
     if (statusFilter !== 'all' && inv.status !== statusFilter) return false;
-    if (search && !inv.customer.toLowerCase().includes(search.toLowerCase()) && !inv.id.toLowerCase().includes(search.toLowerCase())) return false;
+    const name = inv.user_email || '';
+    const id = inv.invoice_number || '';
+    if (search && !name.toLowerCase().includes(search.toLowerCase()) && !id.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
-  const totalOutstanding = invoices.filter((i) => i.status === 'pending' || i.status === 'overdue')
-    .reduce((sum, i) => sum + parseFloat(i.amount.replace(/[$,]/g, '')), 0);
+  const totalOutstanding = (invoices || []).filter((i) => i.status === 'pending' || i.status === 'overdue')
+    .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
 
-
-
+  const handleEmailReceipt = async (id: number) => {
+    try {
+      await invoiceApi.emailReceipt(id);
+    } catch {
+      // silently fail
+    }
+  };
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -97,39 +85,34 @@ const FinanceInvoicesPage: React.FC = () => {
             </Box>
           </Box>
 
-          {/* Summary — matches Overview stat cards */}
-          {(() => {
-            const invStatCards = [
-              { label: 'Total Invoices', value: invoices.length.toString(), icon: <InvoiceIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
-              { label: 'Paid', value: invoices.filter((i) => i.status === 'paid').length.toString(), icon: <ViewIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+          {/* Summary */}
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            {[
+              { label: 'Total Invoices', value: (invoices || []).length.toString(), icon: <InvoiceIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
+              { label: 'Paid', value: (invoices || []).filter((i) => i.status === 'paid').length.toString(), icon: <ViewIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
               { label: 'Outstanding', value: `$${totalOutstanding.toLocaleString()}`, icon: <ExportIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-              { label: 'Overdue', value: invoices.filter((i) => i.status === 'overdue').length.toString(), icon: <SendIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
-            ];
-            return (
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                {invStatCards.map((s) => (
-                  <Grid size={{ xs: 6, md: 3 }} key={s.label}>
-                    <Paper elevation={0} sx={{
-                      bgcolor: s.bgcolor, borderRadius: '20px', p: 3,
-                      position: 'relative', minHeight: 160, display: 'flex',
-                      flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                      textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer',
-                      '&:hover': { transform: 'translateY(-4px)' },
-                    }}>
-                      <Box sx={{
-                        position: 'absolute', top: 16, right: 16, width: 40, height: 40,
-                        borderRadius: '50%', bgcolor: s.iconBg, display: 'flex',
-                        alignItems: 'center', justifyContent: 'center', color: 'white',
-                        '& svg': { fontSize: 20 },
-                      }}>{s.icon}</Box>
-                      <Typography variant="h3" sx={{ fontWeight: 700, color: s.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{s.value}</Typography>
-                      <Typography variant="body2" sx={{ color: s.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>{s.label}</Typography>
-                    </Paper>
-                  </Grid>
-                ))}
+              { label: 'Overdue', value: (invoices || []).filter((i) => i.status === 'overdue').length.toString(), icon: <SendIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
+            ].map((s) => (
+              <Grid size={{ xs: 6, sm: 6, md: 3 }} key={s.label}>
+                <Paper elevation={0} sx={{
+                  bgcolor: s.bgcolor, borderRadius: '20px', p: 3,
+                  position: 'relative', minHeight: { xs: 110, md: 160 }, display: 'flex',
+                  flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                  textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer',
+                  '&:hover': { transform: 'translateY(-4px)' },
+                }}>
+                  <Box sx={{
+                    position: 'absolute', top: 16, right: 16, width: 40, height: 40,
+                    borderRadius: '50%', bgcolor: s.iconBg, display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', color: 'white',
+                    '& svg': { fontSize: 20 },
+                  }}>{s.icon}</Box>
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: s.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{s.value}</Typography>
+                  <Typography variant="body2" sx={{ color: s.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>{s.label}</Typography>
+                </Paper>
               </Grid>
-            );
-          })()}
+            ))}
+          </Grid>
 
           {/* Filters */}
           <Paper elevation={0} sx={{ ...cardSx, mb: 3 }}>
@@ -157,7 +140,9 @@ const FinanceInvoicesPage: React.FC = () => {
               <Typography fontWeight={700}>All Invoices</Typography>
               <Typography variant="caption" color="text.secondary">{filtered.length} invoice{filtered.length !== 1 ? 's' : ''}</Typography>
             </Box>
-            {filtered.map((inv, i) => (
+            {isLoading ? (
+              <Box sx={{ p: 4, textAlign: 'center' }}><CircularProgress size={32} /></Box>
+            ) : filtered.map((inv, i) => (
               <Box key={inv.id} sx={{
                 display: 'flex', alignItems: 'center', gap: 2, p: 2, px: 3,
                 borderBottom: i < filtered.length - 1 ? 1 : 0, borderColor: 'divider',
@@ -168,19 +153,22 @@ const FinanceInvoicesPage: React.FC = () => {
                 </Box>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body2" fontWeight={700}>{inv.id}</Typography>
-                    <Typography variant="body2" fontWeight={500} noWrap>— {inv.customer}</Typography>
+                    <Typography variant="body2" fontWeight={700}>{inv.invoice_number}</Typography>
+                    <Typography variant="body2" fontWeight={500} noWrap>— {inv.user_email}</Typography>
                   </Box>
-                  <Typography variant="caption" color="text.secondary">{inv.items} item{inv.items !== 1 ? 's' : ''} · Due {inv.dueDate}</Typography>
+                  <Typography variant="caption" color="text.secondary">Generated {new Date(inv.created_at).toLocaleDateString()} · Due {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'}</Typography>
                 </Box>
-                <Typography variant="body2" fontWeight={700} sx={{ minWidth: 70, textAlign: 'right', fontFamily: 'monospace' }}>{inv.amount}</Typography>
+                <Typography variant="body2" fontWeight={700} sx={{ minWidth: 70, textAlign: 'right', fontFamily: 'monospace' }}>
+                  ${inv.amount}
+                </Typography>
                 <Chip label={inv.status} size="small" sx={{
                   height: 22, fontSize: '0.7rem', fontWeight: 600, textTransform: 'capitalize',
-                  bgcolor: statusColors[inv.status].bg, color: statusColors[inv.status].color,
+                  bgcolor: statusColors[inv.status]?.bg || 'rgba(0,0,0,0.05)',
+                  color: statusColors[inv.status]?.color || 'text.secondary',
                 }} />
                 <Box sx={{ display: 'flex', gap: 0.25 }}>
                   {(inv.status === 'pending' || inv.status === 'overdue') && (
-                    <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main' } }}>
+                    <IconButton size="small" title="Email receipt" onClick={() => handleEmailReceipt(inv.id)} sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main' } }}>
                       <SendIcon sx={{ fontSize: 16 }} />
                     </IconButton>
                   )}

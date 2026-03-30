@@ -197,7 +197,7 @@ const ManagerCertificatesPage: React.FC = () => {
                     sx={{
                       fontWeight: 700,
                       color: kpi.color,
-                      fontSize: { xs: '2rem', md: '2.5rem' },
+                      fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
                       lineHeight: 1,
                       mb: 1,
                     }}

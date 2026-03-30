@@ -54,10 +54,10 @@ const LearnerDashboard: React.FC = () => {
 
         {/* Upcoming Sessions & Recent Activity */}
         <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
-          <Grid size={{ xs: 12, lg: 8 }}>
+          <Grid size={{ xs: 12, md: 7, lg: 8 }}>
             <UpcomingSessions />
           </Grid>
-          <Grid size={{ xs: 12, lg: 4 }}>
+          <Grid size={{ xs: 12, md: 5, lg: 4 }}>
             <RecentActivity />
           </Grid>
         </Grid>

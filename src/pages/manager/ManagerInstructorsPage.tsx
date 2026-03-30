@@ -221,7 +221,7 @@ const ManagerInstructorsPage: React.FC = () => {
           {/* Instructor Cards Grid */}
           <Grid container spacing={3}>
             {filteredInstructors.map((instructor: any) => (
-              <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={instructor.id}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={instructor.id}>
                 <Paper
                   elevation={0}
                   sx={{

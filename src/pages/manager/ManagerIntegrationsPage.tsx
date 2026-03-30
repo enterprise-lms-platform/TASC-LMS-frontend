@@ -148,7 +148,7 @@ const ManagerIntegrationsPage: React.FC = () => {
           {/* ── Integration Cards Grid ── */}
           <Grid container spacing={3}>
             {integrations.map((integration) => (
-              <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={integration.name}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={integration.name}>
                 <Paper elevation={0} sx={{ ...cardSx, height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <Box sx={headerSx}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>

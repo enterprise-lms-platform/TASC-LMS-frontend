@@ -181,10 +181,10 @@ const FinanceExportPage: React.FC = () => {
               { label: 'Last Export', value: lastExport, icon: <DateIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
               { label: 'Ready to Download', value: String(readyCount), icon: <ScheduleIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
             ].map((s) => (
-              <Grid size={{ xs: 6, md: 3 }} key={s.label}>
+              <Grid size={{ xs: 6, sm: 6, md: 3 }} key={s.label}>
                 <Paper elevation={0} sx={{
                   bgcolor: s.bgcolor, borderRadius: '20px', p: 3,
-                  position: 'relative', minHeight: 160, display: 'flex',
+                  position: 'relative', minHeight: { xs: 110, md: 160 }, display: 'flex',
                   flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                   textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer',
                   '&:hover': { transform: 'translateY(-4px)' },
@@ -195,7 +195,7 @@ const FinanceExportPage: React.FC = () => {
                     alignItems: 'center', justifyContent: 'center', color: 'white',
                     '& svg': { fontSize: 20 },
                   }}>{s.icon}</Box>
-                  <Typography variant="h3" sx={{ fontWeight: 700, color: s.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{s.value}</Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: s.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{s.value}</Typography>
                   <Typography variant="body2" sx={{ color: s.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>{s.label}</Typography>
                 </Paper>
               </Grid>

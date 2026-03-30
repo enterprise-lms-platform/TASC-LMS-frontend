@@ -60,17 +60,22 @@ import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
 import { useEnrollments, useCertificates } from '../../hooks/useLearning';
+import {
+  useUserSubscriptions,
+  useCancelUserSubscription,
+  useCreatePaymentMethod,
+  useSetDefaultPaymentMethod,
+} from '../../hooks/usePayments';
 import { invoiceApi, subscriptionApi, paymentMethodApi } from '../../services/payments.services';
 import { livestreamApi } from '../../services/livestream.services';
-import type { Invoice, PaymentMethod } from '../../types/types';
+import type { Invoice, PaymentMethod, PaymentMethodType } from '../../types/types';
 
 // --- Main Page Component ---
 const SubscriptionManagementPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [addPaymentModalOpen, setAddPaymentModalOpen] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
-  const [paymentType, setPaymentType] = useState('mpesa');
+  const [paymentType, setPaymentType] = useState('mobile_money');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [setAsDefault, setSetAsDefault] = useState(false);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' as 'success' | 'warning' | 'error' });
@@ -79,6 +84,11 @@ const SubscriptionManagementPage: React.FC = () => {
   const showToast = (message: string, severity: 'success' | 'warning' | 'error' = 'success') => {
     setToast({ open: true, message, severity });
   };
+
+  // ─── Mutations ───
+  const cancelSubscription = useCancelUserSubscription();
+  const createPaymentMethod = useCreatePaymentMethod();
+  const setDefaultPaymentMethod = useSetDefaultPaymentMethod();
 
   // ─── Fetch real data ───
   const { data: enrollments = [] } = useEnrollments();
@@ -94,6 +104,8 @@ const SubscriptionManagementPage: React.FC = () => {
     queryKey: ['mySubscriptionStatus'],
     queryFn: () => subscriptionApi.getMyStatus().then((r) => r.data),
   });
+  const { data: activeSubscriptions = [] } = useUserSubscriptions({ status: 'active' });
+  const activeSubscriptionId = activeSubscriptions[0]?.id ?? null;
   const { data: livestreamData } = useQuery({
     queryKey: ['learnerLiveSessions'],
     queryFn: () => livestreamApi.getAll().then((r) => {
@@ -151,15 +163,37 @@ const SubscriptionManagementPage: React.FC = () => {
   const isActive = subStatus?.has_active_subscription ?? false;
 
   const handleCancelSubscription = () => {
-    setCancelModalOpen(false);
-    showToast(`Your subscription has been cancelled. It will remain active until ${endDate}.`, 'warning');
+    if (!activeSubscriptionId) return;
+    cancelSubscription.mutate(activeSubscriptionId, {
+      onSuccess: () => {
+        setCancelModalOpen(false);
+        showToast(`Your subscription has been cancelled. It will remain active until ${endDate}.`, 'warning');
+      },
+      onError: () => {
+        showToast('Failed to cancel subscription. Please try again.', 'error');
+      },
+    });
   };
 
   const handleAddPayment = () => {
-    setAddPaymentModalOpen(false);
-    showToast('Payment method added successfully!');
-    setPhoneNumber('');
-    setSetAsDefault(false);
+    createPaymentMethod.mutate(
+      {
+        method_type: paymentType as PaymentMethodType,
+        is_default: setAsDefault,
+        gateway_token: phoneNumber || undefined,
+      },
+      {
+        onSuccess: () => {
+          setAddPaymentModalOpen(false);
+          showToast('Payment method added successfully!');
+          setPhoneNumber('');
+          setSetAsDefault(false);
+        },
+        onError: () => {
+          showToast('Failed to add payment method. Please try again.', 'error');
+        },
+      }
+    );
   };
 
   // Payment methods from API
@@ -258,7 +292,7 @@ const SubscriptionManagementPage: React.FC = () => {
             </Stack>
             <Grid container spacing={3}>
               {usageStats.map((stat, i) => (
-                <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={i}>
+                <Grid size={{ xs: 6, sm: 6, md: 3 }} key={i}>
                   <Box sx={{ bgcolor: '#fafafa', p: 2.5, borderRadius: 2, border: '1px solid #e4e4e7' }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -356,7 +390,15 @@ const SubscriptionManagementPage: React.FC = () => {
                   )}
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ flexShrink: 0 }}>
                     {!method.isDefault && (
-                      <Button size="small" variant="outlined" sx={{ borderColor: '#d4d4d8', color: '#3f3f46', textTransform: 'none', fontSize: { xs: '0.7rem', sm: '0.8125rem' } }}>Set Default</Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => setDefaultPaymentMethod.mutate(method.id)}
+                        disabled={setDefaultPaymentMethod.isPending}
+                        sx={{ borderColor: '#d4d4d8', color: '#3f3f46', textTransform: 'none', fontSize: { xs: '0.7rem', sm: '0.8125rem' } }}
+                      >
+                        Set Default
+                      </Button>
                     )}
                     <Stack direction="row" spacing={0.5}>
                       <IconButton size="small"><EditIcon fontSize="small" /></IconButton>
@@ -391,22 +433,11 @@ const SubscriptionManagementPage: React.FC = () => {
                 </Stack>
               ))}
             </Stack>
-            <FormControl fullWidth>
-              <Typography variant="body2" fontWeight={500} sx={{ mb: 1, textAlign: 'left' }}>Reason for cancellation (optional)</Typography>
-              <Select value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} size="small" displayEmpty>
-                <MenuItem value="">Select a reason...</MenuItem>
-                <MenuItem value="expensive">Too expensive</MenuItem>
-                <MenuItem value="not_using">Not using it enough</MenuItem>
-                <MenuItem value="alternative">Found an alternative</MenuItem>
-                <MenuItem value="features">Missing features</MenuItem>
-                <MenuItem value="other">Other</MenuItem>
-              </Select>
-            </FormControl>
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 2, borderTop: '1px solid #e4e4e7' }}>
           <Button variant="outlined" onClick={() => setCancelModalOpen(false)} sx={{ textTransform: 'none' }}>Keep Subscription</Button>
-          <Button variant="contained" color="error" startIcon={<CloseIcon />} onClick={handleCancelSubscription} sx={{ textTransform: 'none' }}>Cancel Subscription</Button>
+          <Button variant="contained" color="error" startIcon={cancelSubscription.isPending ? <CircularProgress size={16} color="inherit" /> : <CloseIcon />} onClick={handleCancelSubscription} disabled={cancelSubscription.isPending || !activeSubscriptionId} sx={{ textTransform: 'none' }}>Cancel Subscription</Button>
         </DialogActions>
       </Dialog>
 
@@ -421,10 +452,10 @@ const SubscriptionManagementPage: React.FC = () => {
             <FormControl fullWidth>
               <Typography variant="body2" fontWeight={500} sx={{ mb: 1 }}>Payment Type</Typography>
               <Select value={paymentType} onChange={(e) => setPaymentType(e.target.value)} size="small">
-                <MenuItem value="mpesa">M-Pesa</MenuItem>
-                <MenuItem value="mtn">MTN MoMo</MenuItem>
-                <MenuItem value="airtel">Airtel Money</MenuItem>
-                <MenuItem value="card">Credit/Debit Card</MenuItem>
+                <MenuItem value="mobile_money">Mobile Money (M-Pesa / MTN / Airtel)</MenuItem>
+                <MenuItem value="credit_card">Credit / Debit Card</MenuItem>
+                <MenuItem value="paypal">PayPal</MenuItem>
+                <MenuItem value="bank_transfer">Bank Transfer</MenuItem>
               </Select>
             </FormControl>
             <TextField label="Phone Number" placeholder="+254 7XX XXX XXX" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} size="small" fullWidth />
@@ -433,7 +464,7 @@ const SubscriptionManagementPage: React.FC = () => {
         </DialogContent>
         <DialogActions sx={{ p: 2, borderTop: '1px solid #e4e4e7' }}>
           <Button variant="outlined" onClick={() => setAddPaymentModalOpen(false)} sx={{ textTransform: 'none' }}>Cancel</Button>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddPayment} sx={{ bgcolor: '#ffa424', textTransform: 'none', '&:hover': { bgcolor: '#f97316' } }}>Add Payment Method</Button>
+          <Button variant="contained" startIcon={createPaymentMethod.isPending ? <CircularProgress size={16} color="inherit" /> : <AddIcon />} onClick={handleAddPayment} disabled={createPaymentMethod.isPending} sx={{ bgcolor: '#ffa424', textTransform: 'none', '&:hover': { bgcolor: '#f97316' } }}>Add Payment Method</Button>
         </DialogActions>
       </Dialog>
 

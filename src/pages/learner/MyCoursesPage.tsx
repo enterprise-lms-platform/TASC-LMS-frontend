@@ -144,9 +144,9 @@ const MyCoursesPage: React.FC = () => {
         {/* KPI Row */}
         <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
           {kpiData.map((k, index) => (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
+            <Grid size={{ xs: 6, sm: 6, md: 3 }} key={k.label}>
               {isLoading ? (
-                <Skeleton variant="rounded" height={160} sx={{ borderRadius: '20px' }} />
+                <Skeleton variant="rounded" height={120} sx={{ borderRadius: '20px' }} />
               ) : (
                 <Paper
                   elevation={0}
@@ -154,10 +154,10 @@ const MyCoursesPage: React.FC = () => {
                   sx={{
                     bgcolor: k.bgcolor,
                     borderRadius: '20px',
-                    p: 3,
+                    p: { xs: 2, md: 3 },
                     position: 'relative',
                     height: '100%',
-                    minHeight: 160,
+                    minHeight: { xs: 110, md: 160 },
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
@@ -170,21 +170,21 @@ const MyCoursesPage: React.FC = () => {
                 >
                   <Box
                     sx={{
-                      position: 'absolute', top: 16, right: 16, width: 40, height: 40,
+                      position: 'absolute', top: 12, right: 12, width: { xs: 32, md: 40 }, height: { xs: 32, md: 40 },
                       borderRadius: '50%', bgcolor: k.iconBg, display: 'flex',
                       alignItems: 'center', justifyContent: 'center', color: 'white',
-                      '& svg': { fontSize: 20 },
+                      '& svg': { fontSize: { xs: 16, md: 20 } },
                     }}
                   >
                     {k.icon}
                   </Box>
                   <Typography
                     variant="h3"
-                    sx={{ fontWeight: 700, color: k.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}
+                    sx={{ fontWeight: 700, color: k.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}
                   >
                     {k.value}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: k.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>
+                  <Typography variant="body2" sx={{ color: k.subColor, fontWeight: 500, fontSize: { xs: '0.7rem', md: '0.875rem' }, opacity: 0.8 }}>
                     {k.label}
                   </Typography>
                 </Paper>
@@ -219,14 +219,14 @@ const MyCoursesPage: React.FC = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               InputProps={{ startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 20 }} /> }}
-              sx={{ flex: 1, minWidth: 200, '& .MuiOutlinedInput-root': { borderRadius: '10px', fontSize: '0.85rem' } }}
+              sx={{ flex: 1, minWidth: { xs: 120, sm: 200 }, '& .MuiOutlinedInput-root': { borderRadius: '10px', fontSize: '0.85rem' } }}
             />
             <TextField
               size="small"
               select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              sx={{ minWidth: 160, '& .MuiOutlinedInput-root': { borderRadius: '10px', fontSize: '0.85rem' } }}
+              sx={{ minWidth: { xs: 120, sm: 160 }, '& .MuiOutlinedInput-root': { borderRadius: '10px', fontSize: '0.85rem' } }}
               InputProps={{ startAdornment: <FilterIcon sx={{ mr: 1, color: 'text.disabled', fontSize: 18 }} /> }}
             >
               <MenuItem value="recent">Last Accessed</MenuItem>
@@ -324,7 +324,7 @@ const MyCoursesPage: React.FC = () => {
                       </Box>
 
                       {/* Right side */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.75, sm: 1.5 }, flexShrink: 0, flexWrap: 'wrap' }}>
                         <Chip
                           label={course.status}
                           size="small"
@@ -334,7 +334,7 @@ const MyCoursesPage: React.FC = () => {
                             fontWeight: 600, fontSize: '0.7rem', borderRadius: '50px', height: 24,
                           }}
                         />
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 0.25 }}>
                           <StarIcon sx={{ fontSize: 14, color: 'text.disabled' }} />
                           <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'text.disabled' }}>—</Typography>
                         </Box>
@@ -353,8 +353,9 @@ const MyCoursesPage: React.FC = () => {
                               );
                             }}
                             sx={{
-                              textTransform: 'none', fontWeight: 600, fontSize: '0.75rem',
-                              borderRadius: '50px', boxShadow: 'none', px: 2, color: 'white',
+                              textTransform: 'none', fontWeight: 600, fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                              borderRadius: '50px', boxShadow: 'none', px: { xs: 1.5, sm: 2 }, color: 'white',
+                              whiteSpace: 'nowrap',
                               '&:hover': { boxShadow: '0 4px 12px rgba(249,115,22,0.3)' },
                             }}
                           >

@@ -78,7 +78,7 @@ const AllOrganizationsPage: React.FC = () => {
     initials: org.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
     bgColor: 'linear-gradient(135deg, #ffb74d, #ffa424)',
     plan: 'Standard',
-    users: '0',
+    users: String(org.users_count || 0),
     courses: org.courses_count || 0,
     revenue: '$0',
     status: org.is_active ? 'active' : 'pending' as const,
@@ -126,7 +126,7 @@ const AllOrganizationsPage: React.FC = () => {
     <SuperadminLayout title="All Organizations" subtitle="Manage organizations on the platform">
       <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
         {kpiCards.map((kpi, index) => (
-          <Grid key={kpi.title} size={{ xs: 12, sm: 6, lg: 3 }}>
+          <Grid key={kpi.title} size={{ xs: 12, sm: 6, md: 3 }}>
             <KPICard
               title={kpi.title}
               value={kpi.value}

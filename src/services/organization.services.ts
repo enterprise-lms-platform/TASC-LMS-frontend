@@ -21,3 +21,45 @@ export const organizationApi = {
   getById: (id: number) =>
     apiClient.get<Organization>(`/api/v1/superadmin/organizations/${id}/`),
 };
+
+export const managerSettingsApi = {
+  get: () =>
+    apiClient.get<Organization>(`/api/v1/auth/manager/organization-settings/`),
+
+  update: (data: Partial<Organization>) =>
+    apiClient.patch<Organization>(`/api/v1/auth/manager/organization-settings/`, data),
+};
+
+export interface ManagerBillingPlan {
+  plan_name: string | null;
+  price: string;
+  currency: string;
+  billing_cycle: string | null;
+  renewal_date: string | null;
+  user_limit: number | null;
+}
+
+export interface ManagerBillingUsage {
+  active_users: number;
+  active_courses: number;
+}
+
+export const managerBillingApi = {
+  getPlan: () =>
+    apiClient.get<ManagerBillingPlan>(`/api/v1/auth/manager/billing/plan/`),
+
+  getUsage: () =>
+    apiClient.get<ManagerBillingUsage>(`/api/v1/auth/manager/billing/usage/`),
+};
+
+export interface SecurityStats {
+  failed_logins_today: number;
+  locked_accounts: number;
+  active_sessions: number;
+  mfa_adoption_percent: number;
+}
+
+export const securityApi = {
+  getStats: () =>
+    apiClient.get<SecurityStats>(`/api/v1/superadmin/security/stats/`),
+};

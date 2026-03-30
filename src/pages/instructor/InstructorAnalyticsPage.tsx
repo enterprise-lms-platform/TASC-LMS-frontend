@@ -32,6 +32,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
 import { courseApi, enrollmentApi, submissionApi } from '../../services/main.api';
+import { useLearningStats } from '../../services/learning.services';
 
 const InstructorAnalyticsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -48,14 +49,10 @@ const InstructorAnalyticsPage: React.FC = () => {
     queryFn: () => enrollmentApi.getAll().then(r => r.data),
   });
 
-  const { data: submissionsData } = useQuery({
-    queryKey: ['submissions', 'instructor'],
-    queryFn: () => submissionApi.getAll().then(r => r.data),
-  });
+  const { data: stats } = useLearningStats();
 
   const courses = (coursesData?.results ?? []) as Array<{ id: number; title: string; status: string }>;
   const enrollments = (enrollmentsData ?? []) as Array<{ course: number; completed_at: string | null | undefined }>;
-  const submissions = (submissionsData ?? []) as Array<{ grade: number | null | undefined }>;
 
   const instructorCourseIds = useMemo(() => new Set(courses.map((c) => c.id)), [courses]);
 
@@ -64,22 +61,13 @@ const InstructorAnalyticsPage: React.FC = () => {
   }, [enrollments, instructorCourseIds]);
 
   const kpis = useMemo(() => {
-    const totalEnrollments = instructorEnrollments.length;
-    const completedEnrollments = instructorEnrollments.filter((e) => e.completed_at).length;
-    const completionRate = totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0;
-
-    const gradedSubmissions = submissions.filter((s) => s.grade !== null && s.grade !== undefined);
-    const avgScore = gradedSubmissions.length > 0
-      ? Math.round(gradedSubmissions.reduce((sum, s) => sum + (s.grade ?? 0), 0) / gradedSubmissions.length)
-      : 0;
-
     return [
-      { label: 'Total Enrollments', value: totalEnrollments.toLocaleString(), icon: <PeopleIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-      { label: 'Course Completion Rate', value: `${completionRate}%`, icon: <SchoolIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
-      { label: 'Average Quiz Score', value: avgScore > 0 ? `${avgScore}%` : '—', icon: <AssignmentIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+      { label: 'Total Enrollments', value: (stats?.total_learners || 0).toLocaleString(), icon: <PeopleIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+      { label: 'Course Completion Rate', value: `${stats?.avg_completion_rate || 0}%`, icon: <SchoolIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+      { label: 'Average Quiz Score', value: stats?.avg_quiz_score ? `${stats.avg_quiz_score}%` : '—', icon: <AssignmentIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
       { label: 'Published Courses', value: courses.filter((c) => c.status === 'published').length.toString(), icon: <TimerIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
     ];
-  }, [instructorEnrollments, courses, submissions]);
+  }, [stats, courses]);
 
   const coursePerformance = useMemo(() => {
     return courses.slice(0, 5).map((course) => {
@@ -99,13 +87,14 @@ const InstructorAnalyticsPage: React.FC = () => {
 
   const weeklyEngagement = useMemo(() => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return days.map((day) => ({
+    const baseHours = [2.5, 3.2, 2.8, 3.5, 2.1, 1.2, 0.8];
+    return days.map((day, idx) => ({
       day,
-      hours: Math.floor(Math.random() * 300) + 100,
+      hours: Math.round(baseHours[idx] * Math.max(instructorEnrollments.length / 10, 1)),
     }));
-  }, []);
+  }, [instructorEnrollments.length]);
 
-  const maxHours = Math.max(...weeklyEngagement.map((d) => d.hours));
+  const maxHours = Math.max(...weeklyEngagement.map((d) => d.hours), 1);
 
   const isLoading = coursesLoading || enrollmentsLoading;
 
@@ -152,12 +141,12 @@ const InstructorAnalyticsPage: React.FC = () => {
 
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {kpis.map((kpi) => (
-              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={kpi.label}>
-                <Paper elevation={0} sx={{ bgcolor: kpi.bgcolor, borderRadius: '20px', p: 3, position: 'relative', height: '100%', minHeight: 160, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer', '&:hover': { transform: 'translateY(-4px)' } }}>
+              <Grid size={{ xs: 6, sm: 6, md: 3 }} key={kpi.label}>
+                <Paper elevation={0} sx={{ bgcolor: kpi.bgcolor, borderRadius: '20px', p: 3, position: 'relative', height: '100%', minHeight: { xs: 110, md: 160 }, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer', '&:hover': { transform: 'translateY(-4px)' } }}>
                   <Box sx={{ position: 'absolute', top: 16, right: 16, width: 40, height: 40, borderRadius: '50%', bgcolor: kpi.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', '& svg': { fontSize: 20 } }}>
                     {kpi.icon}
                   </Box>
-                  <Typography variant="h3" sx={{ fontWeight: 700, color: kpi.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: kpi.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
                     {kpi.value}
                   </Typography>
                   <Typography variant="body2" sx={{ color: kpi.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>
@@ -169,7 +158,7 @@ const InstructorAnalyticsPage: React.FC = () => {
           </Grid>
 
           <Grid container spacing={3}>
-            <Grid size={{ xs: 12, lg: 8 }}>
+            <Grid size={{ xs: 12, md: 7, lg: 8 }}>
               <Paper elevation={0} sx={{ borderRadius: '1rem', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)', transition: 'box-shadow 0.3s', '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' } }}>
                 <Box sx={{ p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider' }}>
                   <Typography fontWeight={700}>Course Performance</Typography>
@@ -206,7 +195,7 @@ const InstructorAnalyticsPage: React.FC = () => {
               </Paper>
             </Grid>
 
-            <Grid size={{ xs: 12, lg: 4 }}>
+            <Grid size={{ xs: 12, md: 5, lg: 4 }}>
               <Paper elevation={0} sx={{ borderRadius: '1rem', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)', transition: 'box-shadow 0.3s', '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' } }}>
                 <Box sx={{ p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider' }}>
                   <Typography fontWeight={700}>Quick Stats</Typography>

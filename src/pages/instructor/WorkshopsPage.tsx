@@ -1,5 +1,4 @@
-import React, { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
 import {
   Box,
   CssBaseline,
@@ -44,7 +43,6 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
-import { livestreamApi } from '../../services/main.api';
 
 export interface Workshop {
   id: string;
@@ -84,34 +82,8 @@ const WorkshopsPage: React.FC = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
 
-  const { data: sessionsData, isLoading } = useQuery({
-    queryKey: ['livestreams', 'workshops'],
-    queryFn: () => livestreamApi.getAll({ page_size: 100 }).then(r => r.data),
-  });
-
-  const sessions = sessionsData?.results ?? [];
-
-  const workshopSessions = useMemo(() => {
-    return sessions.map((s): Workshop => ({
-      id: s.id,
-      title: s.title,
-      description: s.description,
-      location: s.platform === 'custom' ? s.join_url || 'Custom Platform' : s.platform,
-      startDate: s.start_time.split('T')[0],
-      endDate: s.end_time.split('T')[0],
-      participants: 0,
-      maxParticipants: s.max_attendees,
-      status: s.status === 'live' ? 'ongoing' : s.status === 'scheduled' ? 'upcoming' : 'completed',
-      gradingType: 'score',
-      category: s.course_title || 'General',
-    }));
-  }, [sessions]);
-
-  const allWorkshops = useMemo(() => {
-    const apiWorkshops = workshopSessions;
-    const localWorkshops = workshops.filter(w => !apiWorkshops.some(a => a.id === w.id));
-    return [...apiWorkshops, ...localWorkshops];
-  }, [workshopSessions, workshops]);
+  // TODO F35: replace with workshopApi.getAll() once backend Task 72 is done
+  const allWorkshops = workshops;
 
   const upcomingCount = allWorkshops.filter(w => w.status === 'upcoming').length;
   const ongoingCount = allWorkshops.filter(w => w.status === 'ongoing').length;
@@ -217,7 +189,7 @@ const WorkshopsPage: React.FC = () => {
               { label: 'Ongoing', value: ongoingCount, icon: <EditIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
               { label: 'Total Participants', value: totalParticipants, icon: <PeopleIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
             ].map((kpi) => (
-              <Grid size={{ xs: 6, md: 3 }} key={kpi.label}>
+              <Grid size={{ xs: 6, sm: 6, md: 3 }} key={kpi.label}>
                 <Paper
                   elevation={0}
                   sx={{
@@ -226,7 +198,7 @@ const WorkshopsPage: React.FC = () => {
                     p: 3,
                     position: 'relative',
                     height: '100%',
-                    minHeight: 160,
+                    minHeight: { xs: 110, md: 160 },
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
@@ -255,7 +227,7 @@ const WorkshopsPage: React.FC = () => {
                   >
                     {kpi.icon}
                   </Box>
-                  <Typography variant="h3" sx={{ fontWeight: 700, color: kpi.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: kpi.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
                     {kpi.value}
                   </Typography>
                   <Typography variant="body2" sx={{ color: kpi.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>
@@ -301,7 +273,7 @@ const WorkshopsPage: React.FC = () => {
           {/* Workshop Cards */}
           <Grid container spacing={2}>
             {filtered.map((workshop) => (
-              <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={workshop.id}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={workshop.id}>
                 <Paper
                   elevation={0}
                   sx={{

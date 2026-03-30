@@ -84,6 +84,9 @@ export const queryKeys = {
     all: (params?: SubmissionParams) => ['submissions', params] as const,
     detail: (id: number) => ['submissions', 'detail', id] as const,
   },
+  savedCourses: {
+    all: ['saved-courses'] as const,
+  },
 
   // Payments
   invoices: {

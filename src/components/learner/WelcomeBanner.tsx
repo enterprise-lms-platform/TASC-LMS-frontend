@@ -13,13 +13,14 @@ const WelcomeBanner: React.FC = () => {
     <Paper
       elevation={0}
       sx={{
-        backgroundImage: 'url("/dashboard banner images/learner1.png")',
+        backgroundImage: 'url("/new banner images/Learner Dashboard.webp")',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
         p: { xs: 3, md: 4 },
         borderRadius: '1rem',
         mb: 4,
+        minHeight: 220,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: { xs: 'flex-start', md: 'center' },
@@ -74,7 +75,7 @@ const WelcomeBanner: React.FC = () => {
             display: { xs: 'none', sm: 'block' }
           }}
         >
-          You're making great progress! Continue learning where you left off or explore new courses.
+          Every lesson counts. Jump back in, discover something new, and keep building toward your goals.
         </Typography>
         <Typography 
           variant="body2" 
@@ -83,7 +84,7 @@ const WelcomeBanner: React.FC = () => {
             display: { xs: 'block', sm: 'none' }
           }}
         >
-          Continue learning where you left off!
+          Keep building toward your goals!
         </Typography>
       </Box>
       <Box sx={{ 
@@ -98,6 +99,7 @@ const WelcomeBanner: React.FC = () => {
           variant="contained"
           startIcon={<PlayArrow />}
           size="small"
+          onClick={() => navigate('/learner/my-courses')}
           sx={{
             bgcolor: 'rgba(255,255,255,0.2)',
             backdropFilter: 'blur(8px)',

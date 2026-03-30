@@ -58,6 +58,7 @@ import {
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
 import { transactionApi } from '../../services/payments.services';
+import { apiClient } from '../../utils/config';
 import type { Transaction } from '../../types/types';
 
 const PAGE_SIZE = 10;
@@ -100,6 +101,45 @@ const PaymentHistoryPage: React.FC = () => {
   const handleMobileMenuToggle = () => setMobileOpen(!mobileOpen);
   const showToast = (message: string, severity: 'success' | 'warning' | 'error' = 'success') => {
     setToast({ open: true, message, severity });
+  };
+
+  const handleExportCsv = async () => {
+    try {
+      const params: Record<string, string> = {};
+      if (statusFilter !== 'all') params.status = statusFilter;
+      const response = await apiClient.get('/api/v1/payments/transactions/export-csv/', {
+        responseType: 'blob',
+        params,
+      });
+      const url = URL.createObjectURL(response.data as Blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'transactions.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      showToast('Failed to export CSV', 'error');
+    }
+  };
+
+  const handleDownloadStatement = async () => {
+    try {
+      const response = await apiClient.get('/api/v1/payments/transactions/export-csv/', {
+        responseType: 'blob',
+      });
+      const url = URL.createObjectURL(response.data as Blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'statement.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      showToast('Failed to download statement', 'error');
+    }
   };
 
   const openTransactionDetail = (txn: Transaction) => {
@@ -175,11 +215,11 @@ const PaymentHistoryPage: React.FC = () => {
             <Typography variant="body2" color="text.secondary">View and manage your payment transactions</Typography>
           </Box>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: { xs: '100%', sm: 'auto' } }}>
-            <Button variant="outlined" startIcon={<DownloadIcon />} sx={{ borderColor: '#d4d4d8', color: '#3f3f46', textTransform: 'none' }}>
+            <Button variant="outlined" size="small" startIcon={<DownloadIcon />} onClick={handleExportCsv} sx={{ borderColor: '#d4d4d8', color: '#3f3f46', textTransform: 'none', fontSize: { xs: '0.75rem', sm: '0.8rem' }, whiteSpace: 'nowrap' }}>
               Export CSV
             </Button>
-            <Button variant="contained" startIcon={<DescriptionIcon />} sx={{ bgcolor: '#ffa424', textTransform: 'none', '&:hover': { bgcolor: '#f97316' } }}>
-              Download Statement
+            <Button variant="contained" size="small" startIcon={<DescriptionIcon />} onClick={handleDownloadStatement} sx={{ bgcolor: '#ffa424', textTransform: 'none', fontSize: { xs: '0.75rem', sm: '0.8rem' }, whiteSpace: 'nowrap', '&:hover': { bgcolor: '#f97316' } }}>
+              Statement
             </Button>
           </Stack>
         </Box>
@@ -187,15 +227,15 @@ const PaymentHistoryPage: React.FC = () => {
         {/* Stats Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           {stats.map((stat, i) => (
-            <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={i}>
+            <Grid size={{ xs: 6, sm: 6, md: 3 }} key={i}>
               <Card sx={{ borderRadius: 3, boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e4e4e7' }}>
-                <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2.5 }}>
-                  <Box sx={{ width: 52, height: 52, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: stat.bg, color: stat.color, '& svg': { fontSize: 24 } }}>
+                <CardContent sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, p: { xs: 1.5, md: 2.5 } }}>
+                  <Box sx={{ width: { xs: 40, md: 52 }, height: { xs: 40, md: 52 }, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: stat.bg, color: stat.color, '& svg': { fontSize: { xs: 20, md: 24 } }, flexShrink: 0 }}>
                     {stat.icon}
                   </Box>
-                  <Box>
-                    <Typography variant="h5" fontWeight={700} color="text.primary">{stat.value}</Typography>
-                    <Typography variant="body2" color="text.secondary">{stat.label}</Typography>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="h5" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' } }} noWrap>{stat.value}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', md: '0.8rem' } }}>{stat.label}</Typography>
                   </Box>
                 </CardContent>
               </Card>
@@ -302,7 +342,7 @@ const PaymentHistoryPage: React.FC = () => {
                             </>
                           )}
                           {(txn.status === 'pending' || txn.status === 'failed') && (
-                            <Button size="small" variant="contained" startIcon={<RefreshIcon />} sx={{ bgcolor: '#ffa424', textTransform: 'none', '&:hover': { bgcolor: '#f97316' } }}>
+                            <Button size="small" variant="contained" startIcon={<RefreshIcon />} sx={{ bgcolor: '#ffa424', textTransform: 'none', fontSize: '0.7rem', px: 1.5, whiteSpace: 'nowrap', '&:hover': { bgcolor: '#f97316' } }}>
                               Retry
                             </Button>
                           )}

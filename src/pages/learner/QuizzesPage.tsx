@@ -174,7 +174,7 @@ const QuizzesPage: React.FC = () => {
         {/* KPIs */}
         <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
           {kpis.map((k, index) => (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
+            <Grid size={{ xs: 6, sm: 6, md: 3 }} key={k.label}>
               <Paper
                 elevation={0}
                 className={`stat-card ld-fade-in ld-fade-in-${index}`}
@@ -184,7 +184,7 @@ const QuizzesPage: React.FC = () => {
                   p: 3,
                   position: 'relative',
                   height: '100%',
-                  minHeight: 160,
+                  minHeight: { xs: 110, md: 160 },
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'center',
@@ -198,7 +198,7 @@ const QuizzesPage: React.FC = () => {
                 <Box sx={{ position: 'absolute', top: 16, right: 16, width: 40, height: 40, borderRadius: '50%', bgcolor: k.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', '& svg': { fontSize: 20 } }}>
                   {k.icon}
                 </Box>
-                <Typography variant="h3" sx={{ fontWeight: 700, color: k.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
+                <Typography variant="h3" sx={{ fontWeight: 700, color: k.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
                   {k.value}
                 </Typography>
                 <Typography variant="body2" sx={{ color: k.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>

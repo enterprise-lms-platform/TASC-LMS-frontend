@@ -20,8 +20,6 @@ const individualPlan = {
   period: '/ 6 months',
   perMonth: '$16.50/month',
   description: 'One plan, unlimited access for individual learners.',
-  subscribers: 648,
-  revenue: '$64,152',
   features: [
     'Unlimited access to all courses',
     'Earn professional certificates',
@@ -40,8 +38,6 @@ interface OrgPlan {
   price: string;
   perUser: string;
   seats: string;
-  subscribers: number;
-  revenue: string;
   features: { text: string; included: boolean }[];
   popular?: boolean;
   color: string;
@@ -54,8 +50,6 @@ const orgPlans: OrgPlan[] = [
     price: '$15',
     perUser: '/user/month',
     seats: '5-25 users · Billed annually',
-    subscribers: 82,
-    revenue: '$14,760',
     features: [
       { text: 'Access to 500+ courses', included: true },
       { text: 'Basic team management', included: true },
@@ -74,8 +68,6 @@ const orgPlans: OrgPlan[] = [
     price: '$20',
     perUser: '/user/month',
     seats: '25-200 users · Billed annually',
-    subscribers: 124,
-    revenue: '$29,760',
     popular: true,
     features: [
       { text: 'Access to all 1000+ courses', included: true },
@@ -95,8 +87,6 @@ const orgPlans: OrgPlan[] = [
     price: '$25',
     perUser: '/user/month',
     seats: '200+ users · Custom billing',
-    subscribers: 68,
-    revenue: '$20,400',
     features: [
       { text: 'Everything in Business', included: true },
       { text: 'Unlimited custom content', included: true },
@@ -150,16 +140,16 @@ const FinancePricingPage: React.FC = () => {
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {(() => {
               const kpiCards = [
-                { label: 'Total Subscribers', value: '922', icon: <PricingIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
-                { label: 'Monthly Recurring', value: '$18,037', icon: <CheckIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-                { label: 'Avg. Revenue / User', value: '$117', icon: <StarIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-                { label: 'Conversion Rate', value: '23.4%', icon: <EditIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+                { label: 'Total Subscribers', value: '—', icon: <PricingIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
+                { label: 'Monthly Recurring', value: '—', icon: <CheckIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+                { label: 'Avg. Revenue / User', value: '—', icon: <StarIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+                { label: 'Conversion Rate', value: '—', icon: <EditIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
               ];
               return kpiCards.map((s) => (
-                <Grid size={{ xs: 6, md: 3 }} key={s.label}>
+                <Grid size={{ xs: 6, sm: 6, md: 3 }} key={s.label}>
                   <Paper elevation={0} sx={{
                     bgcolor: s.bgcolor, borderRadius: '20px', p: 3,
-                    position: 'relative', minHeight: 160, display: 'flex',
+                    position: 'relative', minHeight: { xs: 110, md: 160 }, display: 'flex',
                     flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                     textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer',
                     '&:hover': { transform: 'translateY(-4px)' },
@@ -170,7 +160,7 @@ const FinancePricingPage: React.FC = () => {
                       alignItems: 'center', justifyContent: 'center', color: 'white',
                       '& svg': { fontSize: 20 },
                     }}>{s.icon}</Box>
-                    <Typography variant="h3" sx={{ fontWeight: 700, color: s.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{s.value}</Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 700, color: s.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{s.value}</Typography>
                     <Typography variant="body2" sx={{ color: s.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>{s.label}</Typography>
                   </Paper>
                 </Grid>
@@ -218,16 +208,6 @@ const FinancePricingPage: React.FC = () => {
                       Just {individualPlan.perMonth}
                     </Typography>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 4, mb: 2 }}>
-                      <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="h6" fontWeight={700}>{individualPlan.subscribers}</Typography>
-                        <Typography variant="caption" color="text.secondary">Subscribers</Typography>
-                      </Box>
-                      <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="h6" fontWeight={700} color="primary.main">{individualPlan.revenue}</Typography>
-                        <Typography variant="caption" color="text.secondary">Revenue</Typography>
-                      </Box>
-                    </Box>
                   </Box>
 
                   <Divider />
@@ -286,16 +266,6 @@ const FinancePricingPage: React.FC = () => {
                       </Box>
                       <Typography variant="caption" color="text.secondary">{plan.seats}</Typography>
 
-                      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mt: 2, mb: 2 }}>
-                        <Box sx={{ textAlign: 'center' }}>
-                          <Typography variant="h6" fontWeight={700}>{plan.subscribers}</Typography>
-                          <Typography variant="caption" color="text.secondary">Orgs</Typography>
-                        </Box>
-                        <Box sx={{ textAlign: 'center' }}>
-                          <Typography variant="h6" fontWeight={700} color="primary.main">{plan.revenue}</Typography>
-                          <Typography variant="caption" color="text.secondary">Revenue</Typography>
-                        </Box>
-                      </Box>
                     </Box>
 
                     <Divider />

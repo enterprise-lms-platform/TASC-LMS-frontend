@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   CssBaseline,
@@ -15,6 +15,7 @@ import {
   FormControl,
   InputLabel,
   Chip,
+  CircularProgress,
 } from '@mui/material';
 import {
   TrendingUp as ProgressIcon,
@@ -26,6 +27,8 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
+import { useEnrollments } from '../../hooks/useLearning';
+import { useLearningStats } from '../../services/learning.services';
 
 interface CourseProgress {
   id: string;
@@ -34,77 +37,62 @@ interface CourseProgress {
   avgProgress: number;
   completions: number;
   atRisk: number;
-  modules: { name: string; progress: number }[];
 }
-
-const courseProgressData: CourseProgress[] = [
-  {
-    id: '1',
-    name: 'Advanced React Patterns',
-    enrolled: 452,
-    avgProgress: 68,
-    completions: 312,
-    atRisk: 28,
-    modules: [
-      { name: 'Module 1: Introduction', progress: 95 },
-      { name: 'Module 2: React Hooks', progress: 82 },
-      { name: 'Module 3: Advanced Patterns', progress: 65 },
-      { name: 'Module 4: Custom Hooks', progress: 48 },
-      { name: 'Module 5: Final Project', progress: 22 },
-    ],
-  },
-  {
-    id: '2',
-    name: 'TypeScript Mastery',
-    enrolled: 321,
-    avgProgress: 55,
-    completions: 178,
-    atRisk: 42,
-    modules: [
-      { name: 'Module 1: TypeScript Basics', progress: 88 },
-      { name: 'Module 2: Advanced Types', progress: 62 },
-      { name: 'Module 3: Generics', progress: 45 },
-      { name: 'Module 4: Project Config', progress: 28 },
-    ],
-  },
-  {
-    id: '3',
-    name: 'Node.js Backend Dev',
-    enrolled: 198,
-    avgProgress: 72,
-    completions: 142,
-    atRisk: 15,
-    modules: [
-      { name: 'Module 1: Node Fundamentals', progress: 92 },
-      { name: 'Module 2: Express.js', progress: 78 },
-      { name: 'Module 3: Database Integration', progress: 65 },
-      { name: 'Module 4: Authentication', progress: 52 },
-    ],
-  },
-];
-
-// Completion funnel
-const funnelData = [
-  { label: 'Enrolled', count: 971, pct: 100, color: '#3b82f6' },
-  { label: 'Started', count: 923, pct: 95, color: '#6366f1' },
-  { label: 'Midway (50%+)', count: 685, pct: 71, color: '#f59e0b' },
-  { label: 'Near Complete (80%+)', count: 498, pct: 51, color: '#10b981' },
-  { label: 'Completed', count: 632, pct: 65, color: '#059669' },
-];
 
 const ProgressTrackingPage: React.FC = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [courseFilter, setCourseFilter] = useState('all');
 
+  const { data: enrollments, isLoading: enrollLoading } = useEnrollments();
+  const { data: stats, isLoading: statsLoading } = useLearningStats();
+  const isLoading = enrollLoading || statsLoading;
+
+  const courseProgressData = useMemo(() => {
+    if (!enrollments) return [];
+    const courseMap = new Map<number, { title: string; enrollments: Array<{ progress: number; status: string }> }>();
+    for (const e of enrollments) {
+      if (!courseMap.has(e.course)) {
+        courseMap.set(e.course, { title: e.course_title, enrollments: [] });
+      }
+      courseMap.get(e.course)!.enrollments.push({
+        progress: e.progress_percentage,
+        status: e.status,
+      });
+    }
+    return Array.from(courseMap.entries()).map(([courseId, data]) => {
+      const enrolled = data.enrollments.length;
+      const avgProgress = enrolled > 0 ? Math.round(data.enrollments.reduce((s, e) => s + e.progress, 0) / enrolled) : 0;
+      const completions = data.enrollments.filter(e => e.status === 'completed').length;
+      const atRisk = data.enrollments.filter(e => e.progress < 25 && e.status !== 'completed').length;
+      return { id: String(courseId), name: data.title, enrolled, avgProgress, completions, atRisk };
+    });
+  }, [enrollments]);
+
+  const funnelData = useMemo(() => {
+    if (!enrollments || enrollments.length === 0) return [];
+    const total = enrollments.length;
+    const started = enrollments.filter(e => e.progress_percentage > 0).length;
+    const midway = enrollments.filter(e => e.progress_percentage >= 50).length;
+    const nearComplete = enrollments.filter(e => e.progress_percentage >= 80).length;
+    const completed = enrollments.filter(e => e.status === 'completed').length;
+    return [
+      { label: 'Enrolled', count: total, pct: 100, color: '#3b82f6' },
+      { label: 'Started', count: started, pct: total > 0 ? Math.round(started / total * 100) : 0, color: '#6366f1' },
+      { label: 'Midway (50%+)', count: midway, pct: total > 0 ? Math.round(midway / total * 100) : 0, color: '#f59e0b' },
+      { label: 'Near Complete (80%+)', count: nearComplete, pct: total > 0 ? Math.round(nearComplete / total * 100) : 0, color: '#10b981' },
+      { label: 'Completed', count: completed, pct: total > 0 ? Math.round(completed / total * 100) : 0, color: '#059669' },
+    ];
+  }, [enrollments]);
+
   const filteredCourses = courseFilter === 'all'
     ? courseProgressData
     : courseProgressData.filter((c) => c.id === courseFilter);
 
-  const totalEnrolled = courseProgressData.reduce((s, c) => s + c.enrolled, 0);
-  const totalCompleted = courseProgressData.reduce((s, c) => s + c.completions, 0);
+  const totalEnrolled = stats?.total_learners ?? courseProgressData.reduce((s, c) => s + c.enrolled, 0);
+  const totalCompleted = stats?.total_completed_courses ?? courseProgressData.reduce((s, c) => s + c.completions, 0);
   const totalAtRisk = courseProgressData.reduce((s, c) => s + c.atRisk, 0);
-  const overallAvg = Math.round(courseProgressData.reduce((s, c) => s + c.avgProgress, 0) / courseProgressData.length);
+  const overallAvg = stats?.avg_completion_rate ?? (courseProgressData.length > 0 ? Math.round(courseProgressData.reduce((s, c) => s + c.avgProgress, 0) / courseProgressData.length) : 0);
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.100', minHeight: '100vh' }}>
@@ -145,6 +133,9 @@ const ProgressTrackingPage: React.FC = () => {
         <Toolbar sx={{ minHeight: '72px !important' }} />
 
         <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+          {isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><CircularProgress /></Box>
+          ) : (<>
           {/* KPIs */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {[
@@ -153,7 +144,7 @@ const ProgressTrackingPage: React.FC = () => {
               { label: 'Completions', value: totalCompleted, icon: <CompletedIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
               { label: 'At Risk', value: totalAtRisk, icon: <AtRiskIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
             ].map((kpi) => (
-              <Grid size={{ xs: 6, md: 3 }} key={kpi.label}>
+              <Grid size={{ xs: 6, sm: 6, md: 3 }} key={kpi.label}>
                 <Paper
                   elevation={0}
                   sx={{
@@ -162,7 +153,7 @@ const ProgressTrackingPage: React.FC = () => {
                     p: 3,
                     position: 'relative',
                     height: '100%',
-                    minHeight: 160,
+                    minHeight: { xs: 110, md: 160 },
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
@@ -191,7 +182,7 @@ const ProgressTrackingPage: React.FC = () => {
                   >
                     {kpi.icon}
                   </Box>
-                  <Typography variant="h3" sx={{ fontWeight: 700, color: kpi.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: kpi.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
                     {kpi.value}
                   </Typography>
                   <Typography variant="body2" sx={{ color: kpi.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>
@@ -278,32 +269,35 @@ const ProgressTrackingPage: React.FC = () => {
                     </Box>
                   </Box>
                   <Box sx={{ p: 2, px: 3 }}>
-                    {course.modules.map((mod) => (
-                      <Box key={mod.name} sx={{ mb: 1.5 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                          <Typography variant="caption" color="text.secondary">{mod.name}</Typography>
-                          <Typography variant="caption" fontWeight={600}>{mod.progress}%</Typography>
-                        </Box>
-                        <LinearProgress
-                          variant="determinate"
-                          value={mod.progress}
-                          sx={{
-                            height: 8,
-                            borderRadius: 1,
-                            bgcolor: 'grey.100',
-                            '& .MuiLinearProgress-bar': {
-                              bgcolor: mod.progress >= 80 ? '#10b981' : mod.progress >= 50 ? '#f59e0b' : '#ef4444',
-                              borderRadius: 1,
-                            },
-                          }}
-                        />
+                    <Box sx={{ mb: 1.5 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                        <Typography variant="caption" color="text.secondary">Overall Progress</Typography>
+                        <Typography variant="caption" fontWeight={600}>{course.avgProgress}%</Typography>
                       </Box>
-                    ))}
+                      <LinearProgress
+                        variant="determinate"
+                        value={course.avgProgress}
+                        sx={{
+                          height: 8,
+                          borderRadius: 1,
+                          bgcolor: 'grey.100',
+                          '& .MuiLinearProgress-bar': {
+                            bgcolor: course.avgProgress >= 80 ? '#10b981' : course.avgProgress >= 50 ? '#f59e0b' : '#ef4444',
+                            borderRadius: 1,
+                          },
+                        }}
+                      />
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+                      <Typography variant="caption" color="text.secondary">{course.completions} completed</Typography>
+                      {course.atRisk > 0 && <Typography variant="caption" color="error">{course.atRisk} at risk (&lt;25%)</Typography>}
+                    </Box>
                   </Box>
                 </Paper>
               ))}
             </Grid>
           </Grid>
+          </>)}
         </Box>
       </Box>
     </Box>

@@ -77,7 +77,7 @@ const LearnerProfilePage: React.FC = () => {
         <Box
           sx={{
             height: 200,
-            backgroundImage: 'url("/dashboard banner images/learner2.jpg")',
+            backgroundImage: 'url("/new banner images/Learner Dashboard.webp")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             position: 'relative',
@@ -87,14 +87,17 @@ const LearnerProfilePage: React.FC = () => {
            <Button
             variant="contained"
             startIcon={<CameraIcon />}
+            size="small"
             sx={{
               position: 'absolute',
-              bottom: 16,
-              right: 24,
+              bottom: 12,
+              right: { xs: 12, md: 24 },
               bgcolor: 'rgba(255,255,255,0.2)',
               backdropFilter: 'blur(4px)',
               boxShadow: 'none',
               textTransform: 'none',
+              fontSize: { xs: '0.75rem', sm: '0.8rem' },
+              px: { xs: 1.5, sm: 2 },
               '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' },
             }}
           >
@@ -171,13 +174,13 @@ const LearnerProfilePage: React.FC = () => {
 
             {/* Actions */}
             <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button variant="outlined" startIcon={<EditIcon />} sx={{ borderRadius: '50px', textTransform: 'none', fontWeight: 600 }}>Edit Public Profile</Button>
+              <Button variant="outlined" startIcon={<EditIcon />} size="small" sx={{ borderRadius: '50px', textTransform: 'none', fontWeight: 600, fontSize: { xs: '0.75rem', sm: '0.8rem' }, px: { xs: 1.5, sm: 2 }, whiteSpace: 'nowrap' }}>Edit Profile</Button>
             </Box>
           </Paper>
 
           {/* Main Content Grid */}
           <Grid container spacing={3}>
-            {/* Left Sidebar Tabs */}
+            {/* Left Sidebar Tabs — vertical on md+, horizontal on xs/sm */}
             <Grid size={{ xs: 12, md: 3 }}>
               <Paper elevation={0} sx={{ borderRadius: '1rem', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                 <Tabs
@@ -185,6 +188,7 @@ const LearnerProfilePage: React.FC = () => {
                   value={activeTab}
                   onChange={(_, v) => setActiveTab(v)}
                   sx={{
+                    display: { xs: 'none', md: 'flex' },
                     '& .MuiTab-root': {
                       alignItems: 'flex-start',
                       textTransform: 'none',
@@ -198,11 +202,23 @@ const LearnerProfilePage: React.FC = () => {
                       color: 'primary.dark',
                       borderRight: '3px solid #ffa424',
                     },
-                    '& .MuiTabs-indicator': { display: 'none' }, // Custom indicator via borderRight
+                    '& .MuiTabs-indicator': { display: 'none' },
                   }}
                 >
                   <Tab icon={<PersonIcon sx={{ mr: 1 }} />} iconPosition="start" label="Personal Info" />
                   <Tab icon={<SecurityIcon sx={{ mr: 1 }} />} iconPosition="start" label="Security" />
+                </Tabs>
+                <Tabs
+                  value={activeTab}
+                  onChange={(_, v) => setActiveTab(v)}
+                  sx={{
+                    display: { xs: 'flex', md: 'none' },
+                    '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, fontSize: '0.85rem', minHeight: 44 },
+                    '& .MuiTabs-indicator': { height: 2.5, borderRadius: 2 },
+                  }}
+                >
+                  <Tab icon={<PersonIcon sx={{ mr: 0.5, fontSize: 18 }} />} iconPosition="start" label="Personal Info" />
+                  <Tab icon={<SecurityIcon sx={{ mr: 0.5, fontSize: 18 }} />} iconPosition="start" label="Security" />
                 </Tabs>
               </Paper>
             </Grid>
@@ -252,7 +268,7 @@ const LearnerProfilePage: React.FC = () => {
                                  setSaving(false);
                                }
                              }}
-                             sx={{ borderRadius: '50px', px: 4, textTransform: 'none', fontWeight: 600, color: 'white' }}
+                             sx={{ borderRadius: '50px', px: { xs: 3, md: 4 }, textTransform: 'none', fontWeight: 600, color: 'white', fontSize: { xs: '0.8rem', md: '0.875rem' } }}
                            >
                              {saving ? 'Saving...' : 'Save Changes'}
                            </Button>

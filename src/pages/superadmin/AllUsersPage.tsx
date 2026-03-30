@@ -69,7 +69,7 @@ const AllUsersPage: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
 
-  const { data: usersData, isLoading } = useQuery({
+  const { data: usersData } = useQuery({
     queryKey: ['users', roleFilter, statusFilter, searchQuery],
     queryFn: () => usersApi.getAll({
       role: roleFilter === 'All' ? undefined : roleFilter.toLowerCase(),
@@ -134,7 +134,7 @@ const AllUsersPage: React.FC = () => {
       {/* KPI Stat Cards */}
       <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
         {kpiStats.map((stat, index) => (
-          <Grid key={stat.title} size={{ xs: 12, sm: 6, lg: 3 }}>
+          <Grid key={stat.title} size={{ xs: 12, sm: 6, md: 3 }}>
             <KPICard
               title={stat.title}
               value={stat.value}

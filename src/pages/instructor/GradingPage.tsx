@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, CssBaseline, Toolbar, Typography, Snackbar, Alert } from '@mui/material';
 
 // Layout
@@ -13,7 +13,6 @@ import SubmissionTabs from '../../components/instructor/grading/SubmissionTabs';
 import type { TabValue } from '../../components/instructor/grading/SubmissionTabs';
 import SubmissionCard from '../../components/instructor/grading/SubmissionCard';
 import FileAttachment from '../../components/instructor/grading/FileAttachment';
-import type { FileData } from '../../components/instructor/grading/FileAttachment';
 import AnnotationToolbar from '../../components/instructor/grading/AnnotationToolbar';
 import type { AnnotationTool, HighlightColor } from '../../components/instructor/grading/AnnotationToolbar';
 import RubricPanel from '../../components/instructor/grading/RubricPanel';
@@ -21,78 +20,41 @@ import type { GradingCriterion } from '../../components/instructor/grading/Rubri
 import FeedbackSection from '../../components/instructor/grading/FeedbackSection';
 import GradingFooter from '../../components/instructor/grading/GradingFooter';
 
-// Sample data; replacewith use effect and the api call from main.ts file
-const sampleSubmissions: SubmissionData[] = [
-  {
-    id: '1',
-    studentName: 'Jennifer Smith',
-    studentInitials: 'JS',
-    submittedAt: 'Feb 4, 10:23 AM',
-    status: 'pending',
-    previewText: 'This essay explores the fundamental differences between useState and useReducer hooks in React, examining when each is most appropriate...',
-  },
-  {
-    id: '2',
-    studentName: 'Michael Chen',
-    studentInitials: 'MC',
-    submittedAt: 'Feb 4, 9:45 AM',
-    status: 'pending',
-    previewText: 'React hooks have revolutionized how we manage state in functional components. In this analysis...',
-  },
-  {
-    id: '3',
-    studentName: 'Emma Wilson',
-    studentInitials: 'EW',
-    submittedAt: 'Feb 4, 8:12 AM',
-    status: 'graded',
-    score: 85,
-    maxScore: 100,
-    previewText: 'The useEffect hook is one of the most powerful features in React. It allows us to perform side effects...',
-  },
-  {
-    id: '4',
-    studentName: 'David Johnson',
-    studentInitials: 'DJ',
-    submittedAt: 'Feb 5, 2:30 AM',
-    status: 'pending',
-    isLate: true,
-    previewText: 'Custom hooks enable us to extract component logic into reusable functions...',
-  },
-  {
-    id: '5',
-    studentName: 'Sarah Brown',
-    studentInitials: 'SB',
-    submittedAt: 'Feb 3, 11:59 PM',
-    status: 'graded',
-    score: 92,
-    maxScore: 100,
-    previewText: 'Context API combined with useReducer provides a powerful state management solution...',
-  },
-];
+// API services
+import { submissionApi } from '../../services/learning.services';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-const sampleFiles: FileData[] = [
-  { id: '1', name: 'custom-hooks-library.zip', size: '156 KB', type: 'zip' },
-  { id: '2', name: 'documentation.pdf', size: '2.4 MB', type: 'pdf' },
-  { id: '3', name: 'useDebounce.ts', size: '4.2 KB', type: 'code' },
-];
+/**
+ * Mapper to convert API Submission to internal SubmissionData format
+ */
+const mapApiSubmissionToSubmissionData = (s: any): SubmissionData => ({
+  id: String(s.id),
+  studentName: s.user_name || 'Unknown Student',
+  studentInitials: (s.user_name || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase(),
+  submittedAt: s.submitted_at ? new Date(s.submitted_at).toLocaleString() : 'N/A',
+  status: s.status === 'submitted' ? 'pending' : (s.status === 'graded' ? 'graded' : 'pending'),
+  score: s.grade,
+  maxScore: 100,
+  previewText: s.submitted_text || 'No text content provided.',
+});
 
 const createDefaultCriteria = (): GradingCriterion[] => [
   {
     id: '1',
-    name: 'Code Quality',
-    maxPoints: 30,
+    name: 'Content Quality',
+    maxPoints: 40,
     selectedLevel: null,
     score: 0,
     levels: [
-      { key: 'excellent', name: 'Excellent', points: 30, color: '#10b981' },
-      { key: 'good', name: 'Good', points: 23, color: '#3b82f6' },
-      { key: 'satisfactory', name: 'Satisfactory', points: 15, color: '#f59e0b' },
-      { key: 'needsWork', name: 'Needs Work', points: 8, color: '#ef4444' },
+      { key: 'excellent', name: 'Excellent', points: 40, color: '#10b981' },
+      { key: 'good', name: 'Good', points: 30, color: '#3b82f6' },
+      { key: 'satisfactory', name: 'Satisfactory', points: 20, color: '#f59e0b' },
+      { key: 'needsWork', name: 'Needs Work', points: 10, color: '#ef4444' },
     ],
   },
   {
     id: '2',
-    name: 'Functionality',
+    name: 'Critical Analysis',
     maxPoints: 40,
     selectedLevel: null,
     score: 0,
@@ -105,7 +67,7 @@ const createDefaultCriteria = (): GradingCriterion[] => [
   },
   {
     id: '3',
-    name: 'Documentation',
+    name: 'Presentation',
     maxPoints: 20,
     selectedLevel: null,
     score: 0,
@@ -116,34 +78,63 @@ const createDefaultCriteria = (): GradingCriterion[] => [
       { key: 'needsWork', name: 'Needs Work', points: 5, color: '#ef4444' },
     ],
   },
-  {
-    id: '4',
-    name: 'Testing',
-    maxPoints: 10,
-    selectedLevel: null,
-    score: 0,
-    levels: [
-      { key: 'excellent', name: 'Excellent', points: 10, color: '#10b981' },
-      { key: 'good', name: 'Good', points: 8, color: '#3b82f6' },
-      { key: 'satisfactory', name: 'Satisfactory', points: 5, color: '#f59e0b' },
-      { key: 'needsWork', name: 'Needs Work', points: 2, color: '#ef4444' },
-    ],
-  },
 ];
 
 const GradingPage: React.FC = () => {
+  const queryClient = useQueryClient();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>('1');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabValue>('submission');
   const [annotationTool, setAnnotationTool] = useState<AnnotationTool>(null);
   const [highlightColor, setHighlightColor] = useState<HighlightColor>('yellow');
   const [criteria, setCriteria] = useState<GradingCriterion[]>(createDefaultCriteria());
   const [feedback, setFeedback] = useState('');
   const [lastSaved, setLastSaved] = useState<Date | undefined>();
-  const [toast, setToast] = useState('');
+  const [toastMsg, setToastMsg] = useState('');
 
-  const selectedSubmission = sampleSubmissions.find((s) => s.id === selectedId);
-  const currentIndex = sampleSubmissions.findIndex((s) => s.id === selectedId);
+  // Fetch submissions from API (backend scopes to current user's courses for instructors)
+  const { data: apiSubmissions, isLoading } = useQuery({
+    queryKey: ['instructor-submissions'],
+    queryFn: () => submissionApi.getAll().then(res => res.data),
+  });
+
+  const rawSubmissions = Array.isArray(apiSubmissions) ? apiSubmissions : (apiSubmissions as any)?.results ?? [];
+  const submissions = rawSubmissions.map(mapApiSubmissionToSubmissionData);
+
+  // Automatically select first submission if none selected
+  useEffect(() => {
+    if (!selectedId && submissions.length > 0) {
+      setSelectedId(submissions[0].id);
+    }
+  }, [submissions, selectedId]);
+
+  const selectedSubmission = submissions.find((s) => s.id === selectedId);
+  const originalSubmission = rawSubmissions.find(s => String(s.id) === selectedId);
+  const currentIndex = submissions.findIndex((s) => s.id === selectedId);
+
+  // Grade mutation
+  const gradeMutation = useMutation({
+    mutationFn: ({ id, grade, feedback }: { id: number; grade: number; feedback: string }) => 
+      submissionApi.grade(id, { grade, feedback }),
+    onSuccess: () => {
+      setToastMsg('Submission graded successfully');
+      setLastSaved(new Date());
+      queryClient.invalidateQueries({ queryKey: ['instructor-submissions'] });
+      
+      // Move to next pending if available
+      const nextPending = submissions.find(
+        (s, i) => i > currentIndex && s.status === 'pending'
+      );
+      if (nextPending) {
+        setSelectedId(nextPending.id);
+        setCriteria(createDefaultCriteria());
+        setFeedback('');
+      }
+    },
+    onError: (error: any) => {
+      setToastMsg(error.response?.data?.detail || 'Failed to submit grade');
+    }
+  });
 
   const handleSelectLevel = (criterionId: string, levelKey: string) => {
     setCriteria((prev) =>
@@ -175,33 +166,38 @@ const GradingPage: React.FC = () => {
 
   const handleSaveDraft = () => {
     setLastSaved(new Date());
-    setToast('Draft saved');
+    setToastMsg('Draft saved locally');
   };
 
-  const handleSubmitNext = () => {
-    setLastSaved(new Date());
-    // Move to next pending submission
-    const nextPending = sampleSubmissions.find(
-      (s, i) => i > currentIndex && s.status === 'pending'
-    );
-    if (nextPending) {
-      setSelectedId(nextPending.id);
-      setCriteria(createDefaultCriteria());
-      setFeedback('');
-    }
+  const handleSubmitScore = () => {
+    if (!selectedId || !selectedSubmission) return;
+    const totalScore = criteria.reduce((acc, c) => acc + c.score, 0);
+    gradeMutation.mutate({
+      id: Number(selectedId),
+      grade: totalScore,
+      feedback: feedback,
+    });
   };
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
-      setSelectedId(sampleSubmissions[currentIndex - 1].id);
+      setSelectedId(submissions[currentIndex - 1].id);
     }
   };
 
   const handleNext = () => {
-    if (currentIndex < sampleSubmissions.length - 1) {
-      setSelectedId(sampleSubmissions[currentIndex + 1].id);
+    if (currentIndex < submissions.length - 1) {
+      setSelectedId(submissions[currentIndex + 1].id);
     }
   };
+
+  if (isLoading && submissions.length === 0) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Typography>Loading submissions...</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.100', minHeight: '100vh' }}>
@@ -210,7 +206,7 @@ const GradingPage: React.FC = () => {
       <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
 
       <GradingTopBar
-        assignmentName="Build a Custom React Hook Library"
+        assignmentName={originalSubmission?.assignment_title || "Viewing Submission"}
         onMobileMenuToggle={() => setMobileOpen(!mobileOpen)}
       />
 
@@ -230,7 +226,7 @@ const GradingPage: React.FC = () => {
         <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Submissions Sidebar */}
           <SubmissionsSidebar
-            submissions={sampleSubmissions}
+            submissions={submissions}
             selectedId={selectedId}
             onSelectSubmission={setSelectedId}
             mobileOpen={mobileOpen}
@@ -244,12 +240,12 @@ const GradingPage: React.FC = () => {
                 <GradingHeader
                   studentName={selectedSubmission.studentName}
                   studentInitials={selectedSubmission.studentInitials}
-                  email={`${selectedSubmission.studentName.toLowerCase().replace(' ', '.')}@university.edu`}
+                  email={originalSubmission?.user_email || "student@tasc.edu"}
                   submittedAt={selectedSubmission.submittedAt}
-                  fileCount={sampleFiles.length}
+                  fileCount={originalSubmission?.submitted_file_url ? 1 : 0}
                   attemptNumber={1}
                   currentIndex={currentIndex}
-                  totalCount={sampleSubmissions.length}
+                  totalCount={submissions.length}
                   onPrevious={handlePrevious}
                   onNext={handleNext}
                 />
@@ -279,28 +275,9 @@ const GradingPage: React.FC = () => {
                         <SubmissionCard title="Text Submission">
                           <Typography
                             variant="body1"
-                            sx={{ lineHeight: 1.8, color: 'text.secondary' }}
+                            sx={{ lineHeight: 1.8, color: 'text.secondary', whiteSpace: 'pre-wrap' }}
                           >
                             {selectedSubmission.previewText}
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            sx={{ lineHeight: 1.8, color: 'text.secondary', mt: 2 }}
-                          >
-                            React hooks represent a fundamental shift in how we think about component
-                            logic. Prior to hooks, class components were the only way to manage
-                            state and lifecycle methods. With the introduction of hooks in React
-                            16.8, functional components gained the ability to be stateful, leading
-                            to cleaner, more composable code.
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            sx={{ lineHeight: 1.8, color: 'text.secondary', mt: 2 }}
-                          >
-                            The useState hook is the most basic hook, allowing us to add state to
-                            functional components. It returns a tuple containing the current state
-                            value and a function to update it. This simple pattern forms the
-                            foundation for more complex state management patterns.
                           </Typography>
                         </SubmissionCard>
                       )}
@@ -308,14 +285,28 @@ const GradingPage: React.FC = () => {
                       {activeTab === 'files' && (
                         <SubmissionCard title="Submitted Files">
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                            {sampleFiles.map((file) => (
+                            {originalSubmission?.submitted_file_url ? (
                               <FileAttachment
-                                key={file.id}
-                                file={file}
-                                onView={() => setToast(`Viewing ${file.name} — coming soon`)}
-                                onDownload={() => setToast(`Downloading ${file.name} — coming soon`)}
+                                file={{
+                                  id: '1',
+                                  name: originalSubmission.submitted_file_name || 'attachment',
+                                  size: 'N/A',
+                                  type: originalSubmission.submitted_file_name?.split('.').pop() || 'file'
+                                }}
+                                onView={() => window.open(originalSubmission.submitted_file_url, '_blank')}
+                                onDownload={() => {
+                                  const link = document.createElement('a');
+                                  link.href = originalSubmission.submitted_file_url;
+                                  link.download = originalSubmission.submitted_file_name || 'attachment';
+                                  link.rel = 'noopener noreferrer';
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                }}
                               />
-                            ))}
+                            ) : (
+                              <Typography variant="body2" color="text.disabled">No files attached.</Typography>
+                            )}
                           </Box>
                         </SubmissionCard>
                       )}
@@ -323,7 +314,10 @@ const GradingPage: React.FC = () => {
                       {activeTab === 'history' && (
                         <SubmissionCard title="Submission History">
                           <Typography variant="body2" color="text.secondary">
-                            Submission received on {selectedSubmission.submittedAt}
+                            Submission ID: {selectedSubmission.id}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                            Time: {selectedSubmission.submittedAt}
                           </Typography>
                         </SubmissionCard>
                       )}
@@ -348,33 +342,22 @@ const GradingPage: React.FC = () => {
                 <GradingFooter
                   lastSaved={lastSaved}
                   onSaveDraft={handleSaveDraft}
-                  onSubmitNext={handleSubmitNext}
+                  onSubmitNext={handleSubmitScore}
+                  isSubmitting={gradeMutation.isPending}
                 />
               </>
             ) : (
-              <Box
-                sx={{
-                  flex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'column',
-                  p: 6,
-                }}
-              >
-                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
-                  Select a submission
-                </Typography>
-                <Typography variant="body2" color="text.disabled">
-                  Choose a submission from the list to start grading
-                </Typography>
+              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', p: 6 }}>
+                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>Select a submission</Typography>
+                <Typography variant="body2" color="text.disabled">Choose a submission from the list to start grading</Typography>
               </Box>
             )}
           </Box>
         </Box>
       </Box>
-      <Snackbar open={!!toast} autoHideDuration={3000} onClose={() => setToast('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-        <Alert severity="info" onClose={() => setToast('')} variant="filled">{toast}</Alert>
+
+      <Snackbar open={!!toastMsg} autoHideDuration={3000} onClose={() => setToastMsg('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity={toastMsg.includes('Failed') ? 'error' : 'success'} onClose={() => setToastMsg('')} variant="filled">{toastMsg}</Alert>
       </Snackbar>
     </Box>
   );

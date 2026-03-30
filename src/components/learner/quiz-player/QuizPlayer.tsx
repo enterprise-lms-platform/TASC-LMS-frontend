@@ -17,6 +17,7 @@ import {
 } from '@mui/icons-material';
 import type { QuizSettings, QuizQuestion } from '../../../types/types';
 import { quizSubmissionApi, type QuizSubmission } from '../../../services/learning.services';
+import { sessionApi } from '../../../services/catalogue.services';
 
 /* ── Types ── */
 type Answer = string | string[] | boolean | null;
@@ -250,7 +251,7 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
       const serverSubmission = res.data;
       if (serverSubmission.score != null) {
         const serverScore = serverSubmission.max_score > 0
-          ? Math.round((serverSubmission.score / serverSubmission.max_score) * 100)
+          ? Math.round((Number(serverSubmission.score) / Number(serverSubmission.max_score)) * 100)
           : 0;
         const serverPassed = serverSubmission.passed;
         setAttempt((prev) => ({ ...prev, score: serverScore, passed: serverPassed }));

@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { Box, Container, Typography, Chip, Paper, Collapse, IconButton, Stack } from '@mui/material';
+import { Box, Container, Typography, Chip, Paper, Collapse, IconButton, Stack, Skeleton } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useQuery } from '@tanstack/react-query';
+import { faqApi } from '../../services/public.services';
+import type { FaqItem } from '../../services/public.services';
 
-const faqs = [
+const fallbackFaqs = [
   {
     question: 'How does the free trial work?',
     answer: 'Our 14-day free trial gives you full access to all Business plan features with up to 10 users. No credit card required to start. At the end of your trial, you can choose a plan that fits your team size, or we\'ll downgrade you to our free tier.',
@@ -33,6 +36,21 @@ const faqs = [
 const FaqSection: React.FC = () => {
   const [openIndex, setOpenIndex] = useState(0);
 
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['faqs'],
+    queryFn: () => faqApi.getAll(),
+  });
+
+  const faqs = React.useMemo(() => {
+    if (error || !data?.data || data.data.length === 0) {
+      return fallbackFaqs;
+    }
+    return data.data.map((faq: FaqItem) => ({
+      question: faq.question,
+      answer: faq.answer,
+    }));
+  }, [data, error]);
+
   return (
     <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: '#fafafa' }}>
       <Container maxWidth="md">
@@ -47,29 +65,39 @@ const FaqSection: React.FC = () => {
         </Box>
 
         <Paper elevation={0} sx={{ border: '1px solid #e4e4e7', borderRadius: 3, overflow: 'hidden' }}>
-          {faqs.map((faq, index) => (
-            <Box key={faq.question} sx={{ borderBottom: index < faqs.length - 1 ? '1px solid #e4e4e7' : 'none' }}>
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                onClick={() => setOpenIndex(openIndex === index ? -1 : index)}
-                sx={{ p: 3, cursor: 'pointer', transition: 'background 0.2s', '&:hover': { bgcolor: '#fafafa' } }}
-              >
-                <Typography sx={{ fontWeight: 600, color: '#27272a', pr: 2 }}>{faq.question}</Typography>
-                <IconButton
-                  size="small"
-                  className={`faq-toggle ${openIndex === index ? 'open' : ''}`}
-                  sx={{ bgcolor: openIndex === index ? '#ffa424' : '#f4f4f5', color: openIndex === index ? 'white' : '#71717a', flexShrink: 0 }}
+          {isLoading ? (
+            Array.from({ length: 5 }).map((_, idx) => (
+              <Box key={idx} sx={{ borderBottom: idx < 4 ? '1px solid #e4e4e7' : 'none', p: 3 }}>
+                <Skeleton variant="text" width="80%" height={28} />
+                <Skeleton variant="text" width="100%" height={20} sx={{ mt: 1 }} />
+                <Skeleton variant="text" width="60%" height={20} />
+              </Box>
+            ))
+          ) : (
+            faqs.map((faq, index) => (
+              <Box key={faq.question} sx={{ borderBottom: index < faqs.length - 1 ? '1px solid #e4e4e7' : 'none' }}>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  onClick={() => setOpenIndex(openIndex === index ? -1 : index)}
+                  sx={{ p: 3, cursor: 'pointer', transition: 'background 0.2s', '&:hover': { bgcolor: '#fafafa' } }}
                 >
-                  <ExpandMoreIcon />
-                </IconButton>
-              </Stack>
-              <Collapse in={openIndex === index}>
-                <Typography sx={{ px: 3, pb: 3, color: '#52525b', lineHeight: 1.8 }}>{faq.answer}</Typography>
-              </Collapse>
-            </Box>
-          ))}
+                  <Typography sx={{ fontWeight: 600, color: '#27272a', pr: 2 }}>{faq.question}</Typography>
+                  <IconButton
+                    size="small"
+                    className={`faq-toggle ${openIndex === index ? 'open' : ''}`}
+                    sx={{ bgcolor: openIndex === index ? '#ffa424' : '#f4f4f5', color: openIndex === index ? 'white' : '#71717a', flexShrink: 0 }}
+                  >
+                    <ExpandMoreIcon />
+                  </IconButton>
+                </Stack>
+                <Collapse in={openIndex === index}>
+                  <Typography sx={{ px: 3, pb: 3, color: '#52525b', lineHeight: 1.8 }}>{faq.answer}</Typography>
+                </Collapse>
+              </Box>
+            ))
+          )}
         </Paper>
       </Container>
     </Box>

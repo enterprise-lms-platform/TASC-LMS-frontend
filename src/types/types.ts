@@ -103,7 +103,11 @@ export const PaymentMethodType = {
   CREDIT_CARD: 'credit_card',
   DEBIT_CARD: 'debit_card',
   PAYPAL: 'paypal',
-  BANK_ACCOUNT: 'bank_account',
+  BANK_TRANSFER: 'bank_transfer',
+  MOBILE_MONEY: 'mobile_money',
+  GOOGLE_PAY: 'google_pay',
+  APPLE_PAY: 'apple_pay',
+  OTHER: 'other',
 } as const;
 export type PaymentMethodType = typeof PaymentMethodType[keyof typeof PaymentMethodType];
 
@@ -1117,9 +1121,20 @@ export interface Organization {
   id: number;
   name: string;
   slug: string;
+  description?: string;
+  logo?: string | null;
   logo_url?: string | null;
+  website?: string | null;
+  industry?: string;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
   is_active: boolean;
+  settings?: Record<string, any>;
   created_at: string;
+  updated_at?: string;
   courses_count?: number;
   users_count?: number;
 }
