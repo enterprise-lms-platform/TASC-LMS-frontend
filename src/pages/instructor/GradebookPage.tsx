@@ -106,10 +106,11 @@ const GradebookPage: React.FC = () => {
     status: string; submitted_at: string; grade?: number | null; feedback?: string | null;
   }>;
 
-  const allSubs: Submission[] = useQuery({
+  const { data: allSubsRaw } = useQuery({
     queryKey: ['instructor-submissions'],
-    queryFn: () => submissionApi.getAll(),
-  }).data?.data as Submission[] ?? [];
+    queryFn: () => submissionApi.getAll().then(r => r.data),
+  });
+  const allSubs: Submission[] = Array.isArray(allSubsRaw) ? allSubsRaw : (allSubsRaw as any)?.results ?? [];
 
   const { students: allStudents, items: allItems, grades: allGrades } = useMemo(
     () => buildGradebookData(allSubs),
