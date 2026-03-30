@@ -96,10 +96,11 @@ const CoursePlayerPage: React.FC = () => {
 
   // Keep state synced via React Query
   const course = queryClient.getQueryData<CourseDetail>(queryKeys.courses.detail(Number(courseId))) || initialCourse;
-  const recordedProgressRaw =
-    queryClient.getQueryData<SessionProgress[] | { results: SessionProgress[] }>(
-      queryKeys.sessionProgress.all({ course: Number(courseId) })
-    ) || initialProgress;
+  const { data: recordedProgressRaw = initialProgress } = useQuery({
+    queryKey: queryKeys.sessionProgress.all({ course: Number(courseId) }),
+    queryFn: () => sessionProgressApi.getAll({ course: Number(courseId) }).then((r) => r.data),
+    initialData: initialProgress,
+  });
 
   const recordedProgressList: SessionProgress[] = useMemo(() => {
     if (Array.isArray(recordedProgressRaw)) return recordedProgressRaw;
@@ -219,8 +220,8 @@ const CoursePlayerPage: React.FC = () => {
     queryClient.setQueryData(queryKeys.sessionProgress.all({ course: Number(courseId) }), (oldData: unknown) => {
       const oldList: SessionProgress[] = Array.isArray(oldData)
         ? oldData
-        : (oldData as { results?: unknown }).results && Array.isArray((oldData as { results?: unknown }).results)
-          ? (oldData as { results: SessionProgress[] }).results
+        : Array.isArray((oldData as { results?: unknown })?.results)
+          ? ((oldData as { results?: SessionProgress[] }).results ?? [])
           : [];
 
       const idx = oldList.findIndex(p => p.id === record.id);
@@ -297,8 +298,8 @@ const CoursePlayerPage: React.FC = () => {
       queryClient.setQueryData(queryKeys.sessionProgress.all({ course: Number(courseId) }), (old: unknown) => {
         const oldList: SessionProgress[] = Array.isArray(old)
           ? old
-          : (old as { results?: unknown }).results && Array.isArray((old as { results?: unknown }).results)
-            ? (old as { results: SessionProgress[] }).results
+          : Array.isArray((old as { results?: unknown })?.results)
+            ? ((old as { results?: SessionProgress[] }).results ?? [])
             : [];
 
         return oldList.map(p =>
