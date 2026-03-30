@@ -251,10 +251,14 @@ const CoursePlayerPage: React.FC = () => {
 
   const setSessionCompleted = useCallback(async (sessionId: number, completed: boolean): Promise<void> => {
     const progressRecord = await ensureProgressRecord(sessionId);
-    const updated = (await sessionProgressApi.partialUpdate(progressRecord.id, {
+    const updatedPatch = (await sessionProgressApi.partialUpdate(progressRecord.id, {
       is_completed: completed,
       time_spent_seconds: progressRecord.time_spent_seconds ?? 0,
     })).data;
+    const updated: SessionProgress = {
+      ...progressRecord,
+      ...updatedPatch,
+    };
     mergeProgressIntoCache(updated);
   }, [ensureProgressRecord, mergeProgressIntoCache]);
 
