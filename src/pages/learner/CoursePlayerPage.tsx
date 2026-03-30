@@ -114,6 +114,7 @@ const CoursePlayerPage: React.FC = () => {
     }
     return [];
   }, [recordedProgressRaw]);
+  const enrollmentId = course?.enrollment_id ?? null;
 
   const modules = useMemo(() => groupSessions(course?.sessions || []), [course?.sessions]);
   const allSessions = useMemo(() => modules.flatMap(m => m.sessions), [modules]);
@@ -239,21 +240,7 @@ const CoursePlayerPage: React.FC = () => {
     }
   };
 
-  const toggleComplete = async (sessionId: number) => {
-    const progRecord = recordedProgressList.find(p => p.session === sessionId) || {
-        id: Date.now(),
-        enrollment: 1,
-        session: sessionId,
-        session_title: allSessions.find(s => s.id === sessionId)?.title || '',
-        session_type: 'video',
-        is_started: true,
-        is_completed: false,
-        time_spent_seconds: 0,
-        time_spent_minutes: 0,
-        last_accessed_at: new Date().toISOString(),
-        duration_minutes: 0
-    };
-    
+  const mergeProgressIntoCache = useCallback((record: SessionProgress) => {
     queryClient.setQueryData(queryKeys.sessionProgress.all({ course: Number(courseId) }), (oldData: unknown) => {
       const oldList: SessionProgress[] = Array.isArray(oldData)
         ? oldData
@@ -261,14 +248,49 @@ const CoursePlayerPage: React.FC = () => {
           ? (oldData as { results: SessionProgress[] }).results
           : [];
 
-      const exists = oldList.find(p => p.session === sessionId);
-      if (exists) {
-        return oldList.map(p => p.session === sessionId ? { ...p, is_completed: !p.is_completed } : p);
+      const idx = oldList.findIndex(p => p.id === record.id);
+      if (idx >= 0) {
+        return oldList.map((p, i) => (i === idx ? { ...p, ...record } : p));
       }
-
-      return [...oldList, { ...progRecord, is_completed: true }];
+      return [...oldList, record];
     });
-  };
+  }, [courseId, queryClient]);
+
+  const ensureProgressRecord = useCallback(async (sessionId: number): Promise<SessionProgress> => {
+    const existing = recordedProgressList.find(p => p.session === sessionId);
+    if (existing) return existing;
+
+    if (!enrollmentId) {
+      console.error('Cannot create session progress without enrollment id', { sessionId, courseId });
+      throw new Error('Missing enrollment id for session progress.');
+    }
+
+    const created = (await sessionProgressApi.create({
+      enrollment: enrollmentId,
+      session: sessionId,
+    })).data;
+    mergeProgressIntoCache(created);
+    return created;
+  }, [recordedProgressList, enrollmentId, courseId, mergeProgressIntoCache]);
+
+  const setSessionCompleted = useCallback(async (sessionId: number, completed: boolean): Promise<void> => {
+    const progressRecord = await ensureProgressRecord(sessionId);
+    const updated = (await sessionProgressApi.partialUpdate(progressRecord.id, {
+      is_completed: completed,
+      time_spent_seconds: progressRecord.time_spent_seconds ?? 0,
+    })).data;
+    mergeProgressIntoCache(updated);
+  }, [ensureProgressRecord, mergeProgressIntoCache]);
+
+  const toggleComplete = useCallback(async (sessionId: number) => {
+    try {
+      const existing = recordedProgressList.find(p => p.session === sessionId);
+      const nextCompleted = !(existing?.is_completed ?? false);
+      await setSessionCompleted(sessionId, nextCompleted);
+    } catch (error) {
+      console.error('Failed to persist session completion state', { sessionId, error });
+    }
+  }, [recordedProgressList, setSessionCompleted]);
 
   // Notes: read from session progress `notes` field (stored as JSON array)
   const activeProgressRecord = recordedProgressList.find(p => p.session === activeSessionId);
@@ -636,11 +658,16 @@ const CoursePlayerPage: React.FC = () => {
             /* Quiz Player */
             <QuizSessionRenderer
               sessionId={activeSession.id}
-              enrollmentId={(course as unknown as { enrollment_id?: number | null })?.enrollment_id ?? null}
-              onComplete={(score, passed) => {
-              if (passed && !completedSessions.includes(activeSession.id)) {
-                toggleComplete(activeSession.id);
-              }
+              enrollmentId={enrollmentId}
+              onComplete={(_score, passed) => {
+                if (passed && !completedSessions.includes(activeSession.id)) {
+                  void setSessionCompleted(activeSession.id, true).catch((error) => {
+                    console.error('Failed to persist quiz session completion', {
+                      sessionId: activeSession.id,
+                      error,
+                    });
+                  });
+                }
               }}
             />
           ) : (

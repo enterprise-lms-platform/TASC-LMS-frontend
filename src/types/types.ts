@@ -608,6 +608,10 @@ export interface CourseDetail {
   meta_keywords?: string;
   created_by: CourseDetailCreatedBy | null;
   sessions: Session[];
+  enrollment_id?: number | null;
+  enrollment_status?: string;
+  progress_percentage?: number | null;
+  enrolled_at?: string | null;
   created_at: string;
   updated_at: string;
   rejection_reason?: string | null;
