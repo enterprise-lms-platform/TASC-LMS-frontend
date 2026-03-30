@@ -1,10 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import { Add as AddIcon, PersonAdd as PersonAddIcon, Download as DownloadIcon } from '@mui/icons-material';
+import { useAuth } from '../../contexts/AuthContext';
 
 // Manager data (will come from backend later)
 const managerData = {
-  name: 'Sarah',
   pendingCourses: 5,
   assignmentsToReview: 12,
   newUserRequests: 3,
@@ -12,17 +13,21 @@ const managerData = {
 };
 
 const WelcomeBanner: React.FC = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const firstName = user?.first_name || 'there';
   return (
     <Paper
       elevation={0}
       sx={{
-        backgroundImage: 'url("/dashboard banner images/LMS manager.jpg")',
+        backgroundImage: 'url("/new banner images/Manager Dashboard.webp")',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
         p: { xs: 3, md: 4 },
         borderRadius: 3,
         mb: 3,
+        minHeight: 220,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: { xs: 'flex-start', md: 'center' },
@@ -47,7 +52,7 @@ const WelcomeBanner: React.FC = () => {
           gutterBottom
           sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem', md: '2rem' } }}
         >
-          Welcome back, {managerData.name}!
+          Welcome back, {firstName}!
         </Typography>
         <Typography 
           variant="body1" 
@@ -84,15 +89,20 @@ const WelcomeBanner: React.FC = () => {
           variant="contained"
           startIcon={<AddIcon />}
           size="small"
+          onClick={() => navigate('/manager/courses/create')}
           sx={{
-            bgcolor: 'white',
-            color: 'text.primary',
+            bgcolor: 'rgba(255,255,255,0.2)',
+            backdropFilter: 'blur(8px)',
+            color: 'white',
             textTransform: 'none',
             fontWeight: 600,
-            px: { xs: 1.5, md: 2.5 },
+            px: { xs: 1.5, md: 3 },
             py: { xs: 0.75, md: 1 },
             fontSize: { xs: '0.8rem', md: '0.875rem' },
-            '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+            borderRadius: '50px',
+            border: '1px solid rgba(255,255,255,0.3)',
+            boxShadow: 'none',
+            '&:hover': { bgcolor: 'rgba(255,255,255,0.3)', boxShadow: 'none' },
             flex: { xs: 1, sm: 'none' },
             width: { xs: '100%', sm: 'auto' },
           }}
@@ -103,14 +113,16 @@ const WelcomeBanner: React.FC = () => {
           variant="outlined"
           startIcon={<PersonAddIcon />}
           size="small"
+          onClick={() => navigate('/manager/invite-user')}
           sx={{
             color: 'white',
-            borderColor: 'rgba(255,255,255,0.5)',
+            borderColor: 'rgba(255,255,255,0.3)',
             textTransform: 'none',
             fontWeight: 600,
-            px: { xs: 1.5, md: 2.5 },
+            px: { xs: 1.5, md: 3 },
             py: { xs: 0.75, md: 1 },
             fontSize: { xs: '0.8rem', md: '0.875rem' },
+            borderRadius: '50px',
             '&:hover': {
               borderColor: 'white',
               bgcolor: 'rgba(255,255,255,0.1)',
@@ -125,14 +137,16 @@ const WelcomeBanner: React.FC = () => {
           variant="outlined"
           startIcon={<DownloadIcon />}
           size="small"
+          onClick={() => navigate('/manager/reports')}
           sx={{
             color: 'white',
-            borderColor: 'rgba(255,255,255,0.5)',
+            borderColor: 'rgba(255,255,255,0.3)',
             textTransform: 'none',
             fontWeight: 600,
-            px: { xs: 1.5, md: 2.5 },
+            px: { xs: 1.5, md: 3 },
             py: { xs: 0.75, md: 1 },
             fontSize: { xs: '0.8rem', md: '0.875rem' },
+            borderRadius: '50px',
             '&:hover': {
               borderColor: 'white',
               bgcolor: 'rgba(255,255,255,0.1)',

@@ -1,24 +1,38 @@
 import React from 'react';
 import { Box, Typography, Stack } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
+import { publicStatsApi } from '../../../services/public.services';
 
-const heroStats = [
-  { value: '1000+', label: 'Courses' },
-  { value: '200+', label: 'Instructors' },
-  { value: '50K+', label: 'Learners' },
-  { value: '4.8', label: 'Avg Rating' },
-];
+const formatCount = (n: number): string => {
+  if (n >= 1000) return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}K+`;
+  return `${n}+`;
+};
 
 const CatalogHero: React.FC = () => {
+  const { data: statsData } = useQuery({
+    queryKey: ['catalogHeroStats'],
+    queryFn: () => publicStatsApi.getStats(),
+  });
+  const stats = statsData?.data;
+
+  const heroStats = [
+    { value: stats ? formatCount(stats.courses) : '1,000+', label: 'Courses' },
+    { value: stats ? formatCount(stats.instructors) : '200+', label: 'Instructors' },
+    { value: stats ? formatCount(stats.learners) : '50K+', label: 'Learners' },
+    { value: '4.8', label: 'Avg Rating' },
+  ];
+
   return (
     <Box
       sx={{
-        backgroundImage: 'url("/dashboard banner images/browse courses.jpg")',
+        backgroundImage: 'url("/new banner images/Browse Courses Banner.webp")',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
         p: { xs: 4, md: 6 },
         borderRadius: 4,
         mb: 4,
+        minHeight: 320,
         position: 'relative',
         overflow: 'hidden',
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',

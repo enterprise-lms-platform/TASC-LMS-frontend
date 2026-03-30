@@ -77,7 +77,7 @@ const LearnerProfilePage: React.FC = () => {
         <Box
           sx={{
             height: 200,
-            backgroundImage: 'url("/dashboard banner images/learner2.jpg")',
+            backgroundImage: 'url("/new banner images/Learner Dashboard.webp")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             position: 'relative',

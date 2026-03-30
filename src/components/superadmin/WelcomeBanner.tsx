@@ -1,19 +1,37 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import { Download as DownloadIcon, Settings as SettingsIcon } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '../../contexts/AuthContext';
+import { notificationApi } from '../../services/notifications.services';
 
 const WelcomeBanner: React.FC = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const firstName = user?.first_name || 'Super Admin';
+
+  const { data: notifData } = useQuery({
+    queryKey: ['superadminWelcomeNotification'],
+    queryFn: () => notificationApi.getAll({ is_read: false, page_size: 1 }),
+  });
+  const notifications = Array.isArray(notifData?.data) ? notifData.data : notifData?.data?.results ?? [];
+  const topNotification = notifications[0];
+  const subtitle = topNotification?.description
+    || "You have the full picture. Oversee every organization, manage platform settings, and ensure everything runs at peak performance.";
+
   return (
     <Paper
       elevation={0}
       sx={{
-        backgroundImage: 'url("/dashboard banner images/super admin1.jpg")',
+        backgroundImage: 'url("/new banner images/Super Admin Dashboard.webp")',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
         p: { xs: 3, md: 4 },
         borderRadius: '1.25rem',
         mb: 3,
+        minHeight: 220,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -26,7 +44,7 @@ const WelcomeBanner: React.FC = () => {
           content: '""',
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 70%, transparent 100%)',
+          background: 'linear-gradient(90deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.12) 70%, transparent 100%)',
           pointerEvents: 'none',
         },
         /* Subtle geometric pattern */
@@ -48,11 +66,30 @@ const WelcomeBanner: React.FC = () => {
       }}
     >
       <Box sx={{ position: 'relative', zIndex: 1 }}>
-        <Typography sx={{ fontWeight: 700, mb: 0.75, fontSize: { xs: '1.15rem', md: '1.35rem' }, letterSpacing: '-0.01em' }}>
-          Welcome back, Super Admin!
+        <Typography
+          variant="h4"
+          fontWeight={700}
+          gutterBottom
+          sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem', md: '2rem' } }}
+        >
+          Welcome back, {firstName}!
         </Typography>
-        <Typography sx={{ opacity: 0.9, maxWidth: 520, fontSize: '0.88rem', fontWeight: 400, lineHeight: 1.5 }}>
-          Your platform is running smoothly. Here's what's happening across all organizations today.
+        <Typography
+          variant="body1"
+          sx={{
+            opacity: 0.9,
+            maxWidth: 520,
+            fontSize: { xs: '0.875rem', md: '1rem' },
+            display: { xs: 'none', sm: 'block' },
+          }}
+        >
+          {subtitle}
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{ opacity: 0.9, display: { xs: 'block', sm: 'none' } }}
+        >
+          {topNotification?.title || 'Oversee organizations and keep the platform at its best.'}
         </Typography>
       </Box>
       <Box sx={{
@@ -66,6 +103,7 @@ const WelcomeBanner: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<DownloadIcon sx={{ fontSize: 18 }} />}
+          onClick={() => navigate('/superadmin/revenue')}
           sx={{
             bgcolor: 'rgba(255,255,255,0.2)',
             color: 'white',
@@ -76,7 +114,7 @@ const WelcomeBanner: React.FC = () => {
             fontWeight: 500,
             fontSize: '0.82rem',
             textTransform: 'none',
-            borderRadius: 2,
+            borderRadius: '50px',
             '&:hover': {
               bgcolor: 'rgba(255,255,255,0.3)',
               boxShadow: 'none',
@@ -89,6 +127,7 @@ const WelcomeBanner: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<SettingsIcon sx={{ fontSize: 18 }} />}
+          onClick={() => navigate('/superadmin/settings')}
           sx={{
             bgcolor: 'rgba(255,255,255,0.2)',
             color: 'white',
@@ -99,7 +138,7 @@ const WelcomeBanner: React.FC = () => {
             fontWeight: 500,
             fontSize: '0.82rem',
             textTransform: 'none',
-            borderRadius: 2,
+            borderRadius: '50px',
             '&:hover': {
               bgcolor: 'rgba(255,255,255,0.3)',
               boxShadow: 'none',

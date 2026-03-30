@@ -20,13 +20,14 @@ const WelcomeBanner: React.FC = () => {
     <Paper
       elevation={0}
       sx={{
-        backgroundImage: 'url("/dashboard banner images/instructor.jpg")',
+        backgroundImage: 'url("/new banner images/Instructor Dashboard.webp")',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
         p: { xs: 3, md: 4 },
         borderRadius: '1rem',
         mb: 4,
+        minHeight: 220,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: { xs: 'flex-start', md: 'center' },

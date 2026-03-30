@@ -1,9 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import { Download as DownloadIcon, Add as AddIcon } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
 const WelcomeBanner: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const firstName = user?.first_name || 'there';
 
@@ -11,13 +13,14 @@ const WelcomeBanner: React.FC = () => {
     <Paper
       elevation={0}
       sx={{
-        backgroundImage: 'url("/dashboard banner images/finance3.jpg")',
+        backgroundImage: 'url("/new banner images/Finance Dashboard.webp")',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
         p: { xs: 3, md: 4 },
         borderRadius: '1rem',
         mb: 4,
+        minHeight: 220,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: { xs: 'flex-start', md: 'center' },
@@ -72,7 +75,7 @@ const WelcomeBanner: React.FC = () => {
             display: { xs: 'none', sm: 'block' }
           }}
         >
-          Track revenue, manage payments, and generate financial reports across your organization.
+          Your financial command center is ready. Monitor income, manage invoices, and stay ahead of every transaction.
         </Typography>
         <Typography
           variant="body2"
@@ -81,7 +84,7 @@ const WelcomeBanner: React.FC = () => {
             display: { xs: 'block', sm: 'none' }
           }}
         >
-          Track revenue and manage payments.
+          Monitor income and stay ahead of every transaction.
         </Typography>
       </Box>
       <Box sx={{
@@ -96,6 +99,7 @@ const WelcomeBanner: React.FC = () => {
           variant="contained"
           startIcon={<DownloadIcon />}
           size="small"
+          onClick={() => navigate('/finance/export')}
           sx={{
             bgcolor: 'rgba(255,255,255,0.2)',
             backdropFilter: 'blur(8px)',
@@ -119,6 +123,7 @@ const WelcomeBanner: React.FC = () => {
           variant="outlined"
           startIcon={<AddIcon />}
           size="small"
+          onClick={() => navigate('/finance/invoices')}
           sx={{
             color: 'white',
             borderColor: 'rgba(255,255,255,0.3)',

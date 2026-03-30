@@ -377,6 +377,10 @@ export const courseReviewApi = {
   getAll: (params?: { course?: number; rating?: number; page?: number; page_size?: number }) =>
     apiClient.get<PaginatedResponse<CourseReview>>(`${BASE_PATH}/course-reviews/`, { params }),
 
+  // Submit a new review
+  create: (data: { course: number; rating: number; content: string }) =>
+    apiClient.post<CourseReview>(`${BASE_PATH}/course-reviews/`, data),
+
   // Mark a review as helpful
   helpful: (id: number) =>
     apiClient.post<CourseReview>(`${BASE_PATH}/course-reviews/${id}/helpful/`),
