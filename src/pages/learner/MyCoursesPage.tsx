@@ -24,9 +24,10 @@ const statusColors: Record<string, { bg: string; color: string }> = {
   'Not Started': { bg: 'rgba(156, 163, 175, 0.08)', color: '#71717a' },
 };
 
-const getStatus = (progress: number) => {
+const getStatus = (progress: number, lastAccessedSession: number | null | undefined) => {
   if (progress >= 100) return 'Completed';
   if (progress > 0) return 'In Progress';
+  if (lastAccessedSession != null) return 'In Progress';
   return 'Not Started';
 };
 
@@ -67,10 +68,11 @@ const MyCoursesPage: React.FC = () => {
     category: 'General',
     progress: Number(e.progress_percentage) ?? 0,
     progressLabel: `${Math.round(Number(e.progress_percentage) || 0)}% complete`,
-    status: getStatus(Number(e.progress_percentage) || 0),
+    status: getStatus(Number(e.progress_percentage) || 0, e.last_accessed_session ?? null),
     lastAccessed: getTimeAgo(e.last_accessed_at || e.enrolled_at),
     image: e.course_thumbnail || '',
     sortKey: new Date(e.last_accessed_at || e.enrolled_at || 0).getTime(),
+    lastAccessedSession: e.last_accessed_session ?? null,
   })), [enrollments]);
 
   // Compute KPIs from real data
@@ -340,8 +342,16 @@ const MyCoursesPage: React.FC = () => {
                           <Button
                             size="small"
                             variant="contained"
-                            startIcon={<PlayIcon sx={{ fontSize: { xs: 14, sm: 18 } }} />}
-                            onClick={(e) => { e.stopPropagation(); navigate(`/learner/course/${course.id}/learn`); }}
+                            startIcon={<PlayIcon />}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const base = `/learner/course/${course.id}/learn`;
+                              navigate(
+                                course.lastAccessedSession != null
+                                  ? `${base}?session=${course.lastAccessedSession}`
+                                  : base,
+                              );
+                            }}
                             sx={{
                               textTransform: 'none', fontWeight: 600, fontSize: { xs: '0.7rem', sm: '0.75rem' },
                               borderRadius: '50px', boxShadow: 'none', px: { xs: 1.5, sm: 2 }, color: 'white',

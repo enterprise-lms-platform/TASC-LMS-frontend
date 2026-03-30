@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
-import { useParams, useNavigate, useLoaderData } from 'react-router-dom';
+import { useParams, useNavigate, useLoaderData, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { sessionProgressApi, discussionApi, discussionReplyApi, quizSubmissionApi } from '../../services/learning.services';
 import { queryKeys } from '../../hooks/queryKeys';
@@ -87,6 +87,7 @@ const normalizeList = <T,>(value: unknown): T[] => {
 const CoursePlayerPage: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const queryClient = useQueryClient();
@@ -121,8 +122,13 @@ const CoursePlayerPage: React.FC = () => {
   const allSessions = useMemo(() => modules.flatMap(m => m.sessions), [modules]);
   const totalSessions = allSessions.length;
 
+  const sessionParam = searchParams.get('session');
+  const sessionInitForCourseRef = useRef<string | null>(null);
+  /** Avoid repeated ensureProgressRecord calls for the same session in one visit. */
+  const ensuredStartedSessionsRef = useRef<Set<number>>(new Set());
+
   const [activeTab, setActiveTab] = useState(0);
-  const [activeSessionId, setActiveSessionId] = useState<number | null>(allSessions[0]?.id || null);
+  const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
   const [expandedModules, setExpandedModules] = useState<string[]>(['module-1']);
   const [curriculumOpen, setCurriculumOpen] = useState(true);
   const [newNote, setNewNote] = useState('');
@@ -143,7 +149,23 @@ const CoursePlayerPage: React.FC = () => {
   const progressPercent = totalSessions > 0 ? Math.round((completedSessions.length / totalSessions) * 100) : 0;
 
   const activeSession = allSessions.find(s => s.id === activeSessionId) || allSessions[0];
-  const activeSessionIndex = allSessions.findIndex(s => s.id === activeSessionId);
+  const activeSessionIndex = useMemo(() => {
+    if (activeSessionId === null) return 0;
+    const idx = allSessions.findIndex(s => s.id === activeSessionId);
+    return idx >= 0 ? idx : 0;
+  }, [activeSessionId, allSessions]);
+
+  useEffect(() => {
+    if (allSessions.length === 0) return;
+    if (sessionInitForCourseRef.current === courseId) return;
+    sessionInitForCourseRef.current = courseId ?? null;
+    const parsed = sessionParam ? parseInt(sessionParam, 10) : NaN;
+    const valid =
+      Number.isFinite(parsed) &&
+      parsed > 0 &&
+      allSessions.some((s) => s.id === parsed);
+    setActiveSessionId(valid ? parsed : (allSessions[0]?.id ?? null));
+  }, [courseId, allSessions, sessionParam]);
 
   // Use the presigned URL hook — only triggers if the activeSession needs it and has an ID
   const isPrivateAsset = activeSession?.content_source === 'upload' && !!activeSession?.asset_object_key;
@@ -257,6 +279,11 @@ const CoursePlayerPage: React.FC = () => {
     });
   }, [courseId, queryClient]);
 
+  const invalidateEnrollmentCaches = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['learner', 'my-courses'] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.enrollments.all });
+  }, [queryClient]);
+
   const ensureProgressRecord = useCallback(async (sessionId: number): Promise<SessionProgress> => {
     const existing = recordedProgressList.find(p => p.session === sessionId);
     if (existing) return existing;
@@ -271,8 +298,29 @@ const CoursePlayerPage: React.FC = () => {
       session: sessionId,
     })).data;
     mergeProgressIntoCache(created);
+    invalidateEnrollmentCaches();
     return created;
-  }, [recordedProgressList, enrollmentId, courseId, mergeProgressIntoCache]);
+  }, [recordedProgressList, enrollmentId, courseId, mergeProgressIntoCache, invalidateEnrollmentCaches]);
+
+  useEffect(() => {
+    ensuredStartedSessionsRef.current.clear();
+  }, [courseId]);
+
+  const ensureStartedForSession = useCallback(async (sessionId: number) => {
+    if (ensuredStartedSessionsRef.current.has(sessionId)) return;
+    ensuredStartedSessionsRef.current.add(sessionId);
+    try {
+      await ensureProgressRecord(sessionId);
+    } catch (err) {
+      ensuredStartedSessionsRef.current.delete(sessionId);
+      console.error('Failed to ensure session progress record', { sessionId, err });
+    }
+  }, [ensureProgressRecord]);
+
+  useEffect(() => {
+    if (activeSessionId == null || !enrollmentId) return;
+    void ensureStartedForSession(activeSessionId);
+  }, [activeSessionId, enrollmentId, ensureStartedForSession]);
 
   const setSessionCompleted = useCallback(async (sessionId: number, completed: boolean): Promise<void> => {
     const progressRecord = await ensureProgressRecord(sessionId);
@@ -285,7 +333,8 @@ const CoursePlayerPage: React.FC = () => {
       ...updatedPatch,
     };
     mergeProgressIntoCache(updated);
-  }, [ensureProgressRecord, mergeProgressIntoCache]);
+    invalidateEnrollmentCaches();
+  }, [ensureProgressRecord, mergeProgressIntoCache, invalidateEnrollmentCaches]);
 
   const toggleComplete = useCallback(async (sessionId: number) => {
     try {
