@@ -26,9 +26,20 @@ import type { RecentUploadItem } from '../../components/instructor/content-uploa
 import UploadFooter from '../../components/instructor/content-upload/UploadFooter';
 import { uploadApi, quotaApi } from '../../services/upload.services';
 import type { SessionAssetUploadResult } from '../../services/upload.services';
-import { usePartialUpdateSession } from '../../hooks/useCatalogue';
+import { useSessions, usePartialUpdateSession } from '../../hooks/useCatalogue';
 import { getErrorMessage } from '../../utils/config';
 import FeedbackSnackbar from '../../components/common/FeedbackSnackbar';
+
+function formatRelativeTime(dateString: string): string {
+  const diff = Math.max(0, Date.now() - new Date(dateString).getTime());
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days !== 1 ? 's' : ''} ago`;
+}
 
 interface UploadFileEntry {
   id: string;
@@ -52,12 +63,6 @@ const typeLabels: Record<UploadContentType, { label: string; icon: React.ReactNo
   scorm: { label: 'SCORM', icon: <ScormIcon />, color: '#8b5cf6' },
 };
 
-const sampleRecentUploads: RecentUploadItem[] = [
-  { id: '1', name: 'intro-video.mp4', type: 'video', time: '2 hours ago' },
-  { id: '2', name: 'lecture-notes.pdf', type: 'document', time: '5 hours ago' },
-  { id: '3', name: 'interactive-quiz.zip', type: 'scorm', time: '1 day ago' },
-];
-
 const ContentUploadPage: React.FC = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -80,6 +85,23 @@ const ContentUploadPage: React.FC = () => {
     : 'video';
 
   const lessonTitle = searchParams.get('lesson') || '';
+
+  const { data: sessionsData } = useSessions({ course: numericCourseId });
+  const allSessions = Array.isArray(sessionsData) ? sessionsData : [];
+  
+  const realRecentUploads: RecentUploadItem[] = React.useMemo(() => {
+    return allSessions
+      .filter((s) => s.asset_original_filename)
+      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+      .slice(0, 5)
+      .map((s) => ({
+        id: s.id.toString(),
+        name: s.asset_original_filename as string,
+        // safely assign video or document depending on session_type
+        type: (s.session_type === 'scorm' ? 'scorm' : s.session_type === 'document' ? 'document' : 'video') as UploadContentType,
+        time: formatRelativeTime(s.updated_at),
+      }));
+  }, [allSessions]);
 
   const patchSession = usePartialUpdateSession();
   const abortControllers = useRef<Map<string, AbortController>>(new Map());
@@ -188,6 +210,12 @@ const ContentUploadPage: React.FC = () => {
     abortControllers.current.clear();
     setFileEntries([]);
     navigate(-1);
+  };
+
+  const handleAddMore = () => {
+    setFileEntries([]);
+    setExternalVideoUrl('');
+    setExternalVideoError('');
   };
 
   const validateExternalUrl = (url: string): boolean => {
@@ -503,7 +531,7 @@ const ContentUploadPage: React.FC = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <UploadTipsCard contentType={contentType} />
               <StorageInfoCard used={storageUsedGb} total={storageTotalGb} />
-              <RecentUploadsCard uploads={sampleRecentUploads} />
+              <RecentUploadsCard uploads={realRecentUploads} />
             </Box>
           </Box>
         </Box>
@@ -513,7 +541,7 @@ const ContentUploadPage: React.FC = () => {
       <UploadFooter
         uploadCount={contentSource === 'external' && isExternalValid ? 1 : completedFiles.length}
         onCancel={handleCancel}
-        onAddMore={() => { }}
+        onAddMore={handleAddMore}
         onComplete={handleComplete}
         disabled={completing || isStillUploading || !canComplete}
         savingLabel={completing ? 'Saving\u2026' : isStillUploading ? 'Uploading\u2026' : undefined}
