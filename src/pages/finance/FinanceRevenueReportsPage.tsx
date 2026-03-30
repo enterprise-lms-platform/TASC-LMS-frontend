@@ -90,7 +90,7 @@ const FinanceRevenueReportsPage: React.FC = () => {
                         position: 'absolute', top: 14, right: 14, width: 36, height: 36, borderRadius: '50%',
                         bgcolor: kpi.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', '& svg': { fontSize: 18 },
                       }}>{kpi.icon}</Box>
-                      <Typography variant="h4" sx={{ fontWeight: 700, color: kpi.color, fontSize: { xs: '1.8rem', md: '2rem' }, lineHeight: 1, mb: 0.5 }}>{kpi.value}</Typography>
+                      <Typography variant="h4" sx={{ fontWeight: 700, color: kpi.color, fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2rem' }, lineHeight: 1, mb: 0.5 }}>{kpi.value}</Typography>
                       <Typography variant="body2" sx={{ color: kpi.subColor, fontWeight: 500, fontSize: '0.8rem', opacity: 0.8, mb: 0.5 }}>{kpi.label}</Typography>
                       <Chip label={kpi.change} size="small" sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, bgcolor: 'rgba(16,185,129,0.15)', color: '#10b981' }} />
                     </Paper>
@@ -100,7 +100,7 @@ const FinanceRevenueReportsPage: React.FC = () => {
 
               <Grid container spacing={3} sx={{ mb: 3 }}>
                 {/* Monthly Breakdown Chart */}
-                <Grid size={{ xs: 12, lg: 8 }}>
+                <Grid size={{ xs: 12, md: 7, lg: 8 }}>
                   <Paper elevation={0} sx={cardSx}>
                     <Box sx={{ ...headerSx, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Typography fontWeight={700}>Monthly Revenue Breakdown</Typography>
@@ -127,7 +127,7 @@ const FinanceRevenueReportsPage: React.FC = () => {
                 </Grid>
 
                 {/* Revenue by Gateway */}
-                <Grid size={{ xs: 12, lg: 4 }}>
+                <Grid size={{ xs: 12, md: 5, lg: 4 }}>
                   <Paper elevation={0} sx={{ ...cardSx, height: '100%' }}>
                     <Box sx={headerSx}>
                       <Typography fontWeight={700}>Revenue by Gateway</Typography>

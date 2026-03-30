@@ -62,6 +62,10 @@ export const invoiceApi = {
   //  Pay an invoice
   pay: (id: number) =>
     apiClient.post<Invoice>(`${BASE_PATH}/invoices/${id}/pay/`),
+
+  //  Email a receipt for an invoice to the customer
+  emailReceipt: (id: number) =>
+    apiClient.post(`${BASE_PATH}/invoices/${id}/email-receipt/`),
 };
 
 // TRANSACTIONS

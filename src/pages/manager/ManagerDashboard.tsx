@@ -63,7 +63,7 @@ const ManagerDashboard: React.FC = () => {
           {/* Main Grid - Left (2fr) + Right (1fr) */}
           <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 3 }}>
             {/* Left Column - Tables & Charts */}
-            <Grid size={{ xs: 12, lg: 8 }}>
+            <Grid size={{ xs: 12, md: 7, lg: 8 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {/* Users/Courses Tabbed Table */}
                 <UsersCoursesTable />
@@ -74,7 +74,7 @@ const ManagerDashboard: React.FC = () => {
             </Grid>
 
             {/* Right Column - Widgets */}
-            <Grid size={{ xs: 12, lg: 4 }}>
+            <Grid size={{ xs: 12, md: 5, lg: 4 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {/* Pending Tasks */}
                 <PendingTasks />

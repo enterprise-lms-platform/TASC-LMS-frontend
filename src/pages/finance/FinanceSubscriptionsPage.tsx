@@ -82,7 +82,7 @@ const FinanceSubscriptionsPage: React.FC = () => {
               { label: 'Growth', value: `${parseFloat(growthRate) >= 0 ? '+' : ''}${growthRate}%`, icon: <PremiumIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12' },
               { label: 'Churn Rate', value: `${churnRate}%`, icon: <HistoryIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b' },
             ].map((s) => (
-              <Grid size={{ xs: 6, md: 3 }} key={s.label}>
+              <Grid size={{ xs: 6, sm: 6, md: 3 }} key={s.label}>
                 <Paper elevation={0} sx={{
                   bgcolor: s.bgcolor, borderRadius: '20px', p: 3,
                   position: 'relative', display: 'flex', flexDirection: 'column',

@@ -1,33 +1,15 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Chip, IconButton, Button,
+  TableHead, TableRow, Chip, IconButton, CircularProgress, Button,
 } from '@mui/material';
 import {
   CardMembership as CertIcon, CheckCircle as ValidIcon, Warning as ExpiredIcon,
   Block as RevokedIcon, Visibility as ViewIcon,
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
-import { useCertificateStats } from '../../services/learning.services';
-
-const kpis_unused = null; // old hardcoded kpis removed — now computed inside component
-
-const statusColors: Record<string, { bg: string; color: string }> = {
-  Valid: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
-  Expired: { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' },
-  Revoked: { bg: 'rgba(255, 164, 36, 0.1)', color: '#ffa424' },
-};
-
-const certs = [
-  { id: 'CERT-4567', recipient: 'John Kamau', course: 'Advanced React Patterns', issued: 'Feb 10, 2026', expiry: 'Feb 10, 2028', status: 'Valid' },
-  { id: 'CERT-4566', recipient: 'Mary Wambui', course: 'Data Science Fundamentals', issued: 'Feb 8, 2026', expiry: 'Feb 8, 2028', status: 'Valid' },
-  { id: 'CERT-4565', recipient: 'Peter Ochieng', course: 'Cybersecurity Essentials', issued: 'Jan 15, 2026', expiry: 'Jan 15, 2028', status: 'Valid' },
-  { id: 'CERT-4521', recipient: 'Grace Akinyi', course: 'Cloud Architecture', issued: 'Dec 20, 2025', expiry: 'Dec 20, 2027', status: 'Revoked' },
-  { id: 'CERT-4489', recipient: 'David Mwangi', course: 'Python for Beginners', issued: 'Nov 5, 2025', expiry: 'Nov 5, 2027', status: 'Valid' },
-  { id: 'CERT-4322', recipient: 'Sarah Nakamura', course: 'Business Analytics', issued: 'Aug 12, 2024', expiry: 'Aug 12, 2025', status: 'Expired' },
-  { id: 'CERT-4211', recipient: 'James Otieno', course: 'Digital Marketing', issued: 'Jul 3, 2024', expiry: 'Jul 3, 2025', status: 'Expired' },
-  { id: 'CERT-4100', recipient: 'Faith Muthoni', course: 'UX/UI Design', issued: 'Jun 18, 2024', expiry: 'Jun 18, 2026', status: 'Valid' },
-];
+import { useCertificateStats, managerCertificateApi } from '../../services/learning.services';
 
 const templates = [
   { name: 'Course Completion', desc: 'Standard course completion certificate' },
@@ -38,6 +20,13 @@ const templates = [
 
 const CertificationsPage: React.FC = () => {
   const { data: stats } = useCertificateStats();
+
+  const { data: certsRaw, isLoading } = useQuery({
+    queryKey: ['superadmin', 'certificates'],
+    queryFn: () => managerCertificateApi.getAll({ page_size: 100 }).then((r) => r.data),
+  });
+
+  const certs = Array.isArray(certsRaw) ? certsRaw : (certsRaw as any)?.results ?? [];
 
   const kpis = [
     { label: 'Total Issued', value: String(stats?.total ?? '—'), icon: <CertIcon />, gradient: 'linear-gradient(135deg, #71717a, #a1a1aa)', trend: `${stats?.this_month ?? 0} this month` },
@@ -64,36 +53,53 @@ const CertificationsPage: React.FC = () => {
     </Grid>
 
     <Grid container spacing={3}>
-      <Grid size={{ xs: 12, lg: 8 }}>
+      <Grid size={{ xs: 12, md: 7, lg: 8 }}>
         <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
           <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 3 }}>Certificates</Typography>
-          <TableContainer>
-            <Table>
-              <TableHead><TableRow>
-                {['Certificate ID', 'Recipient', 'Course', 'Issued', 'Expiry', 'Status', 'Actions'].map((h) => (
-                  <TableCell key={h} sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{h}</TableCell>
-                ))}
-              </TableRow></TableHead>
-              <TableBody>
-                {certs.map((c) => (
-                  <TableRow key={c.id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' } }}>
-                    <TableCell><Typography variant="body2" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>{c.id}</Typography></TableCell>
-                    <TableCell><Typography variant="body2" sx={{ fontWeight: 500 }}>{c.recipient}</Typography></TableCell>
-                    <TableCell><Typography variant="body2">{c.course}</Typography></TableCell>
-                    <TableCell><Typography variant="body2">{c.issued}</Typography></TableCell>
-                    <TableCell><Typography variant="body2">{c.expiry}</Typography></TableCell>
-                    <TableCell><Chip label={c.status} size="small" sx={{ bgcolor: statusColors[c.status]?.bg, color: statusColors[c.status]?.color, fontWeight: 500, fontSize: '0.75rem' }} /></TableCell>
-                    <TableCell>
-                      <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><ViewIcon fontSize="small" /></IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          {isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress size={28} /></Box>
+          ) : (
+            <TableContainer>
+              <Table>
+                <TableHead><TableRow>
+                  {['Certificate #', 'Recipient', 'Course', 'Issued', 'Expiry', 'Status', 'Actions'].map((h) => (
+                    <TableCell key={h} sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{h}</TableCell>
+                  ))}
+                </TableRow></TableHead>
+                <TableBody>
+                  {certs.map((c: any) => (
+                    <TableRow key={c.id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' } }}>
+                      <TableCell><Typography variant="body2" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>{c.certificate_number}</Typography></TableCell>
+                      <TableCell><Typography variant="body2" sx={{ fontWeight: 500 }}>{c.user_name}</Typography></TableCell>
+                      <TableCell><Typography variant="body2">{c.course_title}</Typography></TableCell>
+                      <TableCell><Typography variant="body2">{c.issued_at ? new Date(c.issued_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</Typography></TableCell>
+                      <TableCell><Typography variant="body2">{c.expiry_date ? new Date(c.expiry_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No expiry'}</Typography></TableCell>
+                      <TableCell>
+                        <Chip
+                          label={c.is_expired ? 'Expired' : c.is_valid ? 'Valid' : 'Revoked'}
+                          size="small"
+                          sx={{
+                            bgcolor: c.is_expired ? 'rgba(245,158,11,0.1)' : c.is_valid ? 'rgba(16,185,129,0.1)' : 'rgba(255,164,36,0.1)',
+                            color: c.is_expired ? '#f59e0b' : c.is_valid ? '#10b981' : '#ffa424',
+                            fontWeight: 500, fontSize: '0.75rem',
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><ViewIcon fontSize="small" /></IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {certs.length === 0 && (
+                    <TableRow><TableCell colSpan={7} align="center" sx={{ py: 4, color: 'text.secondary' }}>No certificates found</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </Paper>
       </Grid>
-      <Grid size={{ xs: 12, lg: 4 }}>
+      <Grid size={{ xs: 12, md: 5, lg: 4 }}>
         <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
           <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 2 }}>Certificate Templates</Typography>
           {templates.map((t, i) => (

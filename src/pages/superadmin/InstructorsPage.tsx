@@ -1,37 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Chip, IconButton, Avatar, Button, TextField,
+  TableHead, TableRow, Chip, IconButton, Avatar, Button, TextField, CircularProgress,
 } from '@mui/material';
 import {
   School as InstructorIcon, Star as StarIcon, MenuBook as CourseIcon,
-  Edit as EditIcon, Visibility as ViewIcon,
-  PersonAdd as InviteIcon,
+  Edit as EditIcon, Visibility as ViewIcon, PersonAdd as InviteIcon,
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import { useInstructorStats } from '../../services/learning.services';
-
+import { usersApi } from '../../services/users.services';
 import KPICard from '../../components/superadmin/KPICard';
 
-const statusColors: Record<string, { bg: string; color: string }> = {
-  Active: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
-  Inactive: { bg: 'rgba(156, 163, 175, 0.1)', color: '#71717a' },
-  Pending: { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' },
-};
-
-const instructors = [
-  { name: 'John Kamau', email: 'john@acme.com', org: 'Acme Corporation', courses: 12, students: 1245, rating: 4.8, status: 'Active', joined: 'Jan 2025' },
-  { name: 'Mary Wambui', email: 'mary@globaltech.com', org: 'Global Tech Inc', courses: 8, students: 987, rating: 4.9, status: 'Active', joined: 'Feb 2025' },
-  { name: 'Peter Ochieng', email: 'peter@innovate.com', org: 'Innovate Solutions', courses: 6, students: 756, rating: 4.7, status: 'Active', joined: 'Mar 2025' },
-  { name: 'Grace Akinyi', email: 'grace@acme.com', org: 'Acme Corporation', courses: 10, students: 1102, rating: 4.6, status: 'Active', joined: 'Jan 2025' },
-  { name: 'David Mwangi', email: 'david@future.com', org: 'Future Dynamics', courses: 4, students: 432, rating: 4.5, status: 'Active', joined: 'Apr 2025' },
-  { name: 'Sarah Nakamura', email: 'sarah@nextgen.com', org: 'NextGen Partners', courses: 7, students: 623, rating: 4.8, status: 'Inactive', joined: 'May 2025' },
-  { name: 'James Otieno', email: 'james@acme.com', org: 'Acme Corporation', courses: 5, students: 378, rating: 4.4, status: 'Active', joined: 'Jun 2025' },
-  { name: 'Faith Muthoni', email: 'faith@globaltech.com', org: 'Global Tech Inc', courses: 9, students: 890, rating: 4.7, status: 'Pending', joined: 'Dec 2025' },
-];
-
 const InstructorsPage: React.FC = () => {
+  const [search, setSearch] = useState('');
   const { data: stats } = useInstructorStats();
+
+  const { data: instructorsRaw, isLoading } = useQuery({
+    queryKey: ['superadmin', 'instructors', search],
+    queryFn: () => usersApi.getInstructors({ search: search || undefined, page_size: 100 }).then((r) => r.data),
+  });
+
+  const instructors = Array.isArray(instructorsRaw) ? instructorsRaw : (instructorsRaw as any)?.results ?? [];
 
   const kpis = [
     { label: 'Total Instructors', value: String(stats?.total ?? '—'), icon: <InstructorIcon />, bgColor: '#fff3e0', badgeColor: '#ffa424', valueColor: '#e65100', labelColor: '#9a3412' },
@@ -52,54 +43,88 @@ const InstructorsPage: React.FC = () => {
 
       <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-          <TextField size="small" placeholder="Search instructors..." sx={{ minWidth: 250 }} />
+          <TextField
+            size="small"
+            placeholder="Search instructors..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ minWidth: 250 }}
+          />
           <Button variant="contained" startIcon={<InviteIcon />} sx={{ textTransform: 'none', fontWeight: 600 }}>Invite Instructor</Button>
         </Box>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                {['Instructor', 'Organization', 'Courses', 'Students', 'Avg Rating', 'Status', 'Joined', 'Actions'].map((h) => (
-                  <TableCell key={h} sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{h}</TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {instructors.map((inst) => (
-                <TableRow key={inst.email} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' } }}>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <Avatar sx={{ width: 36, height: 36, background: 'linear-gradient(135deg, #ffb74d, #f97316)', fontSize: '0.8rem', fontWeight: 700 }}>
-                        {inst.name.split(' ').map((n) => n[0]).join('')}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>{inst.name}</Typography>
-                        <Typography variant="caption" color="text.secondary">{inst.email}</Typography>
-                      </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell><Typography variant="body2">{inst.org}</Typography></TableCell>
-                  <TableCell><Typography variant="body2">{inst.courses}</Typography></TableCell>
-                  <TableCell><Typography variant="body2">{inst.students.toLocaleString()}</Typography></TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <StarIcon sx={{ fontSize: 16, color: '#f59e0b' }} />
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>{inst.rating}</Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell><Chip label={inst.status} size="small" sx={{ bgcolor: statusColors[inst.status]?.bg, color: statusColors[inst.status]?.color, fontWeight: 500, fontSize: '0.75rem' }} /></TableCell>
-                  <TableCell><Typography variant="body2">{inst.joined}</Typography></TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><ViewIcon fontSize="small" /></IconButton>
-                      <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><EditIcon fontSize="small" /></IconButton>
-                    </Box>
-                  </TableCell>
+
+        {isLoading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+            <CircularProgress size={32} />
+          </Box>
+        ) : (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  {['Instructor', 'Courses', 'Students', 'Avg Rating', 'Status', 'Joined', 'Actions'].map((h) => (
+                    <TableCell key={h} sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{h}</TableCell>
+                  ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {instructors.map((inst: any) => (
+                  <TableRow key={inst.id} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' } }}>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Avatar
+                          src={inst.avatar || inst.google_picture || undefined}
+                          sx={{ width: 36, height: 36, background: 'linear-gradient(135deg, #ffb74d, #f97316)', fontSize: '0.8rem', fontWeight: 700 }}
+                        >
+                          {`${inst.first_name?.[0] ?? ''}${inst.last_name?.[0] ?? ''}`}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>{inst.name || `${inst.first_name} ${inst.last_name}`}</Typography>
+                          <Typography variant="caption" color="text.secondary">{inst.email}</Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell><Typography variant="body2">{inst.courses_count ?? '—'}</Typography></TableCell>
+                    <TableCell><Typography variant="body2">{(inst.students_count ?? 0).toLocaleString()}</Typography></TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <StarIcon sx={{ fontSize: 16, color: '#f59e0b' }} />
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>{inst.rating ?? '—'}</Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={inst.is_active ? 'Active' : 'Inactive'}
+                        size="small"
+                        sx={{
+                          bgcolor: inst.is_active ? 'rgba(16, 185, 129, 0.1)' : 'rgba(156, 163, 175, 0.1)',
+                          color: inst.is_active ? '#10b981' : '#71717a',
+                          fontWeight: 500, fontSize: '0.75rem',
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {inst.created_at ? new Date(inst.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><ViewIcon fontSize="small" /></IconButton>
+                        <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><EditIcon fontSize="small" /></IconButton>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {instructors.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center" sx={{ py: 4, color: 'text.secondary' }}>No instructors found</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Paper>
     </SuperadminLayout>
   );

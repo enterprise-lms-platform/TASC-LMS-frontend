@@ -78,6 +78,20 @@ api.messaging            // messagingApi
 | ✅ | F18 | ~~Dashboard mock cleanup~~ | various | Done — Instructor WelcomeBanner uses real submission count; Finance Sidebar revenue → `—` (backend Task 37 needed) |
 | ✅ | F19 | ~~Instructor ProgressTrackingPage wiring~~ | `ProgressTrackingPage.tsx` | Done — replaced hardcoded course arrays + funnel with `useEnrollments()` + `useLearningStats()` [29 Mar] |
 | ✅ | F20 | ~~Finance remaining mock cleanup~~ | 3 finance pages | Done — Subscriptions Growth/Churn, Revenue gateway breakdown, Churn page cleanup [29 Mar] |
+| ✅ | F21 | ~~Responsive fixes across all roles~~ | ~58 page files | Done — KPI cards, layout splits, button sizing, tab layouts fixed across learner/instructor/manager/finance/superadmin [30 Mar] |
+| ✅ | F22 | ~~Superadmin — wire table data to real APIs~~ | ~8 files | Done — AllCoursesPage, InstructorsPage, InvoicesPage, CertificationsPage wired; AssessmentsPage, RevenuePage, NotificationsPage, SecurityPage sessions → empty state (pending backend) [30 Mar] |
+| ✅ | F23 | ~~Superadmin — strip mock-only pages~~ | ~5 files | Done — DataMigrationPage, PartnershipsPage → Coming Soon; RolesPermissionsPage fake user counts removed; GatewaySettingsPage → Pesapal-only [30 Mar] |
+| ✅ | F24 | ~~Finance — strip gateway mock pages~~ | 4 gateway pages | Done — GatewayAirtelPage, GatewayMpesaPage, GatewayMtnPage → Coming Soon; GatewayPesapalPage → wired to real transactions API [30 Mar] |
+| ✅ | F25 | ~~Finance — wire remaining mock pages~~ | 2 files | Done — FinanceAlertsPage fake alerts cleared → empty state; FinancePricingPage KPI/subscriber counts → '—' [30 Mar] |
+| ✅ | F26 | ~~Finance — fix FinanceStatementsPage hardcoded percentages~~ | 1 file | Done — removed 75%/5%/15% splits; Income Statement → empty state; only Total Revenue (real API) shown [30 Mar] |
+| ✅ | F27 | ~~Non-functional buttons audit~~ | ~15 files | Done — GatewayPesapalPage Export CSV wired to `/api/v1/payments/transactions/export-csv/`; FinanceInvoicesPage Send icon wired to `/api/v1/payments/invoices/{id}/email-receipt/`; remaining buttons documented in F29–F34 [30 Mar] |
+| HIGH | F28 | Export functionality (frontend) | multiple files | Wire Export CSV/PDF buttons to backend export endpoints once backend Task 64 done — Finance Invoices, Revenue, Superadmin Users/Courses/Orgs (transaction export done on PesapalPage) |
+| HIGH | F29 | Superadmin SystemSettingsPage — wire Save buttons | 1 file | Needs backend Task 67 (system settings PATCH + SMTP config + test email endpoints) — all Save buttons are no-ops |
+| HIGH | F30 | Superadmin SecurityPage — wire policy Save buttons | 1 file | Needs backend Task 68 (MFA settings, password policy, session settings PATCH + terminate-all-sessions endpoint) |
+| HIGH | F31 | GatewaySettingsPage — wire Save + Test Connection | 1 file | Needs backend Task 69 (Pesapal consumer key/secret PATCH + test-connection endpoint) |
+| MED | F32 | InstructorsPage — wire Invite Instructor button | 1 file | Needs backend Task 70 (user invite/email endpoint) |
+| MED | F33 | FinanceInvoicesPage — Create Invoice modal | 1 file | Backend `POST /api/v1/payments/invoices/` EXISTS — needs frontend form/dialog with fields: customer, amount, due_date, line items |
+| MED | F34 | FinancePricingPage — Edit Plans / Manage Plan buttons | 1 file | Needs backend Task 71 (subscription plan PATCH admin endpoint) |
 
 ---
 

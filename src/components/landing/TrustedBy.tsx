@@ -12,16 +12,21 @@ const TrustedBy: React.FC<TrustedByProps> = ({ isMobile }) => {
     queryFn: () => publicClientsApi.getClients().then(r => r.data),
   });
 
+  const fallbackCompanies = [
+    { name: 'GIZ', logoUrl: '/partners/logos/GIZ_Deutsche_Gesellschaft.png' },
+    { name: 'Irish Aid', logoUrl: '/partners/logos/Irish_Aid.png' },
+    { name: 'PSFU', logoUrl: '/partners/logos/PSFU.png' },
+    { name: 'SDF', logoUrl: '/partners/logos/SDF.png' },
+    { name: 'Sinhydro', logoUrl: '/partners/logos/Sinhydro.png' },
+    { name: 'TotalEnergies', logoUrl: '/partners/logos/TotalEnergies.png' },
+    { name: 'Uganda Breweries', logoUrl: '/partners/logos/the_Uganda_Breweries_Limited.png' },
+    { name: 'VSO', logoUrl: '/partners/logos/the_VSO.png' },
+  ];
+
   const companies = clientsData.data?.results?.map((client: { name: string; logo_url: string }) => ({
     name: client.name,
     logoUrl: client.logo_url,
-  })) || [
-    { icon: 'building', name: 'Acme Corp' },
-    { icon: 'globe', name: 'Global Tech' },
-    { icon: 'rocket', name: 'Innovate' },
-    { icon: 'bolt', name: 'Future Dynamics' },
-    { icon: 'star', name: 'NextGen' },
-  ];
+  })) || fallbackCompanies;
 
   return (
     <section
@@ -78,15 +83,16 @@ const TrustedBy: React.FC<TrustedByProps> = ({ isMobile }) => {
               }}
             >
               {company.logoUrl ? (
-                <img 
-                  src={company.logoUrl} 
-                  alt={company.name} 
-                  style={{ height: '32px', objectFit: 'contain' }} 
+                <img
+                  src={company.logoUrl}
+                  alt={company.name}
+                  style={{ height: '40px', maxWidth: '120px', objectFit: 'contain', opacity: 0.7, transition: 'opacity 0.3s' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = '1'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = '0.7'; }}
                 />
               ) : (
-                <i className="fas fa-building" style={{ fontSize: '1.5rem' }} />
+                <span>{company.name}</span>
               )}
-              <span>{company.name}</span>
             </div>
           ))}
         </div>

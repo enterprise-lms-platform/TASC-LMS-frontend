@@ -235,7 +235,7 @@ const ManagerSessionsPage: React.FC = () => {
                     sx={{
                       fontWeight: 700,
                       color: kpi.color,
-                      fontSize: { xs: '1.8rem', md: '2.2rem' },
+                      fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2.2rem' },
                       lineHeight: 1,
                       mb: 0.5,
                     }}
@@ -285,7 +285,7 @@ const ManagerSessionsPage: React.FC = () => {
               const statusColors = getStatusColor(displayStatus);
               const instructorName = getInstructorName(session);
               return (
-                <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={session.id}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={session.id}>
                   <Paper
                     elevation={0}
                     sx={{

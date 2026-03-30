@@ -223,7 +223,7 @@ const ManagerCreateCoursePage = () => {
 
           <Grid container spacing={3} sx={{ mb: 4 }}>
             {quickStartOptions.map((option) => (
-              <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={option.title}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={option.title}>
                 <Paper
                   elevation={0}
                   sx={{

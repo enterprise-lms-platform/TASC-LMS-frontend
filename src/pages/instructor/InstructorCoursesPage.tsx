@@ -240,7 +240,7 @@ const InstructorCoursesPage: React.FC = () => {
             {filtered.map((course) => {
               const statusInfo = statusColors[course.status] ?? statusColors.archived;
               return (
-                <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={course.id}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={course.id}>
                   <Paper
                     elevation={0}
                     sx={{

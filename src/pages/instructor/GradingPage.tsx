@@ -98,7 +98,7 @@ const GradingPage: React.FC = () => {
     queryFn: () => submissionApi.getAll().then(res => res.data),
   });
 
-  const rawSubmissions = apiSubmissions?.results ?? [];
+  const rawSubmissions = Array.isArray(apiSubmissions) ? apiSubmissions : (apiSubmissions as any)?.results ?? [];
   const submissions = rawSubmissions.map(mapApiSubmissionToSubmissionData);
 
   // Automatically select first submission if none selected

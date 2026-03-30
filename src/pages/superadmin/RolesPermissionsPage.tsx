@@ -25,7 +25,6 @@ import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 interface RoleCard {
   name: string;
   description: string;
-  userCount: number;
   icon: React.ReactNode;
   iconBg: string;
 }
@@ -34,35 +33,30 @@ const roles: RoleCard[] = [
   {
     name: 'Super Admin',
     description: 'Full platform control with access to all system settings, organizations, and configurations',
-    userCount: 2,
     icon: <SuperAdminIcon sx={{ fontSize: 28 }} />,
     iconBg: 'linear-gradient(135deg, #ffa424, #ffb74d)',
   },
   {
     name: 'LMS Manager',
     description: 'Organization and course management including enrollment, reporting, content curation, and system configuration',
-    userCount: 32,
     icon: <ManagerIcon sx={{ fontSize: 28 }} />,
     iconBg: 'linear-gradient(135deg, #10b981, #34d399)',
   },
   {
     name: 'Instructor',
     description: 'Content creation and teaching responsibilities including grading and assessments',
-    userCount: 156,
     icon: <InstructorIcon sx={{ fontSize: 28 }} />,
     iconBg: 'linear-gradient(135deg, #ffb74d, #ffa424)',
   },
   {
     name: 'Learner',
     description: 'Course consumption with access to enrolled courses, assessments, and certificates',
-    userCount: 24312,
     icon: <LearnerIcon sx={{ fontSize: 28 }} />,
     iconBg: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
   },
   {
     name: 'Finance',
     description: 'Financial oversight including payment tracking, invoices, subscriptions, and revenue reports',
-    userCount: 5,
     icon: <FinanceIcon sx={{ fontSize: 28 }} />,
     iconBg: 'linear-gradient(135deg, #71717a, #a1a1aa)',
   },
@@ -186,22 +180,6 @@ const RolesPermissionsPage: React.FC = () => {
                     {role.description}
                   </Typography>
                 </Box>
-              </Box>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  pt: 2,
-                  borderTop: '1px solid',
-                  borderColor: 'divider',
-                }}
-              >
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  <Box component="span" sx={{ fontWeight: 700, color: 'text.primary', fontSize: '1.1rem' }}>
-                    {role.userCount.toLocaleString()}
-                  </Box>{' '}
-                  users
-                </Typography>
               </Box>
             </Paper>
           </Grid>

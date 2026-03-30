@@ -25,16 +25,7 @@ interface Alert {
   read: boolean;
 }
 
-const alertsData: Alert[] = [
-  { id: '1', title: 'Payment Gateway Down', message: 'M-Pesa gateway is experiencing intermittent failures. Transaction success rate dropped to 62%.', severity: 'critical', time: '5 min ago', read: false },
-  { id: '2', title: 'Revenue Target Exceeded', message: 'Monthly revenue has exceeded the $200K target by 8%. Current: $216,400.', severity: 'success', time: '1 hour ago', read: false },
-  { id: '3', title: 'High Churn Rate Detected', message: 'Subscription churn rate increased to 4.2% this week, above the 3% threshold.', severity: 'warning', time: '3 hours ago', read: false },
-  { id: '4', title: 'Pending Reconciliation', message: '14 transactions from MTN MoMo require manual reconciliation. Total: $3,842.', severity: 'warning', time: '5 hours ago', read: true },
-  { id: '5', title: 'Invoice Overdue', message: 'Invoice INV-2400 for Startup Hub ($1,890) is 3 days overdue. Automatic reminder sent.', severity: 'warning', time: '8 hours ago', read: true },
-  { id: '6', title: 'System Maintenance Scheduled', message: 'Payment processing will be briefly paused on Feb 28 from 2:00-3:00 AM EAT for database maintenance.', severity: 'info', time: '1 day ago', read: true },
-  { id: '7', title: 'New Card Processor Added', message: 'Visa Direct integration has been enabled. Payouts now support instant card transfers.', severity: 'info', time: '2 days ago', read: true },
-  { id: '8', title: 'Quarterly Report Ready', message: 'Q4 2025 financial statements have been generated and are ready for download.', severity: 'success', time: '3 days ago', read: true },
-];
+const alertsData: Alert[] = [];
 
 const severityConfig: Record<AlertSeverity, { icon: React.ReactNode; color: string; bg: string }> = {
   critical: { icon: <ErrorIcon sx={{ fontSize: 20 }} />, color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
@@ -103,10 +94,10 @@ const FinanceAlertsPage: React.FC = () => {
                   const count = alertsData.filter((a) => a.severity === card.sev).length;
                   const cfg = severityConfig[card.sev];
                   return (
-                    <Grid size={{ xs: 6, md: 3 }} key={card.sev}>
+                    <Grid size={{ xs: 6, sm: 6, md: 3 }} key={card.sev}>
                       <Paper elevation={0} sx={{
                         bgcolor: card.bgcolor, borderRadius: '20px', p: 3,
-                        position: 'relative', minHeight: 160, display: 'flex',
+                        position: 'relative', minHeight: { xs: 110, md: 160 }, display: 'flex',
                         flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                         textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer',
                         '&:hover': { transform: 'translateY(-4px)' },
@@ -117,7 +108,7 @@ const FinanceAlertsPage: React.FC = () => {
                           alignItems: 'center', justifyContent: 'center', color: 'white',
                           '& svg': { fontSize: 20 },
                         }}>{cfg.icon}</Box>
-                        <Typography variant="h3" sx={{ fontWeight: 700, color: card.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{count}</Typography>
+                        <Typography variant="h3" sx={{ fontWeight: 700, color: card.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{count}</Typography>
                         <Typography variant="body2" sx={{ color: card.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8, textTransform: 'capitalize' }}>{card.sev}</Typography>
                       </Paper>
                     </Grid>
@@ -133,7 +124,13 @@ const FinanceAlertsPage: React.FC = () => {
               <Typography fontWeight={700}>All Alerts</Typography>
               <Typography variant="caption" color="text.secondary">{filtered.length} alert{filtered.length !== 1 ? 's' : ''}</Typography>
             </Box>
-            {filtered.map((alert, i) => {
+            {filtered.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
+                <BellIcon sx={{ fontSize: 48, color: 'grey.300', mb: 1 }} />
+                <Typography variant="body2">No alerts — alerts feed pending backend implementation</Typography>
+                <Typography variant="caption">Backend task: add financial alerts/notifications endpoint</Typography>
+              </Box>
+            ) : filtered.map((alert, i) => {
               const cfg = severityConfig[alert.severity];
               return (
                 <Box key={alert.id} sx={{

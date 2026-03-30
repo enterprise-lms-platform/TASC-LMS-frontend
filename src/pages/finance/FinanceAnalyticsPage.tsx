@@ -184,11 +184,11 @@ const FinanceAnalyticsPage: React.FC = () => {
               { label: 'Total Transactions', value: kpis.totalTransactions.toLocaleString(), icon: <TransactionsIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
             ].map((kpi) => (
               <Grid size={{ xs: 12, sm: 6, md: 3 }} key={kpi.label}>
-                <Paper elevation={0} sx={{ bgcolor: kpi.bgcolor, borderRadius: '20px', p: 3, position: 'relative', height: '100%', minHeight: 160, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer', '&:hover': { transform: 'translateY(-4px)' } }}>
+                <Paper elevation={0} sx={{ bgcolor: kpi.bgcolor, borderRadius: '20px', p: 3, position: 'relative', height: '100%', minHeight: { xs: 110, md: 160 }, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer', '&:hover': { transform: 'translateY(-4px)' } }}>
                   <Box sx={{ position: 'absolute', top: 16, right: 16, width: 40, height: 40, borderRadius: '50%', bgcolor: kpi.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', '& svg': { fontSize: 20 } }}>
                     {kpi.icon}
                   </Box>
-                  <Typography variant="h3" sx={{ fontWeight: 700, color: kpi.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: kpi.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
                     {kpi.value}
                   </Typography>
                   <Typography variant="body2" sx={{ color: kpi.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>
@@ -200,7 +200,7 @@ const FinanceAnalyticsPage: React.FC = () => {
           </Grid>
 
           <Grid container spacing={3}>
-            <Grid size={{ xs: 12, lg: 8 }}>
+            <Grid size={{ xs: 12, md: 7, lg: 8 }}>
               <Paper elevation={0} sx={cardSx}>
                 <Box sx={headerSx}>
                   <Typography fontWeight={700}>Transaction History</Typography>
@@ -228,7 +228,7 @@ const FinanceAnalyticsPage: React.FC = () => {
               </Paper>
             </Grid>
 
-            <Grid size={{ xs: 12, lg: 4 }}>
+            <Grid size={{ xs: 12, md: 5, lg: 4 }}>
               <Paper elevation={0} sx={cardSx}>
                 <Box sx={headerSx}>
                   <Typography fontWeight={700}>Payment Methods</Typography>
@@ -252,7 +252,7 @@ const FinanceAnalyticsPage: React.FC = () => {
               </Paper>
             </Grid>
 
-            <Grid size={{ xs: 12, lg: 4 }}>
+            <Grid size={{ xs: 12, md: 5, lg: 4 }}>
               <Paper elevation={0} sx={cardSx}>
                 <Box sx={headerSx}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -273,7 +273,7 @@ const FinanceAnalyticsPage: React.FC = () => {
               </Paper>
             </Grid>
 
-            <Grid size={{ xs: 12, lg: 8 }}>
+            <Grid size={{ xs: 12, md: 7, lg: 8 }}>
               <Paper elevation={0} sx={cardSx}>
                 <Box sx={headerSx}>
                   <Typography fontWeight={700}>Top Courses by Revenue</Typography>

@@ -29,7 +29,7 @@ const ProgressPage: React.FC = () => {
     queryFn: () => enrollmentApi.getAll().then(res => res.data),
   });
 
-  const enrollments = enrollmentsData?.results ?? [];
+  const enrollments = Array.isArray(enrollmentsData) ? enrollmentsData : (enrollmentsData as any)?.results ?? [];
 
   // Use enrollments (user-scoped) for milestones, not stats (platform-wide)
   const userCompletedCount = enrollments.filter(e => e.status === 'completed').length;
@@ -106,7 +106,7 @@ const ProgressPage: React.FC = () => {
         {/* KPIs */}
         <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
           {kpis.map((k, index) => (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
+            <Grid size={{ xs: 6, sm: 6, md: 3 }} key={k.label}>
               <Paper
                 elevation={0}
                 className={`stat-card ld-fade-in ld-fade-in-${index}`}
@@ -116,7 +116,7 @@ const ProgressPage: React.FC = () => {
                   p: 3,
                   position: 'relative',
                   height: '100%',
-                  minHeight: 160,
+                  minHeight: { xs: 110, md: 160 },
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'center',
@@ -155,7 +155,7 @@ const ProgressPage: React.FC = () => {
                   sx={{
                     fontWeight: 700,
                     color: k.color,
-                    fontSize: { xs: '2rem', md: '2.5rem' },
+                    fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
                     lineHeight: 1,
                     mb: 1,
                   }}
@@ -182,7 +182,7 @@ const ProgressPage: React.FC = () => {
 
         <Grid container spacing={3}>
           {/* Course Progress — left column */}
-          <Grid size={{ xs: 12, lg: 8 }}>
+          <Grid size={{ xs: 12, md: 7, lg: 8 }}>
             <Paper elevation={0} sx={{ borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
               <Box sx={{ px: 3, pt: 2 }}>
                 <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ minHeight: 40, '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, fontSize: '0.82rem', minHeight: 40, px: 2 }, '& .MuiTabs-indicator': { height: 2.5, borderRadius: 2 } }}>
@@ -219,7 +219,7 @@ const ProgressPage: React.FC = () => {
           </Grid>
 
           {/* Milestones — right column */}
-          <Grid size={{ xs: 12, lg: 4 }}>
+          <Grid size={{ xs: 12, md: 5, lg: 4 }}>
             <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                 <TimelineIcon sx={{ color: 'primary.main', fontSize: 20 }} />

@@ -292,7 +292,7 @@ const SubscriptionManagementPage: React.FC = () => {
             </Stack>
             <Grid container spacing={3}>
               {usageStats.map((stat, i) => (
-                <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={i}>
+                <Grid size={{ xs: 6, sm: 6, md: 3 }} key={i}>
                   <Box sx={{ bgcolor: '#fafafa', p: 2.5, borderRadius: 2, border: '1px solid #e4e4e7' }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

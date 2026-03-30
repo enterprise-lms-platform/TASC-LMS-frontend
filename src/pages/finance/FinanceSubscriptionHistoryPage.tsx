@@ -74,10 +74,10 @@ const FinanceSubscriptionHistoryPage: React.FC = () => {
               { label: 'Pending', value: (transactions || []).filter((e) => e.status === 'pending').length.toString(), icon: <RenewedIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
               { label: 'Failed', value: (transactions || []).filter((e) => e.status === 'failed').length.toString(), icon: <CancelledIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
             ].map((s) => (
-              <Grid size={{ xs: 6, md: 3 }} key={s.label}>
+              <Grid size={{ xs: 6, sm: 6, md: 3 }} key={s.label}>
                 <Paper elevation={0} sx={{
                   bgcolor: s.bgcolor, borderRadius: '20px', p: 3,
-                  position: 'relative', minHeight: 160, display: 'flex',
+                  position: 'relative', minHeight: { xs: 110, md: 160 }, display: 'flex',
                   flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                   textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer',
                   '&:hover': { transform: 'translateY(-4px)' },
@@ -88,7 +88,7 @@ const FinanceSubscriptionHistoryPage: React.FC = () => {
                     alignItems: 'center', justifyContent: 'center', color: 'white',
                     '& svg': { fontSize: 20 },
                   }}>{s.icon}</Box>
-                  <Typography variant="h3" sx={{ fontWeight: 700, color: s.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{s.value}</Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: s.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{s.value}</Typography>
                   <Typography variant="body2" sx={{ color: s.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>{s.label}</Typography>
                 </Paper>
               </Grid>

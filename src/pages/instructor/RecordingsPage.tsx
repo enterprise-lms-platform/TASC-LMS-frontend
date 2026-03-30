@@ -116,7 +116,7 @@ const RecordingsPage: React.FC = () => {
           ) : (
             <Grid container spacing={2}>
               {filtered.map((recording) => (
-                <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={recording.id}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={recording.id}>
                   <Paper
                     elevation={0}
                     sx={{

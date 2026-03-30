@@ -191,7 +191,7 @@ const ManagerBulkImportPage: React.FC = () => {
 
           <Grid container spacing={3}>
             {/* Step 1: Upload CSV */}
-            <Grid size={{ xs: 12, lg: 6 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Paper elevation={0} sx={cardSx}>
                 <Box sx={headerSx}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -350,7 +350,7 @@ const ManagerBulkImportPage: React.FC = () => {
             </Grid>
 
             {/* Step 2: Column Mapping */}
-            <Grid size={{ xs: 12, lg: 6 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Paper elevation={0} sx={{ ...cardSx, opacity: selectedFile ? 1 : 0.7 }}>
                 <Box sx={headerSx}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

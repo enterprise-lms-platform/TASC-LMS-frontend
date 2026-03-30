@@ -372,7 +372,7 @@ const CheckoutPaymentPage: React.FC = () => {
         {/* Grid Layout */}
         <Grid container spacing={4}>
           {/* Payment Section */}
-          <Grid size={{ xs: 12, lg: 7 }}>
+          <Grid size={{ xs: 12, md: 7, lg: 7 }}>
             <Box
               sx={{
                 bgcolor: 'white',
@@ -638,7 +638,7 @@ const CheckoutPaymentPage: React.FC = () => {
           </Grid>
 
           {/* Order Summary - Keep your existing code */}
-          <Grid size={{ xs: 12, lg: 5 }}>
+          <Grid size={{ xs: 12, md: 5, lg: 5 }}>
             {/* ... Your existing Order Summary code ... */}
             <Box
               sx={{

@@ -154,7 +154,7 @@ const ManagerActivityPage: React.FC = () => {
 
           <Grid container spacing={3}>
             {/* Activity Feed */}
-            <Grid size={{ xs: 12, lg: 8 }}>
+            <Grid size={{ xs: 12, md: 7, lg: 8 }}>
               <Paper elevation={0} sx={cardSx}>
                 <Box sx={headerSx}>
                   <Typography fontWeight={700}>Activity Feed</Typography>
@@ -221,7 +221,7 @@ const ManagerActivityPage: React.FC = () => {
             </Grid>
 
             {/* Activity Summary Sidebar */}
-            <Grid size={{ xs: 12, lg: 4 }}>
+            <Grid size={{ xs: 12, md: 5, lg: 4 }}>
               <Paper elevation={0} sx={cardSx}>
                 <Box sx={headerSx}>
                   <Typography fontWeight={700}>Activity Summary</Typography>

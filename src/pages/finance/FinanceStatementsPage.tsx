@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
-  Box, CssBaseline, Toolbar, Typography, Paper, Grid, Button, Chip,
-  Select, MenuItem, FormControl, InputLabel, LinearProgress, Divider, CircularProgress,
+  Box, CssBaseline, Toolbar, Typography, Paper, Grid, Button,
+  Select, MenuItem, FormControl, InputLabel, CircularProgress,
 } from '@mui/material';
 import {
   AccountBalance as StatementsIcon,
@@ -33,22 +33,7 @@ const FinanceStatementsPage: React.FC = () => {
   const totalRev = parseFloat(revenueStats?.total_revenue || '0');
   const paidInv = parseFloat(invoiceStats?.total_revenue || '0');
 
-  const incomeData = {
-    revenue: [
-      { item: 'Paid Invoices', amount: `$${paidInv.toLocaleString()}`, percentage: totalRev > 0 ? (paidInv / totalRev * 100) : 100 },
-      { item: 'Subscriptions', amount: `$${(totalRev * 0.75).toLocaleString()}`, percentage: 75 },
-      { item: 'Certificate Fees', amount: `$${(totalRev * 0.05).toLocaleString()}`, percentage: 5 },
-    ],
-    totalRevenue: `$${totalRev.toLocaleString()}`,
-    expenses: [
-      { item: 'Platform & Infrastructure', amount: `$${(totalRev * 0.15).toLocaleString()}`, percentage: 38 },
-      { item: 'Payment Processing Fees', amount: `$${(totalRev * 0.03).toLocaleString()}`, percentage: 17 },
-      { item: 'Content Creator Payouts', amount: `$${(totalRev * 0.1).toLocaleString()}`, percentage: 24 },
-    ],
-    totalExpenses: `$${(totalRev * 0.3).toLocaleString()}`,
-    netIncome: `$${(totalRev * 0.7).toLocaleString()}`,
-    margin: '70.0%',
-  };
+  const totalRevFmt = totalRev > 0 ? `$${totalRev.toLocaleString()}` : '—';
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -89,15 +74,15 @@ const FinanceStatementsPage: React.FC = () => {
               {/* KPI Stats */}
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 {[
-                  { label: 'Total Revenue', value: incomeData.totalRevenue, icon: <WalletIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-                  { label: 'Net Income', value: incomeData.netIncome, icon: <SavingsIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
-                  { label: 'Total Invoices', value: invoiceStats?.total.toString() || '0', icon: <UpIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-                  { label: 'Profit Margin', value: incomeData.margin, icon: <AssessmentIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+                  { label: 'Total Revenue', value: totalRevFmt, icon: <WalletIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+                  { label: 'Net Income', value: '—', icon: <SavingsIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
+                  { label: 'Total Invoices', value: invoiceStats?.total?.toString() || '—', icon: <UpIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+                  { label: 'Profit Margin', value: '—', icon: <AssessmentIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
                 ].map((s) => (
-                  <Grid size={{ xs: 6, md: 3 }} key={s.label}>
+                  <Grid size={{ xs: 6, sm: 6, md: 3 }} key={s.label}>
                     <Paper elevation={0} sx={{
                       bgcolor: s.bgcolor, borderRadius: '20px', p: 3,
-                      position: 'relative', minHeight: 160, display: 'flex',
+                      position: 'relative', minHeight: { xs: 110, md: 160 }, display: 'flex',
                       flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                       textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer',
                       '&:hover': { transform: 'translateY(-4px)' },
@@ -108,7 +93,7 @@ const FinanceStatementsPage: React.FC = () => {
                         alignItems: 'center', justifyContent: 'center', color: 'white',
                         '& svg': { fontSize: 20 },
                       }}>{s.icon}</Box>
-                      <Typography variant="h3" sx={{ fontWeight: 700, color: s.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{s.value}</Typography>
+                      <Typography variant="h3" sx={{ fontWeight: 700, color: s.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{s.value}</Typography>
                       <Typography variant="body2" sx={{ color: s.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>{s.label}</Typography>
                     </Paper>
                   </Grid>
@@ -120,41 +105,14 @@ const FinanceStatementsPage: React.FC = () => {
                 <Box sx={{ ...headerSx, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography fontWeight={700}>Income Statement</Typography>
                 </Box>
-
-                {/* Revenue */}
-                <Box sx={{ px: 3, pt: 2 }}>
-                  <Typography variant="caption" fontWeight={700} color="text.disabled" sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.65rem' }}>Revenue</Typography>
-                </Box>
-                {incomeData.revenue.map((r) => (
-                  <Box key={r.item} sx={{ display: 'flex', alignItems: 'center', gap: 2, px: 3, py: 1, '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' } }}>
-                    <Typography variant="body2" sx={{ flex: 1, fontSize: '0.8rem' }}>{r.item}</Typography>
-                    <LinearProgress variant="determinate" value={r.percentage} sx={{ width: 60, height: 4, borderRadius: 2, bgcolor: 'grey.100', '& .MuiLinearProgress-bar': { bgcolor: '#10b981', borderRadius: 2 } }} />
-                    <Typography variant="body2" fontWeight={600} sx={{ minWidth: 90, textAlign: 'right', fontFamily: 'monospace', fontSize: '0.8rem' }}>{r.amount}</Typography>
-                  </Box>
-                ))}
-                <Box sx={{ px: 3, py: 1.5, display: 'flex', justifyContent: 'space-between', bgcolor: 'rgba(16,185,129,0.05)', borderTop: 1, borderColor: 'divider' }}>
+                <Box sx={{ px: 3, py: 1.5, display: 'flex', justifyContent: 'space-between', bgcolor: 'rgba(16,185,129,0.05)', borderBottom: 1, borderColor: 'divider' }}>
                   <Typography variant="body2" fontWeight={700} color="success.main">Total Revenue</Typography>
-                  <Typography variant="body2" fontWeight={700} color="success.main" sx={{ fontFamily: 'monospace' }}>{incomeData.totalRevenue}</Typography>
+                  <Typography variant="body2" fontWeight={700} color="success.main" sx={{ fontFamily: 'monospace' }}>{totalRevFmt}</Typography>
                 </Box>
-
-                {/* Expenses */}
-                <Box sx={{ px: 3, pt: 2 }}>
-                  <Typography variant="caption" fontWeight={700} color="text.disabled" sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.65rem' }}>Expenses</Typography>
-                </Box>
-                {incomeData.expenses.map((e) => (
-                  <Box key={e.item} sx={{ display: 'flex', alignItems: 'center', gap: 2, px: 3, py: 1, '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' } }}>
-                    <Typography variant="body2" sx={{ flex: 1, fontSize: '0.8rem' }}>{e.item}</Typography>
-                    <LinearProgress variant="determinate" value={e.percentage} sx={{ width: 60, height: 4, borderRadius: 2, bgcolor: 'grey.100', '& .MuiLinearProgress-bar': { bgcolor: '#ef4444', borderRadius: 2 } }} />
-                    <Typography variant="body2" fontWeight={600} sx={{ minWidth: 90, textAlign: 'right', fontFamily: 'monospace', fontSize: '0.8rem' }}>{e.amount}</Typography>
-                  </Box>
-                ))}
-                <Divider />
-                <Box sx={{ px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: 'rgba(99,102,241,0.04)' }}>
-                  <Box>
-                    <Typography variant="body1" fontWeight={700}>Net Income</Typography>
-                    <Typography variant="caption" color="text.secondary">Margin: {incomeData.margin}</Typography>
-                  </Box>
-                  <Typography variant="h6" fontWeight={800} sx={{ fontFamily: 'monospace', color: '#6366f1' }}>{incomeData.netIncome}</Typography>
+                <Box sx={{ textAlign: 'center', py: 5, color: 'text.secondary' }}>
+                  <AssessmentIcon sx={{ fontSize: 40, color: 'grey.300', mb: 1 }} />
+                  <Typography variant="body2">Detailed income breakdown pending backend implementation</Typography>
+                  <Typography variant="caption">Revenue by category, expense breakdown, and net income require a financial statements API endpoint</Typography>
                 </Box>
               </Paper>
             </>

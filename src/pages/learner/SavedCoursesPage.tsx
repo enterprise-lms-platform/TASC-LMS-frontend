@@ -104,7 +104,7 @@ const SavedCoursesPage: React.FC = () => {
               subColor: '#9a3412',
             },
           ].map((k, index) => (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
+            <Grid size={{ xs: 6, sm: 6, md: 3 }} key={k.label}>
               <Paper
                 elevation={0}
                 className={`stat-card ld-fade-in ld-fade-in-${index}`}
@@ -114,7 +114,7 @@ const SavedCoursesPage: React.FC = () => {
                   p: 3,
                   position: 'relative',
                   height: '100%',
-                  minHeight: 160,
+                  minHeight: { xs: 110, md: 160 },
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'center',
@@ -151,7 +151,7 @@ const SavedCoursesPage: React.FC = () => {
                   sx={{
                     fontWeight: 700,
                     color: k.color,
-                    fontSize: { xs: '2rem', md: '2.5rem' },
+                    fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
                     lineHeight: 1,
                     mb: 1,
                   }}

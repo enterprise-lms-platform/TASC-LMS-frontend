@@ -15,6 +15,7 @@ import {
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
 import { useInvoices } from '../../hooks/usePayments';
+import { invoiceApi } from '../../services/payments.services';
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   paid: { bg: 'rgba(16,185,129,0.1)', color: '#10b981' },
@@ -48,6 +49,14 @@ const FinanceInvoicesPage: React.FC = () => {
 
   const totalOutstanding = (invoices || []).filter((i) => i.status === 'pending' || i.status === 'overdue')
     .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+
+  const handleEmailReceipt = async (id: number) => {
+    try {
+      await invoiceApi.emailReceipt(id);
+    } catch {
+      // silently fail
+    }
+  };
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -84,10 +93,10 @@ const FinanceInvoicesPage: React.FC = () => {
               { label: 'Outstanding', value: `$${totalOutstanding.toLocaleString()}`, icon: <ExportIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
               { label: 'Overdue', value: (invoices || []).filter((i) => i.status === 'overdue').length.toString(), icon: <SendIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
             ].map((s) => (
-              <Grid size={{ xs: 6, md: 3 }} key={s.label}>
+              <Grid size={{ xs: 6, sm: 6, md: 3 }} key={s.label}>
                 <Paper elevation={0} sx={{
                   bgcolor: s.bgcolor, borderRadius: '20px', p: 3,
-                  position: 'relative', minHeight: 160, display: 'flex',
+                  position: 'relative', minHeight: { xs: 110, md: 160 }, display: 'flex',
                   flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                   textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer',
                   '&:hover': { transform: 'translateY(-4px)' },
@@ -98,7 +107,7 @@ const FinanceInvoicesPage: React.FC = () => {
                     alignItems: 'center', justifyContent: 'center', color: 'white',
                     '& svg': { fontSize: 20 },
                   }}>{s.icon}</Box>
-                  <Typography variant="h3" sx={{ fontWeight: 700, color: s.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{s.value}</Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: s.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>{s.value}</Typography>
                   <Typography variant="body2" sx={{ color: s.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>{s.label}</Typography>
                 </Paper>
               </Grid>
@@ -159,7 +168,7 @@ const FinanceInvoicesPage: React.FC = () => {
                 }} />
                 <Box sx={{ display: 'flex', gap: 0.25 }}>
                   {(inv.status === 'pending' || inv.status === 'overdue') && (
-                    <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main' } }}>
+                    <IconButton size="small" title="Email receipt" onClick={() => handleEmailReceipt(inv.id)} sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main' } }}>
                       <SendIcon sx={{ fontSize: 16 }} />
                     </IconButton>
                   )}

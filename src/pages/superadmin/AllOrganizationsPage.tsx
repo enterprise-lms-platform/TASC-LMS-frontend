@@ -126,7 +126,7 @@ const AllOrganizationsPage: React.FC = () => {
     <SuperadminLayout title="All Organizations" subtitle="Manage organizations on the platform">
       <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
         {kpiCards.map((kpi, index) => (
-          <Grid key={kpi.title} size={{ xs: 12, sm: 6, lg: 3 }}>
+          <Grid key={kpi.title} size={{ xs: 12, sm: 6, md: 3 }}>
             <KPICard
               title={kpi.title}
               value={kpi.value}

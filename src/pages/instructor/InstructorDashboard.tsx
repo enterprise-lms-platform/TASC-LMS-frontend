@@ -57,12 +57,12 @@ const InstructorDashboard: React.FC = () => {
           {/* Main Content Grid - Left (2fr) + Right (1fr) */}
           <Grid container spacing={{ xs: 2, md: 3 }}>
             {/* Left Column - Courses */}
-            <Grid size={{ xs: 12, lg: 8 }}>
+            <Grid size={{ xs: 12, md: 7, lg: 8 }}>
               <CoursesSection />
             </Grid>
 
             {/* Right Column - Widgets */}
-            <Grid size={{ xs: 12, lg: 4 }}>
+            <Grid size={{ xs: 12, md: 5, lg: 4 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {/* Pending Tasks */}
                 <PendingTasks />

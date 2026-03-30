@@ -176,17 +176,17 @@ const LearnerCourseCatalogPage: React.FC = () => {
         {/* Stat Cards */}
         <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
           {kpis.map((k, index) => (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={k.label}>
+            <Grid size={{ xs: 6, sm: 6, md: 3 }} key={k.label}>
               <Paper
                 elevation={0}
                 className={`stat-card ld-fade-in ld-fade-in-${index}`}
                 sx={{
                   bgcolor: k.bgcolor,
                   borderRadius: '20px',
-                  p: 3,
+                  p: { xs: 2, md: 3 },
                   position: 'relative',
                   height: '100%',
-                  minHeight: 160,
+                  minHeight: { xs: 110, md: 160 },
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'center',
@@ -200,25 +200,25 @@ const LearnerCourseCatalogPage: React.FC = () => {
                 <Box
                   sx={{
                     position: 'absolute',
-                    top: 16,
-                    right: 16,
-                    width: 40,
-                    height: 40,
+                    top: 12,
+                    right: 12,
+                    width: { xs: 32, md: 40 },
+                    height: { xs: 32, md: 40 },
                     borderRadius: '50%',
                     bgcolor: k.iconBg,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: 'white',
-                    '& svg': { fontSize: 20 },
+                    '& svg': { fontSize: { xs: 16, md: 20 } },
                   }}
                 >
                   {k.icon}
                 </Box>
-                <Typography variant="h3" sx={{ fontWeight: 700, color: k.color, fontSize: { xs: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
+                <Typography variant="h3" sx={{ fontWeight: 700, color: k.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
                   {k.value}
                 </Typography>
-                <Typography variant="body2" sx={{ color: k.subColor, fontWeight: 500, fontSize: '0.875rem', opacity: 0.8 }}>
+                <Typography variant="body2" sx={{ color: k.subColor, fontWeight: 500, fontSize: { xs: '0.7rem', md: '0.875rem' }, opacity: 0.8 }}>
                   {k.label}
                 </Typography>
               </Paper>
@@ -249,7 +249,7 @@ const LearnerCourseCatalogPage: React.FC = () => {
           <SectionHeader title="Most Popular Courses" viewAllText="View All Courses" />
           <Grid container spacing={3}>
             {displayCourses.map((course) => (
-              <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={course.id}>
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={course.id}>
                 <CatalogCourseCard
                   course={course}
                   isFavorite={favorites.includes(course.id)}

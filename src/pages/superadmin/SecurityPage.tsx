@@ -1,34 +1,18 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Box, Paper, Typography, Grid, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Chip, Button, Switch, FormControlLabel, TextField,
-  Divider, Slider, IconButton, Alert,
+  Box, Paper, Typography, Grid, Button, Switch, FormControlLabel, TextField,
+  Divider, Slider, Alert,
 } from '@mui/material';
 import {
   VpnKey as MFAIcon, AccessTime as SessionIcon,
   Lock as PasswordIcon, Shield as ShieldIcon,
-  Block as BlockIcon, Delete as DeleteIcon,
+  Block as BlockIcon,
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import KPICard from '../../components/superadmin/KPICard';
 import { securityApi } from '../../services/organization.services';
 
-const activeSessions = [
-  { user: 'John Kamau', role: 'Super Admin', ip: '196.201.214.xx', device: 'Chrome / macOS', location: 'Nairobi, KE', started: '2 hours ago', status: 'Active' },
-  { user: 'Mary Wambui', role: 'LMS Manager', ip: '41.89.162.xx', device: 'Firefox / Windows', location: 'Nairobi, KE', started: '45 min ago', status: 'Active' },
-  { user: 'Peter Ochieng', role: 'Instructor', ip: '105.48.73.xx', device: 'Safari / iOS', location: 'Mombasa, KE', started: '3 hours ago', status: 'Active' },
-  { user: 'Grace Akinyi', role: 'Learner', ip: '41.75.189.xx', device: 'Chrome / Android', location: 'Kisumu, KE', started: '1 hour ago', status: 'Active' },
-  { user: 'David Mwangi', role: 'Finance', ip: '196.201.220.xx', device: 'Edge / Windows', location: 'Nairobi, KE', started: '20 min ago', status: 'Active' },
-  { user: 'Sarah Nakamura', role: 'Learner', ip: '102.68.45.xx', device: 'Chrome / Windows', location: 'Kampala, UG', started: '5 hours ago', status: 'Idle' },
-  { user: 'James Otieno', role: 'LMS Manager', ip: '41.89.55.xx', device: 'Chrome / Linux', location: 'Nairobi, KE', started: '30 min ago', status: 'Active' },
-  { user: 'Faith Muthoni', role: 'Instructor', ip: '196.201.198.xx', device: 'Firefox / macOS', location: 'Nakuru, KE', started: '4 hours ago', status: 'Idle' },
-];
-
-const sessionStatusColors: Record<string, { bg: string; color: string }> = {
-  Active: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
-  Idle: { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' },
-};
 
 const SecurityPage: React.FC = () => {
   const { data: stats } = useQuery({
@@ -171,37 +155,12 @@ const SecurityPage: React.FC = () => {
 
     {/* Active Sessions Table */}
     <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>Active Sessions</Typography>
-        <Typography variant="body2" color="text.secondary">{activeSessions.length} active sessions</Typography>
+      <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>Active Sessions</Typography>
+      <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
+        <SessionIcon sx={{ fontSize: 48, color: 'grey.300', mb: 1 }} />
+        <Typography variant="body2">Active session list endpoint pending backend implementation</Typography>
+        <Typography variant="caption">Session count shown in stats above is live</Typography>
       </Box>
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              {['User', 'Role', 'IP Address', 'Device', 'Location', 'Started', 'Status', 'Actions'].map((h) => (
-                <TableCell key={h} sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{h}</TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {activeSessions.map((s, i) => (
-              <TableRow key={i} sx={{ '&:hover': { bgcolor: 'rgba(0,0,0,0.015)' } }}>
-                <TableCell><Typography variant="body2" sx={{ fontWeight: 500 }}>{s.user}</Typography></TableCell>
-                <TableCell><Typography variant="body2">{s.role}</Typography></TableCell>
-                <TableCell><Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{s.ip}</Typography></TableCell>
-                <TableCell><Typography variant="body2">{s.device}</Typography></TableCell>
-                <TableCell><Typography variant="body2">{s.location}</Typography></TableCell>
-                <TableCell><Typography variant="body2">{s.started}</Typography></TableCell>
-                <TableCell><Chip label={s.status} size="small" sx={{ bgcolor: sessionStatusColors[s.status]?.bg, color: sessionStatusColors[s.status]?.color, fontWeight: 500, fontSize: '0.75rem' }} /></TableCell>
-                <TableCell>
-                  <IconButton size="small" color="error" sx={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}><DeleteIcon fontSize="small" /></IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
     </Paper>
   </SuperadminLayout>
   );

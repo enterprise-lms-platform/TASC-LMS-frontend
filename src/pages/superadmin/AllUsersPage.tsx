@@ -134,7 +134,7 @@ const AllUsersPage: React.FC = () => {
       {/* KPI Stat Cards */}
       <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
         {kpiStats.map((stat, index) => (
-          <Grid key={stat.title} size={{ xs: 12, sm: 6, lg: 3 }}>
+          <Grid key={stat.title} size={{ xs: 12, sm: 6, md: 3 }}>
             <KPICard
               title={stat.title}
               value={stat.value}
