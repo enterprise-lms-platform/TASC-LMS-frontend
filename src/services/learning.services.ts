@@ -18,7 +18,6 @@ import type {
   SubmissionCreateRequest,
   SubmissionUpdateRequest,
   GradeSubmissionRequest,
-  PaginatedResponse,
 } from '../types/types';
 
 const BASE_PATH = '/api/v1/learning';
@@ -39,7 +38,7 @@ export const enrollmentApi = {
 
   //  List all enrollments for the authenticated user
   getAll: (params?: EnrollmentParams) =>
-    apiClient.get<PaginatedResponse<Enrollment>>(`${BASE_PATH}/enrollments/`, { params }),
+    apiClient.get<Enrollment[]>(`${BASE_PATH}/enrollments/`, { params }),
 
 
   //  Get enrollment details by ID
@@ -266,7 +265,7 @@ export const submissionApi = {
 
   //  List all submissions (instructors see their course submissions, learners see their own)
   getAll: (params?: SubmissionParams) =>
-    apiClient.get<PaginatedResponse<Submission>>(`${BASE_PATH}/submissions/`, { params }),
+    apiClient.get<Submission[]>(`${BASE_PATH}/submissions/`, { params }),
 
   //  Get submission details by ID
   getById: (id: number) =>

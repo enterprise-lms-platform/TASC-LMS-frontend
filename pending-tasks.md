@@ -92,6 +92,7 @@ api.messaging            // messagingApi
 | MED | F32 | InstructorsPage — wire Invite Instructor button | 1 file | Needs backend Task 70 (user invite/email endpoint) |
 | MED | F33 | FinanceInvoicesPage — Create Invoice modal | 1 file | Backend `POST /api/v1/payments/invoices/` EXISTS — needs frontend form/dialog with fields: customer, amount, due_date, line items |
 | MED | F34 | FinancePricingPage — Edit Plans / Manage Plan buttons | 1 file | Needs backend Task 71 (subscription plan PATCH admin endpoint) |
+| MED | F35 | WorkshopsPage — wire to real workshops API | 1 file | Needs backend Task 72 (Workshop model + CRUD endpoints). Currently local-state only (livestreamApi removed — workshops are physical meets, not livestreams) |
 
 ---
 
