@@ -6,6 +6,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { type LoaderFunctionArgs, redirect } from 'react-router-dom';
 import { queryKeys } from '../../hooks/queryKeys';
+import { normalizeEnrollmentListResponse } from '../../hooks/useLearning';
 import { enrollmentApi, sessionProgressApi, certificateApi } from '../../services/learning.services';
 import { courseApi } from '../../services/catalogue.services';
 
@@ -126,7 +127,7 @@ export const learnerCourseDetailLoader = async (
     const enrollments = await queryClient
       .ensureQueryData({
         queryKey: queryKeys.enrollments.all,
-        queryFn: () => enrollmentApi.getAll().then((r) => r.data),
+        queryFn: () => enrollmentApi.getAll().then((r) => normalizeEnrollmentListResponse(r.data)),
         staleTime: 5 * 60 * 1000,
       })
       .catch(() => []);
