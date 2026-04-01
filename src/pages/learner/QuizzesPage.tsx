@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { enrollmentApi, sessionProgressApi } from '../../services/learning.services';
 import { sessionApi } from '../../services/catalogue.services';
 import { queryKeys } from '../../hooks/queryKeys';
+import { normalizeEnrollmentListResponse } from '../../hooks/useLearning';
 import type { SessionProgress, QuizDetailResponse, Enrollment } from '../../types/types';
 import '../../styles/LearnerDashboard.css';
 
@@ -53,7 +54,7 @@ const QuizzesPage: React.FC = () => {
   // Fetch enrollments
   const { data: enrollmentsRes } = useQuery({
     queryKey: queryKeys.enrollments.all,
-    queryFn: () => enrollmentApi.getAll().then((r) => r.data),
+    queryFn: () => enrollmentApi.getAll().then((r) => normalizeEnrollmentListResponse(r.data)),
   });
   const enrollments = enrollmentsRes ?? [];
 

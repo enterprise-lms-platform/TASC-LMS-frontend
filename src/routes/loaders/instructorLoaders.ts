@@ -7,6 +7,7 @@ import { QueryClient } from '@tanstack/react-query';
 import type { LoaderFunctionArgs } from 'react-router-dom';
 import { redirect } from 'react-router-dom';
 import { queryKeys } from '../../hooks/queryKeys';
+import { normalizeEnrollmentListResponse } from '../../hooks/useLearning';
 import { courseApi, categoryApi } from '../../services/catalogue.services';
 import { enrollmentApi, submissionApi } from '../../services/learning.services';
 
@@ -28,7 +29,7 @@ export const instructorDashboardLoader = async (queryClient: QueryClient) => {
     // Fetch enrollments in instructor's courses
     const enrollments = await queryClient.ensureQueryData({
       queryKey: queryKeys.enrollments.all,
-      queryFn: () => enrollmentApi.getAll().then((r) => r.data),
+      queryFn: () => enrollmentApi.getAll().then((r) => normalizeEnrollmentListResponse(r.data)),
       staleTime: 5 * 60 * 1000,
     });
 
@@ -170,7 +171,7 @@ export const instructorLearnersLoader = async (
   try {
     const enrollments = await queryClient.ensureQueryData({
       queryKey: queryKeys.enrollments.all,
-      queryFn: () => enrollmentApi.getAll(params).then((r) => r.data),
+      queryFn: () => enrollmentApi.getAll(params).then((r) => normalizeEnrollmentListResponse(r.data)),
       staleTime: 5 * 60 * 1000,
     });
 
@@ -219,7 +220,10 @@ export const gradebookLoader = async (
   try {
     const enrollments = await queryClient.ensureQueryData({
       queryKey: queryKeys.enrollments.all,
-      queryFn: () => enrollmentApi.getAll({ course: courseId ?? undefined }).then((r) => r.data),
+      queryFn: () =>
+        enrollmentApi
+          .getAll({ course: courseId ?? undefined })
+          .then((r) => normalizeEnrollmentListResponse(r.data)),
       staleTime: 5 * 60 * 1000,
     });
 
@@ -243,7 +247,7 @@ export const instructorAnalyticsLoader = async (
     // Placeholder - depends on analytics service
     const enrollments = await queryClient.ensureQueryData({
       queryKey: queryKeys.enrollments.all,
-      queryFn: () => enrollmentApi.getAll(params).then((r) => r.data),
+      queryFn: () => enrollmentApi.getAll(params).then((r) => normalizeEnrollmentListResponse(r.data)),
       staleTime: 10 * 60 * 1000,
     });
 

@@ -12,6 +12,8 @@ import type { PublicCourseDetail } from '../../types/types';
 import { useAuth } from '../../contexts/AuthContext';
 import { enrollmentApi } from '../../services/learning.services';
 import { useCreateEnrollment } from '../../hooks/useLearning';
+import { normalizeEnrollmentListResponse } from '../../hooks/useLearning';
+import { queryKeys } from '../../hooks/queryKeys';
 
 interface CoursePricingCardProps {
   course?: PublicCourseDetail;
@@ -33,12 +35,12 @@ const CoursePricingCard: React.FC<CoursePricingCardProps> = ({ course }) => {
 
   // Check if user is already enrolled (only when authenticated)
   const { data: enrollmentsData } = useQuery({
-    queryKey: ['enrollments'],
-    queryFn: () => enrollmentApi.getAll().then(r => r.data),
+    queryKey: queryKeys.enrollments.all,
+    queryFn: () => enrollmentApi.getAll().then((r) => normalizeEnrollmentListResponse(r.data)),
     enabled: isAuthenticated,
   });
 
-  const enrollments = Array.isArray(enrollmentsData) ? enrollmentsData : (enrollmentsData as any)?.results || [];
+  const enrollments = Array.isArray(enrollmentsData) ? enrollmentsData : [];
   const isEnrolled = course?.id && enrollments.some((e: any) => e.course === course.id || e.course_id === course.id);
 
   const handleFreeEnroll = async () => {
