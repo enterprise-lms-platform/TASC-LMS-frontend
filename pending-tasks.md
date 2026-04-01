@@ -101,6 +101,9 @@ api.messaging            // messagingApi
 | HIGH | F41 | Testimonials — pull featured reviews from API | `src/components/landing/Testimonials.tsx`, `src/components/business/TestimonialsSection.tsx` | Replace hardcoded arrays with API fetch of superadmin-featured reviews; needs backend Task 73 |
 | HIGH | F42 | Certificate verification — modal on landing + branded results page | `src/components/landing/` (new modal), `src/pages/public/CertificateValidationPage.tsx` | Inline modal on landing page for input; success navigates to redesigned branded results page |
 | HIGH | F43 | Demo form — send to superadmin via backend instead of EmailJS | `src/components/business/BusinessCtaSection.tsx`, new superadmin page | Replace placeholder EmailJS config with POST to backend; new superadmin demo requests page; needs backend Task 74 |
+| MED | F44 | CourseCurriculum — remove hardcoded fallback, add empty state | `src/components/course/CourseCurriculum.tsx` | Delete `defaultModules` demo data; render "Curriculum coming soon" empty state when sessions API returns empty |
+| MED | F45 | CourseObjectives — remove hardcoded fallback, add empty state | `src/components/course/CourseObjectives.tsx` | Delete `defaultObjectives` demo data; render nothing (hide section) when `learning_objectives_list` is empty |
+| MED | F46 | CourseInstructor — wire bio and stats to real API | `src/components/course/CourseInstructor.tsx` | Replace placeholder bio/stats with instructor profile data; needs backend Task 75 |
 
 ---
 
@@ -1270,3 +1273,91 @@ export const useSubmitDemoRequest = () => useMutation({
 - Filter bar: status filter + date range
 - Add route to `router.tsx` under superadmin group: `path: 'demo-requests'`
 - Add nav link in superadmin sidebar
+
+---
+
+## MED PRIORITY — Course Detail Page Gaps (from audit 1 Apr 2026)
+
+### Task F44: CourseCurriculum — Remove Hardcoded Fallback, Add Empty State
+
+**Problem:** `src/components/course/CourseCurriculum.tsx` lines 14–50 define `defaultModules` — a hardcoded "Learn React" demo curriculum. Lines 63–89 render it whenever `sessions.length === 0`. Any real course with no sessions yet shows fake React content to visitors.
+
+**Fix:**
+1. Delete the `defaultModules` constant (lines 14–50)
+2. Update the conditional at lines 63–89 — when `courseId` is set but sessions are empty, render an empty state:
+   ```tsx
+   <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+     <MenuBookIcon sx={{ fontSize: 40, mb: 1, opacity: 0.4 }} />
+     <Typography variant="body2">Curriculum coming soon.</Typography>
+   </Box>
+   ```
+3. When `courseId` is not provided (component used outside course detail context), keep current graceful handling
+4. Keep the loading skeleton while `isLoading` is true
+
+---
+
+### Task F45: CourseObjectives — Remove Hardcoded Fallback, Hide Section When Empty
+
+**Problem:** `src/components/course/CourseObjectives.tsx` lines 9–18 define `defaultObjectives` with demo bullet points. The component defaults to this array if the parent passes an empty `objectives` prop. Courses without a `learning_objectives_list` show fabricated learning goals.
+
+**Fix:**
+1. Delete the `defaultObjectives` constant (lines 9–18)
+2. Change the prop default from `objectives = defaultObjectives` to `objectives = []`
+3. In the render: if `objectives.length === 0`, return `null` — the section simply doesn't render rather than showing placeholder content
+4. No empty state UI needed here — absence of objectives is a valid course state; the section should be invisible, not broken-looking
+
+---
+
+### Task F46: CourseInstructor — Wire Bio and Stats to Real API
+
+**Problem:** `src/components/course/CourseInstructor.tsx` only receives the instructor's `name` prop. Lines 35–48 show hardcoded `"--"` for rating, reviews, students, and courses taught. Line 51–52 shows `"Instructor bio will appear here."`. Social links render but have no `href`.
+
+**Backend dependency:** Task 75 — add `GET /api/v1/public/instructors/{userId}/` returning instructor public profile: `{ bio, rating, total_reviews, total_students, total_courses, social_links: { linkedin?, github?, twitter?, website? } }`. Alternatively extend the existing `PublicCourseDetail` response to embed the full instructor object instead of just `instructor_name`.
+
+**Step 1 — New service method** (`src/services/public.services.ts`):
+```typescript
+export interface PublicInstructorProfile {
+  id: number;
+  name: string;
+  bio: string;
+  rating: number | null;
+  total_reviews: number;
+  total_students: number;
+  total_courses: number;
+  avatar_url?: string | null;
+  social_links: {
+    linkedin?: string;
+    github?: string;
+    twitter?: string;
+    website?: string;
+  };
+}
+
+export const publicInstructorApi = {
+  getById: (userId: number) =>
+    apiClient.get<PublicInstructorProfile>(`/api/v1/public/instructors/${userId}/`),
+};
+```
+Export from `src/services/main.api.ts` under `api.public.instructor`.
+
+**Step 2 — Hook** (`src/hooks/usePublic.ts`, add):
+```typescript
+export const usePublicInstructor = (userId: number | undefined) =>
+  useQuery({
+    queryKey: ['public-instructor', userId],
+    queryFn: () => publicInstructorApi.getById(userId!).then(r => r.data),
+    enabled: !!userId,
+    staleTime: 10 * 60 * 1000,
+  });
+```
+
+**Step 3 — Update `CourseInstructor.tsx`**:
+- Change props from `{ name: string }` to `{ instructorId: number; name: string }`
+- Call `usePublicInstructor(instructorId)` inside the component
+- Replace hardcoded `"--"` with real values from the profile response; show `"--"` only while loading
+- Replace `"Instructor bio will appear here."` with `profile?.bio ?? ''`; hide the bio block entirely if `bio` is empty
+- Wire social icon `href` attributes from `profile?.social_links`; hide icons with no URL
+
+**Step 4 — Update `CourseLandingPage.tsx`**:
+- Pass `instructorId={course.instructor_id}` (or whatever the field is on `PublicCourseDetail`) to `<CourseInstructor />`
+- Verify `PublicCourseDetail` type in `src/types/types.ts` exposes `instructor_id` — add it if missing
