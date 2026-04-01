@@ -50,6 +50,7 @@ const MySchedulePage = lazy(() => import('../pages/learner/MySchedulePage'));
 const SavedCoursesPage = lazy(() => import('../pages/learner/SavedCoursesPage'));
 const LearnerProfilePage = lazy(() => import('../pages/learner/LearnerProfilePage'));
 const CheckoutPaymentPage = lazy(() => import('../pages/learner/CheckoutPaymentPage'));
+const PesapalReturnPage = lazy(() => import('../pages/learner/PesapalReturnPage'));
 const InvoiceReceiptPage = lazy(() => import('../pages/learner/InvoiceReceiptPage'));
 const SubscriptionManagementPage = lazy(() => import('../pages/learner/SubscriptionManagementPage'));
 const PaymentHistoryPage = lazy(() => import('../pages/learner/PaymentHistoryPage'));
@@ -356,6 +357,18 @@ export const createAppRouter = (queryClient: QueryClient) => {
     {
       path: '/invoice',
       element: <SuspenseWrapper><ProtectedRoute><InvoiceReceiptPage /></ProtectedRoute></SuspenseWrapper>,
+    },
+    {
+      path: '/payments/success',
+      element: <SuspenseWrapper><PesapalReturnPage /></SuspenseWrapper>,
+    },
+    {
+      path: '/payments/failed',
+      element: <SuspenseWrapper><PesapalReturnPage /></SuspenseWrapper>,
+    },
+    {
+      path: '/payments/pending',
+      element: <SuspenseWrapper><PesapalReturnPage /></SuspenseWrapper>,
     },
 
     // ═══════════════════════════════════════════════════════════════════════════

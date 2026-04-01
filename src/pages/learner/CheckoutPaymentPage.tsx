@@ -9,37 +9,25 @@ import {
   TextField,
   FormControlLabel,
   Checkbox,
-  RadioGroup,
-  Select,
-  MenuItem,
   CircularProgress,
   Snackbar,
   Alert,
   Grid,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from '@mui/material';
 import {
   Lock as LockIcon,
   School as SchoolIcon,
   Check as CheckIcon,
   CreditCard as CreditCardIcon,
-  PhoneAndroid as PhoneIcon,
-  SimCard as SimCardIcon,
-  Wifi as WifiIcon,
   Person as PersonIcon,
   Email as EmailIcon,
   AccessTime as TimeIcon,
   SignalCellularAlt as LevelIcon,
   Security as SecurityIcon,
   Undo as RefundIcon,
-  VpnKey as PinIcon,
-  Sms as OtpIcon,
 } from '@mui/icons-material';
-import { useFlutterwavePayment } from '../../hooks/useFlutterwavePayment';
 import { useAuth } from '../../hooks/useAuth';
+import { usePesapalInitiatePayment } from '../../hooks/usePayments';
 import type { CourseDetail } from '../../types/types';
 
 // Types
@@ -62,16 +50,13 @@ interface PaymentMethod {
 }
 
 const paymentMethods: PaymentMethod[] = [
-  { id: 'mpesa', name: 'M-Pesa', description: 'Pay via M-Pesa', icon: <PhoneIcon />, color: '#4caf50' },
-  { id: 'mtn', name: 'MTN MoMo', description: 'MTN Mobile Money', icon: <SimCardIcon />, color: '#ffcc00' },
-  { id: 'airtel', name: 'Airtel Money', description: 'Airtel Pay', icon: <WifiIcon />, color: '#ff0000' },
-  { id: 'flutterwave', name: 'Card Payment', description: 'Debit / Credit Card', icon: <CreditCardIcon />, color: '#f5a623' },
-];
-
-const countryCodes = [
-  { code: '+254', flag: '🇰🇪', country: 'Kenya' },
-  { code: '+256', flag: '🇺🇬', country: 'Uganda' },
-  { code: '+255', flag: '🇹🇿', country: 'Tanzania' },
+  {
+    id: 'pesapal',
+    name: 'Pesapal',
+    description: 'Pay securely on hosted Pesapal checkout',
+    icon: <CreditCardIcon />,
+    color: '#f5a623',
+  },
 ];
 
 /** Map a CourseDetail from the loader/API into the checkout shape */
@@ -94,6 +79,7 @@ const CheckoutPaymentPage: React.FC = () => {
   const location = useLocation();
   const loaderData = useLoaderData() as { course?: CourseDetail } | undefined;
   const { user } = useAuth();
+  const pesapalInitiate = usePesapalInitiatePayment();
 
   // Derive course: loader data (from URL param) > route state > redirect
   const stateCourse = (location.state as { course?: CheckoutCourse })?.course;
@@ -107,36 +93,13 @@ const CheckoutPaymentPage: React.FC = () => {
     return null;
   }
 
-  // Flutterwave hook
-  const {
-    step: flwStep,
-    loading: flwLoading,
-    error: flwError,
-    transactionId,
-    handleCardSubmit,
-    handlePINSubmit,
-    handleOTPSubmit,
-    resetPayment,
-  } = useFlutterwavePayment();
-
   // State
-  const [selectedPayment, setSelectedPayment] = useState('mpesa');
-  const [countryCode, setCountryCode] = useState('+254');
-  const [phoneNumber, setPhoneNumber] = useState(user?.phone_number ?? '');
+  const [selectedPayment] = useState('pesapal');
   const [firstName, setFirstName] = useState(user?.first_name ?? '');
   const [lastName, setLastName] = useState(user?.last_name ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // Card fields
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
-  const [cardExpiry, setCardExpiry] = useState(''); // MM/YY format
-
-  // PIN/OTP dialog
-  const [authDialogOpen, setAuthDialogOpen] = useState(false);
-  const [authValue, setAuthValue] = useState('');
 
   const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
@@ -153,136 +116,32 @@ const CheckoutPaymentPage: React.FC = () => {
     setToast({ open: true, message, severity });
   };
 
-  // Open auth dialog when PIN or OTP is needed
-  React.useEffect(() => {
-    if (flwStep === 'pin' || flwStep === 'otp') {
-      setAuthDialogOpen(true);
-      setAuthValue('');
-    }
-  }, [flwStep]);
-
-  // Handle successful payment
-  React.useEffect(() => {
-    if (flwStep === 'success') {
-      setIsProcessing(false);
-      showToast('Payment successful! Redirecting...', 'success');
-      
-      setTimeout(() => {
-        navigate('/invoice', {
-          state: {
-            customerName: `${firstName} ${lastName}`,
-            customerEmail: email,
-            customerPhone: selectedPayment === 'flutterwave' ? undefined : `${countryCode} ${phoneNumber}`,
-            course: {
-              title: course.title,
-              instructor: course.instructor,
-              unitPrice: course.currentPrice,
-              originalPrice: course.currentPrice,
-            },
-            subtotal: subtotal,
-            total: total,
-            paymentMethod: paymentMethods.find(m => m.id === selectedPayment)?.name,
-            transactionId: transactionId,
-          }
-        });
-      }, 1500);
-    }
-  }, [countryCode, course.currentPrice, course.instructor, course.title, email, firstName, flwStep, lastName, navigate, phoneNumber, selectedPayment, subtotal, total, transactionId]);
-
-  // Handle errors
-  React.useEffect(() => {
-    if (flwError) {
-      setIsProcessing(false);
-      showToast(flwError, 'error');
-    }
-  }, [flwError]);
-
   const handlePayment = async () => {
     if (!termsAccepted) {
       showToast('Please accept the terms and conditions', 'error');
       return;
     }
-
-    // Card payment via Flutterwave
-    if (selectedPayment === 'flutterwave') {
-      if (!cardNumber || !cardCvv || !cardExpiry) {
-        showToast('Please fill in all card details', 'error');
-        return;
-      }
-
-      // Parse expiry MM/YY
-      const [expiryMonth, expiryYear] = cardExpiry.split('/');
-      if (!expiryMonth || !expiryYear || expiryMonth.length !== 2 || expiryYear.length !== 2) {
-        showToast('Invalid expiry date format (use MM/YY)', 'error');
-        return;
-      }
-
-      setIsProcessing(true);
-
-      await handleCardSubmit({
-        cardNumber: cardNumber.replace(/\s/g, ''),
-        cvv: cardCvv,
-        expiryMonth,
-        expiryYear,
-        email,
-        amount: total,
-        fullname: `${firstName} ${lastName}`,
-      });
-
-      return;
-    }
-
-    // Mobile money payments (existing logic)
-    if (!phoneNumber) {
-      showToast('Please enter your phone number', 'error');
-      return;
-    }
-
     setIsProcessing(true);
-
-    // Simulate mobile money processing
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    setIsProcessing(false);
-    showToast('Payment successful! Redirecting...', 'success');
-
-    setTimeout(() => {
-      navigate('/invoice', {
-        state: {
-          customerName: `${firstName} ${lastName}`,
-          customerEmail: email,
-          customerPhone: `${countryCode} ${phoneNumber}`,
-          course: {
-            title: course.title,
-            instructor: course.instructor,
-            unitPrice: course.currentPrice,
-            originalPrice: course.currentPrice,
-          },
-          subtotal: subtotal,
-          total: total,
-          paymentMethod: paymentMethods.find(m => m.id === selectedPayment)?.name,
-        }
+    try {
+      const response = await pesapalInitiate.mutateAsync({
+        amount: total.toFixed(2),
+        currency: 'UGX',
+        description: `Course checkout: ${course.title}`,
       });
-    }, 1500);
-  };
-
-  const handleAuthSubmit = () => {
-    if (!authValue) {
-      showToast(`Please enter ${flwStep === 'pin' ? 'PIN' : 'OTP'}`, 'error');
-      return;
-    }
-
-    setAuthDialogOpen(false);
-    
-    if (flwStep === 'pin') {
-      handlePINSubmit(authValue);
-    } else if (flwStep === 'otp') {
-      handleOTPSubmit(authValue);
+      localStorage.setItem(
+        'pesapal_checkout_context',
+        JSON.stringify({
+          paymentId: response.payment_id,
+          courseId: course.id,
+          courseTitle: course.title,
+        }),
+      );
+      window.location.assign(response.redirect_url);
+    } catch {
+      setIsProcessing(false);
+      showToast('Failed to initiate Pesapal checkout. Please try again.', 'error');
     }
   };
-
-  const isMobilePayment = ['mpesa', 'mtn', 'airtel'].includes(selectedPayment);
-  const isCardPayment = selectedPayment === 'flutterwave';
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f4f4f5' }}>
@@ -391,193 +250,74 @@ const CheckoutPaymentPage: React.FC = () => {
 
               <Box sx={{ p: 3 }}>
                 {/* Payment Methods Grid */}
-                <RadioGroup value={selectedPayment} onChange={(e) => setSelectedPayment(e.target.value)}>
-                  <Grid container spacing={1.5} sx={{ mb: 3 }}>
-                    {paymentMethods.map((method) => (
-                      <Grid key={method.id} size={{ xs: 12, sm: 6 }}>
-                        <Box
-                          onClick={() => setSelectedPayment(method.id)}
-                          sx={{
-                            border: '2px solid',
-                            borderColor: selectedPayment === method.id ? '#ffa424' : '#e4e4e7',
-                            borderRadius: 2,
-                            p: 2,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            bgcolor: selectedPayment === method.id ? 'rgba(255, 164, 36, 0.1)' : 'transparent',
-                            '&:hover': {
-                              borderColor: '#ffa424',
-                              bgcolor: 'rgba(255, 164, 36, 0.05)',
-                            },
-                          }}
-                        >
-                          <Stack direction="row" alignItems="center" spacing={1.5}>
-                            <Box
-                              sx={{
-                                width: 48,
-                                height: 32,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                bgcolor: '#f4f4f5',
-                                borderRadius: 1,
-                                color: method.color,
-                              }}
-                            >
-                              {method.icon}
-                            </Box>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography variant="body2" fontWeight={600} color="text.primary">
-                                {method.name}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {method.description}
-                              </Typography>
-                            </Box>
-                            <Box
-                              sx={{
-                                width: 20,
-                                height: 20,
-                                borderRadius: '50%',
-                                border: '2px solid',
-                                borderColor: selectedPayment === method.id ? '#ffa424' : '#d4d4d8',
-                                bgcolor: selectedPayment === method.id ? '#ffa424' : 'transparent',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                              }}
-                            >
-                              {selectedPayment === method.id && <CheckIcon sx={{ fontSize: 12, color: 'white' }} />}
-                            </Box>
-                          </Stack>
-                        </Box>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </RadioGroup>
-
-                {/* Card Payment Form */}
-                {isCardPayment && (
-                  <Box
-                    sx={{
-                      bgcolor: 'rgba(245, 166, 35, 0.05)',
-                      border: '1px solid rgba(245, 166, 35, 0.2)',
-                      borderRadius: 2,
-                      p: 2.5,
-                      mb: 3,
-                    }}
-                  >
-                    <Typography variant="body1" fontWeight={500} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, color: '#27272a' }}>
-                      <CreditCardIcon sx={{ color: '#f5a623' }} />
-                      Card Details
-                    </Typography>
-                    
-                    <Grid container spacing={2}>
-                      <Grid size={{ xs: 12 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                          Card Number <span style={{ color: '#ef4444' }}>*</span>
-                        </Typography>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          placeholder="1234 5678 9012 3456"
-                          value={cardNumber}
-                          onChange={(e) => {
-                            // Format card number with spaces
-                            const value = e.target.value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
-                            setCardNumber(value);
-                          }}
-                          inputProps={{ maxLength: 19 }}
-                        />
-                      </Grid>
-                      
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                          Expiry Date <span style={{ color: '#ef4444' }}>*</span>
-                        </Typography>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          placeholder="MM/YY"
-                          value={cardExpiry}
-                          onChange={(e) => {
-                            // Format as MM/YY
-                            let value = e.target.value.replace(/\D/g, '');
-                            if (value.length >= 2) {
-                              value = value.slice(0, 2) + '/' + value.slice(2, 4);
-                            }
-                            setCardExpiry(value);
-                          }}
-                          inputProps={{ maxLength: 5 }}
-                        />
-                      </Grid>
-                      
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                          CVV <span style={{ color: '#ef4444' }}>*</span>
-                        </Typography>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          type="password"
-                          placeholder="123"
-                          value={cardCvv}
-                          onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, ''))}
-                          inputProps={{ maxLength: 3 }}
-                        />
-                      </Grid>
-                    </Grid>
-                    
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
-                      Your card information is encrypted and secure
-                    </Typography>
-                  </Box>
-                )}
-
-                {/* Mobile Money Form */}
-                {isMobilePayment && (
-                  <Box
-                    sx={{
-                      bgcolor: 'rgba(76, 175, 80, 0.05)',
-                      border: '1px solid rgba(76, 175, 80, 0.2)',
-                      borderRadius: 2,
-                      p: 2.5,
-                      mb: 3,
-                    }}
-                  >
-                    <Typography variant="body1" fontWeight={500} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, color: '#27272a' }}>
-                      <PhoneIcon sx={{ color: '#4caf50' }} />
-                      {selectedPayment === 'mpesa' ? 'M-Pesa' : selectedPayment === 'mtn' ? 'MTN MoMo' : 'Airtel Money'} Payment Details
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      Phone Number <span style={{ color: '#ef4444' }}>*</span>
-                    </Typography>
-                    <Stack direction="row" spacing={1}>
-                      <Select
-                        value={countryCode}
-                        onChange={(e) => setCountryCode(e.target.value)}
-                        size="small"
-                        sx={{ width: 120 }}
+                <Grid container spacing={1.5} sx={{ mb: 3 }}>
+                  {paymentMethods.map((method) => (
+                    <Grid key={method.id} size={{ xs: 12, sm: 6 }}>
+                      <Box
+                        sx={{
+                          border: '2px solid',
+                          borderColor: '#ffa424',
+                          borderRadius: 2,
+                          p: 2,
+                          bgcolor: 'rgba(255, 164, 36, 0.1)',
+                        }}
                       >
-                        {countryCodes.map((cc) => (
-                          <MenuItem key={cc.code} value={cc.code}>
-                            {cc.flag} {cc.code}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        placeholder="712 345 678"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                      />
-                    </Stack>
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                      Enter the phone number registered with your mobile money account
-                    </Typography>
-                  </Box>
-                )}
+                        <Stack direction="row" alignItems="center" spacing={1.5}>
+                          <Box
+                            sx={{
+                              width: 48,
+                              height: 32,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              bgcolor: '#f4f4f5',
+                              borderRadius: 1,
+                              color: method.color,
+                            }}
+                          >
+                            {method.icon}
+                          </Box>
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="body2" fontWeight={600} color="text.primary">
+                              {method.name}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {method.description}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              width: 20,
+                              height: 20,
+                              borderRadius: '50%',
+                              border: '2px solid',
+                              borderColor: '#ffa424',
+                              bgcolor: '#ffa424',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <CheckIcon sx={{ fontSize: 12, color: 'white' }} />
+                          </Box>
+                        </Stack>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+                <Box
+                  sx={{
+                    bgcolor: 'rgba(245, 166, 35, 0.05)',
+                    border: '1px solid rgba(245, 166, 35, 0.2)',
+                    borderRadius: 2,
+                    p: 2.5,
+                    mb: 3,
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    When you click pay, you will be redirected to Pesapal hosted checkout to complete payment securely.
+                  </Typography>
+                </Box>
 
                 {/* Billing Information - same as before */}
                 <Box sx={{ mb: 3 }}>
@@ -742,8 +482,8 @@ const CheckoutPaymentPage: React.FC = () => {
                   variant="contained"
                   size="large"
                   onClick={handlePayment}
-                  disabled={isProcessing || flwLoading}
-                  startIcon={(isProcessing || flwLoading) ? <CircularProgress size={20} color="inherit" /> : <LockIcon />}
+                  disabled={isProcessing || pesapalInitiate.isPending}
+                  startIcon={(isProcessing || pesapalInitiate.isPending) ? <CircularProgress size={20} color="inherit" /> : <LockIcon />}
                   sx={{
                     mt: 3,
                     py: 1.5,
@@ -760,7 +500,7 @@ const CheckoutPaymentPage: React.FC = () => {
                     },
                   }}
                 >
-                  {(isProcessing || flwLoading) ? 'Processing...' : `Pay $${total.toFixed(2)}`}
+                  {(isProcessing || pesapalInitiate.isPending) ? 'Redirecting to Pesapal...' : `Pay $${total.toFixed(2)}`}
                 </Button>
 
                 {/* Security Info */}
@@ -799,63 +539,8 @@ const CheckoutPaymentPage: React.FC = () => {
         </Grid>
       </Box>
 
-      {/* PIN/OTP Dialog */}
-      <Dialog 
-        open={authDialogOpen} 
-        onClose={() => {}}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {flwStep === 'pin' ? <PinIcon sx={{ color: '#ffa424' }} /> : <OtpIcon sx={{ color: '#ffa424' }} />}
-          Enter {flwStep === 'pin' ? 'Card PIN' : 'OTP'}
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {flwStep === 'pin' 
-              ? 'Please enter your 4-digit card PIN to complete the transaction'
-              : 'An OTP has been sent to your phone/email. Please enter it below'}
-          </Typography>
-          <TextField
-            fullWidth
-            type={flwStep === 'pin' ? 'password' : 'text'}
-            placeholder={flwStep === 'pin' ? '****' : '123456'}
-            value={authValue}
-            onChange={(e) => setAuthValue(e.target.value)}
-            inputProps={{ 
-              maxLength: flwStep === 'pin' ? 4 : 6,
-              style: { textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.5rem' }
-            }}
-            autoFocus
-          />
-        </DialogContent>
-        <DialogActions sx={{ p: 2.5, pt: 0 }}>
-          <Button 
-            onClick={() => {
-              setAuthDialogOpen(false);
-              resetPayment();
-              setIsProcessing(false);
-            }}
-            sx={{ color: '#71717a' }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleAuthSubmit}
-            disabled={flwLoading}
-            sx={{
-              background: 'linear-gradient(135deg, #ffa424, #f97316)',
-              '&:hover': { opacity: 0.9 },
-            }}
-          >
-            {flwLoading ? <CircularProgress size={20} color="inherit" /> : 'Submit'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
       {/* Loading Overlay */}
-      {(isProcessing || flwStep === 'processing') && (
+      {(isProcessing || pesapalInitiate.isPending) && (
         <Box
           sx={{
             position: 'fixed',
@@ -876,10 +561,7 @@ const CheckoutPaymentPage: React.FC = () => {
             Processing your payment...
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            {isCardPayment 
-              ? 'Please wait while we process your card payment'
-              : `Please check your phone for the ${selectedPayment === 'mpesa' ? 'M-Pesa' : selectedPayment === 'mtn' ? 'MTN MoMo' : 'Airtel Money'} prompt`
-            }
+            Redirecting you to Pesapal hosted checkout...
           </Typography>
         </Box>
       )}
