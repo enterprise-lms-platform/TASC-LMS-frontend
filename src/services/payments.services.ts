@@ -198,3 +198,33 @@ export const userSubscriptionApi = {
   renew: (id: number) =>
     apiClient.post<UserSubscription>(`${BASE_PATH}/user-subscriptions/${id}/renew/`),
 };
+
+// PESAPAL
+export interface PesapalInitiateRequest {
+  amount: string;
+  currency?: string;
+  description?: string;
+}
+
+export interface PesapalInitiateResponse {
+  payment_id: string;
+  redirect_url: string;
+  order_tracking_id: string;
+}
+
+export interface PesapalPaymentStatusResponse {
+  order_tracking_id: string;
+  status: string;
+  payment_method: string;
+  amount: number;
+  currency: string;
+  confirmation_code: string;
+  message: string;
+}
+
+export const pesapalApi = {
+  initiate: (data: PesapalInitiateRequest) =>
+    apiClient.post<PesapalInitiateResponse>(`${BASE_PATH}/pesapal/initiate/`, data),
+  getStatus: (paymentId: string) =>
+    apiClient.get<PesapalPaymentStatusResponse>(`${BASE_PATH}/pesapal/${paymentId}/status/`),
+};

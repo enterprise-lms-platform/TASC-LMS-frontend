@@ -65,8 +65,9 @@ import {
   useCancelUserSubscription,
   useCreatePaymentMethod,
   useSetDefaultPaymentMethod,
+  useMySubscription,
 } from '../../hooks/usePayments';
-import { invoiceApi, subscriptionApi, paymentMethodApi } from '../../services/payments.services';
+import { invoiceApi, paymentMethodApi } from '../../services/payments.services';
 import { livestreamApi } from '../../services/livestream.services';
 import type { Invoice, PaymentMethod, PaymentMethodType } from '../../types/types';
 
@@ -100,10 +101,7 @@ const SubscriptionManagementPage: React.FC = () => {
       return Array.isArray(d) ? d : (d as { results?: Invoice[] }).results ?? [];
     }),
   });
-  const { data: subStatus } = useQuery({
-    queryKey: ['mySubscriptionStatus'],
-    queryFn: () => subscriptionApi.getMyStatus().then((r) => r.data),
-  });
+  const { data: subStatus } = useMySubscription();
   const { data: activeSubscriptions = [] } = useUserSubscriptions({ status: 'active' });
   const activeSubscriptionId = activeSubscriptions[0]?.id ?? null;
   const { data: livestreamData } = useQuery({
