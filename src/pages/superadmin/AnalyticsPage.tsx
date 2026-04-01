@@ -13,6 +13,7 @@ import KPICard from '../../components/superadmin/KPICard';
 import { publicStatsApi } from '../../services/public.services';
 import { organizationApi } from '../../services/organization.services';
 import { courseApi, enrollmentApi } from '../../services/main.api';
+import { normalizeEnrollmentListResponse } from '../../hooks/useLearning';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -131,7 +132,10 @@ const AnalyticsPage: React.FC = () => {
   }, [orgsData]);
 
   const courses = useMemo(() => coursesData?.data?.results || [], [coursesData]);
-  const enrollments = useMemo(() => enrollmentsData?.data || [], [enrollmentsData]);
+  const enrollments = useMemo(
+    () => normalizeEnrollmentListResponse(enrollmentsData?.data),
+    [enrollmentsData]
+  );
 
   const topCourses = useMemo(() => {
     if (courses.length === 0) return fallbackTopCourses;
