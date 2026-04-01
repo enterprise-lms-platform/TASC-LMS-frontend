@@ -93,6 +93,10 @@ api.messaging            // messagingApi
 | MED | F33 | FinanceInvoicesPage — Create Invoice modal | 1 file | Backend `POST /api/v1/payments/invoices/` EXISTS — needs frontend form/dialog with fields: customer, amount, due_date, line items |
 | MED | F34 | FinancePricingPage — Edit Plans / Manage Plan buttons | 1 file | Needs backend Task 71 (subscription plan PATCH admin endpoint) |
 | MED | F35 | WorkshopsPage — wire to real workshops API | 1 file | Needs backend Task 72 (Workshop model + CRUD endpoints). Currently local-state only (livestreamApi removed — workshops are physical meets, not livestreams) |
+| LOW | F36 | Fix `VITE_API_URL` inconsistency in superadmin service | `src/services/superadmin.services.ts` | Rename `VITE_API_URL` → `VITE_API_BASE_URL` to match rest of codebase; add to `.env.example` |
+| LOW | F37 | Deduplicate `DEV_BYPASS_AUTH` constant | 7 files | Export from `src/utils/config.ts`, import in `ProtectedRoute.tsx` and all 5 loader files — eliminates repeated definition |
+| LOW | F38 | Add automated test suite (Vitest + RTL) | codebase-wide | Add Vitest + React Testing Library; cover auth flow, ProtectedRoute role checks, and one mutation hook as baseline |
+| LOW | F39 | Split router.tsx by role if it exceeds ~1000 lines | `src/routes/router.tsx` | Currently 916 lines. Extract each role group into `src/routes/learnerRoutes.tsx` etc. and compose in router.tsx |
 
 ---
 
@@ -989,3 +993,89 @@ These pages are blocked purely on backend. Once the backend task is completed, t
 | Session Attachments | ✅ Working | `/api/v1/catalogue/session-attachments/` | — |
 | Messaging | ✅ Working | `/api/v1/messaging/` | — |
 | Badges | ✅ Working | `/api/v1/learning/badges/` | — |
+
+---
+
+## LOW PRIORITY — Code Quality & Infrastructure (from audit 1 Apr 2026)
+
+### Task F36: Fix `VITE_API_URL` Inconsistency
+
+**Problem:** `src/services/superadmin.services.ts` references `import.meta.env.VITE_API_URL` which is not declared in `.env.example` and not used anywhere else. The rest of the codebase uses `VITE_API_BASE_URL` (declared in `src/utils/config.ts`). If `VITE_API_URL` is unset it silently falls back to empty string, breaking superadmin API calls.
+
+**Fix:**
+1. In `src/services/superadmin.services.ts` — replace `import.meta.env.VITE_API_URL` with `import.meta.env.VITE_API_BASE_URL`
+2. In `.env.example` — verify `VITE_API_BASE_URL` entry exists (it does); no new entry needed
+
+---
+
+### Task F37: Deduplicate `DEV_BYPASS_AUTH` Constant
+
+**Problem:** `const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;` is copy-pasted into 7 files:
+- `src/utils/config.ts`
+- `src/components/ProtectedRoute.tsx`
+- `src/routes/loaders/learnerLoaders.ts`
+- `src/routes/loaders/sharedLoaders.ts`
+- `src/routes/loaders/instructorLoaders.ts`
+- `src/routes/loaders/financeLoaders.ts`
+- `src/routes/loaders/managerLoaders.ts`
+- `src/routes/loaders/superadminLoaders.ts`
+
+**Fix:**
+1. In `src/utils/config.ts` — export the constant: `export const DEV_BYPASS_AUTH = ...`
+2. In all other 6 files — remove the local declaration and import: `import { DEV_BYPASS_AUTH } from '../utils/config';` (adjust relative path per file)
+
+**Note:** No behavioral change — purely a DRY refactor. Security posture unchanged (still gated by `import.meta.env.DEV`).
+
+---
+
+### Task F38: Add Automated Test Suite (Vitest + React Testing Library)
+
+**Problem:** The codebase has zero automated tests. 421 files, 5 user roles, auth flows, and payment integrations — all untested at runtime.
+
+**Setup:**
+```bash
+npm install -D vitest @vitest/ui jsdom @testing-library/react @testing-library/user-event @testing-library/jest-dom
+```
+
+Add to `vite.config.ts`:
+```typescript
+test: {
+  environment: 'jsdom',
+  globals: true,
+  setupFiles: './src/test/setup.ts',
+}
+```
+
+Create `src/test/setup.ts`:
+```typescript
+import '@testing-library/jest-dom';
+```
+
+Add to `package.json` scripts:
+```json
+"test": "vitest",
+"test:ui": "vitest --ui"
+```
+
+**Baseline tests to write first (highest value):**
+1. `src/components/ProtectedRoute.test.tsx` — verify each role is granted/denied correct routes; verify `DEV_BYPASS_AUTH` behavior
+2. `src/hooks/useAuthQueries.test.ts` — mock `authApi`, verify login mutation calls correct endpoint, stores tokens
+3. `src/utils/config.test.ts` — verify Axios interceptor attaches Bearer token, verify 401 triggers refresh
+
+**Do NOT** add tests for pure MUI display components — TypeScript already catches most prop/type errors at compile time.
+
+---
+
+### Task F39: Split `router.tsx` by Role (Trigger: file exceeds ~1000 lines)
+
+**Current state:** `src/routes/router.tsx` is 916 lines (as of 1 Apr 2026). Not urgent yet.
+
+**When to act:** If route count grows and file crosses ~1000 lines.
+
+**Plan:**
+1. Create `src/routes/learnerRoutes.tsx`, `instructorRoutes.tsx`, `managerRoutes.tsx`, `financeRoutes.tsx`, `superadminRoutes.tsx`
+2. Each file exports a function `(queryClient: QueryClient) => RouteObject[]` containing that role's routes
+3. In `router.tsx`, import and spread each: `...learnerRoutes(queryClient), ...instructorRoutes(queryClient)`
+4. Keep public routes and the top-level router structure in `router.tsx`
+
+**No behavioral change** — pure structural refactor.
