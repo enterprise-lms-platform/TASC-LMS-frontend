@@ -47,7 +47,8 @@ const CourseReviews: React.FC<CourseReviewsProps> = ({
   const [submitError, setSubmitError] = useState('');
 
   const { data: enrollments } = useEnrollments();
-  const isEnrolled = enrollments?.some((e) => e.course === courseId) ?? false;
+  const safeEnrollments = Array.isArray(enrollments) ? enrollments : [];
+  const isEnrolled = safeEnrollments.some((e) => e.course === courseId);
 
   const submitMutation = useMutation({
     mutationFn: (data: { course: number; rating: number; content: string }) =>

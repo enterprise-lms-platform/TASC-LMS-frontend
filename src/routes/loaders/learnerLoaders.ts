@@ -22,7 +22,7 @@ export const learnerDashboardLoader = async (queryClient: QueryClient) => {
     // Fetch user's active enrollments
     const enrollments = await queryClient.ensureQueryData({
       queryKey: queryKeys.enrollments.all,
-      queryFn: () => enrollmentApi.getAll().then((r) => r.data),
+      queryFn: () => enrollmentApi.getAll().then((r) => normalizeEnrollmentListResponse(r.data)),
       staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     });
 
@@ -66,7 +66,7 @@ export const myCoursesLoader = async (queryClient: QueryClient) => {
   try {
     const enrollments = await queryClient.ensureQueryData({
       queryKey: queryKeys.enrollments.all,
-      queryFn: () => enrollmentApi.getAll().then((r) => r.data),
+      queryFn: () => enrollmentApi.getAll().then((r) => normalizeEnrollmentListResponse(r.data)),
       staleTime: 5 * 60 * 1000,
     });
 
@@ -206,7 +206,7 @@ export const learnerAssignmentsLoader = async (queryClient: QueryClient) => {
     // Fetch enrollments to get course IDs, then assignments
     const enrollments = await queryClient.ensureQueryData({
       queryKey: queryKeys.enrollments.all,
-      queryFn: () => enrollmentApi.getAll().then((r) => r.data),
+      queryFn: () => enrollmentApi.getAll().then((r) => normalizeEnrollmentListResponse(r.data)),
       staleTime: 5 * 60 * 1000,
     });
 
@@ -232,7 +232,7 @@ export const learnerProgressLoader = async (queryClient: QueryClient) => {
 
     const enrollments = await queryClient.ensureQueryData({
       queryKey: queryKeys.enrollments.all,
-      queryFn: () => enrollmentApi.getAll().then((r) => r.data),
+      queryFn: () => enrollmentApi.getAll().then((r) => normalizeEnrollmentListResponse(r.data)),
       staleTime: 5 * 60 * 1000,
     });
 
