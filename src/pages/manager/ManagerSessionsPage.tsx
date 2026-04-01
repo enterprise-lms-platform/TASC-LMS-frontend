@@ -70,7 +70,18 @@ const getStatusColor = (status: string) => {
   }
 };
 
-
+interface Session{
+  start_date?: string;
+  end_date?: string;
+  created_at: string;
+  instructor?: {
+    name?: string;
+    email?: string;
+  };
+  duration_minutes?: number;
+  session_type?: string;
+  title: string;
+}
 const ManagerSessionsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('All');
@@ -81,9 +92,9 @@ const ManagerSessionsPage: React.FC = () => {
     queryFn: () => sessionApi.getAll({ page_size: 100 }).then(r => r.data),
   });
 
-  const sessions = sessionsData?.results ?? [];
+  const sessions = useMemo(() => sessionsData?.results ?? [], [sessionsData]);
 
-  const getSessionDisplayStatus = (session: any): 'Upcoming' | 'In Progress' | 'Completed' => {
+  const getSessionDisplayStatus = (session: Session): 'Upcoming' | 'In Progress' | 'Completed' => {
     const now = new Date();
     const start = new Date(session.start_date || session.created_at);
     const end = session.end_date ? new Date(session.end_date) : null;
@@ -92,7 +103,7 @@ const ManagerSessionsPage: React.FC = () => {
     return 'In Progress';
   };
 
-  const getInstructorName = (session: any): string => {
+  const getInstructorName = (session: Session): string => {
     return session.instructor?.name || session.instructor?.email || 'Unknown';
   };
 
@@ -101,19 +112,19 @@ const ManagerSessionsPage: React.FC = () => {
     return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const formatSessionDate = (session: any): string => {
+  const formatSessionDate = (session: Session): string => {
     const date = session.start_date || session.created_at;
     return date ? new Date(date).toLocaleDateString() : '-';
   };
 
-  const formatSessionTime = (session: any): string => {
+  const formatSessionTime = (session: Session): string => {
     const date = session.start_date || session.created_at;
     return date ? new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
   };
 
   const filteredSessions = useMemo(() => {
     if (!sessions.length) return [];
-    return sessions.filter((session: any) => {
+    return sessions.filter((session: Session) => {
       const status = getSessionDisplayStatus(session);
       const matchesStatus = statusFilter === 'All' || status === statusFilter;
       const matchesInstructor = instructorFilter === 'All Instructors' || (session.instructor?.name || '').includes(instructorFilter.replace('All Instructors', ''));
@@ -124,12 +135,12 @@ const ManagerSessionsPage: React.FC = () => {
   const kpis = useMemo(() => {
     if (!sessions.length) return [];
     const now = new Date();
-    const thisWeek = sessions.filter((s: any) => {
+    const thisWeek = sessions.filter((s: Session) => {
       const start = new Date(s.start_date || s.created_at);
       const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
       return start >= now && start <= weekFromNow;
     }).length;
-    const totalHours = sessions.reduce((acc: number, s: any) => acc + (s.duration || 0), 0);
+    const totalHours = sessions.reduce((acc: number, s: Session) => acc + (s.duration_minutes || 0), 0);
     return [
       { label: 'Total Sessions', value: sessions.length.toString(), ...getKpiConfig('Total Sessions') },
       { label: 'This Week', value: thisWeek.toString(), ...getKpiConfig('This Week') },
@@ -140,7 +151,7 @@ const ManagerSessionsPage: React.FC = () => {
 
   const instructorList = useMemo(() => {
     if (!sessions.length) return ['All Instructors'];
-    const uniqueInstructors = new Set<string>(sessions.map((s: any) => s.instructor?.name || s.instructor?.email || 'Unknown').filter((n: any) => Boolean(n)));
+    const uniqueInstructors = new Set<string>(sessions.map((s: Session) => s.instructor?.name || s.instructor?.email || 'Unknown').filter((n: string) => Boolean(n)));
     return ['All Instructors', ...Array.from(uniqueInstructors)];
   }, [sessions]);
 
@@ -267,7 +278,7 @@ const ManagerSessionsPage: React.FC = () => {
                 <FormControl size="small" sx={{ minWidth: 180 }}>
                   <InputLabel>Instructor</InputLabel>
                   <Select value={instructorFilter} onChange={(e) => setInstructorFilter(e.target.value)} label="Instructor">
-                    {instructorList.map((name: any) => (
+                    {instructorList.map((name: string) => (
                       <MenuItem key={name} value={name}>
                         {name}
                       </MenuItem>

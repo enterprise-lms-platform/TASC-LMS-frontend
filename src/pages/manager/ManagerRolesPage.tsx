@@ -70,7 +70,7 @@ const roles = [
   },
 ];
 
-// ── Recent Role Changes ──
+// ── Recent Role Changes ── HARD CODED FOR DEMO PURPOSES ONLY, REPLACE WITH API DATA IN PRODUCTION
 const recentRoleChanges = [
   { user: 'Sarah Mitchell', initials: 'SM', previousRole: 'Learner', newRole: 'Instructor', changedBy: 'Alex Okafor', date: 'Mar 8, 2026' },
   { user: 'David Kim', initials: 'DK', previousRole: 'Learner', newRole: 'Instructor', changedBy: 'Alex Okafor', date: 'Mar 5, 2026' },

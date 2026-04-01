@@ -14,7 +14,6 @@ import {
   IconButton,
   Tooltip,
   InputAdornment,
-  Chip,
 } from '@mui/material';
 import {
   VideoLibrary as VideoLibraryIcon,
@@ -74,14 +73,13 @@ const ManagerRecordingsPage: React.FC = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  const { data: sessionsData, isLoading } = useQuery({
+  const { data: sessionsData } = useQuery({
     queryKey: ['livestreams', 'recordings'],
     queryFn: () => livestreamApi.getAll({ page_size: 100 }).then(r => r.data),
   });
 
-  const sessions = sessionsData?.results ?? [];
-
   const recordings = useMemo(() => {
+    const sessions = sessionsData?.results ?? [];
     return sessions
       .filter(s => s.recording_url && s.status === 'ended')
       .map(s => ({
@@ -95,7 +93,7 @@ const ManagerRecordingsPage: React.FC = () => {
         fileSize: formatFileSize(0),
         recordingUrl: s.recording_url,
       }));
-  }, [sessions]);
+  }, [sessionsData]);
 
   const uniqueCourses = useMemo(() => {
     const courses = new Set(recordings.map(r => r.course).filter(Boolean));

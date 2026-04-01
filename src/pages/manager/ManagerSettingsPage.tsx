@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box,
@@ -96,50 +96,67 @@ const ManagerSettingsPage: React.FC = () => {
     severity: 'success',
   });
 
-  // ── Organization Info state ──
-  const [orgName, setOrgName] = useState('');
-  const [orgDescription, setOrgDescription] = useState('');
-  const [industry, setIndustry] = useState('');
-  const [websiteUrl, setWebsiteUrl] = useState('');
-
-  // ── Branding state ──
-  const [primaryColor, setPrimaryColor] = useState('#ffa424');
-  const [themeMode, setThemeMode] = useState<string>('light');
-
-  // ── Learning Preferences state ──
-  const [defaultLanguage, setDefaultLanguage] = useState('en');
-  const [certificateAutoIssue, setCertificateAutoIssue] = useState(true);
-  const [courseApprovalRequired, setCourseApprovalRequired] = useState(false);
-  const [selfEnrollmentAllowed, setSelfEnrollmentAllowed] = useState(true);
-
-  // ── Data & Privacy state ──
-  const [dataRetention, setDataRetention] = useState('3years');
-  const [gdprCompliance, setGdprCompliance] = useState(true);
-
   // ── Fetching ──
   const { data: org, isLoading } = useQuery({
     queryKey: ['manager-organization'],
     queryFn: () => managerSettingsApi.get().then((res) => res.data),
   });
 
-  useEffect(() => {
-    if (org) {
-      setOrgName(org.name || '');
-      setOrgDescription(org.description || '');
-      setIndustry(org.industry || '');
-      setWebsiteUrl(org.website || '');
-      
-      const s = org.settings || {};
-      setPrimaryColor(s.primaryColor || '#ffa424');
-      setThemeMode(s.themeMode || 'light');
-      setDefaultLanguage(s.defaultLanguage || 'en');
-      setCertificateAutoIssue(s.certificateAutoIssue !== false);
-      setCourseApprovalRequired(!!s.courseApprovalRequired);
-      setSelfEnrollmentAllowed(s.selfEnrollmentAllowed !== false);
-      setDataRetention(s.dataRetention || '3years');
-      setGdprCompliance(s.gdprCompliance !== false);
+  // ── Derived state from org data ──
+  const initialState = useMemo(() => {
+    if (!org) {
+      return {
+        orgName: '',
+        orgDescription: '',
+        industry: '',
+        websiteUrl: '',
+        primaryColor: '#ffa424',
+        themeMode: 'light',
+        defaultLanguage: 'en',
+        certificateAutoIssue: true,
+        courseApprovalRequired: false,
+        selfEnrollmentAllowed: true,
+        dataRetention: '3years',
+        gdprCompliance: true,
+      };
     }
+
+    const s = org.settings || {};
+    return {
+      orgName: org.name || '',
+      orgDescription: org.description || '',
+      industry: org.industry || '',
+      websiteUrl: org.website || '',
+      primaryColor: s.primaryColor || '#ffa424',
+      themeMode: s.themeMode || 'light',
+      defaultLanguage: s.defaultLanguage || 'en',
+      certificateAutoIssue: s.certificateAutoIssue !== false,
+      courseApprovalRequired: !!s.courseApprovalRequired,
+      selfEnrollmentAllowed: s.selfEnrollmentAllowed !== false,
+      dataRetention: s.dataRetention || '3years',
+      gdprCompliance: s.gdprCompliance !== false,
+    };
   }, [org]);
+
+  // ── Organization Info state ──
+  const [orgName, setOrgName] = useState(initialState.orgName);
+  const [orgDescription, setOrgDescription] = useState(initialState.orgDescription);
+  const [industry, setIndustry] = useState(initialState.industry);
+  const [websiteUrl, setWebsiteUrl] = useState(initialState.websiteUrl);
+
+  // ── Branding state ──
+  const [primaryColor, setPrimaryColor] = useState(initialState.primaryColor);
+  const [themeMode, setThemeMode] = useState<string>(initialState.themeMode);
+
+  // ── Learning Preferences state ──
+  const [defaultLanguage, setDefaultLanguage] = useState(initialState.defaultLanguage);
+  const [certificateAutoIssue, setCertificateAutoIssue] = useState(initialState.certificateAutoIssue);
+  const [courseApprovalRequired, setCourseApprovalRequired] = useState(initialState.courseApprovalRequired);
+  const [selfEnrollmentAllowed, setSelfEnrollmentAllowed] = useState(initialState.selfEnrollmentAllowed);
+
+  // ── Data & Privacy state ──
+  const [dataRetention, setDataRetention] = useState(initialState.dataRetention);
+  const [gdprCompliance, setGdprCompliance] = useState(initialState.gdprCompliance);
 
   // ── Mutations ──
   const updateMutation = useMutation({

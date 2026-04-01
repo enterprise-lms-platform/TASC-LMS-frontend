@@ -141,7 +141,7 @@ const ManagerUsersPage: React.FC = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const filtered = users.filter((u: any) => {
+  const filtered = users.filter((u:{ name: string; email: string; is_active: boolean; role: string }) => {
     const matchSearch =
       (u.name || u.email).toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase());
@@ -263,7 +263,7 @@ const ManagerUsersPage: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filtered.map((user: any) => {
+                    {filtered.map((user) => {
                     const isActive = user.is_active;
                     return (
                     <TableRow
@@ -282,7 +282,7 @@ const ManagerUsersPage: React.FC = () => {
                             }}
                           >
                             {user.avatar || user.google_picture ? (
-                              <img src={user.avatar || user.google_picture} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                              <img src={(user.avatar || user.google_picture) ?? ''} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                             ) : (
                               getInitials(user.name || user.email)
                             )}
@@ -323,12 +323,12 @@ const ManagerUsersPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
-                          {formatDate(user.created_at)}
+                          {formatDate(user.created_at || '')}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
-                          {getRelativeTime(user.last_login)}
+                          {getRelativeTime(user.last_login || '')}
                         </Typography>
                       </TableCell>
                       <TableCell align="right">

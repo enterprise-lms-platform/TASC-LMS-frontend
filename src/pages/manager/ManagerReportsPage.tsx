@@ -163,7 +163,7 @@ const ManagerReportsPage: React.FC = () => {
 
           {/* Report Type Cards */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
-            {reportTypesList.map((report: any) => (
+            {reportTypesList.map((report) => (
               <Grid size={{ xs: 12, sm: 6 }} key={report.id}>
                 <Paper
                   elevation={0}
@@ -243,7 +243,7 @@ const ManagerReportsPage: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {reports.map((report: any) => (
+                  {reports.map((report) => (
                     <TableRow key={report.id} hover sx={{ '&:last-child td': { borderBottom: 0 } }}>
                       <TableCell>
                         <Typography variant="body2" fontWeight={600}>{report.name}</Typography>

@@ -54,7 +54,7 @@ const headerSx = {
   gap: 2,
 };
 
-// ── KPI data ──
+// ── KPI data ── HARD CODED FOR DEMO PURPOSES ONLY, REPLACE WITH API DATA IN PRODUCTION
 const kpis = [
   { label: 'Total Quizzes', value: '89', icon: <TotalQuizzesIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
   { label: 'Avg Pass Rate', value: '76.3%', icon: <PassRateIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
@@ -62,7 +62,7 @@ const kpis = [
   { label: 'Avg Score', value: '72%', icon: <ScoreIcon />, bgcolor: '#fef9c3', iconBg: '#facc15', color: '#713f12', subColor: '#854d0e' },
 ];
 
-// ── Mock quiz data ──
+// ── Mock quiz data ── HARD CODED FOR DEMO PURPOSES ONLY, REPLACE WITH API DATA IN PRODUCTION
 const quizzes = [
   { id: 1, title: 'React Fundamentals Quiz', course: 'Advanced React Patterns', questions: 25, timeLimit: '30 min', attempts: 842, passRate: 82, avgScore: 78, status: 'Active' },
   { id: 2, title: 'Python Basics Assessment', course: 'Python for Data Science', questions: 30, timeLimit: '45 min', attempts: 716, passRate: 74, avgScore: 71, status: 'Active' },
@@ -74,7 +74,8 @@ const quizzes = [
   { id: 8, title: 'Agile & Scrum Principles', course: 'Project Management Pro', questions: 15, timeLimit: '20 min', attempts: 438, passRate: 91, avgScore: 88, status: 'Draft' },
 ];
 
-const courses = ['All Courses', 'Advanced React Patterns', 'Python for Data Science', 'AWS Solutions Architect', 'TypeScript Mastery', 'Docker & Kubernetes', 'Database Management', 'Cybersecurity Fundamentals', 'Project Management Pro'];
+// ── Course options ── HARD CODED FOR DEMO PURPOSES ONLY, REPLACE WITH API DATA IN PRODUCTION
+const courses = ['All Courses', 'Advanced React Patterns', 'Python for Data Science', 'AWS Solutions Architect', 'TypeScript Mastery', 'Docker & Kubernetes', 'Database Management', 'Cybersecurity Fundamentals', 'Project Management Pro']; // ── Utility function to determine pass rate color ──
 
 const getPassRateColor = (rate: number) => {
   if (rate > 70) return '#16a34a';

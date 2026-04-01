@@ -55,7 +55,7 @@ const kpis = [
   { label: 'On Track', value: '1,248', icon: <OnTrackIcon />, bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f', subColor: '#1e40af' },
 ];
 
-// ── Course progress overview ──
+// ── Course progress overview ── HARD CODED FOR DEMO PURPOSES ONLY, REPLACE WITH API DATA IN PRODUCTION
 const courseProgress = [
   { name: 'Advanced React Patterns', enrolled: 452, avgProgress: 72, completionRate: 68, color: '#ffa424' },
   { name: 'Python for Data Science', enrolled: 386, avgProgress: 65, completionRate: 58, color: '#3b82f6' },
@@ -65,7 +65,7 @@ const courseProgress = [
   { name: 'Cybersecurity Fundamentals', enrolled: 198, avgProgress: 59, completionRate: 51, color: '#ef4444' },
 ];
 
-// ── At-risk learners ──
+// ── At-risk learners ── HARD CODED FOR DEMO PURPOSES ONLY, REPLACE WITH API DATA IN PRODUCTION
 const atRiskLearners = [
   { id: 1, name: 'Michael Torres', initials: 'MT', course: 'AWS Solutions Architect', progress: 12, daysInactive: 21, lastActivity: 'Feb 17, 2026' },
   { id: 2, name: 'Rachel Green', initials: 'RG', course: 'Docker & Kubernetes', progress: 8, daysInactive: 18, lastActivity: 'Feb 20, 2026' },
