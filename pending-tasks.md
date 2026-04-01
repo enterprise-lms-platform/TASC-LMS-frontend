@@ -97,6 +97,13 @@ api.messaging            // messagingApi
 | LOW | F37 | Deduplicate `DEV_BYPASS_AUTH` constant | 7 files | Export from `src/utils/config.ts`, import in `ProtectedRoute.tsx` and all 5 loader files — eliminates repeated definition |
 | LOW | F38 | Add automated test suite (Vitest + RTL) | codebase-wide | Add Vitest + React Testing Library; cover auth flow, ProtectedRoute role checks, and one mutation hook as baseline |
 | LOW | F39 | Split router.tsx by role if it exceeds ~1000 lines | `src/routes/router.tsx` | Currently 916 lines. Extract each role group into `src/routes/learnerRoutes.tsx` etc. and compose in router.tsx |
+| HIGH | F40 | Review moderation — superadmin approve/reject queue | `src/pages/superadmin/`, `src/components/course/CourseReviews.tsx`, `src/components/learner/course/CourseReviews.tsx` | New superadmin reviews page; course display filtered to approved only; needs backend Task 73 |
+| HIGH | F41 | Testimonials — pull featured reviews from API | `src/components/landing/Testimonials.tsx`, `src/components/business/TestimonialsSection.tsx` | Replace hardcoded arrays with API fetch of superadmin-featured reviews; needs backend Task 73 |
+| HIGH | F42 | Certificate verification — modal on landing + branded results page | `src/components/landing/` (new modal), `src/pages/public/CertificateValidationPage.tsx` | Inline modal on landing page for input; success navigates to redesigned branded results page |
+| HIGH | F43 | Demo form — send to superadmin via backend instead of EmailJS | `src/components/business/BusinessCtaSection.tsx`, new superadmin page | Replace placeholder EmailJS config with POST to backend; new superadmin demo requests page; needs backend Task 74 |
+| MED | F44 | CourseCurriculum — remove hardcoded fallback, add empty state | `src/components/course/CourseCurriculum.tsx` | Delete `defaultModules` demo data; render "Curriculum coming soon" empty state when sessions API returns empty |
+| MED | F45 | CourseObjectives — remove hardcoded fallback, add empty state | `src/components/course/CourseObjectives.tsx` | Delete `defaultObjectives` demo data; render nothing (hide section) when `learning_objectives_list` is empty |
+| MED | F46 | CourseInstructor — wire bio and stats to real API | `src/components/course/CourseInstructor.tsx` | Replace placeholder bio/stats with instructor profile data; needs backend Task 75 |
 
 ---
 
@@ -1079,3 +1086,278 @@ Add to `package.json` scripts:
 4. Keep public routes and the top-level router structure in `router.tsx`
 
 **No behavioral change** — pure structural refactor.
+
+---
+
+## HIGH PRIORITY — Senior Dev Directives (1 Apr 2026)
+
+### Task F40: Review Moderation — Superadmin Approve/Reject Queue
+
+**Context:** Reviews are currently submitted with an `is_approved` flag already in the `CourseReview` type, and the learner submission already shows "pending approval" messaging. The missing piece is the superadmin UI to action them, and ensuring course-side display filters to approved-only.
+
+**Backend dependency:** Task 73 — add `GET /api/v1/superadmin/reviews/` (filterable by `status=pending|approved|rejected`), `POST /api/v1/superadmin/reviews/{id}/approve/`, `POST /api/v1/superadmin/reviews/{id}/reject/`. Also add `is_featured` boolean field to `CourseReview` model for Task F41.
+
+**Step 1 — New superadmin service methods** (`src/services/superadmin.services.ts`):
+```typescript
+export const superadminReviewApi = {
+  getAll: (params?: { status?: 'pending' | 'approved' | 'rejected'; page?: number }) =>
+    apiClient.get<PaginatedResponse<CourseReview>>('/api/v1/superadmin/reviews/', { params }),
+  approve: (id: number) =>
+    apiClient.post(`/api/v1/superadmin/reviews/${id}/approve/`),
+  reject: (id: number) =>
+    apiClient.post(`/api/v1/superadmin/reviews/${id}/reject/`),
+  feature: (id: number, featured: boolean) =>
+    apiClient.patch(`/api/v1/superadmin/reviews/${id}/`, { is_featured: featured }),
+};
+```
+Export from `src/services/main.api.ts` under `api.admin.reviews`.
+
+**Step 2 — Query key** (`src/hooks/queryKeys.ts`):
+```typescript
+superadminReviews: {
+  all: (params?: object) => ['superadmin-reviews', 'list', params ?? {}] as const,
+},
+```
+
+**Step 3 — Hook** (`src/hooks/useSuperadmin.ts`, add):
+```typescript
+export const useSuperadminReviews = (params?: { status?: string; page?: number }) =>
+  useQuery({ queryKey: queryKeys.superadminReviews.all(params), queryFn: () => superadminReviewApi.getAll(params).then(r => r.data) });
+
+export const useApproveReview = () => useMutation({
+  mutationFn: (id: number) => superadminReviewApi.approve(id),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.superadminReviews.all() }),
+});
+
+export const useRejectReview = () => useMutation({
+  mutationFn: (id: number) => superadminReviewApi.reject(id),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.superadminReviews.all() }),
+});
+
+export const useFeatureReview = () => useMutation({
+  mutationFn: ({ id, featured }: { id: number; featured: boolean }) => superadminReviewApi.feature(id, featured),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.superadminReviews.all() }),
+});
+```
+
+**Step 4 — New superadmin page** `src/pages/superadmin/SuperadminReviewsPage.tsx`:
+- Tabs: **Pending** | **Approved** | **Rejected**
+- Each tab shows a table/list: reviewer name, course name, rating (stars), review text (truncated), date submitted
+- Pending tab: Approve button (green) + Reject button (red) per row
+- Approved tab: Reject button + "Feature as Testimonial" toggle (star icon) per row — feature toggle calls `useFeatureReview`
+- Rejected tab: Re-approve button per row
+- Add route to `router.tsx` under superadmin group: `path: 'reviews'` → `<SuperadminReviewsPage />`
+- Add nav link in superadmin sidebar
+
+**Step 5 — Filter course-side display to approved only**:
+- `src/components/course/CourseReviews.tsx` and `src/components/learner/course/CourseReviews.tsx` — verify `courseReviewApi.getAll` already passes `is_approved=true` or that the backend endpoint filters by default. If not, add `{ is_approved: true }` to the params in the `useQuery` call for public-facing review lists.
+- The review submission success message ("pending approval") is already correct — keep it.
+
+---
+
+### Task F41: Testimonials — Pull Superadmin-Featured Reviews from API
+
+**Context:** Both `Testimonials.tsx` (landing page) and `TestimonialsSection.tsx` (for-business page) use hardcoded arrays. Reviews marked `is_featured: true` by the superadmin (via Task F40) should populate these sections.
+
+**Backend dependency:** Task 73 — add `GET /api/v1/public/testimonials/` returning featured reviews. Response shape should match or be mappable to the current testimonial card data (name, role/company, avatar/initials, text).
+
+**Step 1 — Public service method** (`src/services/public.services.ts`):
+```typescript
+export const publicTestimonialApi = {
+  getAll: () =>
+    apiClient.get<PaginatedResponse<CourseReview>>('/api/v1/public/testimonials/'),
+};
+```
+Export from `src/services/main.api.ts` under `api.public.testimonial`.
+
+**Step 2 — Hook** (`src/hooks/usePublic.ts`, add):
+```typescript
+export const useTestimonials = () =>
+  useQuery({
+    queryKey: ['testimonials'],
+    queryFn: () => publicTestimonialApi.getAll().then(r => r.data),
+    staleTime: 10 * 60 * 1000,
+  });
+```
+
+**Step 3 — Update `src/components/landing/Testimonials.tsx`**:
+- Replace hardcoded `testimonials` array with `const { data } = useTestimonials()`
+- Map `data?.results ?? []` — derive display fields from `CourseReview`:
+  - `name` → reviewer's `user_name`
+  - `role` → course title (e.g., "Learner — {course_title}")
+  - `initials` → first two letters of `user_name`
+  - `avatar` → reviewer avatar URL if available, else initials fallback
+  - `text` → review `content`
+- Keep the current card layout; just swap the data source
+- Show a loading skeleton (3 placeholder cards) while fetching
+- If API returns empty, fall back to existing hardcoded array so the landing page never looks bare
+
+**Step 4 — Update `src/components/business/TestimonialsSection.tsx`**:
+- Same changes as Step 3; the `company` field can be omitted or left blank if not in the API response
+
+---
+
+### Task F42: Certificate Verification — Inline Modal on Landing + Branded Results Page
+
+**Context:** `CertificateValidationPage.tsx` is currently a standalone full page at `/certificate/validate`. The landing page should let users verify without leaving — via a modal. On success, navigate to a well-branded results page (redesigned `CertificateValidationPage.tsx`).
+
+**API already exists:** `GET /api/v1/learning/certificates/verify/?certificate_number={n}` returns the `Certificate` type. No backend changes needed.
+
+**Step 1 — New modal component** `src/components/landing/CertificateVerifyModal.tsx`:
+- Triggered by a "Verify Certificate" button/link already present on the landing page (find and wire it)
+- Modal contains: TASC logo, heading "Verify Certificate", single text input "Certificate Number", Submit button
+- On submit: calls `certificateApi.verify(certificateNumber)` from `src/services/learning.services.ts`
+- On success: close modal, navigate to `/certificate/result?cert={certificateNumber}` using `useNavigate`
+- On failure (not found / invalid): show inline error inside the modal — "Certificate not found. Please check the number and try again."
+- Loading state: disable button + show spinner on input row
+
+**Step 2 — New branded results page** `src/pages/public/CertificateResultPage.tsx`:
+- Route: `/certificate/result` (add to public routes in `router.tsx`, no auth required)
+- Reads `?cert=` query param on mount, calls `certificateApi.verify()` automatically
+- **Branded layout:**
+  - Full-page centered layout with TASC logo at top
+  - Large green checkmark icon (or red X for invalid/expired)
+  - Certificate number displayed prominently
+  - Details card: Holder Name, Course Title, Date Awarded, Expiry Date (if set)
+  - "This certificate was issued by TASC Learning Management System" footer line
+  - Download PDF button if `pdf_url` is present on the response
+  - "Verify Another" button → reopens the modal (navigate back to `/` with a flag, or just link to `/`)
+- For invalid/expired: red X, "This certificate is not valid" heading, brief explanation
+
+**Step 3 — Wire modal into landing page**:
+- In `src/pages/public/LandingPage.tsx` or whichever component holds the "Verify Certificate" CTA — import `CertificateVerifyModal`, add `open` state, wire the button to open the modal
+- The existing `CertificateValidationPage.tsx` can remain as a direct-link fallback (keep route `/certificate/validate`); the new `/certificate/result` is for the branded display
+
+---
+
+### Task F43: Demo Form — Send to Superadmin via Backend
+
+**Context:** `src/components/business/BusinessCtaSection.tsx` uses EmailJS with placeholder credentials (`YOUR_SERVICE_ID` etc.), so it is currently non-functional. The senior dev wants demo requests to go to the superadmin dashboard instead.
+
+**Backend dependency:** Task 74 — `POST /api/v1/public/demo-requests/` (no auth, public endpoint) accepting `{ first_name, last_name, email, company, team_size, phone? }`. New `DemoRequest` model. Superadmin endpoint `GET /api/v1/superadmin/demo-requests/` with status management (new/contacted/closed).
+
+**Step 1 — Public service method** (`src/services/public.services.ts`):
+```typescript
+export interface DemoRequestPayload {
+  first_name: string;
+  last_name: string;
+  email: string;
+  company: string;
+  team_size: string;
+  phone?: string;
+}
+
+export const demoRequestApi = {
+  submit: (data: DemoRequestPayload) =>
+    apiClient.post('/api/v1/public/demo-requests/', data),
+};
+```
+Export from `src/services/main.api.ts` under `api.public.demoRequest`.
+
+**Step 2 — Hook** (`src/hooks/usePublic.ts`, add):
+```typescript
+export const useSubmitDemoRequest = () => useMutation({
+  mutationFn: (data: DemoRequestPayload) => demoRequestApi.submit(data),
+});
+```
+
+**Step 3 — Update `src/components/business/BusinessCtaSection.tsx`**:
+- Remove all EmailJS imports and the three `EMAILJS_*` constants (Lines 20-23)
+- Replace the `emailjs.send(...)` call in the submit handler with `useSubmitDemoRequest().mutateAsync(payload)`
+- Keep the existing form fields, success message, and error message — only swap the submission mechanism
+- Error message: change generic text to "Failed to submit. Please try again or email us at admin@tasc.co.ug"
+
+**Step 4 — New superadmin page** `src/pages/superadmin/SuperadminDemoRequestsPage.tsx`:
+- Table columns: Name, Company, Email, Team Size, Phone, Date Submitted, Status
+- Status dropdown per row: **New** | **Contacted** | **Closed** (calls `PATCH /api/v1/superadmin/demo-requests/{id}/`)
+- Filter bar: status filter + date range
+- Add route to `router.tsx` under superadmin group: `path: 'demo-requests'`
+- Add nav link in superadmin sidebar
+
+---
+
+## MED PRIORITY — Course Detail Page Gaps (from audit 1 Apr 2026)
+
+### Task F44: CourseCurriculum — Remove Hardcoded Fallback, Add Empty State
+
+**Problem:** `src/components/course/CourseCurriculum.tsx` lines 14–50 define `defaultModules` — a hardcoded "Learn React" demo curriculum. Lines 63–89 render it whenever `sessions.length === 0`. Any real course with no sessions yet shows fake React content to visitors.
+
+**Fix:**
+1. Delete the `defaultModules` constant (lines 14–50)
+2. Update the conditional at lines 63–89 — when `courseId` is set but sessions are empty, render an empty state:
+   ```tsx
+   <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+     <MenuBookIcon sx={{ fontSize: 40, mb: 1, opacity: 0.4 }} />
+     <Typography variant="body2">Curriculum coming soon.</Typography>
+   </Box>
+   ```
+3. When `courseId` is not provided (component used outside course detail context), keep current graceful handling
+4. Keep the loading skeleton while `isLoading` is true
+
+---
+
+### Task F45: CourseObjectives — Remove Hardcoded Fallback, Hide Section When Empty
+
+**Problem:** `src/components/course/CourseObjectives.tsx` lines 9–18 define `defaultObjectives` with demo bullet points. The component defaults to this array if the parent passes an empty `objectives` prop. Courses without a `learning_objectives_list` show fabricated learning goals.
+
+**Fix:**
+1. Delete the `defaultObjectives` constant (lines 9–18)
+2. Change the prop default from `objectives = defaultObjectives` to `objectives = []`
+3. In the render: if `objectives.length === 0`, return `null` — the section simply doesn't render rather than showing placeholder content
+4. No empty state UI needed here — absence of objectives is a valid course state; the section should be invisible, not broken-looking
+
+---
+
+### Task F46: CourseInstructor — Wire Bio and Stats to Real API
+
+**Problem:** `src/components/course/CourseInstructor.tsx` only receives the instructor's `name` prop. Lines 35–48 show hardcoded `"--"` for rating, reviews, students, and courses taught. Line 51–52 shows `"Instructor bio will appear here."`. Social links render but have no `href`.
+
+**Backend dependency:** Task 75 — add `GET /api/v1/public/instructors/{userId}/` returning instructor public profile: `{ bio, rating, total_reviews, total_students, total_courses, social_links: { linkedin?, github?, twitter?, website? } }`. Alternatively extend the existing `PublicCourseDetail` response to embed the full instructor object instead of just `instructor_name`.
+
+**Step 1 — New service method** (`src/services/public.services.ts`):
+```typescript
+export interface PublicInstructorProfile {
+  id: number;
+  name: string;
+  bio: string;
+  rating: number | null;
+  total_reviews: number;
+  total_students: number;
+  total_courses: number;
+  avatar_url?: string | null;
+  social_links: {
+    linkedin?: string;
+    github?: string;
+    twitter?: string;
+    website?: string;
+  };
+}
+
+export const publicInstructorApi = {
+  getById: (userId: number) =>
+    apiClient.get<PublicInstructorProfile>(`/api/v1/public/instructors/${userId}/`),
+};
+```
+Export from `src/services/main.api.ts` under `api.public.instructor`.
+
+**Step 2 — Hook** (`src/hooks/usePublic.ts`, add):
+```typescript
+export const usePublicInstructor = (userId: number | undefined) =>
+  useQuery({
+    queryKey: ['public-instructor', userId],
+    queryFn: () => publicInstructorApi.getById(userId!).then(r => r.data),
+    enabled: !!userId,
+    staleTime: 10 * 60 * 1000,
+  });
+```
+
+**Step 3 — Update `CourseInstructor.tsx`**:
+- Change props from `{ name: string }` to `{ instructorId: number; name: string }`
+- Call `usePublicInstructor(instructorId)` inside the component
+- Replace hardcoded `"--"` with real values from the profile response; show `"--"` only while loading
+- Replace `"Instructor bio will appear here."` with `profile?.bio ?? ''`; hide the bio block entirely if `bio` is empty
+- Wire social icon `href` attributes from `profile?.social_links`; hide icons with no URL
+
+**Step 4 — Update `CourseLandingPage.tsx`**:
+- Pass `instructorId={course.instructor_id}` (or whatever the field is on `PublicCourseDetail`) to `<CourseInstructor />`
+- Verify `PublicCourseDetail` type in `src/types/types.ts` exposes `instructor_id` — add it if missing
