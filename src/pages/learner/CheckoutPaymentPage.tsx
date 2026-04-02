@@ -1,6 +1,6 @@
 // CheckoutPaymentPage.tsx
 import React, { useState } from 'react';
-import { useNavigate, useLocation, useLoaderData } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -16,30 +16,15 @@ import {
 } from '@mui/material';
 import {
   Lock as LockIcon,
-  School as SchoolIcon,
   Check as CheckIcon,
   CreditCard as CreditCardIcon,
   Person as PersonIcon,
   Email as EmailIcon,
-  AccessTime as TimeIcon,
-  SignalCellularAlt as LevelIcon,
   Security as SecurityIcon,
   Undo as RefundIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
-import { usePesapalInitiatePayment } from '../../hooks/usePayments';
-import type { CourseDetail } from '../../types/types';
-
-// Types
-interface CheckoutCourse {
-  id: string;
-  title: string;
-  instructor: string;
-  duration: string;
-  level: string;
-  originalPrice: number;
-  currentPrice: number;
-}
+import { useMySubscription, usePesapalInitiateSubscription, useSubscriptions } from '../../hooks/usePayments';
 
 interface PaymentMethod {
   id: string;
@@ -59,37 +44,19 @@ const paymentMethods: PaymentMethod[] = [
   },
 ];
 
-/** Map a CourseDetail from the loader/API into the checkout shape */
-function toCourseCheckout(c: CourseDetail): CheckoutCourse {
-  const price = parseFloat(c.price) || 0;
-  const discounted = parseFloat(c.discounted_price) || price;
-  return {
-    id: String(c.id),
-    title: c.title,
-    instructor: c.instructor_name || 'Instructor',
-    duration: c.duration_hours ? `${c.duration_hours} hours` : 'Self-paced',
-    level: c.level || 'All Levels',
-    originalPrice: price,
-    currentPrice: discounted,
-  };
-}
-
 const CheckoutPaymentPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const loaderData = useLoaderData() as { course?: CourseDetail } | undefined;
   const { user } = useAuth();
-  const pesapalInitiate = usePesapalInitiatePayment();
+  const { data: subStatus } = useMySubscription();
+  const { data: plansResponse = [], isLoading: plansLoading } = useSubscriptions();
+  const pesapalInitiate = usePesapalInitiateSubscription();
 
-  // Derive course: loader data (from URL param) > route state > redirect
-  const stateCourse = (location.state as { course?: CheckoutCourse })?.course;
-  const course: CheckoutCourse | null = loaderData?.course
-    ? toCourseCheckout(loaderData.course)
-    : stateCourse ?? null;
+  const plans = plansResponse ?? [];
+  const plan = plans.find((p: any) => p?.status === 'active') ?? plans[0];
+  const hasActiveSubscription = subStatus?.has_active_subscription ?? false;
 
-  // If no course data at all, redirect back to catalogue
-  if (!course) {
-    navigate('/learner/courses', { replace: true });
+  if (hasActiveSubscription) {
+    navigate('/learner/subscription', { replace: true });
     return null;
   }
 
@@ -107,8 +74,7 @@ const CheckoutPaymentPage: React.FC = () => {
     severity: 'success',
   });
 
-  // Calculate prices
-  const subtotal = course.currentPrice;
+  const subtotal = plan ? parseFloat(plan.price) : 0;
   const processingFee = 0;
   const total = subtotal + processingFee;
 
@@ -121,25 +87,28 @@ const CheckoutPaymentPage: React.FC = () => {
       showToast('Please accept the terms and conditions', 'error');
       return;
     }
+    if (!plan?.id) {
+      showToast('No subscription plan is available right now. Please try again later.', 'error');
+      return;
+    }
     setIsProcessing(true);
     try {
       const response = await pesapalInitiate.mutateAsync({
-        amount: total.toFixed(2),
+        subscription_id: plan.id,
         currency: 'UGX',
-        description: `Course checkout: ${course.title}`,
       });
       localStorage.setItem(
         'pesapal_checkout_context',
         JSON.stringify({
           paymentId: response.payment_id,
-          courseId: course.id,
-          courseTitle: course.title,
+          subscriptionId: plan.id,
+          planName: plan.name,
         }),
       );
       window.location.assign(response.redirect_url);
     } catch {
       setIsProcessing(false);
-      showToast('Failed to initiate Pesapal checkout. Please try again.', 'error');
+      showToast('Failed to initiate Pesapal subscription checkout. Please try again.', 'error');
     }
   };
 
@@ -182,7 +151,7 @@ const CheckoutPaymentPage: React.FC = () => {
         {/* Steps - same as before */}
         <Stack direction="row" justifyContent="center" alignItems="center" flexWrap="wrap" sx={{ mb: 4, gap: 2 }}>
           {[
-            { number: 1, label: 'Course Selected', completed: true },
+            { number: 1, label: 'Plan Selected', completed: true },
             { number: 2, label: 'Payment', active: true },
             { number: 3, label: 'Confirmation', completed: false },
           ].map((step, index) => (
@@ -377,9 +346,8 @@ const CheckoutPaymentPage: React.FC = () => {
             </Box>
           </Grid>
 
-          {/* Order Summary - Keep your existing code */}
+          {/* Order Summary */}
           <Grid size={{ xs: 12, md: 5, lg: 5 }}>
-            {/* ... Your existing Order Summary code ... */}
             <Box
               sx={{
                 bgcolor: 'white',
@@ -396,7 +364,7 @@ const CheckoutPaymentPage: React.FC = () => {
               </Box>
 
               <Box sx={{ p: 3 }}>
-                {/* Course Item */}
+                {/* Plan Item */}
                 <Stack direction="row" spacing={2} sx={{ pb: 2.5, mb: 2.5, borderBottom: '1px solid #e4e4e7' }}>
                   <Box
                     sx={{
@@ -412,30 +380,24 @@ const CheckoutPaymentPage: React.FC = () => {
                       flexShrink: 0,
                     }}
                   >
-                    <SchoolIcon />
+                    <CreditCardIcon />
                   </Box>
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="body2" fontWeight={600} color="text.primary" sx={{ mb: 0.5 }}>
-                      {course.title}
+                      {plan?.name || (plansLoading ? 'Loading plan…' : 'Subscription')}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                      by {course.instructor}
+                      Subscription activation (6 months)
                     </Typography>
                     <Stack direction="row" spacing={1.5}>
                       <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <TimeIcon sx={{ fontSize: 14 }} /> {course.duration}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <LevelIcon sx={{ fontSize: 14 }} /> {course.level}
+                        Unlock all courses after backend confirmation.
                       </Typography>
                     </Stack>
                   </Box>
                   <Box sx={{ textAlign: 'right' }}>
-                    <Typography variant="caption" sx={{ color: '#a1a1aa', textDecoration: 'line-through' }}>
-                      ${course.originalPrice.toFixed(2)}
-                    </Typography>
                     <Typography variant="body1" fontWeight={700} color="text.primary">
-                      ${course.currentPrice.toFixed(2)}
+                      ${total.toFixed(2)}
                     </Typography>
                   </Box>
                 </Stack>
@@ -500,7 +462,7 @@ const CheckoutPaymentPage: React.FC = () => {
                     },
                   }}
                 >
-                  {(isProcessing || pesapalInitiate.isPending) ? 'Redirecting to Pesapal...' : `Pay $${total.toFixed(2)}`}
+                  {(isProcessing || pesapalInitiate.isPending) ? 'Redirecting to Pesapal...' : `Activate Subscription — $${total.toFixed(2)}`}
                 </Button>
 
                 {/* Security Info */}

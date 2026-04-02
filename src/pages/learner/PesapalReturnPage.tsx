@@ -14,7 +14,7 @@ const PesapalReturnPage: React.FC = () => {
   const context = React.useMemo(() => {
     try {
       const raw = localStorage.getItem('pesapal_checkout_context');
-      return raw ? (JSON.parse(raw) as { paymentId?: string; courseId?: string }) : {};
+      return raw ? (JSON.parse(raw) as { paymentId?: string; subscriptionId?: number; planName?: string }) : {};
     } catch {
       return {};
     }
@@ -82,7 +82,7 @@ const PesapalReturnPage: React.FC = () => {
               {hasActiveSubscription ? 'Go to My Courses' : 'Go to Subscription'}
             </Button>
             <Button component={Link} to="/checkout" variant="outlined">
-              Back to Checkout
+              Back to Subscription Checkout
             </Button>
           </Stack>
         </Stack>

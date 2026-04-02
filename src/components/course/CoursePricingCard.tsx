@@ -197,10 +197,10 @@ const CoursePricingCard: React.FC<CoursePricingCardProps> = ({ course }) => {
                   size="large"
                   fullWidth
                   startIcon={<ShoppingCartIcon />}
-                  href={`/checkout?course=${course?.slug || ''}`}
+                  href="/learner/subscription"
                   sx={{ bgcolor: '#ffa424', fontWeight: 700, '&:hover': { bgcolor: '#f97316' } }}
                 >
-                  Get Full Access
+                  Activate Subscription
                 </Button>
               )}
             </Stack>

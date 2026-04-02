@@ -222,9 +222,23 @@ export interface PesapalPaymentStatusResponse {
   message: string;
 }
 
+export interface PesapalRecurringInitiateRequest {
+  subscription_id: number;
+  currency?: string;
+}
+
+export interface PesapalRecurringInitiateResponse {
+  payment_id: string;
+  redirect_url: string;
+  order_tracking_id: string;
+  subscription_id: number;
+}
+
 export const pesapalApi = {
   initiate: (data: PesapalInitiateRequest) =>
     apiClient.post<PesapalInitiateResponse>(`${BASE_PATH}/pesapal/initiate/`, data),
+  initiateRecurring: (data: PesapalRecurringInitiateRequest) =>
+    apiClient.post<PesapalRecurringInitiateResponse>(`${BASE_PATH}/pesapal/recurring/initiate/`, data),
   getStatus: (paymentId: string) =>
     apiClient.get<PesapalPaymentStatusResponse>(`${BASE_PATH}/pesapal/${paymentId}/status/`),
 };

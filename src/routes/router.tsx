@@ -348,11 +348,6 @@ export const createAppRouter = (queryClient: QueryClient) => {
     {
       path: '/checkout',
       element: <SuspenseWrapper><ProtectedRoute><CheckoutPaymentPage /></ProtectedRoute></SuspenseWrapper>,
-      loader: async ({ request }) => {
-        const url = new URL(request.url);
-        const courseId = url.searchParams.get('courseId') || url.searchParams.get('course');
-        return learnerLoaders.checkoutLoader(queryClient, { courseId: courseId || undefined });
-      },
     },
     {
       path: '/invoice',

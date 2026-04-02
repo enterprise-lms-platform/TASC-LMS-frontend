@@ -47,7 +47,9 @@ const EnrollmentModal: React.FC<EnrollmentModalProps> = ({ open, onClose, course
 
   const handleGoToCheckout = () => {
     onClose();
-    navigate(`/checkout?course=${encodeURIComponent(courseSlug || '')}`);
+    navigate('/learner/subscription', {
+      state: { fromCourseId: courseId, message: 'An active subscription is required to enroll in courses.' },
+    });
   };
 
   // Logged-in user flow
@@ -93,7 +95,7 @@ const EnrollmentModal: React.FC<EnrollmentModalProps> = ({ open, onClose, course
           <Typography sx={{ fontSize: '0.875rem', color: '#71717a', mb: 4 }}>
             {isFree
               ? 'This course is free. Click below to start learning immediately.'
-              : 'Proceed to checkout to complete your enrollment.'}
+              : 'Activate your subscription to unlock access to all courses.'}
           </Typography>
 
           <Stack spacing={2}>
@@ -116,7 +118,7 @@ const EnrollmentModal: React.FC<EnrollmentModalProps> = ({ open, onClose, course
                 onClick={handleGoToCheckout}
                 sx={{ bgcolor: '#ffa424', py: 1.5, fontWeight: 600, textTransform: 'none', '&:hover': { bgcolor: '#f97316' } }}
               >
-                Get Full Access
+                Activate Subscription
               </Button>
             )}
           </Stack>
