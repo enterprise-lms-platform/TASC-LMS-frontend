@@ -12,6 +12,7 @@ import {
   type TransactionParams,
   type UserSubscriptionParams,
   type PesapalInitiateRequest,
+  type PesapalRecurringInitiateRequest,
 } from '../services/payments.services';
 import { reportsApi, type ReportListParams } from '../services/reports.services';
 import { queryKeys } from './queryKeys';
@@ -246,6 +247,18 @@ export const usePesapalInitiatePayment = () => {
       pesapalApi.initiate(data).then((r) => r.data),
     onSuccess: () => {
       // Ensure source-of-truth subscription status gets refreshed after provider return flow.
+      qc.invalidateQueries({ queryKey: queryKeys.subscriptions.myStatus });
+      qc.invalidateQueries({ queryKey: ['user-subscriptions'] });
+    },
+  });
+};
+
+export const usePesapalInitiateSubscription = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: PesapalRecurringInitiateRequest) =>
+      pesapalApi.initiateRecurring(data).then((r) => r.data),
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.subscriptions.myStatus });
       qc.invalidateQueries({ queryKey: ['user-subscriptions'] });
     },

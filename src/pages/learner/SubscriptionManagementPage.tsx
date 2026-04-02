@@ -59,6 +59,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
+import { useNavigate } from 'react-router-dom';
 import { useEnrollments, useCertificates } from '../../hooks/useLearning';
 import {
   useUserSubscriptions,
@@ -66,6 +67,7 @@ import {
   useCreatePaymentMethod,
   useSetDefaultPaymentMethod,
   useMySubscription,
+  useSubscriptions,
 } from '../../hooks/usePayments';
 import { invoiceApi, paymentMethodApi } from '../../services/payments.services';
 import { livestreamApi } from '../../services/livestream.services';
@@ -73,6 +75,7 @@ import type { Invoice, PaymentMethod, PaymentMethodType } from '../../types/type
 
 // --- Main Page Component ---
 const SubscriptionManagementPage: React.FC = () => {
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [addPaymentModalOpen, setAddPaymentModalOpen] = useState(false);
@@ -102,6 +105,7 @@ const SubscriptionManagementPage: React.FC = () => {
     }),
   });
   const { data: subStatus } = useMySubscription();
+  const { data: plans = [] } = useSubscriptions();
   const { data: activeSubscriptions = [] } = useUserSubscriptions({ status: 'active' });
   const activeSubscriptionId = activeSubscriptions[0]?.id ?? null;
   const { data: livestreamData } = useQuery({
@@ -159,6 +163,7 @@ const SubscriptionManagementPage: React.FC = () => {
   const nextPayment = subStatus?.end_date ? `${planPrice} on ${endDate}` : '—';
   const daysRemaining = subStatus?.days_remaining ?? 0;
   const isActive = subStatus?.has_active_subscription ?? false;
+  const canonicalPlan = plans.find((p) => p.status === 'active') ?? plans[0];
 
   const handleCancelSubscription = () => {
     if (!activeSubscriptionId) return;
@@ -227,6 +232,27 @@ const SubscriptionManagementPage: React.FC = () => {
           </Button>
         </Box>
 
+        {!isActive && (
+          <Alert
+            severity="warning"
+            sx={{ mb: 3, borderRadius: 2 }}
+            action={
+              <Button
+                color="inherit"
+                variant="outlined"
+                size="small"
+                onClick={() => navigate('/checkout')}
+                sx={{ textTransform: 'none' }}
+                disabled={!canonicalPlan}
+              >
+                Activate Subscription
+              </Button>
+            }
+          >
+            You don’t have an active subscription. Activate your subscription to unlock access to all courses.
+          </Alert>
+        )}
+
         {/* Current Plan Card */}
         <Box
           sx={{
@@ -276,6 +302,16 @@ const SubscriptionManagementPage: React.FC = () => {
             <Button variant="outlined" startIcon={<CloseIcon />} onClick={() => setCancelModalOpen(true)} sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.5)' }, textTransform: 'none' }}>
               Cancel Subscription
             </Button>
+            {!isActive && (
+              <Button
+                variant="contained"
+                onClick={() => navigate('/checkout')}
+                sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' } }}
+                disabled={!canonicalPlan}
+              >
+                Activate Subscription
+              </Button>
+            )}
           </Stack>
         </Box>
 
