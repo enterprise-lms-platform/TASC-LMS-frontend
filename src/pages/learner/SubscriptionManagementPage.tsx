@@ -72,6 +72,7 @@ import {
 import { invoiceApi, paymentMethodApi } from '../../services/payments.services';
 import { livestreamApi } from '../../services/livestream.services';
 import type { Invoice, PaymentMethod, PaymentMethodType } from '../../types/types';
+import type { Subscription } from '../../types/types';
 
 // --- Main Page Component ---
 const SubscriptionManagementPage: React.FC = () => {
@@ -163,7 +164,16 @@ const SubscriptionManagementPage: React.FC = () => {
   const nextPayment = subStatus?.end_date ? `${planPrice} on ${endDate}` : '—';
   const daysRemaining = subStatus?.days_remaining ?? 0;
   const isActive = subStatus?.has_active_subscription ?? false;
-  const canonicalPlan = plans.find((p) => p.status === 'active') ?? plans[0];
+  const typedPlans = (plans ?? []) as Subscription[];
+  const isPaidPlan = (p: Subscription) => {
+    const price = parseFloat(p.price || '0');
+    return (p.trial_days ?? 0) <= 0 && price > 0 && !/trial/i.test(p.name || '');
+  };
+  const canonicalPlan =
+    typedPlans.filter(isPaidPlan).find((p) => p.status === 'active') ??
+    typedPlans.filter(isPaidPlan)[0] ??
+    typedPlans.find((p) => p.status === 'active') ??
+    typedPlans[0];
 
   const handleCancelSubscription = () => {
     if (!activeSubscriptionId) return;

@@ -25,6 +25,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
 import { useMySubscription, usePesapalInitiateSubscription, useSubscriptions } from '../../hooks/usePayments';
+import type { Subscription } from '../../types/types';
 
 interface PaymentMethod {
   id: string;
@@ -51,8 +52,17 @@ const CheckoutPaymentPage: React.FC = () => {
   const { data: plansResponse = [], isLoading: plansLoading } = useSubscriptions();
   const pesapalInitiate = usePesapalInitiateSubscription();
 
-  const plans = plansResponse ?? [];
-  const plan = plans.find((p: any) => p?.status === 'active') ?? plans[0];
+  const plans = (plansResponse ?? []) as Subscription[];
+  const isPaidPlan = (p: Subscription) => {
+    const price = parseFloat(p.price || '0');
+    return (p.trial_days ?? 0) <= 0 && price > 0 && !/trial/i.test(p.name || '');
+  };
+  const paidPlans = plans.filter(isPaidPlan);
+  const plan =
+    paidPlans.find((p) => p.status === 'active') ??
+    paidPlans[0] ??
+    plans.find((p) => p.status === 'active') ??
+    plans[0];
   const hasActiveSubscription = subStatus?.has_active_subscription ?? false;
 
   if (hasActiveSubscription) {
@@ -95,7 +105,7 @@ const CheckoutPaymentPage: React.FC = () => {
     try {
       const response = await pesapalInitiate.mutateAsync({
         subscription_id: plan.id,
-        currency: 'UGX',
+        currency: plan.currency || 'UGX',
       });
       localStorage.setItem(
         'pesapal_checkout_context',
