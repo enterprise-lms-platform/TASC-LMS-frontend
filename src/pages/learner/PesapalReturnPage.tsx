@@ -26,6 +26,10 @@ const PesapalReturnPage: React.FC = () => {
   React.useEffect(() => {
     queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.myStatus });
     void refetch();
+    // Clean up stale checkout context when leaving this page
+    return () => {
+      localStorage.removeItem('pesapal_checkout_context');
+    };
   }, [queryClient, refetch]);
 
   const hasActiveSubscription = subStatus?.has_active_subscription ?? false;
