@@ -19,6 +19,7 @@ import type {
   InviteUserRequest,
   UserMe,
 } from '../types/types';
+import { authError, profileError, orgError } from '../utils/authErrors';
 
 // ─── Query Keys ──────────────────────────────────────────────
 export const authKeys = {
@@ -60,6 +61,7 @@ export const useLogin = () =>
       const { data } = await authApi.login(credentials);
       return data;
     },
+    onError: (error) => authError(error, 'log in'),
   });
 
 /** Login step 2 — verify OTP, stores tokens and primes the user cache. */
@@ -76,6 +78,7 @@ export const useVerifyOtp = () => {
         qc.setQueryData(authKeys.me(), data.user);
       }
     },
+    onError: (error) => authError(error, 'verify OTP'),
   });
 };
 
@@ -86,6 +89,7 @@ export const useResendLoginOtp = () =>
       const { data } = await authApi.resendOtp(challengeId);
       return data;
     },
+    onError: (error) => authError(error, 'resend OTP'),
   });
 
 /** Register — does NOT log the user in (email verification required). */
@@ -95,6 +99,7 @@ export const useRegister = () =>
       const { data } = await authApi.register(payload);
       return data;
     },
+    onError: (error) => authError(error, 'register'),
   });
 
 /** Logout — blacklists refresh token and clears local state. */
@@ -109,6 +114,7 @@ export const useLogout = () => {
       qc.setQueryData(authKeys.me(), null);
       qc.removeQueries({ queryKey: authKeys.all });
     },
+    onError: (error) => authError(error, 'log out'),
   });
 };
 
@@ -123,6 +129,7 @@ export const useUpdateProfile = () => {
     onSuccess: (updatedUser) => {
       qc.setQueryData(authKeys.me(), updatedUser);
     },
+    onError: (error) => profileError(error, 'update profile'),
   });
 };
 
@@ -133,6 +140,7 @@ export const useChangePassword = () =>
       const { data } = await authApi.changePassword(payload);
       return data;
     },
+    onError: (error) => authError(error, 'change password'),
   });
 
 /** Request a password-reset email. */
@@ -142,6 +150,7 @@ export const useRequestPasswordReset = () =>
       const { data } = await authApi.requestPasswordReset(payload);
       return data;
     },
+    onError: (error) => authError(error, 'request password reset'),
   });
 
 /** Confirm a password reset (from the email link). */
@@ -155,6 +164,7 @@ export const useConfirmPasswordReset = () =>
       const { data } = await authApi.confirmPasswordReset(uidb64, token, payload);
       return data;
     },
+    onError: (error) => authError(error, 'reset password'),
   });
 
 /** Set password from an invitation link. */
@@ -168,6 +178,7 @@ export const useSetPassword = () =>
       const { data } = await authApi.setPassword(uidb64, token, payload);
       return data;
     },
+    onError: (error) => authError(error, 'set password'),
   });
 
 /** Verify email address (from the email link). */
@@ -177,6 +188,7 @@ export const useVerifyEmail = () =>
       const { data } = await authApi.verifyEmail(uidb64, token);
       return data;
     },
+    onError: (error) => authError(error, 'verify email'),
   });
 
 /** Resend email verification. */
@@ -186,6 +198,7 @@ export const useResendVerification = () =>
       const { data } = await authApi.resendVerification(email);
       return data;
     },
+    onError: (error) => authError(error, 'resend verification email'),
   });
 
 /** Invite a user (super admin). */
@@ -195,4 +208,5 @@ export const useInviteUser = () =>
       const { data } = await adminApi.inviteUser(payload);
       return data;
     },
+    onError: (error) => orgError(error, 'invite user'),
   });

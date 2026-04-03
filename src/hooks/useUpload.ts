@@ -9,6 +9,7 @@ import { uploadApi } from '../services/upload.services';
 import { sessionApi } from '../services/catalogue.services';
 import type { UploadPrefix } from '../types/types';
 import type { SessionAssetUploadResult } from '../services/upload.services';
+import { genericMutationError } from '../utils/paymentErrors';
 
 /**
  * Mutation hook for uploading a public media file (thumbnails, banners).
@@ -17,6 +18,7 @@ export const useUploadMedia = () =>
   useMutation({
     mutationFn: ({ file, prefix }: { file: File; prefix: UploadPrefix }) =>
       uploadApi.uploadToSpaces(file, prefix),
+    onError: (error) => genericMutationError(error, 'upload file'),
   });
 
 /**
@@ -36,6 +38,7 @@ export const useUploadSessionAsset = () =>
   >({
     mutationFn: ({ file, courseId, sessionId, onProgress }) =>
       uploadApi.uploadSessionAsset(file, courseId, sessionId, onProgress),
+    onError: (error) => genericMutationError(error, 'upload session asset'),
   });
 
 /**

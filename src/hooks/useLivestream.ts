@@ -11,6 +11,7 @@ import {
   type LivestreamActionRequest,
   type LivestreamAttendanceParams,
 } from '../services/livestream.services';
+import { livestreamError } from '../utils/livestreamErrors';
 import { queryKeys } from './queryKeys';
 
 // ── Sessions ──
@@ -50,6 +51,7 @@ export const useUpdateLivestreamSession = () => {
         queryKey: queryKeys.livestreams.detail(variables.id),
       });
     },
+    onError: (error) => livestreamError(error, 'update session'),
   });
 };
 
@@ -60,6 +62,7 @@ export const useDeleteLivestreamSession = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['livestreams'] });
     },
+    onError: (error) => livestreamError(error, 'delete session'),
   });
 };
 

@@ -9,6 +9,7 @@ import type {
   SubmissionUpdateRequest,
   GradeSubmissionRequest,
 } from '../types/types';
+import { submissionError, gradingError } from '../utils/submissionErrors';
 
 /**
  * useSubmissions - Hook for submission list (instructor grading view)
@@ -40,6 +41,7 @@ export const useCreateSubmission = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.submissions.all() });
     },
+    onError: (error) => submissionError(error, 'create submission'),
   });
 };
 
@@ -57,6 +59,7 @@ export const useUpdateSubmission = () => {
         queryKey: queryKeys.submissions.detail(variables.id),
       });
     },
+    onError: (error) => submissionError(error, 'update submission'),
   });
 };
 
@@ -74,6 +77,7 @@ export const useGradeSubmission = () => {
         queryKey: queryKeys.submissions.detail(variables.id),
       });
     },
+    onError: (error) => gradingError(error, 'grade submission'),
   });
 };
 
@@ -87,5 +91,6 @@ export const useDeleteSubmission = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.submissions.all() });
     },
+    onError: (error) => submissionError(error, 'delete submission'),
   });
 };
