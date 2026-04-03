@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Box, CssBaseline, Toolbar, Typography, Paper, Chip, IconButton,
   Button, TextField, InputAdornment, Select, MenuItem, FormControl, InputLabel, Grid,
-  CircularProgress,
+  CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -12,6 +12,7 @@ import {
   Receipt as InvoiceIcon,
   Send as SendIcon,
 } from '@mui/icons-material';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
 import { useInvoices } from '../../hooks/usePayments';
@@ -36,6 +37,38 @@ const FinanceInvoicesPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
+
+  const queryClient = useQueryClient();
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [newInvoice, setNewInvoice] = useState({
+    customer_name: '',
+    customer_email: '',
+    due_date: '',
+  });
+  const [lineItems, setLineItems] = useState([{ description: '', quantity: 1, unit_price: '' }]);
+
+  const { mutate: createInvoice, isPending: isCreating } = useMutation({
+    mutationFn: (data: any) => invoiceApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      setCreateModalOpen(false);
+      setNewInvoice({ customer_name: '', customer_email: '', due_date: '' });
+      setLineItems([{ description: '', quantity: 1, unit_price: '' }]);
+    }
+  });
+
+  const handleCreate = () => {
+    const total = lineItems.reduce((acc, item) => acc + (Number(item.quantity) * Number(item.unit_price)), 0);
+    createInvoice({
+      ...newInvoice,
+      subtotal: total.toString(),
+      total_amount: total.toString(),
+      tax_amount: '0',
+      status: 'pending',
+      issue_date: new Date().toISOString().split('T')[0],
+      items: lineItems,
+    });
+  };
 
   const { data: invoices, isLoading } = useInvoices();
 
@@ -79,6 +112,7 @@ const FinanceInvoicesPage: React.FC = () => {
                 Export
               </Button>
               <Button size="small" variant="contained" startIcon={<AddIcon />}
+                onClick={() => setCreateModalOpen(true)}
                 sx={{ textTransform: 'none', borderRadius: 2, boxShadow: 'none', '&:hover': { boxShadow: '0 2px 8px rgba(255,164,36,0.3)' } }}>
                 New Invoice
               </Button>
@@ -179,6 +213,52 @@ const FinanceInvoicesPage: React.FC = () => {
               </Box>
             ))}
           </Paper>
+          {/* Create Invoice Modal */}
+          <Dialog open={createModalOpen} onClose={() => setCreateModalOpen(false)} maxWidth="sm" fullWidth>
+            <DialogTitle sx={{ fontWeight: 700 }}>Create New Invoice</DialogTitle>
+            <DialogContent dividers>
+              <Grid container spacing={2} sx={{ mt: 0 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth size="small" label="Customer Name" value={newInvoice.customer_name} onChange={e => setNewInvoice({...newInvoice, customer_name: e.target.value})} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth size="small" label="Customer Email" type="email" value={newInvoice.customer_email} onChange={e => setNewInvoice({...newInvoice, customer_email: e.target.value})} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth size="small" label="Due Date" type="date" InputLabelProps={{ shrink: true }} value={newInvoice.due_date} onChange={e => setNewInvoice({...newInvoice, due_date: e.target.value})} />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 1, mt: 1, fontWeight: 600 }}>Line Items</Typography>
+                  {lineItems.map((item, index) => (
+                    <Box key={index} sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                      <TextField fullWidth size="small" placeholder="Description" value={item.description} onChange={e => {
+                        const newItems = [...lineItems];
+                        newItems[index].description = e.target.value;
+                        setLineItems(newItems);
+                      }} />
+                      <TextField size="small" placeholder="Qty" type="number" sx={{ width: 80 }} value={item.quantity} onChange={e => {
+                        const newItems = [...lineItems];
+                        newItems[index].quantity = Number(e.target.value);
+                        setLineItems(newItems);
+                      }} />
+                      <TextField size="small" placeholder="Price" type="number" sx={{ width: 100 }} value={item.unit_price} onChange={e => {
+                        const newItems = [...lineItems];
+                        newItems[index].unit_price = e.target.value;
+                        setLineItems(newItems);
+                      }} />
+                    </Box>
+                  ))}
+                  <Button size="small" onClick={() => setLineItems([...lineItems, { description: '', quantity: 1, unit_price: '' }])}>+ Add Item</Button>
+                </Grid>
+              </Grid>
+            </DialogContent>
+            <DialogActions sx={{ p: 2 }}>
+              <Button onClick={() => setCreateModalOpen(false)} color="inherit">Cancel</Button>
+              <Button variant="contained" disabled={isCreating} onClick={handleCreate}>
+                {isCreating ? 'Creating...' : 'Create Invoice'}
+              </Button>
+            </DialogActions>
+          </Dialog>
         </Box>
       </Box>
     </Box>

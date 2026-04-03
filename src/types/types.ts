@@ -963,6 +963,11 @@ export interface InvoiceCreateRequest {
   currency?: string;
   notes?: string;
   internal_notes?: string;
+  items?: Array<{
+    description: string;
+    quantity: number;
+    unit_price: string;
+  }>;
 }
 
 export interface Transaction {
