@@ -17,6 +17,14 @@ import {
   type QuestionCategoryCreatePayload,
   type BankQuestionCreatePayload,
 } from '../services/catalogue.services';
+import {
+  courseError,
+  moduleError,
+  sessionError,
+  quizError,
+  assignmentError,
+  questionBankError,
+} from '../utils/catalogueErrors';
 import { queryKeys } from './queryKeys';
 import type {
   AssignmentConfigCreateUpdate,
@@ -137,6 +145,7 @@ export const useCreateCourse = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['courses'] });
     },
+    onError: (error) => courseError(error, 'create course'),
   });
 };
 
@@ -151,6 +160,10 @@ export const useUpdateCourse = () => {
         queryKey: queryKeys.courses.detail(variables.id),
       });
     },
+    onError: (error, variables) => {
+      const cached = qc.getQueryData<CourseCreateRequest>(queryKeys.courses.detail(variables.id));
+      return courseError(error, 'update course', { courseTitle: cached?.title });
+    },
   });
 };
 
@@ -164,6 +177,10 @@ export const usePartialUpdateCourse = () => {
       qc.invalidateQueries({
         queryKey: queryKeys.courses.detail(variables.id),
       });
+    },
+    onError: (error, variables) => {
+      const cached = qc.getQueryData<CourseCreateRequest>(queryKeys.courses.detail(variables.id));
+      return courseError(error, 'update course', { courseTitle: cached?.title });
     },
   });
 };
@@ -192,13 +209,14 @@ export const useDeleteCourse = () => {
 
       return { allQueries };
     },
-    onError: (_err, _id, context) => {
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['courses'] });
+    },
+    onError: (error, _id, context) => {
       context?.allQueries.forEach(([key, data]) => {
         qc.setQueryData(key, data);
       });
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: ['courses'] });
+      return courseError(error, 'delete course');
     },
   });
 };
@@ -221,6 +239,7 @@ export const useCreateModule = () => {
       qc.invalidateQueries({ queryKey: ['modules'] });
       qc.invalidateQueries({ queryKey: ['courses'] });
     },
+    onError: (error) => moduleError(error, 'create module'),
   });
 };
 
@@ -236,6 +255,10 @@ export const usePartialUpdateModule = () => {
         queryKey: queryKeys.modules.detail(variables.id),
       });
     },
+    onError: (error, variables) => {
+      const cached = qc.getQueryData<Module>(queryKeys.modules.detail(variables.id));
+      return moduleError(error, 'update module', { moduleTitle: cached?.title });
+    },
   });
 };
 
@@ -248,6 +271,7 @@ export const useReorderModules = () => {
       qc.invalidateQueries({ queryKey: ['modules'] });
       qc.invalidateQueries({ queryKey: ['courses'] });
     },
+    onError: (error) => moduleError(error, 'reorder modules'),
   });
 };
 
@@ -259,6 +283,7 @@ export const useDeleteModule = () => {
       qc.invalidateQueries({ queryKey: ['modules'] });
       qc.invalidateQueries({ queryKey: ['courses'] });
     },
+    onError: (error) => moduleError(error, 'delete module'),
   });
 };
 
@@ -286,6 +311,7 @@ export const useCreateSession = () => {
       qc.invalidateQueries({ queryKey: ['sessions'] });
       qc.invalidateQueries({ queryKey: ['courses'] });
     },
+    onError: (error) => sessionError(error, 'create session'),
   });
 };
 
@@ -316,6 +342,10 @@ export const usePartialUpdateSession = () => {
         queryKey: queryKeys.sessions.detail(variables.id),
       });
     },
+    onError: (error, variables) => {
+      const cached = qc.getQueryData<Session>(queryKeys.sessions.detail(variables.id));
+      return sessionError(error, 'update session', { sessionTitle: cached?.title });
+    },
   });
 };
 
@@ -336,14 +366,15 @@ export const useDeleteSession = () => {
       });
       return { allQueries };
     },
-    onError: (_err, _id, context) => {
-      context?.allQueries.forEach(([key, data]) => {
-        qc.setQueryData(key, data);
-      });
-    },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['sessions'] });
       qc.invalidateQueries({ queryKey: ['courses'] });
+    },
+    onError: (error, _id, context) => {
+      context?.allQueries.forEach(([key, data]) => {
+        qc.setQueryData(key, data);
+      });
+      return sessionError(error, 'delete session');
     },
   });
 };
@@ -428,6 +459,7 @@ export const usePatchQuiz = (sessionId: number) => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.quiz.detail(sessionId) });
     },
+    onError: (error) => quizError(error, 'update quiz settings'),
   });
 };
 
@@ -447,6 +479,7 @@ export const usePutQuizQuestions = (sessionId: number) => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.quiz.detail(sessionId) });
     },
+    onError: (error) => quizError(error, 'update quiz questions'),
   });
 };
 
@@ -468,6 +501,7 @@ export const usePutAssignmentConfig = (sessionId: number) => {
       qc.invalidateQueries({ queryKey: queryKeys.assignment.detail(sessionId) });
       qc.invalidateQueries({ queryKey: queryKeys.sessions.detail(sessionId) });
     },
+    onError: (error) => assignmentError(error, 'update assignment settings'),
   });
 };
 
@@ -480,6 +514,7 @@ export const usePatchAssignmentConfig = (sessionId: number) => {
       qc.invalidateQueries({ queryKey: queryKeys.assignment.detail(sessionId) });
       qc.invalidateQueries({ queryKey: queryKeys.sessions.detail(sessionId) });
     },
+    onError: (error) => assignmentError(error, 'update assignment settings'),
   });
 };
 
@@ -500,6 +535,7 @@ export const useCreateQuestionCategory = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['question-categories'] });
     },
+    onError: (error) => questionBankError(error, 'create category'),
   });
 };
 
@@ -516,6 +552,7 @@ export const usePatchQuestionCategory = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['question-categories'] });
     },
+    onError: (error) => questionBankError(error, 'update category'),
   });
 };
 
@@ -527,6 +564,7 @@ export const useDeleteQuestionCategory = () => {
       qc.invalidateQueries({ queryKey: ['question-categories'] });
       qc.invalidateQueries({ queryKey: ['bank-questions'] });
     },
+    onError: (error) => questionBankError(error, 'delete category'),
   });
 };
 
@@ -564,6 +602,7 @@ export const useCreateBankQuestion = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['bank-questions'] });
     },
+    onError: (error) => questionBankError(error, 'create question'),
   });
 };
 
@@ -578,6 +617,7 @@ export const usePatchBankQuestion = (id?: number | null) => {
         qc.invalidateQueries({ queryKey: queryKeys.bankQuestions.detail(id) });
       }
     },
+    onError: (error) => questionBankError(error, 'update question'),
   });
 };
 
@@ -588,6 +628,7 @@ export const useDeleteBankQuestion = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['bank-questions'] });
     },
+    onError: (error) => questionBankError(error, 'delete question'),
   });
 };
 
@@ -605,5 +646,6 @@ export const useAddQuestionsFromBank = () => {
       qc.invalidateQueries({ queryKey: queryKeys.quiz.detail(variables.sessionId) });
       qc.invalidateQueries({ queryKey: ['bank-questions'] });
     },
+    onError: (error) => quizError(error, 'add questions from bank'),
   });
 };

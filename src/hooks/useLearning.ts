@@ -9,6 +9,12 @@ import {
   type DiscussionParams,
   type DiscussionReplyParams,
 } from '../services/learning.services';
+import {
+  enrollmentError,
+  progressError,
+  certificateError,
+  discussionError,
+} from '../utils/learningErrors';
 import { queryKeys } from './queryKeys';
 import type {
   Enrollment,
@@ -61,6 +67,7 @@ export const useCreateEnrollment = () => {
       qc.invalidateQueries({ queryKey: ['learner', 'enrollments', 'active'] });
       qc.invalidateQueries({ queryKey: ['learner', 'enrollments', 'stats'] });
     },
+    onError: (error) => enrollmentError(error, 'enroll in this course'),
   });
 };
 
@@ -73,6 +80,7 @@ export const useGenerateCertificate = () => {
       qc.invalidateQueries({ queryKey: ['certificates'] });
       qc.invalidateQueries({ queryKey: ['enrollments'] });
     },
+    onError: (error) => certificateError(error),
   });
 };
 
@@ -102,6 +110,7 @@ export const useCreateSessionProgress = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['session-progress'] });
     },
+    onError: (error) => progressError(error, 'create session progress'),
   });
 };
 
@@ -117,6 +126,7 @@ export const useUpdateSessionProgress = () => {
       });
       qc.invalidateQueries({ queryKey: ['enrollments'] });
     },
+    onError: (error) => progressError(error, 'update session progress'),
   });
 };
 
@@ -137,6 +147,7 @@ export const usePartialUpdateSessionProgress = () => {
       });
       qc.invalidateQueries({ queryKey: ['enrollments'] });
     },
+    onError: (error) => progressError(error, 'update session progress'),
   });
 };
 
@@ -148,6 +159,7 @@ export const useDeleteSessionProgress = () => {
       qc.invalidateQueries({ queryKey: ['session-progress'] });
       qc.invalidateQueries({ queryKey: ['enrollments'] });
     },
+    onError: (error) => progressError(error, 'delete session progress'),
   });
 };
 
@@ -163,6 +175,7 @@ export const useMarkSessionCompleted = () => {
       });
       qc.invalidateQueries({ queryKey: ['enrollments'] });
     },
+    onError: (error) => progressError(error, 'mark session completed'),
   });
 };
 
@@ -217,6 +230,7 @@ export const useCreateDiscussion = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['discussions'] });
     },
+    onError: (error) => discussionError(error, 'create discussion'),
   });
 };
 
@@ -231,6 +245,7 @@ export const useUpdateDiscussion = () => {
         queryKey: queryKeys.discussions.detail(variables.id),
       });
     },
+    onError: (error) => discussionError(error, 'update discussion'),
   });
 };
 
@@ -245,6 +260,7 @@ export const usePartialUpdateDiscussion = () => {
         queryKey: queryKeys.discussions.detail(variables.id),
       });
     },
+    onError: (error) => discussionError(error, 'update discussion'),
   });
 };
 
@@ -265,13 +281,14 @@ export const useDeleteDiscussion = () => {
       });
       return { allQueries };
     },
-    onError: (_err, _id, context) => {
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['discussions'] });
+    },
+    onError: (error, _id, context) => {
       context?.allQueries.forEach(([key, data]) => {
         qc.setQueryData(key, data);
       });
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: ['discussions'] });
+      return discussionError(error, 'delete discussion');
     },
   });
 };
@@ -303,6 +320,7 @@ export const useCreateDiscussionReply = () => {
       qc.invalidateQueries({ queryKey: ['discussion-replies'] });
       qc.invalidateQueries({ queryKey: ['discussions'] });
     },
+    onError: (error) => discussionError(error, 'create reply'),
   });
 };
 
@@ -318,6 +336,7 @@ export const useUpdateDiscussionReply = () => {
       });
       qc.invalidateQueries({ queryKey: ['discussions'] });
     },
+    onError: (error) => discussionError(error, 'update reply'),
   });
 };
 
@@ -333,6 +352,7 @@ export const usePartialUpdateDiscussionReply = () => {
       });
       qc.invalidateQueries({ queryKey: ['discussions'] });
     },
+    onError: (error) => discussionError(error, 'update reply'),
   });
 };
 
@@ -353,14 +373,15 @@ export const useDeleteDiscussionReply = () => {
       });
       return { allQueries };
     },
-    onError: (_err, _id, context) => {
-      context?.allQueries.forEach(([key, data]) => {
-        qc.setQueryData(key, data);
-      });
-    },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['discussion-replies'] });
       qc.invalidateQueries({ queryKey: ['discussions'] });
+    },
+    onError: (error, _id, context) => {
+      context?.allQueries.forEach(([key, data]) => {
+        qc.setQueryData(key, data);
+      });
+      return discussionError(error, 'delete reply');
     },
   });
 };
