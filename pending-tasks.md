@@ -61,7 +61,7 @@ api.messaging            // messagingApi
 | ✅ | F1 | ~~Saved Courses page + toggle~~ | `SavedCoursesPage.tsx` | Done — `savedCourseApi` + `useSavedCourses` hook wired |
 | ✅ | F2 | Finance pages — replace mock data | 8 finance page files | Done — wired all 8 pages to live hooks |
 | ✅ | F3 | ~~Superadmin pages — wire KPIs to stats APIs~~ | 6 superadmin page files | Done — KPIs wired; table data still mock |
-| HOLD | F4 | Mobile money checkout | `CheckoutPaymentPage.tsx` | Blocked — waiting on Pesapal API keys |
+| ✅ | F4 | ~~Pesapal Subscription Checkout~~ | `CheckoutPaymentPage.tsx`, `PesapalReturnPage.tsx`, `usePayments.ts`, `payments.services.ts` | Done — Pesapal hosted checkout flow wired end-to-end (initiate → redirect → return page with status polling). `duration_days` now available on Subscription from backend migration 0005. |
 | ~~REMOVED~~ | F5 | ~~Promo code validation~~ — removed from scope | — | Hardcoded SAVE20 logic removed from CheckoutPaymentPage |
 | ✅ | F6 | ~~Learner Progress page overhaul~~ | `ProgressPage.tsx` | Done — fixed pagination bug, milestones derived from real stats |
 | ✅ | F7 | ~~Instructor Grading page wiring~~ | `GradingPage.tsx` | Done — fixed pagination bug, added status filter, file download fixed [29 Mar] |
@@ -321,67 +321,49 @@ const { data: instructorsData } = useQuery({
 
 ---
 
-### Task F4: Mobile Money Checkout — Replace setTimeout
+### Task F4: Pesapal Subscription Checkout ✅ DONE (3 Apr)
 
-**File:** `src/pages/learner/CheckoutPaymentPage.tsx`
+**Files changed:**
+- `src/pages/learner/CheckoutPaymentPage.tsx` — major refactor; now initiates Pesapal hosted checkout via `usePesapalInitiateSubscription()`. Redirects user to `response.redirect_url`. Hardcoded `setTimeout` simulation removed entirely.
+- `src/pages/learner/PesapalReturnPage.tsx` — **new file**. Handles the return from Pesapal at `/payments/success`, `/payments/failed`, `/payments/pending`. Reads `pesapal_checkout_context` from localStorage, polls payment status via `usePesapalPaymentStatus()`, refreshes subscription truth via `useMySubscription()`.
+- `src/services/payments.services.ts` — added `pesapalApi` with `initiate()`, `initiateRecurring()`, and `getStatus()`. Added typed request/response interfaces: `PesapalInitiateRequest`, `PesapalInitiateResponse`, `PesapalRecurringInitiateRequest`, `PesapalRecurringInitiateResponse`, `PesapalPaymentStatusResponse`.
+- `src/hooks/usePayments.ts` — added `usePesapalInitiatePayment()`, `usePesapalInitiateSubscription()`, `usePesapalPaymentStatus()` hooks.
+- `src/routes/router.tsx` — added routes for `/payments/success`, `/payments/failed`, `/payments/pending` all pointing to `PesapalReturnPage`.
 
-**Problem:** Mobile money payment uses `setTimeout(() => { setPaymentStatus('success') }, 3000)` to simulate payment.
+**Backend dependency:** Task 60 ✅ DONE — `apps/payments/views_pesapal.py` ships initiate + recurring initiate + status endpoints. Migration `0005_subscription_duration_days` adds `duration_days` to `Subscription` model.
 
-**Backend dependency:** Task 60 (Pesapal mobile money charge endpoint — see `apps/payments/views_pesapal.py` and `apps/payments/urls.py` for the exact URL)
+**Endpoints wired:**
+- `POST /api/v1/payments/pesapal/initiate/` → one-time payment initiation
+- `POST /api/v1/payments/pesapal/recurring/initiate/` → subscription initiation
+- `GET /api/v1/payments/pesapal/{payment_id}/status/` → payment status polling
 
-**Step 1 — Add service method** (`src/services/payments.services.ts`):
+**Checkout context flow:**
+1. User clicks Pay → `pesapalInitiate.mutateAsync({ subscription_id, currency })` called
+2. Response `redirect_url` stored context `{ paymentId, subscriptionId, planName }` in `localStorage('pesapal_checkout_context')`
+3. `window.location.assign(redirect_url)` sends user to Pesapal hosted page
+4. Pesapal redirects back to `/payments/success|failed|pending?tracking_id=...`
+5. `PesapalReturnPage` reads context, invalidates subscription cache, shows result + CTA
 
-```typescript
-export interface MobileMoneyChargeRequest {
-  enrollment: number;
-  phone_number: string;
-  provider: 'mpesa' | 'mtn' | 'airtel';
-}
-
-export interface MobileMoneyChargeResponse {
-  status: 'pending' | 'error';
-  message: string;
-  order_tracking_id?: string;
-  redirect_url?: string;
-}
-
-export const mobileMoneyApi = {
-  charge: (data: MobileMoneyChargeRequest) =>
-    apiClient.post<MobileMoneyChargeResponse>(
-      '/api/v1/payments/pesapal/initiate/',
-      data
-    ),
-};
-```
-
-**Step 2 — Wire in `CheckoutPaymentPage.tsx`:**
-
-Find the `setTimeout` block in the mobile money handler and replace:
-
-```typescript
-import { mobileMoneyApi } from '../../services/payments.services';
-
-const handleMobileMoneyPayment = async () => {
-  setPaymentStatus('processing');
-  try {
-    const response = await mobileMoneyApi.charge({
-      enrollment: enrollmentId,
-      phone_number: phoneNumber,
-      provider: selectedProvider as 'mpesa' | 'mtn' | 'airtel',
-    });
-    if (response.data.status === 'pending') {
-      setPaymentStatus('pending');
-      // Show "Check your phone" message
-      // Poll for completion or wait for Pesapal IPN webhook redirect
-    }
-  } catch (error) {
-    setPaymentStatus('failed');
-    // Show error toast
-  }
-};
-```
+**Known remaining gaps:**
+- Billing info fields (first name, last name, email collected in form) are NOT yet sent to Pesapal — they are UI-only for now pending backend support
+- No IPN/webhook handling on frontend (backend handles webhook notifications)
 
 ---
+
+### Task F4b: `duration_days` on Subscription — Update Type (minor)
+
+**File:** `src/types/types.ts` — `Subscription` interface
+
+**Backend migration `0005_subscription_duration_days`** added a `duration_days: int` field to the `Subscription` model. The frontend `Subscription` type should be updated:
+
+```typescript
+export interface Subscription {
+  // ... existing fields ...
+  duration_days?: number;  // Added by backend migration 0005 (Apr 2026)
+}
+```
+
+This allows the frontend to show exact subscription duration without computing from `billing_cycle` string.
 
 ### Task F5: ~~Promo Code Validation~~ — REMOVED FROM SCOPE
 
