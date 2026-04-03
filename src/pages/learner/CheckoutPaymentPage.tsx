@@ -25,6 +25,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
 import { useMySubscription, usePesapalInitiateSubscription, useSubscriptions } from '../../hooks/usePayments';
+import { initiatePaymentError } from '../../utils/paymentErrors';
 import type { Subscription } from '../../types/types';
 
 interface PaymentMethod {
@@ -52,6 +53,18 @@ const CheckoutPaymentPage: React.FC = () => {
   const { data: plansResponse = [], isLoading: plansLoading } = useSubscriptions();
   const pesapalInitiate = usePesapalInitiateSubscription();
 
+  // ── State declared before any conditional return (Rules of Hooks) ──
+  const [firstName, setFirstName] = useState(user?.first_name ?? '');
+  const [lastName, setLastName] = useState(user?.last_name ?? '');
+  const [email, setEmail] = useState(user?.email ?? '');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
+
   const plans = (plansResponse ?? []) as Subscription[];
   const isPaidPlan = (p: Subscription) => {
     const price = parseFloat(p.price || '0');
@@ -70,23 +83,10 @@ const CheckoutPaymentPage: React.FC = () => {
     return null;
   }
 
-  // State
-  const [selectedPayment] = useState('pesapal');
-  const [firstName, setFirstName] = useState(user?.first_name ?? '');
-  const [lastName, setLastName] = useState(user?.last_name ?? '');
-  const [email, setEmail] = useState(user?.email ?? '');
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
-
   const subtotal = plan ? parseFloat(plan.price) : 0;
   const processingFee = 0;
   const total = subtotal + processingFee;
+  const currency = plan?.currency || 'USD';
 
   const showToast = (message: string, severity: 'success' | 'error') => {
     setToast({ open: true, message, severity });
@@ -116,9 +116,10 @@ const CheckoutPaymentPage: React.FC = () => {
         }),
       );
       window.location.assign(response.redirect_url);
-    } catch {
+    } catch (err) {
       setIsProcessing(false);
-      showToast('Failed to initiate Pesapal subscription checkout. Please try again.', 'error');
+      const msg = initiatePaymentError(err, { planName: plan?.name, currency: plan?.currency });
+      showToast(msg, 'error');
     }
   };
 
@@ -407,7 +408,7 @@ const CheckoutPaymentPage: React.FC = () => {
                   </Box>
                   <Box sx={{ textAlign: 'right' }}>
                     <Typography variant="body1" fontWeight={700} color="text.primary">
-                      ${total.toFixed(2)}
+                      {currency} {total.toFixed(2)}
                     </Typography>
                   </Box>
                 </Stack>
@@ -416,7 +417,7 @@ const CheckoutPaymentPage: React.FC = () => {
                 <Stack spacing={1} sx={{ mb: 2 }}>
                   <Stack direction="row" justifyContent="space-between">
                     <Typography variant="body2" color="text.secondary">Subtotal</Typography>
-                    <Typography variant="body2" fontWeight={500} color="text.primary">${subtotal.toFixed(2)}</Typography>
+                    <Typography variant="body2" fontWeight={500} color="text.primary">{currency} {subtotal.toFixed(2)}</Typography>
                   </Stack>
                   <Stack direction="row" justifyContent="space-between">
                     <Typography variant="body2" color="text.secondary">Processing Fee</Typography>
@@ -427,7 +428,7 @@ const CheckoutPaymentPage: React.FC = () => {
                 {/* Total */}
                 <Stack direction="row" justifyContent="space-between" sx={{ py: 2, borderTop: '2px solid #e4e4e7' }}>
                   <Typography variant="body1" fontWeight={600} color="text.primary">Total</Typography>
-                  <Typography variant="h5" fontWeight={700} sx={{ color: '#ffa424' }}>${total.toFixed(2)}</Typography>
+                  <Typography variant="h5" fontWeight={700} sx={{ color: '#ffa424' }}>{currency} {total.toFixed(2)}</Typography>
                 </Stack>
 
                 {/* Terms */}
@@ -472,7 +473,7 @@ const CheckoutPaymentPage: React.FC = () => {
                     },
                   }}
                 >
-                  {(isProcessing || pesapalInitiate.isPending) ? 'Redirecting to Pesapal...' : `Activate Subscription — $${total.toFixed(2)}`}
+                  {(isProcessing || pesapalInitiate.isPending) ? 'Redirecting to Pesapal...' : `Activate Subscription — ${currency} ${total.toFixed(2)}`}
                 </Button>
 
                 {/* Security Info */}

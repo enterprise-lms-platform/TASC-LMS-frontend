@@ -16,6 +16,18 @@ import {
 } from '../services/payments.services';
 import { reportsApi, type ReportListParams } from '../services/reports.services';
 import { queryKeys } from './queryKeys';
+import {
+  cancelSubscriptionError,
+  renewSubscriptionError,
+  createSubscriptionError,
+  initiatePaymentError,
+  payInvoiceError,
+  createInvoiceError,
+  updateInvoiceError,
+  addPaymentMethodError,
+  setDefaultPaymentMethodError,
+  genericMutationError,
+} from '../utils/paymentErrors';
 import type {
   InvoiceCreateRequest,
   Invoice,
@@ -49,8 +61,9 @@ export const useCreateInvoice = () => {
     mutationFn: (data: InvoiceCreateRequest) =>
       invoiceApi.create(data).then((r) => r.data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['invoices'] });
+      qc.invalidateQueries({ queryKey: queryKeys.invoices.all() });
     },
+    onError: (error) => createInvoiceError(error),
   });
 };
 
@@ -60,9 +73,16 @@ export const useUpdateInvoice = () => {
     mutationFn: ({ id, data }: { id: number; data: Partial<Invoice> }) =>
       invoiceApi.update(id, data).then((r) => r.data),
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ['invoices'] });
+      qc.invalidateQueries({ queryKey: queryKeys.invoices.all() });
       qc.invalidateQueries({
         queryKey: queryKeys.invoices.detail(variables.id),
+      });
+    },
+    onError: (error, variables) => {
+      const cached = qc.getQueryData<Invoice>(queryKeys.invoices.detail(variables.id));
+      return updateInvoiceError(error, {
+        invoiceNumber: cached?.invoice_number,
+        status: cached?.status,
       });
     },
   });
@@ -87,7 +107,7 @@ export const useDeleteInvoice = () => {
   return useMutation({
     mutationFn: (id: number) => invoiceApi.delete(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['invoices'] });
+      qc.invalidateQueries({ queryKey: queryKeys.invoices.all() });
     },
   });
 };
@@ -97,9 +117,16 @@ export const usePayInvoice = () => {
   return useMutation({
     mutationFn: (id: number) => invoiceApi.pay(id).then((r) => r.data),
     onSuccess: (_data, id) => {
-      qc.invalidateQueries({ queryKey: ['invoices'] });
+      qc.invalidateQueries({ queryKey: queryKeys.invoices.all() });
       qc.invalidateQueries({ queryKey: queryKeys.invoices.detail(id) });
-      qc.invalidateQueries({ queryKey: ['transactions'] });
+      qc.invalidateQueries({ queryKey: queryKeys.transactions.all() });
+    },
+    onError: (error, id) => {
+      const cached = qc.getQueryData<Invoice>(queryKeys.invoices.detail(id));
+      return payInvoiceError(error, {
+        invoiceNumber: cached?.invoice_number,
+        status: cached?.status,
+      });
     },
   });
 };
@@ -146,8 +173,10 @@ export const useCreatePaymentMethod = () => {
     mutationFn: (data: PaymentMethodCreateRequest) =>
       paymentMethodApi.create(data).then((r) => r.data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['payment-methods'] });
+      qc.invalidateQueries({ queryKey: queryKeys.paymentMethods.all });
     },
+    onError: (error, variables) =>
+      addPaymentMethodError(error, { methodType: variables.method_type }),
   });
 };
 
@@ -157,7 +186,7 @@ export const useUpdatePaymentMethod = () => {
     mutationFn: ({ id, data }: { id: number; data: Partial<PaymentMethod> }) =>
       paymentMethodApi.update(id, data).then((r) => r.data),
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ['payment-methods'] });
+      qc.invalidateQueries({ queryKey: queryKeys.paymentMethods.all });
       qc.invalidateQueries({
         queryKey: queryKeys.paymentMethods.detail(variables.id),
       });
@@ -184,7 +213,7 @@ export const useDeletePaymentMethod = () => {
   return useMutation({
     mutationFn: (id: number) => paymentMethodApi.delete(id),
     onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: ['payment-methods'] });
+      await qc.cancelQueries({ queryKey: queryKeys.paymentMethods.all });
       const previous = qc.getQueryData<PaymentMethod[]>(queryKeys.paymentMethods.all);
       if (previous) {
         qc.setQueryData(
@@ -194,13 +223,14 @@ export const useDeletePaymentMethod = () => {
       }
       return { previous };
     },
-    onError: (_err, _id, context) => {
+    onError: (err, _id, context) => {
       if (context?.previous) {
         qc.setQueryData(queryKeys.paymentMethods.all, context.previous);
       }
+      return genericMutationError(err, 'remove this payment method');
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: ['payment-methods'] });
+      qc.invalidateQueries({ queryKey: queryKeys.paymentMethods.all });
     },
   });
 };
@@ -211,8 +241,9 @@ export const useSetDefaultPaymentMethod = () => {
     mutationFn: (id: number) =>
       paymentMethodApi.setDefault(id).then((r) => r.data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['payment-methods'] });
+      qc.invalidateQueries({ queryKey: queryKeys.paymentMethods.all });
     },
+    onError: (error) => setDefaultPaymentMethodError(error),
   });
 };
 
@@ -246,10 +277,10 @@ export const usePesapalInitiatePayment = () => {
     mutationFn: (data: PesapalInitiateRequest) =>
       pesapalApi.initiate(data).then((r) => r.data),
     onSuccess: () => {
-      // Ensure source-of-truth subscription status gets refreshed after provider return flow.
       qc.invalidateQueries({ queryKey: queryKeys.subscriptions.myStatus });
-      qc.invalidateQueries({ queryKey: ['user-subscriptions'] });
+      qc.invalidateQueries({ queryKey: queryKeys.userSubscriptions.all() });
     },
+    onError: (error) => initiatePaymentError(error),
   });
 };
 
@@ -260,8 +291,9 @@ export const usePesapalInitiateSubscription = () => {
       pesapalApi.initiateRecurring(data).then((r) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.subscriptions.myStatus });
-      qc.invalidateQueries({ queryKey: ['user-subscriptions'] });
+      qc.invalidateQueries({ queryKey: queryKeys.userSubscriptions.all() });
     },
+    onError: (error) => initiatePaymentError(error),
   });
 };
 
@@ -297,9 +329,10 @@ export const useCreateUserSubscription = () => {
     mutationFn: (data: UserSubscriptionCreateRequest) =>
       userSubscriptionApi.create(data).then((r) => r.data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['user-subscriptions'] });
-      qc.invalidateQueries({ queryKey: ['invoices'] });
+      qc.invalidateQueries({ queryKey: queryKeys.userSubscriptions.all() });
+      qc.invalidateQueries({ queryKey: queryKeys.invoices.all() });
     },
+    onError: (error) => createSubscriptionError(error),
   });
 };
 
@@ -309,7 +342,7 @@ export const useUpdateUserSubscription = () => {
     mutationFn: ({ id, data }: { id: number; data: Partial<UserSubscription> }) =>
       userSubscriptionApi.update(id, data).then((r) => r.data),
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ['user-subscriptions'] });
+      qc.invalidateQueries({ queryKey: queryKeys.userSubscriptions.all() });
       qc.invalidateQueries({
         queryKey: queryKeys.userSubscriptions.detail(variables.id),
       });
@@ -336,7 +369,7 @@ export const useDeleteUserSubscription = () => {
   return useMutation({
     mutationFn: (id: number) => userSubscriptionApi.delete(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['user-subscriptions'] });
+      qc.invalidateQueries({ queryKey: queryKeys.userSubscriptions.all() });
     },
   });
 };
@@ -347,9 +380,16 @@ export const useCancelUserSubscription = () => {
     mutationFn: (id: number) =>
       userSubscriptionApi.cancel(id).then((r) => r.data),
     onSuccess: (_data, id) => {
-      qc.invalidateQueries({ queryKey: ['user-subscriptions'] });
+      qc.invalidateQueries({ queryKey: queryKeys.userSubscriptions.all() });
       qc.invalidateQueries({
         queryKey: queryKeys.userSubscriptions.detail(id),
+      });
+    },
+    onError: (error, id) => {
+      const cached = qc.getQueryData<UserSubscription>(queryKeys.userSubscriptions.detail(id));
+      return cancelSubscriptionError(error, {
+        planName: (cached as any)?.subscription_name ?? (cached as any)?.plan?.name,
+        status: cached?.status,
       });
     },
   });
@@ -361,11 +401,18 @@ export const useRenewUserSubscription = () => {
     mutationFn: (id: number) =>
       userSubscriptionApi.renew(id).then((r) => r.data),
     onSuccess: (_data, id) => {
-      qc.invalidateQueries({ queryKey: ['user-subscriptions'] });
+      qc.invalidateQueries({ queryKey: queryKeys.userSubscriptions.all() });
       qc.invalidateQueries({
         queryKey: queryKeys.userSubscriptions.detail(id),
       });
-      qc.invalidateQueries({ queryKey: ['invoices'] });
+      qc.invalidateQueries({ queryKey: queryKeys.invoices.all() });
+    },
+    onError: (error, id) => {
+      const cached = qc.getQueryData<UserSubscription>(queryKeys.userSubscriptions.detail(id));
+      return renewSubscriptionError(error, {
+        planName: (cached as any)?.subscription_name ?? (cached as any)?.plan?.name,
+        status: cached?.status,
+      });
     },
   });
 };

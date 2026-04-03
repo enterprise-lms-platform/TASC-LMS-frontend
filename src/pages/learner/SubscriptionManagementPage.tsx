@@ -71,6 +71,7 @@ import {
 } from '../../hooks/usePayments';
 import { invoiceApi, paymentMethodApi } from '../../services/payments.services';
 import { livestreamApi } from '../../services/livestream.services';
+import { cancelSubscriptionError, addPaymentMethodError } from '../../utils/paymentErrors';
 import type { Invoice, PaymentMethod, PaymentMethodType } from '../../types/types';
 import type { Subscription } from '../../types/types';
 
@@ -182,8 +183,12 @@ const SubscriptionManagementPage: React.FC = () => {
         setCancelModalOpen(false);
         showToast(`Your subscription has been cancelled. It will remain active until ${endDate}.`, 'warning');
       },
-      onError: () => {
-        showToast('Failed to cancel subscription. Please try again.', 'error');
+      onError: (error) => {
+        const msg = cancelSubscriptionError(error, {
+          planName: planName !== 'Free Plan' ? planName : undefined,
+          status: subStatus?.status ?? (isActive ? 'active' : undefined),
+        });
+        showToast(msg, 'error');
       },
     });
   };
@@ -202,8 +207,9 @@ const SubscriptionManagementPage: React.FC = () => {
           setPhoneNumber('');
           setSetAsDefault(false);
         },
-        onError: () => {
-          showToast('Failed to add payment method. Please try again.', 'error');
+        onError: (error) => {
+          const msg = addPaymentMethodError(error, { methodType: paymentType });
+          showToast(msg, 'error');
         },
       }
     );
@@ -467,7 +473,7 @@ const SubscriptionManagementPage: React.FC = () => {
             <WarningIcon sx={{ fontSize: 48, color: '#f59e0b', mb: 2 }} />
             <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Are you sure you want to cancel?</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Your subscription will remain active until <strong>August 15, 2026</strong>. After that, you'll lose access to:
+              Your subscription will remain active until <strong>{endDate !== '—' ? endDate : 'the end of your billing period'}</strong>. After that, you'll lose access to:
             </Typography>
             <Stack spacing={1} sx={{ textAlign: 'left', mb: 3 }}>
               {['Unlimited course access', 'Live session participation', 'Certificate generation', 'Offline downloads'].map((item) => (
