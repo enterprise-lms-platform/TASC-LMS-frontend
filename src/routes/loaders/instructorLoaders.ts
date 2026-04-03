@@ -11,7 +11,7 @@ import { normalizeEnrollmentListResponse } from '../../hooks/useLearning';
 import { courseApi, categoryApi } from '../../services/catalogue.services';
 import { enrollmentApi, submissionApi } from '../../services/learning.services';
 
-const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;
+import { DEV_BYPASS_AUTH } from '../../utils/config';
 
 /**
  * Instructor Dashboard Loader

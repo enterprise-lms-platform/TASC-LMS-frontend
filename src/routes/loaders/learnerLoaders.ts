@@ -10,7 +10,7 @@ import { normalizeEnrollmentListResponse } from '../../hooks/useLearning';
 import { enrollmentApi, sessionProgressApi, certificateApi } from '../../services/learning.services';
 import { courseApi } from '../../services/catalogue.services';
 
-const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;
+import { DEV_BYPASS_AUTH } from '../../utils/config';
 
 /**
  * Learner Dashboard Loader

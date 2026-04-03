@@ -8,7 +8,7 @@ import { redirect } from 'react-router-dom';
 import { queryKeys } from '../../hooks/queryKeys';
 import { categoryApi, courseApi, courseApprovalApi, type CategoryListParams } from '../../services/catalogue.services';
 
-const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;
+import { DEV_BYPASS_AUTH } from '../../utils/config';
 
 /**
  * Manager Dashboard Loader

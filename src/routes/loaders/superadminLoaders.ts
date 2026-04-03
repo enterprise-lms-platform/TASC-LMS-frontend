@@ -9,7 +9,7 @@ import { queryKeys } from '../../hooks/queryKeys';
 import { courseApi, courseApprovalApi } from '../../services/catalogue.services';
 import { auditLogApi } from '../../services/superadmin.services';
 
-const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;
+import { DEV_BYPASS_AUTH } from '../../utils/config';
 
 /**
  * Superadmin Dashboard Loader

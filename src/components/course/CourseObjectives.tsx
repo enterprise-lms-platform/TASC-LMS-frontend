@@ -6,18 +6,9 @@ interface CourseObjectivesProps {
   objectives?: string[];
 }
 
-const defaultObjectives = [
-  "Master advanced React Hooks patterns including custom hooks, useReducer, and useContext for complex state management",
-  "Implement compound components, render props, and higher-order components for reusable UI patterns",
-  "Optimize React application performance with memoization, code splitting, and lazy loading techniques",
-  "Build scalable state management solutions using Context API, Redux, and Zustand",
-  "Write type-safe React applications with TypeScript integration and best practices",
-  "Implement effective testing strategies with React Testing Library and Jest",
-  "Design and build accessible React components following WCAG guidelines",
-  "Apply real-world architectural patterns used at companies like Google, Meta, and Netflix"
-];
+const CourseObjectives: React.FC<CourseObjectivesProps> = ({ objectives }) => {
+  if (!objectives || objectives.length === 0) return null;
 
-const CourseObjectives: React.FC<CourseObjectivesProps> = ({ objectives = defaultObjectives }) => {
   return (
     <Box id="objectives" className="course-section" sx={{ mb: 8, scrollMarginTop: '140px' }}>
       <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: '#18181b' }}>What You'll Learn</Typography>

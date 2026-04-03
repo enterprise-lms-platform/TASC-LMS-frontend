@@ -10,7 +10,7 @@ import { courseApi, categoryApi, sessionApi } from '../../services/catalogue.ser
 import { sessionProgressApi } from '../../services/learning.services';
 import { publicCourseApi } from '../../services/public.services';
 
-const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;
+import { DEV_BYPASS_AUTH } from '../../utils/config';
 
 /**
  * Course Detail Loader - Pre-fetch course with curriculum, reviews, enrollment data

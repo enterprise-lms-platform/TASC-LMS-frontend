@@ -11,44 +11,6 @@ interface CourseCurriculumProps {
   courseId?: number;
 }
 
-const defaultModules = [
-  {
-    title: "Module 1: Advanced Hooks Deep Dive",
-    lectures: 8,
-    duration: "2h 45m",
-    lessons: [
-      { title: "1.1 Course Introduction & Setup", duration: "08:24", type: "video", preview: true },
-      { title: "1.2 Understanding useReducer for Complex State", duration: "18:32", type: "video", preview: true },
-      { title: "1.3 Building Custom Hooks", duration: "24:15", type: "video" },
-      { title: "1.4 useCallback & useMemo Optimization", duration: "21:08", type: "video" },
-      { title: "Project: Build a Custom Form Hook Library", duration: "45:00", type: "assignment" },
-      { title: "Module 1 Quiz", duration: "10 questions", type: "quiz" }
-    ]
-  },
-  {
-    title: "Module 2: Component Composition Patterns",
-    lectures: 10,
-    duration: "3h 20m",
-    lessons: [
-      { title: "2.1 Compound Components Pattern", duration: "22:15", type: "video" },
-      { title: "2.2 Render Props Pattern", duration: "19:45", type: "video" },
-      { title: "2.3 Higher-Order Components (HOCs)", duration: "25:30", type: "video" }
-    ]
-  },
-  {
-    title: "Module 3: State Management at Scale",
-    lectures: 9,
-    duration: "3h 05m",
-    lessons: []
-  },
-  {
-    title: "Module 4: Performance Optimization",
-    lectures: 11,
-    duration: "3h 45m",
-    lessons: []
-  }
-];
-
 const CourseCurriculum: React.FC<CourseCurriculumProps> = ({ courseId }) => {
   const [expanded, setExpanded] = useState<string | false>('panel0');
 
@@ -86,13 +48,26 @@ const CourseCurriculum: React.FC<CourseCurriculumProps> = ({ courseId }) => {
         }
         return acc;
       }, [])
-    : defaultModules;
+    : [];
 
   const totalLectures = modules.reduce((sum, m) => sum + m.lectures, 0);
 
   const handleChange = (panel: string) => (_event: React.SyntheticEvent, isExpanded: boolean) => {
     setExpanded(isExpanded ? panel : false);
   };
+
+  if (modules.length === 0) {
+    return (
+      <Box id="curriculum" className="course-section" sx={{ mb: 8, scrollMarginTop: '140px' }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: '#18181b' }}>Course Curriculum</Typography>
+        <Box sx={{ border: '1px dashed #e4e4e7', borderRadius: 3, p: 4, textAlign: 'center', bgcolor: '#fafafa' }}>
+          <Typography sx={{ color: '#71717a', fontSize: '1.0rem' }}>
+            Curriculum details coming soon. The instructor is still assembling the modules for this course.
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box id="curriculum" className="course-section" sx={{ mb: 8, scrollMarginTop: '140px' }}>

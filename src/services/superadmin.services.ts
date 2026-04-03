@@ -36,7 +36,7 @@ export const bulkImportApi = {
    * Download CSV template for bulk user import
    */
   downloadTemplate: () => {
-    window.open(`${import.meta.env.VITE_API_URL || ''}/api/v1/admin/users/csv_template/`, '_blank');
+    window.open(`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/admin/users/csv_template/`, '_blank');
   },
 
   /**

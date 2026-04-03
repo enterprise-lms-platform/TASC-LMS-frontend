@@ -13,7 +13,7 @@ interface ProtectedRouteProps {
 // ⚠️ SECURITY: Development-only auth bypass (NEVER enable in production)
 // Only enabled when VITE_AUTH_BYPASS=true in .env.local AND in dev mode
 // This should ONLY be used for local development. Never commit with this enabled externally.
-const DEV_BYPASS_AUTH = import.meta.env.VITE_AUTH_BYPASS === 'true' && import.meta.env.DEV;
+import { DEV_BYPASS_AUTH } from '../utils/config';
 
 if (DEV_BYPASS_AUTH) {
   console.warn(
