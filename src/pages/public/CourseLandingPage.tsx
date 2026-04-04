@@ -92,7 +92,10 @@ const CourseLandingPage: React.FC = () => {
                   <CourseNavigation />
                   <CourseObjectives objectives={course.learning_objectives_list || []} />
                   <CourseCurriculum courseId={course.id} />
-                  <CourseInstructor name={course.instructor_name} />
+                  <CourseInstructor
+                    instructorId={course.instructor?.id ?? undefined}
+                    name={course.instructor_name}
+                  />
                   <CourseReviews courseId={course.id} />
                   <Box id="faq" className="course-section" sx={{ scrollMarginTop: '140px', mb: 8 }}>
                     <FaqSection />

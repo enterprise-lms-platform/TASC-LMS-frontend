@@ -132,6 +132,28 @@ export const queryKeys = {
   auditLogs: {
     all: (filters?: AuditLogFilters) => ['audit-logs', filters] as const,
   },
+  superadminReviews: {
+    all: (params?: object) => ['superadmin-reviews', params ?? {}] as const,
+  },
+  superadminDemoRequests: {
+    all: (params?: object) => ['superadmin-demo-requests', params ?? {}] as const,
+  },
+  systemSettings: {
+    current: ['system-settings'] as const,
+  },
+  securityPolicy: {
+    current: ['security-policy'] as const,
+  },
+  superadminAssessments: {
+    all: (params?: object) => ['superadmin-assessments', params ?? {}] as const,
+    stats: ['superadmin-assessments', 'stats'] as const,
+  },
+  publicTestimonials: {
+    all: ['public-testimonials'] as const,
+  },
+  publicInstructor: {
+    detail: (id: number) => ['public-instructor', id] as const,
+  },
 
   // Organizations
   organizations: {

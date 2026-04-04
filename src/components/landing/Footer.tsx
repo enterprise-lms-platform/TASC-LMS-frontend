@@ -7,6 +7,7 @@ const Footer: React.FC = () => {
   const platformLinks = [
     { label: 'Browse Courses', href: '/courses' },
     { label: 'For Business', href: '/business' },
+    { label: 'Verify Certificate', href: '/verify-certificate' },
     { label: 'Privacy Policy', href: '/privacy-policy' },
   ];
 

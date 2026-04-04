@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CertificateVerifyModal from './CertificateVerifyModal';
 
 interface HeroProps {
   isMobile: boolean;
@@ -7,6 +8,7 @@ interface HeroProps {
 
 const Hero: React.FC<HeroProps> = ({ isMobile }) => {
   const navigate = useNavigate();
+  const [verifyOpen, setVerifyOpen] = useState(false);
   return (
     <section
       className="hero-section"
@@ -145,6 +147,34 @@ const Hero: React.FC<HeroProps> = ({ isMobile }) => {
               >
                 <i className="fas fa-building" />
                 For Organizations
+              </button>
+            </div>
+
+            {/* Verify Certificate link */}
+            <div style={{ marginBottom: '32px' }}>
+              <button
+                onClick={() => setVerifyOpen(true)}
+                id="verify-certificate-btn"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  fontSize: '0.875rem',
+                  color: '#71717a',
+                  fontWeight: 500,
+                  padding: 0,
+                  transition: 'color 0.2s',
+                  fontFamily: 'inherit',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#ffa424')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#71717a')}
+              >
+                <i className="fas fa-certificate" style={{ fontSize: '0.8rem' }} />
+                Verify a TASC Certificate
+                <i className="fas fa-arrow-right" style={{ fontSize: '0.7rem' }} />
               </button>
             </div>
 
@@ -323,6 +353,7 @@ const Hero: React.FC<HeroProps> = ({ isMobile }) => {
           )}
         </div>
       </div>
+      <CertificateVerifyModal open={verifyOpen} onClose={() => setVerifyOpen(false)} />
     </section>
   );
 };

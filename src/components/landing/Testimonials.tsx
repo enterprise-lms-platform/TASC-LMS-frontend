@@ -1,33 +1,52 @@
 import React from 'react';
+import { useTestimonials } from '../../hooks/usePublic';
 
 interface TestimonialsProps {
   isMobile: boolean;
 }
 
+const STATIC_FALLBACK = [
+  {
+    initials: 'JK',
+    name: 'James Kariuki',
+    role: 'Senior Developer at TechCorp',
+    avatar: '/avatars/male face (14).jpg',
+    text: '"TASC LMS completely transformed my career. The React course helped me land a senior developer position at a top tech company. The hands-on projects were invaluable!"',
+    rating: 5,
+  },
+  {
+    initials: 'AN',
+    name: 'Amina Nakato',
+    role: 'Data Analyst at Global Analytics',
+    avatar: '/avatars/female face (5).jpg',
+    text: '"The live sessions are amazing! Being able to interact with instructors in real-time made complex data science concepts so much easier to understand."',
+    rating: 5,
+  },
+  {
+    initials: 'PO',
+    name: 'Peter Ochieng',
+    role: 'HR Director at Innovate Solutions',
+    avatar: '/avatars/male face (8).jpg',
+    text: '"We enrolled our entire team in TASC LMS. The enterprise features and progress tracking helped us upskill 50+ employees efficiently. Highly recommend for organizations!"',
+    rating: 5,
+  },
+];
+
 const Testimonials: React.FC<TestimonialsProps> = ({ isMobile }) => {
-  const testimonials = [
-    {
-      initials: 'JK',
-      name: 'James Kariuki',
-      role: 'Senior Developer at TechCorp',
-      avatar: '/avatars/male face (14).jpg',
-      text: '"TASC LMS completely transformed my career. The React course helped me land a senior developer position at a top tech company. The hands-on projects were invaluable!"',
-    },
-    {
-      initials: 'AN',
-      name: 'Amina Nakato',
-      role: 'Data Analyst at Global Analytics',
-      avatar: '/avatars/female face (5).jpg',
-      text: '"The live sessions are amazing! Being able to interact with instructors in real-time made complex data science concepts so much easier to understand."',
-    },
-    {
-      initials: 'PO',
-      name: 'Peter Ochieng',
-      role: 'HR Director at Innovate Solutions',
-      avatar: '/avatars/male face (8).jpg',
-      text: '"We enrolled our entire team in TASC LMS. The enterprise features and progress tracking helped us upskill 50+ employees efficiently. Highly recommend for organizations!"',
-    },
-  ];
+  const { data } = useTestimonials();
+
+  const apiItems = data ?? [];
+
+  const testimonials = apiItems.length > 0
+    ? apiItems.slice(0, 3).map((t) => ({
+        initials: t.user_name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase(),
+        name: t.user_name,
+        role: t.course_title,
+        avatar: undefined,
+        text: `"${t.content}"`,
+        rating: t.rating,
+      }))
+    : STATIC_FALLBACK;
 
   return (
     <section
@@ -104,7 +123,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({ isMobile }) => {
               {/* Rating */}
               <div style={{ display: 'flex', gap: '4px', color: '#f59e0b', marginBottom: '16px' }}>
                 {[...Array(5)].map((_, i) => (
-                  <i key={i} className="fas fa-star" />
+                  <i key={i} className="fas fa-star" style={{ color: i < (testimonial.rating ?? 5) ? '#f59e0b' : '#e4e4e7' }} />
                 ))}
               </div>
 

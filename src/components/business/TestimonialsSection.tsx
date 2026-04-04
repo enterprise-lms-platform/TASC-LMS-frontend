@@ -2,8 +2,9 @@ import React from 'react';
 import { Box, Container, Typography, Chip, Grid, Paper, Stack, Avatar } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import StarIcon from '@mui/icons-material/Star';
+import { useTestimonials } from '../../hooks/usePublic';
 
-const testimonials = [
+const STATIC_FALLBACK = [
   {
     initials: 'SK',
     name: 'Sarah Kimani',
@@ -31,6 +32,19 @@ const testimonials = [
 ];
 
 const TestimonialsSection: React.FC = () => {
+  const { data } = useTestimonials();
+  const apiItems = data ?? [];
+
+  const testimonials = apiItems.length > 0
+    ? apiItems.slice(0, 3).map((t) => ({
+        initials: t.user_name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase(),
+        name: t.user_name,
+        role: t.course_title,
+        company: 'Partner Organization',
+        avatar: undefined,
+        text: `"${t.content}"`,
+      }))
+    : STATIC_FALLBACK;
   return (
     <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: 'white' }}>
       <Container maxWidth="lg">

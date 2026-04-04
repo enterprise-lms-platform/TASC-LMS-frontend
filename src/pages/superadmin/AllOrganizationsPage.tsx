@@ -32,11 +32,12 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as ViewIcon,
-
+  Download as DownloadIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import { organizationApi } from '../../services/organization.services';
+import { exportApi } from '../../services/superadmin.services';
 
 
 
@@ -187,14 +188,25 @@ const AllOrganizationsPage: React.FC = () => {
               </Select>
             </FormControl>
           </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => navigate('/superadmin/organizations/add')}
-            sx={{ textTransform: 'none' }}
-          >
-            Add Organization
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1.5 }}>
+            <Button
+              variant="outlined"
+              color="secondary"
+              startIcon={<DownloadIcon />}
+              onClick={() => exportApi.organizations()}
+              sx={{ textTransform: 'none', fontWeight: 600 }}
+            >
+              Export CSV
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => navigate('/superadmin/organizations/add')}
+              sx={{ textTransform: 'none' }}
+            >
+              Add Organization
+            </Button>
+          </Box>
         </Box>
 
         <TableContainer sx={{ width: '100%', overflowX: 'auto' }}>

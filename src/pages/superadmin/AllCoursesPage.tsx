@@ -3,14 +3,16 @@ import { useCourseStats } from '../../services/learning.services';
 import { useCourses } from '../../hooks/useCatalogue';
 import {
   Box, Paper, Typography, Grid, TextField, MenuItem, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Chip, IconButton, Avatar, CircularProgress,
+  TableContainer, TableHead, TableRow, Chip, IconButton, Avatar, CircularProgress, Button,
 } from '@mui/material';
 import {
   MenuBook as CoursesIcon, Publish as PublishIcon, Edit as EditIcon,
   Drafts as DraftIcon, Archive as ArchiveIcon, Visibility as ViewIcon,
+  Download as DownloadIcon,
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import KPICard from '../../components/superadmin/KPICard';
+import { exportApi } from '../../services/superadmin.services';
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   published: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
@@ -94,6 +96,15 @@ const AllCoursesPage: React.FC = () => {
               <MenuItem key={v} value={v}>{v === 'All' ? 'All' : v.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase())}</MenuItem>
             ))}
           </TextField>
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={<DownloadIcon />}
+            onClick={() => exportApi.courses()}
+            sx={{ textTransform: 'none', fontWeight: 600, ml: 'auto' }}
+          >
+            Export CSV
+          </Button>
         </Box>
 
         {isLoading ? (

@@ -1,10 +1,14 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   healthApi,
   publicCategoryApi,
   publicTagApi,
   publicCourseApi,
+  publicTestimonialApi,
+  publicDemoRequestApi,
+  publicInstructorApi,
   type PublicCourseParams,
+  type DemoRequestPayload,
 } from '../services/public.services';
 import { queryKeys } from './queryKeys';
 
@@ -59,4 +63,28 @@ export const usePublicCourse = (slug: string) =>
     queryKey: queryKeys.public.courses.detail(slug),
     queryFn: () => publicCourseApi.getBySlug(slug).then((r) => r.data),
     enabled: !!slug,
+  });
+
+// ── Testimonials ──
+
+export const useTestimonials = () =>
+  useQuery({
+    queryKey: queryKeys.publicTestimonials.all,
+    queryFn: () => publicTestimonialApi.getAll().then((r) => r.data),
+    staleTime: 10 * 60 * 1000,
+  });
+
+// ── Demo request ──
+
+export const useSubmitDemoRequest = () =>
+  useMutation({ mutationFn: (data: DemoRequestPayload) => publicDemoRequestApi.submit(data) });
+
+// ── Public instructor profile ──
+
+export const usePublicInstructor = (userId: number | undefined) =>
+  useQuery({
+    queryKey: queryKeys.publicInstructor.detail(userId!),
+    queryFn: () => publicInstructorApi.getById(userId!).then((r) => r.data),
+    enabled: !!userId,
+    staleTime: 10 * 60 * 1000,
   });

@@ -33,6 +33,7 @@ import {
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import KPICard from '../../components/superadmin/KPICard';
 import { usersApi, userStatsApi } from '../../services/users.services';
+import { exportApi } from '../../services/superadmin.services';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -225,6 +226,15 @@ const AllUsersPage: React.FC = () => {
               sx={{ textTransform: 'none', fontWeight: 600 }}
             >
               Bulk Import
+            </Button>
+            <Button
+              variant="outlined"
+              color="secondary"
+              startIcon={<DownloadIcon />}
+              onClick={() => exportApi.users()}
+              sx={{ textTransform: 'none', fontWeight: 600 }}
+            >
+              Export CSV
             </Button>
           </Box>
         </Box>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Box, Paper, Typography, Grid, TextField, MenuItem, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Chip, IconButton, CircularProgress,
+  TableContainer, TableHead, TableRow, Chip, IconButton, CircularProgress, Button,
 } from '@mui/material';
 import {
   Receipt as InvoiceIcon, CheckCircle as PaidIcon, HourglassEmpty as PendingIcon,
@@ -11,6 +11,7 @@ import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import { useInvoiceStats } from '../../services/learning.services';
 import { useInvoices } from '../../hooks/usePayments';
 import KPICard from '../../components/superadmin/KPICard';
+import { exportApi } from '../../services/superadmin.services';
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   paid: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
@@ -59,6 +60,15 @@ const InvoicesPage: React.FC = () => {
           </TextField>
           <TextField size="small" type="date" label="From" slotProps={{ inputLabel: { shrink: true } }} />
           <TextField size="small" type="date" label="To" slotProps={{ inputLabel: { shrink: true } }} />
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={<DownloadIcon />}
+            onClick={() => exportApi.invoices()}
+            sx={{ textTransform: 'none', fontWeight: 600, ml: 'auto' }}
+          >
+            Export CSV
+          </Button>
         </Box>
 
         {isLoading ? (

@@ -150,3 +150,60 @@ export const faqApi = {
   getAll: () =>
     apiClient.get<FaqItem[]>(`${PUBLIC_PATH}/faqs/`),
 };
+
+// TESTIMONIALS (superadmin-featured reviews)
+
+export interface PublicTestimonial {
+  id: number;
+  user_name: string;
+  course_title: string;
+  rating: number;
+  content: string;
+  created_at: string;
+}
+
+/** Backend returns a JSON array of featured reviews (CourseReview shape). */
+export const publicTestimonialApi = {
+  getAll: () =>
+    apiClient.get<PublicTestimonial[]>(`${PUBLIC_PATH}/testimonials/`),
+};
+
+// DEMO REQUESTS
+
+export interface DemoRequestPayload {
+  first_name: string;
+  last_name: string;
+  email: string;
+  company: string;
+  team_size: string;
+  phone?: string;
+}
+
+export const publicDemoRequestApi = {
+  submit: (data: DemoRequestPayload) =>
+    apiClient.post<{ detail: string }>(`${PUBLIC_PATH}/demo-requests/`, data),
+};
+
+// PUBLIC INSTRUCTOR PROFILE
+
+export interface PublicInstructorProfile {
+  id: number;
+  name: string;
+  bio: string;
+  avatar_url?: string | null;
+  rating: number | null;
+  total_reviews: number;
+  total_students: number;
+  total_courses: number;
+  social_links: {
+    linkedin?: string;
+    github?: string;
+    twitter?: string;
+    website?: string;
+  };
+}
+
+export const publicInstructorApi = {
+  getById: (userId: number) =>
+    apiClient.get<PublicInstructorProfile>(`${PUBLIC_PATH}/instructors/${userId}/`),
+};

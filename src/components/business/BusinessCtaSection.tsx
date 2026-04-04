@@ -15,16 +15,10 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { Link } from 'react-router-dom';
-import emailjs from '@emailjs/browser';
-
-// TODO: Replace these with real EmailJS credentials from https://dashboard.emailjs.com
-const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
-const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
-const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
+import { useSubmitDemoRequest } from '../../hooks/usePublic';
 
 const BusinessCtaSection: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     firstName: '',
@@ -35,31 +29,26 @@ const BusinessCtaSection: React.FC = () => {
     phone: '',
   });
 
+  const submitMutation = useSubmitDemoRequest();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
-    try {
-      await emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ID,
-        {
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          email: formData.email,
-          company: formData.company,
-          team_size: formData.teamSize,
-          phone: formData.phone,
-        },
-        EMAILJS_PUBLIC_KEY,
-      );
-      setSubmitted(true);
-    } catch {
-      setError('Something went wrong. Please try again or contact us directly.');
-    } finally {
-      setLoading(false);
-    }
+    submitMutation.mutate(
+      {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        company: formData.company,
+        team_size: formData.teamSize,
+        phone: formData.phone || undefined,
+      },
+      {
+        onSuccess: () => setSubmitted(true),
+        onError: () => setError('Something went wrong. Please try again or contact us directly.'),
+      },
+    );
   };
 
   return (
@@ -194,11 +183,11 @@ const BusinessCtaSection: React.FC = () => {
                           variant="contained"
                           fullWidth
                           size="large"
-                          disabled={loading}
-                          startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <CalendarMonthIcon />}
+                          disabled={submitMutation.isPending}
+                          startIcon={submitMutation.isPending ? <CircularProgress size={20} color="inherit" /> : <CalendarMonthIcon />}
                           sx={{ bgcolor: '#ffa424', fontWeight: 600, textTransform: 'none', '&:hover': { bgcolor: '#f97316' } }}
                         >
-                          {loading ? 'Submitting...' : 'Schedule Demo'}
+                          {submitMutation.isPending ? 'Submitting...' : 'Schedule Demo'}
                         </Button>
                       </Grid>
                     </Grid>
