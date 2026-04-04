@@ -32,7 +32,7 @@ export const managerDashboardLoader = async (queryClient: QueryClient) => {
 
     return { categories, coursesData };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return { categories: { results: [], count: 0 }, coursesData: { results: [], count: 0 } };
@@ -56,7 +56,7 @@ export const managerCategoriesLoader = async (
 
     return { categories };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { categories: { results: [], count: 0 } };
   }
@@ -82,7 +82,7 @@ export const managerAnalyticsLoader = async (queryClient: QueryClient) => {
 
     return { categories, coursesData };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { categories: { results: [], count: 0 }, coursesData: { results: [], count: 0 } };
   }
@@ -102,7 +102,7 @@ export const approvalQueueLoader = async (queryClient: QueryClient) => {
 
     return { approvalRequests };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return { approvalRequests: { results: [], count: 0 } };
@@ -138,7 +138,7 @@ export const approvalDetailLoader = async (
 
     return { approvalRequest };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return redirect('/manager/approvals');
@@ -160,7 +160,7 @@ export const managerRouteLoader = async (queryClient: QueryClient) => {
 
     return { categories };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return {};

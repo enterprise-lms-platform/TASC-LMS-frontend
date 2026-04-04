@@ -3,7 +3,7 @@ import {
   Box, Paper, Typography, Button, Avatar, Chip, IconButton, Skeleton,
 } from '@mui/material';
 import {
-  Visibility as ViewIcon, Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon,
+  Add as AddIcon, Edit as EditIcon, Visibility as ViewIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -129,12 +129,8 @@ const OrganizationsTable: React.FC = () => {
               }} />
               <Box sx={{ display: 'flex', gap: 0.25 }}>
                 <IconButton size="small" onClick={() => navigate('/superadmin/organizations')}
-                  sx={{ color: 'text.disabled', '&:hover': { color: 'info.main' } }}>
+                  sx={{ color: 'text.disabled', '&:hover': { color: 'info.main' } }} title="Manage organization">
                   <EditIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-                <IconButton size="small"
-                  sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}>
-                  <DeleteIcon sx={{ fontSize: 16 }} />
                 </IconButton>
               </Box>
             </Box>

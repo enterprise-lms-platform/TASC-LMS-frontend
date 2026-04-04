@@ -2,11 +2,12 @@ import React, { useState, useCallback } from 'react';
 import {
   Box, Paper, Typography, TextField, MenuItem, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Chip, Avatar, IconButton,
-  TablePagination, CircularProgress, Alert,
+  TablePagination, CircularProgress, Alert, Dialog, DialogTitle, DialogContent, DialogActions, Button,
 } from '@mui/material';
 import { Visibility as ViewIcon } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import { useAuditLogs } from '../../hooks/useAuditLogs';
+import type { AuditLogEntry } from '../../types/types';
 
 const actionColors: Record<string, { bg: string; color: string }> = {
   Created: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
@@ -34,6 +35,7 @@ const AuditLogsPage: React.FC = () => {
   const [resourceFilter, setResourceFilter] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [selectedLog, setSelectedLog] = useState<AuditLogEntry | null>(null);
 
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const debounceRef = React.useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -170,7 +172,7 @@ const AuditLogsPage: React.FC = () => {
                           <TableCell><Typography variant="body2" sx={{ maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{log.details}</Typography></TableCell>
                           <TableCell><Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{log.ip}</Typography></TableCell>
                           <TableCell>
-                            <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><ViewIcon fontSize="small" /></IconButton>
+                            <IconButton size="small" title="View full details" onClick={() => setSelectedLog(log)} sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><ViewIcon fontSize="small" /></IconButton>
                           </TableCell>
                         </TableRow>
                       );
@@ -191,6 +193,36 @@ const AuditLogsPage: React.FC = () => {
           </>
         )}
       </Paper>
+      {/* Log Detail Dialog */}
+      <Dialog open={!!selectedLog} onClose={() => setSelectedLog(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>Audit Log Detail</DialogTitle>
+        <DialogContent dividers>
+          {selectedLog && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              {[
+                { label: 'Timestamp', value: formatTimestamp(selectedLog.timestamp) },
+                { label: 'User', value: `${selectedLog.user} (${selectedLog.email})` },
+                { label: 'Action', value: capitalize(selectedLog.action) },
+                { label: 'Resource', value: capitalize(selectedLog.resource) },
+                { label: 'IP Address', value: selectedLog.ip },
+                { label: 'Details', value: selectedLog.details },
+              ].map(({ label, value }) => (
+                <Box key={label}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {label}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 0.25, fontFamily: label === 'IP Address' ? 'monospace' : 'inherit', wordBreak: 'break-word' }}>
+                    {value || '—'}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setSelectedLog(null)} sx={{ textTransform: 'none' }}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </SuperadminLayout>
   );
 };

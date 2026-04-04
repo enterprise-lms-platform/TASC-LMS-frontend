@@ -1,19 +1,17 @@
 import React from 'react';
-import { Box, Paper, Typography, Button } from '@mui/material';
+import { Box, Paper, Typography, Button, Skeleton } from '@mui/material';
 import {
   Download as DownloadIcon,
-  FilterList as FilterIcon,
 } from '@mui/icons-material';
+import { useRevenueTrends } from '../../services/learning.services';
+import { exportApi } from '../../services/superadmin.services';
 
-const monthlyRevenue = [
-  { month: 'Aug', amount: 98000 },
-  { month: 'Sep', amount: 112000 },
-  { month: 'Oct', amount: 124000 },
-  { month: 'Nov', amount: 108000 },
-  { month: 'Dec', amount: 142000 },
-  { month: 'Jan', amount: 186000 },
-];
-const maxRevenue = Math.max(...monthlyRevenue.map((d) => d.amount));
+const RevenueChartComponent: React.FC = () => {
+  const { data, isLoading } = useRevenueTrends(6);
+
+  const labels = data?.labels ?? [];
+  const revenue = data?.revenue ?? [];
+  const maxRevenue = revenue.length > 0 ? Math.max(...revenue) : 1;
 
 const cardSx = {
   borderRadius: '1rem',
@@ -24,7 +22,6 @@ const cardSx = {
   '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' },
 };
 
-const RevenueChart: React.FC = () => {
   return (
     <Paper elevation={0} sx={cardSx}>
       <Box
@@ -40,41 +37,52 @@ const RevenueChart: React.FC = () => {
       >
         <Typography fontWeight={700}>Revenue Growth (Last 6 Months)</Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button size="small" variant="outlined" startIcon={<DownloadIcon sx={{ fontSize: 14 }} />}
+          <Button size="small" variant="outlined" startIcon={<DownloadIcon sx={{ fontSize: 14 }} />} onClick={() => exportApi.transactions()}
             sx={{ textTransform: 'none', fontSize: '0.75rem', fontWeight: 500, borderColor: 'rgba(0,0,0,0.08)', color: 'text.secondary', borderRadius: 2, '&:hover': { borderColor: 'primary.main', color: 'primary.main' } }}>
             Export
-          </Button>
-          <Button size="small" variant="outlined" startIcon={<FilterIcon sx={{ fontSize: 14 }} />}
-            sx={{ textTransform: 'none', fontSize: '0.75rem', fontWeight: 500, borderColor: 'rgba(0,0,0,0.08)', color: 'text.secondary', borderRadius: 2, '&:hover': { borderColor: 'primary.main', color: 'primary.main' } }}>
-            Filter
           </Button>
         </Box>
       </Box>
 
-      <Box sx={{ p: 3, display: 'flex', alignItems: 'flex-end', gap: 2, height: 280 }}>
-        {monthlyRevenue.map((d) => (
-          <Box key={d.month} sx={{ flex: 1, textAlign: 'center' }}>
-            <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-              ${(d.amount / 1000).toFixed(0)}K
-            </Typography>
-            <Box
-              sx={{
-                height: `${(d.amount / maxRevenue) * 200}px`,
-                background: 'linear-gradient(180deg, #ffa424, #ffb74d)',
-                borderRadius: '6px 6px 0 0',
-                transition: 'height 0.3s, opacity 0.2s',
-                opacity: 0.85,
-                '&:hover': { opacity: 1 },
-              }}
-            />
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-              {d.month}
-            </Typography>
-          </Box>
-        ))}
-      </Box>
+      {isLoading ? (
+        <Box sx={{ p: 3, display: 'flex', gap: 2, height: 280 }}>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <Box key={i} sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Skeleton width="100%" height={40} sx={{ mb: 1 }} />
+              <Skeleton variant="rectangular" width="100%" height={150} sx={{ borderRadius: 1 }} />
+              <Skeleton width="100%" height={20} sx={{ mt: 1 }} />
+            </Box>
+          ))}
+        </Box>
+      ) : (
+        <Box sx={{ p: 3, display: 'flex', alignItems: 'flex-end', gap: 2, height: 280 }}>
+          {labels.map((month, idx) => {
+            const amount = revenue[idx] || 0;
+            return (
+              <Box key={month} sx={{ flex: 1, textAlign: 'center' }}>
+                <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+                  ${(amount / 1000).toFixed(0)}K
+                </Typography>
+                <Box
+                  sx={{
+                    height: `${(amount / maxRevenue) * 200}px`,
+                    background: 'linear-gradient(180deg, #ffa424, #ffb74d)',
+                    borderRadius: '6px 6px 0 0',
+                    transition: 'height 0.3s, opacity 0.2s',
+                    opacity: 0.85,
+                    '&:hover': { opacity: 1 },
+                  }}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                  {month}
+                </Typography>
+              </Box>
+            );
+          })}
+        </Box>
+      )}
     </Paper>
   );
 };
 
-export default RevenueChart;
+export default RevenueChartComponent;

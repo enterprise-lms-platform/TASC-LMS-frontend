@@ -72,7 +72,7 @@ export const myCoursesLoader = async (queryClient: QueryClient) => {
 
     return { enrollments };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { enrollments: [] };
   }
@@ -134,7 +134,7 @@ export const learnerCourseDetailLoader = async (
 
     return { course, enrollments };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) {
       return redirect('/learner/courses');
     }
@@ -182,15 +182,14 @@ export const coursePlayerLoader = async (
 
     return { course, progress };
   } catch (error: unknown) {
-    const err = error as { status?: number };
-    if (err.status === 401 && !DEV_BYPASS_AUTH) {
+    const status = (error as any)?.response?.status ?? (error as any)?.status;
+    if (status === 401 && !DEV_BYPASS_AUTH) {
       return redirect('/login');
     }
-    if (err.status === 401 && DEV_BYPASS_AUTH) {
-      // In dev bypass mode, return empty data so the page can still render
+    if (status === 401 && DEV_BYPASS_AUTH) {
       return { course: null, progress: [] };
     }
-    if (err.status === 404) {
+    if (status === 404) {
       return redirect('/learner/courses');
     }
     throw error;
@@ -212,7 +211,7 @@ export const learnerAssignmentsLoader = async (queryClient: QueryClient) => {
 
     return { enrollments };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { enrollments: [] };
   }
@@ -238,7 +237,7 @@ export const learnerProgressLoader = async (queryClient: QueryClient) => {
 
     return { progress, enrollments };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { progress: [], enrollments: [] };
   }
@@ -258,7 +257,7 @@ export const learnerCertificatesLoader = async (queryClient: QueryClient) => {
 
     return { certificates };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { certificates: [] };
   }
@@ -309,7 +308,7 @@ export const paymentHistoryLoader = async () => {
     // For now, allow page to fetch its own data
     return {};
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return {};
   }
@@ -324,7 +323,7 @@ export const learnerNotificationsLoader = async () => {
     // When notifications service is ready, add here
     return {};
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return {};
   }

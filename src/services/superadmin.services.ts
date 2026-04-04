@@ -47,7 +47,34 @@ export interface SystemSettings {
   support_email: string;
   default_timezone: string;
   max_upload_mb: number;
+  // Feature flags
+  allow_self_registration?: boolean;
+  allow_google_sso?: boolean;
+  allow_course_reviews?: boolean;
+  allow_discussions?: boolean;
+  allow_live_classes?: boolean;
+  auto_issue_certificates?: boolean;
+  allow_bulk_import?: boolean;
+  allow_api_access?: boolean;
+  // Maintenance
+  maintenance_mode?: boolean;
+  maintenance_message?: string;
 }
+
+export interface GatewaySettings {
+  consumer_key: string;
+  consumer_secret: string;
+  ipn_url: string;
+  environment: 'sandbox' | 'production';
+  currencies: string;
+}
+
+export const gatewaySettingsApi = {
+  save: (data: Partial<GatewaySettings>) =>
+    apiClient.patch(`${BASE_PATH}/system/gateway/`, data),
+  test: () =>
+    apiClient.post<{ detail: string }>(`${BASE_PATH}/system/gateway/test/`),
+};
 
 export interface SecurityPolicy {
   mfa_enabled: boolean;
@@ -110,10 +137,19 @@ export interface BulkImportResult {
 
 export const bulkImportApi = {
   /**
-   * Download CSV template for bulk user import
+   * Download CSV template for bulk user import (generated client-side)
    */
   downloadTemplate: () => {
-    window.open(`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/admin/users/csv_template/`, '_blank');
+    const headers = ['first_name', 'last_name', 'email', 'role', 'organization_id'];
+    const example = ['Jane', 'Doe', 'jane.doe@example.com', 'learner', ''];
+    const csv = [headers.join(','), example.join(',')].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'users_import_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
   },
 
   /**
@@ -157,6 +193,36 @@ export const superadminDemoRequestApi = {
     apiClient.get<PaginatedResponse<DemoRequest>>(`${BASE_PATH}/demo-requests/`, { params }),
   update: (id: number, data: Partial<DemoRequest>) =>
     apiClient.patch<DemoRequest>(`${BASE_PATH}/demo-requests/${id}/`, data),
+};
+
+// ── User Growth Analytics ─────────────────────────────────────────────────────
+
+export interface UserGrowthMetric {
+  label: string;
+  value: number;
+  change: number;
+  positive: boolean;
+}
+
+export interface UserGrowthStats {
+  metrics: UserGrowthMetric[];
+  monthly_signups: { month: string; count: number }[];
+}
+
+export const userGrowthApi = {
+  get: () => apiClient.get<UserGrowthStats>(`${BASE_PATH}/analytics/user-growth/`),
+};
+
+// ── System Health ─────────────────────────────────────────────────────────────
+
+export interface SystemHealthResponse {
+  database: string;
+  db_latency_ms: number;
+  storage: string;
+}
+
+export const systemHealthApi = {
+  get: () => apiClient.get<SystemHealthResponse>(`${BASE_PATH}/system/health/`),
 };
 
 // ── System Settings ───────────────────────────────────────────────────────────

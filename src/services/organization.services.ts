@@ -20,6 +20,15 @@ export const organizationApi = {
 
   getById: (id: number) =>
     apiClient.get<Organization>(`/api/v1/superadmin/organizations/${id}/`),
+
+  create: (data: Partial<Organization>) =>
+    apiClient.post<Organization>(`/api/v1/superadmin/organizations/`, data),
+
+  update: (id: number, data: Partial<Organization>) =>
+    apiClient.patch<Organization>(`/api/v1/superadmin/organizations/${id}/`, data),
+
+  deactivate: (id: number) =>
+    apiClient.patch<Organization>(`/api/v1/superadmin/organizations/${id}/`, { is_active: false }),
 };
 
 export const managerSettingsApi = {

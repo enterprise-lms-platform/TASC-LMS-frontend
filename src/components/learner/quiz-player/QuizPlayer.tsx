@@ -508,7 +508,7 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
       )}
 
       {/* Navigation */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', bottom: 0, bgcolor: '#f8f9fa', pt: 1, pb: 1, zIndex: 1 }}>
         <Button
           startIcon={<PrevIcon />}
           disabled={currentIdx === 0 || settings.allow_back_navigation === false}

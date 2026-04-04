@@ -23,6 +23,7 @@ import {
   FormControl,
   InputLabel,
   Select,
+  CircularProgress,
 } from '@mui/material';
 import {
   Groups as WorkshopsIcon,
@@ -43,22 +44,12 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
-
-export interface Workshop {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  participants: number;
-  maxParticipants: number;
-  status: 'upcoming' | 'ongoing' | 'completed';
-  gradingType: 'attendance' | 'pass_fail' | 'score';
-  category: string;
-}
-
-
+import {
+  useWorkshops,
+  useCreateWorkshop,
+  useDeleteWorkshop,
+} from '../../services/learning.services';
+import type { WorkshopItem } from '../../services/learning.services';
 
 const statusStyles: Record<string, { bg: string; color: string }> = {
   upcoming: { bg: '#dbeafe', color: '#2563eb' },
@@ -78,16 +69,18 @@ const WorkshopsPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState(0);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
-  const [menuWorkshopId, setMenuWorkshopId] = useState<string | null>(null);
+  const [menuWorkshopId, setMenuWorkshopId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [workshops, setWorkshops] = useState<Workshop[]>([]);
 
-  // TODO F35: replace with workshopApi.getAll() once backend Task 72 is done
-  const allWorkshops = workshops;
+  const { data: workshopsData, isLoading } = useWorkshops();
+  const createMutation = useCreateWorkshop();
+  const deleteMutation = useDeleteWorkshop();
+
+  const allWorkshops: WorkshopItem[] = workshopsData?.results ?? [];
 
   const upcomingCount = allWorkshops.filter(w => w.status === 'upcoming').length;
   const ongoingCount = allWorkshops.filter(w => w.status === 'ongoing').length;
-  const totalParticipants = allWorkshops.reduce((s, w) => s + w.participants, 0);
+  const totalParticipants = allWorkshops.reduce((s, w) => s + w.participants_count, 0);
 
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
@@ -97,13 +90,16 @@ const WorkshopsPage: React.FC = () => {
   const [newGradingType, setNewGradingType] = useState<'attendance' | 'pass_fail' | 'score'>('attendance');
 
   const statusFilter = tab === 0 ? null : tab === 1 ? 'upcoming' : tab === 2 ? 'ongoing' : 'completed';
-  const filtered = allWorkshops.filter((w) => {
-    const matchSearch = w.title.toLowerCase().includes(search.toLowerCase()) || w.location.toLowerCase().includes(search.toLowerCase()) || w.category.toLowerCase().includes(search.toLowerCase());
+  const filtered = allWorkshops.filter(w => {
+    const matchSearch =
+      w.title.toLowerCase().includes(search.toLowerCase()) ||
+      w.location.toLowerCase().includes(search.toLowerCase()) ||
+      w.category.toLowerCase().includes(search.toLowerCase());
     const matchStatus = !statusFilter || w.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
-  const handleMenuOpen = (e: React.MouseEvent<HTMLElement>, workshopId: string) => {
+  const handleMenuOpen = (e: React.MouseEvent<HTMLElement>, workshopId: number) => {
     e.stopPropagation();
     setMenuAnchor(e.currentTarget);
     setMenuWorkshopId(workshopId);
@@ -111,27 +107,33 @@ const WorkshopsPage: React.FC = () => {
 
   const handleCreate = () => {
     if (!newTitle.trim() || !newLocation.trim() || !newStartDate || !newEndDate) return;
-    const newWorkshop: Workshop = {
-      id: `w-${Date.now()}`,
-      title: newTitle,
-      description: newDescription,
-      location: newLocation,
-      startDate: newStartDate,
-      endDate: newEndDate,
-      participants: 0,
-      maxParticipants: 30,
-      status: 'upcoming',
-      gradingType: newGradingType,
-      category: 'General',
-    };
-    setWorkshops((prev) => [newWorkshop, ...prev]);
-    setCreateOpen(false);
-    setNewTitle('');
-    setNewDescription('');
-    setNewLocation('');
-    setNewStartDate('');
-    setNewEndDate('');
-    setNewGradingType('attendance');
+    createMutation.mutate(
+      {
+        title: newTitle,
+        description: newDescription,
+        location: newLocation,
+        start_date: newStartDate,
+        end_date: newEndDate,
+        grading_type: newGradingType,
+        category: 'General',
+      },
+      {
+        onSuccess: () => {
+          setCreateOpen(false);
+          setNewTitle('');
+          setNewDescription('');
+          setNewLocation('');
+          setNewStartDate('');
+          setNewEndDate('');
+          setNewGradingType('attendance');
+        },
+      }
+    );
+  };
+
+  const handleDelete = (id: number) => {
+    setMenuAnchor(null);
+    deleteMutation.mutate(id);
   };
 
   const formatDateRange = (start: string, end: string) => {
@@ -188,43 +190,19 @@ const WorkshopsPage: React.FC = () => {
               { label: 'Upcoming', value: upcomingCount, icon: <DateIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
               { label: 'Ongoing', value: ongoingCount, icon: <EditIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
               { label: 'Total Participants', value: totalParticipants, icon: <PeopleIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
-            ].map((kpi) => (
+            ].map(kpi => (
               <Grid size={{ xs: 6, sm: 6, md: 3 }} key={kpi.label}>
                 <Paper
                   elevation={0}
                   sx={{
-                    bgcolor: kpi.bgcolor,
-                    borderRadius: '20px',
-                    p: 3,
-                    position: 'relative',
-                    height: '100%',
-                    minHeight: { xs: 110, md: 160 },
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    transition: 'transform 0.2s',
-                    cursor: 'pointer',
+                    bgcolor: kpi.bgcolor, borderRadius: '20px', p: 3, position: 'relative',
+                    height: '100%', minHeight: { xs: 110, md: 160 },
+                    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center',
+                    transition: 'transform 0.2s', cursor: 'default',
                     '&:hover': { transform: 'translateY(-4px)' },
                   }}
                 >
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 16,
-                      right: 16,
-                      width: 40,
-                      height: 40,
-                      borderRadius: '50%',
-                      bgcolor: kpi.iconBg,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      '& svg': { fontSize: 20 },
-                    }}
-                  >
+                  <Box sx={{ position: 'absolute', top: 16, right: 16, width: 40, height: 40, borderRadius: '50%', bgcolor: kpi.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', '& svg': { fontSize: 20 } }}>
                     {kpi.icon}
                   </Box>
                   <Typography variant="h3" sx={{ fontWeight: 700, color: kpi.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
@@ -239,23 +217,13 @@ const WorkshopsPage: React.FC = () => {
           </Grid>
 
           {/* Filters */}
-          <Paper
-            elevation={0}
-            sx={{
-              borderRadius: '1rem',
-              overflow: 'hidden',
-              mb: 3,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
-              transition: 'box-shadow 0.3s',
-              '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)' },
-            }}
-          >
+          <Paper elevation={0} sx={{ borderRadius: '1rem', overflow: 'hidden', mb: 3, boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)' }}>
             <Box sx={{ p: 2, px: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
               <TextField
                 size="small"
                 placeholder="Search workshops..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={e => setSearch(e.target.value)}
                 InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 20, color: 'text.disabled' }} /></InputAdornment> }}
                 sx={{ minWidth: 280 }}
               />
@@ -266,138 +234,90 @@ const WorkshopsPage: React.FC = () => {
               <Tab label={`All (${allWorkshops.length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
               <Tab label={`Upcoming (${upcomingCount})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
               <Tab label={`Ongoing (${ongoingCount})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
-              <Tab label={`Completed (${allWorkshops.filter((w) => w.status === 'completed').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
+              <Tab label={`Completed (${allWorkshops.filter(w => w.status === 'completed').length})`} sx={{ textTransform: 'none', fontWeight: 600 }} />
             </Tabs>
           </Paper>
 
-          {/* Workshop Cards */}
-          <Grid container spacing={2}>
-            {filtered.map((workshop) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={workshop.id}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    borderRadius: '1rem',
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
-                    transition: 'box-shadow 0.3s, transform 0.2s',
-                    '&:hover': {
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)',
-                      transform: 'translateY(-2px)',
-                    },
-                  }}
-                  onClick={() => navigate(`/instructor/workshops/${workshop.id}`)}
-                >
-                  {/* Top: workshop name in status-colored header (no border) */}
-                  <Box
+          {/* Loading State */}
+          {isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+              <CircularProgress size={36} />
+            </Box>
+          ) : filtered.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 8, color: 'text.secondary' }}>
+              <WorkshopsIcon sx={{ fontSize: 48, opacity: 0.3, mb: 1 }} />
+              <Typography variant="body1" fontWeight={500}>No workshops yet</Typography>
+              <Typography variant="body2">Create your first workshop to get started</Typography>
+            </Box>
+          ) : (
+            /* Workshop Cards */
+            <Grid container spacing={2}>
+              {filtered.map(workshop => (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={workshop.id}>
+                  <Paper
+                    elevation={0}
                     sx={{
-                      px: 2.5,
-                      pt: 2.5,
-                      pb: 2,
-                      bgcolor: statusStyles[workshop.status].bg,
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      gap: 1,
+                      borderRadius: '1rem', overflow: 'hidden', cursor: 'pointer',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04)',
+                      transition: 'box-shadow 0.3s, transform 0.2s',
+                      '&:hover': { boxShadow: '0 2px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)', transform: 'translateY(-2px)' },
                     }}
+                    onClick={() => navigate(`/instructor/workshops/${workshop.id}`)}
                   >
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography
-                        variant="body1"
-                        fontWeight={700}
-                        sx={{
-                          lineHeight: 1.3,
-                          mb: 0.5,
-                          color: statusStyles[workshop.status].color,
-                        }}
-                      >
-                        {workshop.title}
-                      </Typography>
-                      <Chip
-                        label={workshop.category}
-                        size="small"
-                        sx={{
-                          height: 20,
-                          fontSize: '0.65rem',
-                          fontWeight: 600,
-                          bgcolor: 'rgba(255,255,255,0.7)',
-                          color: 'text.secondary',
-                          borderRadius: '6px',
-                        }}
-                      />
-                    </Box>
-                    <IconButton size="small" onClick={(e) => handleMenuOpen(e, workshop.id)} sx={{ color: statusStyles[workshop.status].color, flexShrink: 0 }}>
-                      <MoreIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-
-                  <Box sx={{ p: 2.5, pt: 2 }}>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.45 }}
+                    <Box
+                      sx={{ px: 2.5, pt: 2.5, pb: 2, bgcolor: statusStyles[workshop.status]?.bg ?? '#f4f4f5',
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}
                     >
-                      {workshop.description}
-                    </Typography>
-
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, bgcolor: 'grey.50', borderRadius: '0.75rem', p: 1.5 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.8rem', color: 'text.secondary' }}>
-                        <LocationIcon sx={{ fontSize: 16, color: 'primary.main', opacity: 0.8 }} />
-                        <Typography variant="caption" noWrap sx={{ flex: 1 }}>{workshop.location}</Typography>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="body1" fontWeight={700} sx={{ lineHeight: 1.3, mb: 0.5, color: statusStyles[workshop.status]?.color ?? '#27272a' }}>
+                          {workshop.title}
+                        </Typography>
+                        <Chip label={workshop.category} size="small" sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, bgcolor: 'rgba(255,255,255,0.7)', color: 'text.secondary', borderRadius: '6px' }} />
                       </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.8rem', color: 'text.secondary' }}>
-                        <DateIcon sx={{ fontSize: 16, color: 'primary.main', opacity: 0.8 }} />
-                        <Typography variant="caption">{formatDateRange(workshop.startDate, workshop.endDate)}</Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.8rem', color: 'text.secondary' }}>
-                        <PeopleIcon sx={{ fontSize: 16, color: 'primary.main', opacity: 0.8 }} />
-                        <Typography variant="caption">{workshop.participants} / {workshop.maxParticipants} participants</Typography>
-                      </Box>
+                      <IconButton size="small" onClick={e => handleMenuOpen(e, workshop.id)} sx={{ color: statusStyles[workshop.status]?.color ?? '#27272a', flexShrink: 0 }}>
+                        <MoreIcon fontSize="small" />
+                      </IconButton>
                     </Box>
 
-                    <Box sx={{ mt: 2, pt: 1.5, borderTop: 1, borderColor: 'divider', display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center' }}>
-                      <Chip
-                        label={gradingLabels[workshop.gradingType]}
-                        size="small"
-                        variant="outlined"
-                        sx={{ height: 22, fontSize: '0.65rem', fontWeight: 500, borderRadius: '6px', borderColor: 'grey.300' }}
-                      />
-                      <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', minWidth: 0 }}>
-                        <Chip
-                          label={workshop.status}
-                          size="small"
-                          sx={{
-                            height: 22,
-                            fontSize: '0.7rem',
-                            fontWeight: 600,
-                            textTransform: 'capitalize',
-                            bgcolor: statusStyles[workshop.status].bg,
-                            color: statusStyles[workshop.status].color,
-                            borderRadius: '6px',
-                          }}
-                        />
+                    <Box sx={{ p: 2.5, pt: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.45 }}>
+                        {workshop.description || 'No description provided.'}
+                      </Typography>
+
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, bgcolor: 'grey.50', borderRadius: '0.75rem', p: 1.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <LocationIcon sx={{ fontSize: 16, color: 'primary.main', opacity: 0.8 }} />
+                          <Typography variant="caption" noWrap sx={{ flex: 1 }}>{workshop.location}</Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <DateIcon sx={{ fontSize: 16, color: 'primary.main', opacity: 0.8 }} />
+                          <Typography variant="caption">{formatDateRange(workshop.start_date, workshop.end_date)}</Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <PeopleIcon sx={{ fontSize: 16, color: 'primary.main', opacity: 0.8 }} />
+                          <Typography variant="caption">{workshop.participants_count} / {workshop.max_participants} participants</Typography>
+                        </Box>
                       </Box>
-                      <Button
-                        size="small"
-                        sx={{
-                          textTransform: 'none',
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          color: 'primary.main',
-                          borderRadius: '50px',
-                          px: 1.5,
-                          '&:hover': { bgcolor: 'rgba(255,164,36,0.08)' },
-                        }}
-                      >
-                        View Details
-                      </Button>
+
+                      <Box sx={{ mt: 2, pt: 1.5, borderTop: 1, borderColor: 'divider', display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center' }}>
+                        <Chip label={gradingLabels[workshop.grading_type] ?? workshop.grading_type} size="small" variant="outlined" sx={{ height: 22, fontSize: '0.65rem', fontWeight: 500, borderRadius: '6px', borderColor: 'grey.300' }} />
+                        <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                          <Chip
+                            label={workshop.status}
+                            size="small"
+                            sx={{ height: 22, fontSize: '0.7rem', fontWeight: 600, textTransform: 'capitalize', bgcolor: statusStyles[workshop.status]?.bg ?? '#f4f4f5', color: statusStyles[workshop.status]?.color ?? '#27272a', borderRadius: '6px' }}
+                          />
+                        </Box>
+                        <Button size="small" sx={{ textTransform: 'none', fontSize: '0.8rem', fontWeight: 600, color: 'primary.main', borderRadius: '50px', px: 1.5 }}>
+                          View Details
+                        </Button>
+                      </Box>
                     </Box>
-                  </Box>
-                </Paper>
-              </Grid>
-            ))}
-          </Grid>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+          )}
 
           {/* Context Menu */}
           <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
@@ -416,7 +336,7 @@ const WorkshopsPage: React.FC = () => {
             <MenuItem onClick={() => setMenuAnchor(null)}>
               <CertIcon sx={{ fontSize: 18, mr: 1.5, color: 'text.secondary' }} /> Certificates
             </MenuItem>
-            <MenuItem onClick={() => setMenuAnchor(null)} sx={{ color: 'error.main' }}>
+            <MenuItem onClick={() => menuWorkshopId && handleDelete(menuWorkshopId)} sx={{ color: 'error.main' }}>
               <DeleteIcon sx={{ fontSize: 18, mr: 1.5 }} /> Delete
             </MenuItem>
           </Menu>
@@ -431,62 +351,20 @@ const WorkshopsPage: React.FC = () => {
         </DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1 }}>
-            <TextField
-              fullWidth
-              label="Workshop Title"
-              placeholder="e.g., Leadership Essentials Bootcamp"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              required
-            />
-            <TextField
-              fullWidth
-              label="Description"
-              placeholder="Describe the workshop objectives and content..."
-              value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
-              multiline
-              minRows={3}
-            />
-            <TextField
-              fullWidth
-              label="Location"
-              placeholder="e.g., TASC Training Center, Nairobi"
-              value={newLocation}
-              onChange={(e) => setNewLocation(e.target.value)}
-              required
-            />
+            <TextField fullWidth label="Workshop Title" placeholder="e.g., Leadership Essentials Bootcamp" value={newTitle} onChange={e => setNewTitle(e.target.value)} required />
+            <TextField fullWidth label="Description" placeholder="Describe the workshop objectives and content..." value={newDescription} onChange={e => setNewDescription(e.target.value)} multiline minRows={3} />
+            <TextField fullWidth label="Location" placeholder="e.g., TASC Training Center, Nairobi" value={newLocation} onChange={e => setNewLocation(e.target.value)} required />
             <Grid container spacing={2}>
               <Grid size={{ xs: 6 }}>
-                <TextField
-                  fullWidth
-                  label="Start Date"
-                  type="date"
-                  value={newStartDate}
-                  onChange={(e) => setNewStartDate(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  required
-                />
+                <TextField fullWidth label="Start Date" type="date" value={newStartDate} onChange={e => setNewStartDate(e.target.value)} InputLabelProps={{ shrink: true }} required />
               </Grid>
               <Grid size={{ xs: 6 }}>
-                <TextField
-                  fullWidth
-                  label="End Date"
-                  type="date"
-                  value={newEndDate}
-                  onChange={(e) => setNewEndDate(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  required
-                />
+                <TextField fullWidth label="End Date" type="date" value={newEndDate} onChange={e => setNewEndDate(e.target.value)} InputLabelProps={{ shrink: true }} required />
               </Grid>
             </Grid>
             <FormControl fullWidth>
               <InputLabel>Grading Type</InputLabel>
-              <Select
-                value={newGradingType}
-                onChange={(e) => setNewGradingType(e.target.value as 'attendance' | 'pass_fail' | 'score')}
-                label="Grading Type"
-              >
+              <Select value={newGradingType} onChange={e => setNewGradingType(e.target.value as 'attendance' | 'pass_fail' | 'score')} label="Grading Type">
                 <MenuItem value="attendance">Attendance Only</MenuItem>
                 <MenuItem value="pass_fail">Pass / Fail</MenuItem>
                 <MenuItem value="score">Score (0-100)</MenuItem>
@@ -499,10 +377,10 @@ const WorkshopsPage: React.FC = () => {
           <Button
             variant="contained"
             onClick={handleCreate}
-            disabled={!newTitle.trim() || !newLocation.trim() || !newStartDate || !newEndDate}
+            disabled={!newTitle.trim() || !newLocation.trim() || !newStartDate || !newEndDate || createMutation.isPending}
             sx={{ textTransform: 'none', fontWeight: 600, bgcolor: 'primary.main' }}
           >
-            Create Workshop
+            {createMutation.isPending ? 'Creating…' : 'Create Workshop'}
           </Button>
         </DialogActions>
       </Dialog>

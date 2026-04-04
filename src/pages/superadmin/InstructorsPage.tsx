@@ -9,12 +9,14 @@ import {
   Edit as EditIcon, Visibility as ViewIcon, PersonAdd as InviteIcon,
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
+import InviteInstructorModal from '../../components/superadmin/InviteInstructorModal';
 import { useInstructorStats } from '../../services/learning.services';
 import { usersApi } from '../../services/users.services';
 import KPICard from '../../components/superadmin/KPICard';
 
 const InstructorsPage: React.FC = () => {
   const [search, setSearch] = useState('');
+  const [inviteOpen, setInviteOpen] = useState(false);
   const { data: stats } = useInstructorStats();
 
   const { data: instructorsRaw, isLoading } = useQuery({
@@ -50,8 +52,17 @@ const InstructorsPage: React.FC = () => {
             onChange={(e) => setSearch(e.target.value)}
             sx={{ minWidth: 250 }}
           />
-          <Button variant="contained" startIcon={<InviteIcon />} sx={{ textTransform: 'none', fontWeight: 600 }}>Invite Instructor</Button>
+          <Button
+            variant="contained"
+            startIcon={<InviteIcon />}
+            onClick={() => setInviteOpen(true)}
+            sx={{ textTransform: 'none', fontWeight: 600 }}
+          >
+            Invite Instructor
+          </Button>
         </Box>
+
+        <InviteInstructorModal open={inviteOpen} onClose={() => setInviteOpen(false)} />
 
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
@@ -110,8 +121,8 @@ const InstructorsPage: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 0.5 }}>
-                        <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><ViewIcon fontSize="small" /></IconButton>
-                        <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><EditIcon fontSize="small" /></IconButton>
+                        <IconButton size="small" disabled sx={{ color: 'text.disabled' }} title="View instructor profile"><ViewIcon fontSize="small" /></IconButton>
+                        <IconButton size="small" disabled sx={{ color: 'text.disabled' }} title="Edit instructor"><EditIcon fontSize="small" /></IconButton>
                       </Box>
                     </TableCell>
                   </TableRow>

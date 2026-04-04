@@ -5,7 +5,7 @@
  */
 
 import { apiClient } from '../utils/config';
-import type { PaginatedResponse } from '../types/types';
+import type { InviteUserRequest, PaginatedResponse } from '../types/types';
 
 const BASE_PATH = '/api/v1/admin/users';
 
@@ -54,6 +54,11 @@ export interface InstructorListItem extends UserListItem {
   rating?: number;
 }
 
+export interface InviteUserResponse {
+  detail: string;
+  email: string;
+}
+
 export const usersApi = {
   // Get all users with filters
   getAll: (params?: UserListParams) =>
@@ -80,6 +85,10 @@ export const usersApi = {
     apiClient.get<PaginatedResponse<InstructorListItem>>(`${BASE_PATH}/`, { 
       params: { ...params, role: 'instructor' } 
     }),
+
+  /** Super Admin: invite a user by email (same endpoint as admin invite flow) */
+  invite: (data: InviteUserRequest) =>
+    apiClient.post<InviteUserResponse>(`${BASE_PATH}/invite/`, data),
 
   // Get instructor stats (derived client-side until backend endpoint exists)
   getInstructorStats: async (): Promise<InstructorStats> => {

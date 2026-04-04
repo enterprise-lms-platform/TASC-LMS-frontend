@@ -30,7 +30,7 @@ export const courseDetailLoader = async (
 
     return { course: courseData };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && DEV_BYPASS_AUTH) return { course: null };
     if (err.status === 404) {
       return redirect('/learner/courses');
@@ -116,7 +116,7 @@ export const sessionDetailLoader = async (
 
     return { session };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && DEV_BYPASS_AUTH) return { session: null };
     throw error;
   }

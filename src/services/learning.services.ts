@@ -566,6 +566,9 @@ export const statsApi = {
   getRevenueStats: (months?: number) =>
     apiClient.get<RevenueStatsResponse>('/api/v1/payments/transactions/revenue-stats/', { params: months ? { months } : undefined }),
 
+  getRevenueByOrg: () =>
+    apiClient.get<{ results: Array<{ organization_id: number; organization: string; revenue: string }> }>('/api/v1/payments/transactions/revenue-by-org/'),
+
   getInstructorStats: () =>
     apiClient.get<InstructorStatsResponse>('/api/v1/superadmin/users/instructor-stats/'),
 };
@@ -633,3 +636,100 @@ export const useInstructorStats = () => {
   });
 };
 
+
+// WORKSHOPS
+
+export interface WorkshopItem {
+  id: number;
+  title: string;
+  description: string;
+  location: string;
+  start_date: string;   // ISO date string 'YYYY-MM-DD'
+  end_date: string;
+  max_participants: number;
+  participants: number;
+  participants_count: number;
+  status: 'upcoming' | 'ongoing' | 'completed';
+  grading_type: 'attendance' | 'pass_fail' | 'score';
+  category: string;
+  instructor: number;
+  instructor_name: string;
+  instructor_email: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkshopCreateRequest {
+  title: string;
+  description?: string;
+  location: string;
+  start_date: string;
+  end_date: string;
+  max_participants?: number;
+  participants_count?: number;
+  status?: 'upcoming' | 'ongoing' | 'completed';
+  grading_type?: 'attendance' | 'pass_fail' | 'score';
+  category?: string;
+}
+
+export interface WorkshopParams {
+  status?: 'upcoming' | 'ongoing' | 'completed';
+  search?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export const workshopApi = {
+  getAll: (params?: WorkshopParams) =>
+    apiClient.get<PaginatedResponse<WorkshopItem>>(`${BASE_PATH}/workshops/`, { params }),
+
+  getById: (id: number) =>
+    apiClient.get<WorkshopItem>(`${BASE_PATH}/workshops/${id}/`),
+
+  create: (data: WorkshopCreateRequest) =>
+    apiClient.post<WorkshopItem>(`${BASE_PATH}/workshops/`, data),
+
+  update: (id: number, data: Partial<WorkshopCreateRequest>) =>
+    apiClient.patch<WorkshopItem>(`${BASE_PATH}/workshops/${id}/`, data),
+
+  delete: (id: number) =>
+    apiClient.delete(`${BASE_PATH}/workshops/${id}/`),
+};
+
+export const useWorkshops = (params?: WorkshopParams) => {
+  return useQuery({
+    queryKey: ['workshops', params ?? {}],
+    queryFn: () => workshopApi.getAll(params).then(res => res.data),
+  });
+};
+
+export const useCreateWorkshop = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: WorkshopCreateRequest) => workshopApi.create(data).then(res => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workshops'] });
+    },
+  });
+};
+
+export const useUpdateWorkshop = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<WorkshopCreateRequest> }) =>
+      workshopApi.update(id, data).then(res => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workshops'] });
+    },
+  });
+};
+
+export const useDeleteWorkshop = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => workshopApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workshops'] });
+    },
+  });
+};

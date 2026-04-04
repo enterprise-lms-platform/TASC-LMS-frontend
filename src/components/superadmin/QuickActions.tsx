@@ -15,7 +15,7 @@ const quickActions = [
   { icon: <UsersIcon />, label: 'Manage Users', color: '#6366f1', path: '/superadmin/users' },
   { icon: <OrgIcon />, label: 'Organizations', color: '#8b5cf6', path: '/superadmin/organizations' },
   { icon: <AuditIcon />, label: 'Audit Logs', color: '#3b82f6', path: '/superadmin/audit-logs' },
-  { icon: <ExportIcon />, label: 'Export Data', color: '#f59e0b', path: '/superadmin/reports' },
+  { icon: <ExportIcon />, label: 'Export Data', color: '#f59e0b', path: '/superadmin/analytics' },
   { icon: <SettingsIcon />, label: 'Settings', color: '#ef4444', path: '/superadmin/settings' },
 ];
 

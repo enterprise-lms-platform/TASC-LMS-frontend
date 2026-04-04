@@ -318,11 +318,13 @@ const PaymentsPage: React.FC = () => {
                   <TableCell align="right">
                     <IconButton
                       size="small"
+                      disabled
                       sx={{
                         border: '1px solid',
                         borderColor: 'divider',
-                        '&:hover': { color: 'info.main', borderColor: 'info.main' },
+                        color: 'text.disabled',
                       }}
+                      title="View transaction details"
                     >
                       <ViewIcon fontSize="small" />
                     </IconButton>

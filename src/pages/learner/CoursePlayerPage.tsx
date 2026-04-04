@@ -1002,7 +1002,7 @@ const QuizSessionRenderer: React.FC<{
   }
 
   return (
-    <Box sx={{ p: 2, bgcolor: '#f8f9fa', minHeight: 400 }}>
+    <Box sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 260px)', minHeight: 300, bgcolor: '#f8f9fa', p: 2 }}>
       <QuizPlayer
         sessionId={sessionId}
         quizId={quiz.quiz_id}
@@ -1020,7 +1020,7 @@ const QuizSessionRenderer: React.FC<{
 /* ── Assignment wrapper ── */
 const AssignmentSessionRenderer: React.FC<{ sessionId: number; onComplete?: (score: number | null, passed: boolean | null) => void }> = ({ sessionId, onComplete }) => {
   return (
-    <Box sx={{ p: 2, bgcolor: '#f8f9fa', minHeight: 400 }}>
+    <Box sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 260px)', minHeight: 300, bgcolor: '#f8f9fa', p: 2 }}>
       <AssignmentPlayer
         sessionId={sessionId}
         onComplete={onComplete}

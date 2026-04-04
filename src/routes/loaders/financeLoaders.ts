@@ -34,7 +34,7 @@ export const financeDashboardLoader = async (queryClient: QueryClient) => {
 
     return { transactions, invoices };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return { transactions: { results: [], count: 0 }, invoices: { results: [], count: 0 } };
@@ -58,7 +58,7 @@ export const financePaymentsLoader = async (
 
     return { transactions };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { transactions: { results: [], count: 0 } };
   }
@@ -81,7 +81,7 @@ export const financeInvoicesLoader = async (
 
     return { invoices };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { invoices: { results: [], count: 0 } };
   }
@@ -103,7 +103,7 @@ export const financeSubscriptionsLoader = async (
 
     return { subscriptions };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { subscriptions: [] };
   }
@@ -124,7 +124,7 @@ export const financeRouteLoader = async (queryClient: QueryClient) => {
 
     return { transactions };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return {};

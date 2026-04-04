@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Paper,
@@ -17,12 +18,18 @@ import {
   Chip,
   IconButton,
   Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import {
   People as UsersIcon,
   PersonAdd as PersonAddIcon,
   Block as BlockIcon,
-
   Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -33,7 +40,8 @@ import {
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import KPICard from '../../components/superadmin/KPICard';
 import { usersApi, userStatsApi } from '../../services/users.services';
-import { exportApi } from '../../services/superadmin.services';
+import type { UserUpdateRequest } from '../../services/users.services';
+import { exportApi, bulkImportApi } from '../../services/superadmin.services';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -66,9 +74,25 @@ const getRoleColor = (role: string) => {
 };
 
 const AllUsersPage: React.FC = () => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const csvInputRef = useRef<HTMLInputElement>(null);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+
+  // Edit dialog state
+  const [editUser, setEditUser] = useState<{ id: number; role: string; is_active: boolean } | null>(null);
+  const [editForm, setEditForm] = useState<{ role: string; is_active: boolean }>({ role: '', is_active: true });
+
+  // Delete confirmation state
+  const [deleteUserId, setDeleteUserId] = useState<number | null>(null);
+
+  // Snackbar
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false, message: '', severity: 'success',
+  });
 
   const { data: usersData } = useQuery({
     queryKey: ['users', roleFilter, statusFilter, searchQuery],
@@ -85,19 +109,63 @@ const AllUsersPage: React.FC = () => {
     queryFn: () => userStatsApi.getStats(),
   });
 
-  const apiStats = statsData?.data;
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UserUpdateRequest }) => usersApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setEditUser(null);
+      setSnackbar({ open: true, message: 'User updated successfully', severity: 'success' });
+    },
+    onError: () => {
+      setSnackbar({ open: true, message: 'Failed to update user', severity: 'error' });
+    },
+  });
 
+  const deactivateMutation = useMutation({
+    mutationFn: (id: number) => usersApi.deactivate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['userStats'] });
+      setDeleteUserId(null);
+      setSnackbar({ open: true, message: 'User suspended successfully', severity: 'success' });
+    },
+    onError: () => {
+      setSnackbar({ open: true, message: 'Failed to suspend user', severity: 'error' });
+    },
+  });
+
+  const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const result = await bulkImportApi.uploadCSV(file);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setSnackbar({
+        open: true,
+        message: `Import complete: ${result.imported} imported, ${result.failed} failed`,
+        severity: result.failed > 0 ? 'error' : 'success',
+      });
+    } catch {
+      setSnackbar({ open: true, message: 'CSV upload failed', severity: 'error' });
+    } finally {
+      if (csvInputRef.current) csvInputRef.current.value = '';
+    }
+  };
+
+  const apiStats = statsData?.data;
   const users = usersData?.data?.results || [];
 
   const usersMapped = users.map((user) => ({
-    id: String(user.id),
+    id: user.id,
     name: user.name || `${user.first_name} ${user.last_name}`.trim(),
     email: user.email,
     role: user.role.charAt(0).toUpperCase() + user.role.slice(1),
+    rawRole: user.role,
     organization: '-',
     status: user.is_active ? 'active' : 'suspended' as const,
     lastLogin: user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never',
     avatarColor: '#ffa424',
+    is_active: user.is_active,
   }));
 
   const totalUsers = apiStats?.total ?? usersMapped.length;
@@ -132,6 +200,15 @@ const AllUsersPage: React.FC = () => {
 
   return (
     <SuperadminLayout title="All Users" subtitle="Manage users across all organizations">
+      {/* Hidden CSV file input */}
+      <input
+        ref={csvInputRef}
+        type="file"
+        accept=".csv"
+        style={{ display: 'none' }}
+        onChange={handleCsvUpload}
+      />
+
       {/* KPI Stat Cards */}
       <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
         {kpiStats.map((stat, index) => (
@@ -216,6 +293,7 @@ const AllUsersPage: React.FC = () => {
             <Button
               variant="contained"
               startIcon={<PersonAddIcon />}
+              onClick={() => navigate('/superadmin/add-user')}
               sx={{ textTransform: 'none', fontWeight: 600 }}
             >
               Add User
@@ -223,6 +301,7 @@ const AllUsersPage: React.FC = () => {
             <Button
               variant="outlined"
               startIcon={<CloudUploadIcon />}
+              onClick={() => csvInputRef.current?.click()}
               sx={{ textTransform: 'none', fontWeight: 600 }}
             >
               Bulk Import
@@ -315,6 +394,10 @@ const AllUsersPage: React.FC = () => {
                     <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
                       <IconButton
                         size="small"
+                        onClick={() => {
+                          setEditUser({ id: user.id, role: user.rawRole, is_active: user.is_active });
+                          setEditForm({ role: user.rawRole, is_active: user.is_active });
+                        }}
                         sx={{
                           border: '1px solid',
                           borderColor: 'divider',
@@ -325,6 +408,8 @@ const AllUsersPage: React.FC = () => {
                       </IconButton>
                       <IconButton
                         size="small"
+                        onClick={() => setDeleteUserId(user.id)}
+                        disabled={!user.is_active}
                         sx={{
                           border: '1px solid',
                           borderColor: 'divider',
@@ -378,6 +463,7 @@ const AllUsersPage: React.FC = () => {
             <Button
               variant="outlined"
               startIcon={<DownloadIcon />}
+              onClick={() => bulkImportApi.downloadTemplate()}
               sx={{ textTransform: 'none', fontWeight: 600 }}
             >
               Download CSV Template
@@ -385,6 +471,7 @@ const AllUsersPage: React.FC = () => {
             <Button
               variant="contained"
               startIcon={<UploadIcon />}
+              onClick={() => csvInputRef.current?.click()}
               sx={{ textTransform: 'none', fontWeight: 600 }}
             >
               Upload CSV
@@ -392,6 +479,85 @@ const AllUsersPage: React.FC = () => {
           </Box>
         </Box>
       </Paper>
+
+      {/* Edit User Dialog */}
+      <Dialog open={!!editUser} onClose={() => setEditUser(null)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ fontWeight: 700 }}>Edit User</DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <TextField
+            select
+            fullWidth
+            label="Role"
+            value={editForm.role}
+            onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+            sx={{ mb: 2, mt: 1 }}
+          >
+            {['learner', 'instructor', 'lms_manager', 'finance', 'tasc_admin'].map((r) => (
+              <MenuItem key={r} value={r}>
+                {r.charAt(0).toUpperCase() + r.slice(1).replace('_', ' ')}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            fullWidth
+            label="Status"
+            value={editForm.is_active ? 'active' : 'suspended'}
+            onChange={(e) => setEditForm({ ...editForm, is_active: e.target.value === 'active' })}
+          >
+            <MenuItem value="active">Active</MenuItem>
+            <MenuItem value="suspended">Suspended</MenuItem>
+          </TextField>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setEditUser(null)} sx={{ textTransform: 'none' }}>Cancel</Button>
+          <Button
+            variant="contained"
+            disabled={updateMutation.isPending}
+            onClick={() => {
+              if (!editUser) return;
+              updateMutation.mutate({ id: editUser.id, data: { role: editForm.role, is_active: editForm.is_active } });
+            }}
+            sx={{ textTransform: 'none', fontWeight: 600 }}
+          >
+            {updateMutation.isPending ? <CircularProgress size={20} /> : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Suspend Confirmation Dialog */}
+      <Dialog open={deleteUserId !== null} onClose={() => setDeleteUserId(null)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ fontWeight: 700 }}>Suspend User</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to suspend this user? They will no longer be able to log in.</Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDeleteUserId(null)} sx={{ textTransform: 'none' }}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="error"
+            disabled={deactivateMutation.isPending}
+            onClick={() => {
+              if (deleteUserId !== null) deactivateMutation.mutate(deleteUserId);
+            }}
+            sx={{ textTransform: 'none', fontWeight: 600 }}
+          >
+            {deactivateMutation.isPending ? <CircularProgress size={20} /> : 'Suspend'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </SuperadminLayout>
   );
 };

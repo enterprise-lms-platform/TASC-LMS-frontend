@@ -14,6 +14,7 @@ import { publicStatsApi } from '../../services/public.services';
 import { organizationApi } from '../../services/organization.services';
 import { courseApi, enrollmentApi } from '../../services/main.api';
 import { normalizeEnrollmentListResponse } from '../../hooks/useLearning';
+import { useSuperadminAssessmentStats } from '../../hooks/useSuperadmin';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -39,15 +40,6 @@ const fallbackTopCourses = [
   { name: 'No courses yet', enrollments: 0, completion: 0, rating: 0 },
 ];
 
-const fallbackWeeklyEngagement = [
-  { day: 'Mon', dau: 0, wau: 0 },
-  { day: 'Tue', dau: 0, wau: 0 },
-  { day: 'Wed', dau: 0, wau: 0 },
-  { day: 'Thu', dau: 0, wau: 0 },
-  { day: 'Fri', dau: 0, wau: 0 },
-  { day: 'Sat', dau: 0, wau: 0 },
-  { day: 'Sun', dau: 0, wau: 0 },
-];
 
 const fallbackContentTypes = [
   { type: 'Courses', count: 0, percentage: 0, color: '#ffa424' },
@@ -57,20 +49,13 @@ const fallbackContentTypes = [
   { type: 'Live Sessions', count: 0, percentage: 0, color: '#ef4444' },
 ];
 
-const fallbackCategoryPerformance = [
-  { category: 'Web Development', completion: 0, color: '#ffa424' },
-  { category: 'Data Science', completion: 0, color: '#10b981' },
-  { category: 'Cybersecurity', completion: 0, color: '#6366f1' },
-  { category: 'Cloud Computing', completion: 0, color: '#f59e0b' },
-  { category: 'Mobile Dev', completion: 0, color: '#ef4444' },
-  { category: 'DevOps', completion: 0, color: '#8b5cf6' },
-];
+const fallbackCategoryPerformance: { category: string; completion: number; color: string }[] = [];
 
 const fallbackAssessmentMetrics = [
-  { label: 'Total Assessments', value: '0', change: '+0%' },
-  { label: 'Avg. Pass Rate', value: '0%', change: '+0%' },
-  { label: 'Avg. Score', value: '0%', change: '+0%' },
-  { label: 'Retake Rate', value: '0%', change: '0%' },
+  { label: 'Total Assessments', value: '—', change: '' },
+  { label: 'Quizzes', value: '—', change: '' },
+  { label: 'Assignments', value: '—', change: '' },
+  { label: 'Pass Rate', value: '—', change: '' },
 ];
 
 const fallbackScoreDistribution = [
@@ -101,6 +86,8 @@ const AnalyticsPage: React.FC = () => {
     queryKey: ['enrollments', 'all'],
     queryFn: () => enrollmentApi.getAll(),
   });
+
+  const { data: assessmentStats } = useSuperadminAssessmentStats();
 
   const kpis = useMemo(() => {
     if (statsData?.data) {
@@ -191,7 +178,16 @@ const AnalyticsPage: React.FC = () => {
   const categoryPerformance = fallbackCategoryPerformance;
   const maxCat = 100;
 
-  const assessmentMetrics = fallbackAssessmentMetrics;
+  const assessmentMetrics = useMemo(() => {
+    if (!assessmentStats) return fallbackAssessmentMetrics;
+    return [
+      { label: 'Total Assessments', value: String(assessmentStats.total), change: '' },
+      { label: 'Quizzes', value: String(assessmentStats.quizzes), change: '' },
+      { label: 'Assignments', value: String(assessmentStats.assignments), change: '' },
+      { label: 'Pass Rate', value: `${assessmentStats.pass_rate}%`, change: '' },
+    ];
+  }, [assessmentStats]);
+
   const scoreDistribution = fallbackScoreDistribution;
 
   return (
@@ -370,7 +366,11 @@ const AnalyticsPage: React.FC = () => {
               <Typography fontWeight={700}>Course Performance by Category</Typography>
             </Box>
             <Box sx={{ p: 3 }}>
-              {categoryPerformance.map((cat) => (
+              {categoryPerformance.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                  No category data available yet
+                </Typography>
+              ) : categoryPerformance.map((cat) => (
                 <Box key={cat.category} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, '&:last-child': { mb: 0 } }}>
                   <Typography variant="caption" fontWeight={500} sx={{ minWidth: 100, fontSize: '0.75rem' }}>{cat.category}</Typography>
                   <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1 }}>

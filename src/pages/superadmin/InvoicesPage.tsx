@@ -104,8 +104,8 @@ const InvoicesPage: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 0.5 }}>
-                        <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><ViewIcon fontSize="small" /></IconButton>
-                        <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><DownloadIcon fontSize="small" /></IconButton>
+                        <IconButton size="small" disabled sx={{ color: 'text.disabled' }} title="View invoice details"><ViewIcon fontSize="small" /></IconButton>
+                        <IconButton size="small" onClick={() => exportApi.invoices()} sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }} title="Download invoice"><DownloadIcon fontSize="small" /></IconButton>
                       </Box>
                     </TableCell>
                   </TableRow>

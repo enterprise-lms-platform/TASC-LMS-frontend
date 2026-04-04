@@ -50,14 +50,45 @@ const SystemSettingsPage: React.FC = () => {
   const [testEmail, setTestEmail] = useState('');
   const [snack, setSnack] = useState<{ open: boolean; msg: string; severity: 'success' | 'error' }>({ open: false, msg: '', severity: 'success' });
 
+  const [featureFlags, setFeatureFlags] = useState<Record<string, boolean>>({
+    allow_self_registration: true,
+    allow_google_sso: true,
+    allow_course_reviews: true,
+    allow_discussions: false,
+    allow_live_classes: true,
+    auto_issue_certificates: true,
+    allow_bulk_import: true,
+    allow_api_access: false,
+  });
+
+  const [maintenance, setMaintenance] = useState({
+    maintenance_mode: false,
+    maintenance_message: 'We are performing scheduled maintenance. Please check back shortly.',
+  });
+
   useEffect(() => {
     if (settings) {
       setGeneral({
         platform_name: settings.platform_name ?? '',
-        platform_url: (settings as any).platform_url ?? '',
+        platform_url: settings.platform_url ?? '',
         support_email: settings.support_email ?? '',
-        default_timezone: (settings as any).default_timezone ?? '',
+        default_timezone: settings.default_timezone ?? '',
         max_upload_mb: settings.max_upload_mb ?? 50,
+      });
+      // Hydrate feature flags from settings if returned by backend
+      setFeatureFlags((prev) => ({
+        allow_self_registration: settings.allow_self_registration ?? prev.allow_self_registration,
+        allow_google_sso: settings.allow_google_sso ?? prev.allow_google_sso,
+        allow_course_reviews: settings.allow_course_reviews ?? prev.allow_course_reviews,
+        allow_discussions: settings.allow_discussions ?? prev.allow_discussions,
+        allow_live_classes: settings.allow_live_classes ?? prev.allow_live_classes,
+        auto_issue_certificates: settings.auto_issue_certificates ?? prev.auto_issue_certificates,
+        allow_bulk_import: settings.allow_bulk_import ?? prev.allow_bulk_import,
+        allow_api_access: settings.allow_api_access ?? prev.allow_api_access,
+      }));
+      setMaintenance({
+        maintenance_mode: settings.maintenance_mode ?? false,
+        maintenance_message: settings.maintenance_message ?? 'We are performing scheduled maintenance. Please check back shortly.',
       });
     }
   }, [settings]);
@@ -86,6 +117,20 @@ const SystemSettingsPage: React.FC = () => {
     sendTest.mutate(testEmail || undefined, {
       onSuccess: () => showSnack('Test email sent successfully', 'success'),
       onError: () => showSnack('Failed to send test email', 'error'),
+    });
+  };
+
+  const handleSaveFeatures = () => {
+    saveSettings.mutate(featureFlags as Parameters<typeof saveSettings.mutate>[0], {
+      onSuccess: () => showSnack('Feature settings saved', 'success'),
+      onError: () => showSnack('Failed to save feature settings', 'error'),
+    });
+  };
+
+  const handleSaveMaintenance = () => {
+    saveSettings.mutate(maintenance as Parameters<typeof saveSettings.mutate>[0], {
+      onSuccess: () => showSnack('Maintenance settings saved', 'success'),
+      onError: () => showSnack('Failed to save maintenance settings', 'error'),
     });
   };
 
@@ -187,11 +232,25 @@ const SystemSettingsPage: React.FC = () => {
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>{f.name}</Typography>
                     <Typography variant="caption" color="text.secondary">{f.desc}</Typography>
                   </Box>
-                  <Switch defaultChecked={['allow_self_registration','allow_google_sso','allow_course_reviews','allow_live_classes','auto_issue_certificates','allow_bulk_import'].includes(f.key)} />
+                  <Switch
+                    checked={featureFlags[f.key] ?? false}
+                    onChange={(e) => setFeatureFlags({ ...featureFlags, [f.key]: e.target.checked })}
+                  />
                 </Box>
                 {i < featureToggles.length - 1 && <Divider />}
               </React.Fragment>
             ))}
+            <Box sx={{ mt: 2 }}>
+              <Button
+                variant="contained"
+                sx={{ textTransform: 'none' }}
+                onClick={handleSaveFeatures}
+                disabled={saveSettings.isPending}
+                startIcon={saveSettings.isPending ? <CircularProgress size={16} color="inherit" /> : undefined}
+              >
+                Save Feature Settings
+              </Button>
+            </Box>
           </Paper>
         </Grid>
 
@@ -207,9 +266,37 @@ const SystemSettingsPage: React.FC = () => {
             <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }}>
               Maintenance mode will show a maintenance page to all non-admin users.
             </Alert>
-            <FormControlLabel control={<Switch />} label="Enable Maintenance Mode" sx={{ mb: 2 }} />
-            <TextField fullWidth label="Maintenance Message" multiline rows={3} defaultValue="We are performing scheduled maintenance. Please check back shortly." sx={{ mb: 2 }} size="small" />
-            <Button variant="outlined" color="warning" fullWidth sx={{ textTransform: 'none' }}>Activate Maintenance</Button>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={maintenance.maintenance_mode}
+                  onChange={(e) => setMaintenance({ ...maintenance, maintenance_mode: e.target.checked })}
+                />
+              }
+              label="Enable Maintenance Mode"
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Maintenance Message"
+              multiline
+              rows={3}
+              value={maintenance.maintenance_message}
+              onChange={(e) => setMaintenance({ ...maintenance, maintenance_message: e.target.value })}
+              sx={{ mb: 2 }}
+              size="small"
+            />
+            <Button
+              variant="outlined"
+              color="warning"
+              fullWidth
+              onClick={handleSaveMaintenance}
+              disabled={saveSettings.isPending}
+              startIcon={saveSettings.isPending ? <CircularProgress size={16} /> : undefined}
+              sx={{ textTransform: 'none' }}
+            >
+              {maintenance.maintenance_mode ? 'Deactivate Maintenance' : 'Activate Maintenance'}
+            </Button>
           </Paper>
 
           <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>

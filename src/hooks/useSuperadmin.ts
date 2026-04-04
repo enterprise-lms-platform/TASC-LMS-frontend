@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   auditLogApi,
   superadminReviewApi, superadminDemoRequestApi,
-  systemSettingsApi, smtpApi,
+  systemSettingsApi, smtpApi, systemHealthApi, userGrowthApi,
   securityPolicyApi, terminateSessionsApi,
   superadminAssessmentsApi,
   type ReviewStatus,
@@ -65,6 +65,21 @@ export const useUpdateDemoRequest = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['superadmin-demo-requests'] }),
   });
 };
+
+// ── System health ─────────────────────────────────────────────────────────────
+
+export const useSystemHealth = () =>
+  useQuery({
+    queryKey: ['superadmin', 'system-health'],
+    queryFn: () => systemHealthApi.get().then((r) => r.data),
+    refetchInterval: 30_000,
+  });
+
+export const useUserGrowthStats = () =>
+  useQuery({
+    queryKey: ['superadmin', 'user-growth'],
+    queryFn: () => userGrowthApi.get().then((r) => r.data),
+  });
 
 // ── System settings ───────────────────────────────────────────────────────────
 

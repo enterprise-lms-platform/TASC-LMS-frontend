@@ -24,6 +24,7 @@ const statusColors: Record<string, { bg: string; color: string }> = {
 };
 
 const AllCoursesPage: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const { data: stats } = useCourseStats();
@@ -61,6 +62,7 @@ const AllCoursesPage: React.FC = () => {
   const categories = ['All', ...Array.from(new Set(courses.map((c: any) => c.category?.name).filter(Boolean)))];
 
   const filtered = courses.filter((c: any) => {
+    if (searchQuery && !c.title?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     if (statusFilter !== 'All' && c.status !== statusFilter) return false;
     if (categoryFilter !== 'All' && c.category?.name !== categoryFilter) return false;
     return true;
@@ -87,7 +89,7 @@ const AllCoursesPage: React.FC = () => {
 
       <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)' }}>
         <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-          <TextField size="small" placeholder="Search courses..." sx={{ minWidth: 200, flex: 1 }} />
+          <TextField size="small" placeholder="Search courses..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} sx={{ minWidth: 200, flex: 1 }} />
           <TextField size="small" select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} sx={{ minWidth: 150 }}>
             {categories.map((v) => <MenuItem key={v as string} value={v as string}>{v as string}</MenuItem>)}
           </TextField>
@@ -151,8 +153,8 @@ const AllCoursesPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
-                          <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><ViewIcon fontSize="small" /></IconButton>
-                          <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.04)' } }}><EditIcon fontSize="small" /></IconButton>
+                          <IconButton size="small" disabled title="Course detail view coming soon" sx={{ color: 'text.disabled' }}><ViewIcon fontSize="small" /></IconButton>
+                          <IconButton size="small" disabled title="Course editing coming soon" sx={{ color: 'text.disabled' }}><EditIcon fontSize="small" /></IconButton>
                         </Box>
                       </TableCell>
                     </TableRow>

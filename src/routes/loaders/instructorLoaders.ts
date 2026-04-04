@@ -35,7 +35,7 @@ export const instructorDashboardLoader = async (queryClient: QueryClient) => {
 
     return { courses, enrollments };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner'); // Not an instructor
     return { courses: { results: [], count: 0 }, enrollments: [] };
@@ -60,7 +60,7 @@ export const instructorCoursesLoader = async (
 
     return { courses };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { courses: { results: [], count: 0 } };
   }
@@ -87,7 +87,7 @@ export const courseCreationFormLoader = async (queryClient: QueryClient) => {
     });
     return { categories: categoriesData };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return { categories: { count: 0, next: null, previous: null, results: [] } };
@@ -117,7 +117,7 @@ export const courseStructureLoader = async (
 
     return { course };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 401 && DEV_BYPASS_AUTH) return { course: null };
     if (err.status === 404 || err.status === 403) {
@@ -150,7 +150,7 @@ export const coursePreviewLoader = async (
 
     return { course };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 401 && DEV_BYPASS_AUTH) return { course: null };
     if (err.status === 404 || err.status === 403) {
@@ -177,7 +177,7 @@ export const instructorLearnersLoader = async (
 
     return { enrollments };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { enrollments: [] };
   }
@@ -201,7 +201,7 @@ export const gradingLoader = async (
 
     return { submissions };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { submissions: [] };
   }
@@ -229,7 +229,7 @@ export const gradebookLoader = async (
 
     return { enrollments };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { enrollments: [] };
   }
@@ -253,7 +253,7 @@ export const instructorAnalyticsLoader = async (
 
     return { enrollments };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     return { enrollments: [] };
   }
@@ -274,7 +274,7 @@ export const instructorRouteLoader = async (queryClient: QueryClient) => {
 
     return { courses };
   } catch (error: unknown) {
-    const err = error as { status?: number };
+    const err = { status: (error as any)?.response?.status ?? (error as any)?.status };
     if (err.status === 401 && !DEV_BYPASS_AUTH) return redirect('/login');
     if (err.status === 403) return redirect('/learner');
     return { courses: { results: [], count: 0 } };

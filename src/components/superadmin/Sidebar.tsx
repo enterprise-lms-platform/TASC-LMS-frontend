@@ -38,6 +38,8 @@ import {
   SettingsApplications as GatewayIcon,
   Person as ProfileIcon,
   Chat as MessagesIcon,
+  RateReview as ReviewsIcon,
+  ContactMail as DemoRequestsIcon,
 } from '@mui/icons-material';
 
 const DRAWER_WIDTH = 280;
@@ -79,6 +81,7 @@ const buildNavSections = (unreadCount?: number): NavSection[] => [
       { text: 'All Organizations', icon: <OrganizationsIcon />, path: '/superadmin/organizations' },
       { text: 'Add Organization', icon: <AddOrgIcon />, path: '/superadmin/organizations/add' },
       { text: 'Partnerships', icon: <PartnershipsIcon />, path: '/superadmin/partnerships' },
+      { text: 'Demo Requests', icon: <DemoRequestsIcon />, path: '/superadmin/demo-requests' },
     ],
   },
   {
@@ -86,6 +89,7 @@ const buildNavSections = (unreadCount?: number): NavSection[] => [
     items: [
       { text: 'All Courses', icon: <CoursesIcon />, path: '/superadmin/courses' },
       { text: 'Course Approvals', icon: <ApprovalsIcon />, path: '/superadmin/approvals' },
+      { text: 'Reviews', icon: <ReviewsIcon />, path: '/superadmin/reviews' },
       { text: 'Instructors', icon: <InstructorsIcon />, path: '/superadmin/instructors' },
       { text: 'Certifications', icon: <CertificationsIcon />, path: '/superadmin/certifications' },
       { text: 'Assessments', icon: <AssessmentsIcon />, path: '/superadmin/assessments' },

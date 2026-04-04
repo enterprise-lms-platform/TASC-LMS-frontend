@@ -108,7 +108,7 @@ const CertificationsPage: React.FC = () => {
                 <Typography variant="body2" sx={{ fontWeight: 500 }}>{t.name}</Typography>
                 <Typography variant="caption" color="text.secondary">{t.desc}</Typography>
               </Box>
-              <Button size="small" sx={{ textTransform: 'none', fontSize: '0.75rem' }}>Edit</Button>
+              <Button size="small" disabled sx={{ textTransform: 'none', fontSize: '0.75rem' }} title="Edit certificate template">Edit</Button>
             </Box>
           ))}
         </Paper>

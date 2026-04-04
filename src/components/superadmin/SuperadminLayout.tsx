@@ -59,22 +59,7 @@ const SuperadminLayout: React.FC<SuperadminLayoutProps> = ({
             © 2025 TASC Learning Management System. All rights reserved.
           </Typography>
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 3 }}>
-            {['Privacy Policy', 'Terms of Service', 'Support', 'Documentation'].map((link) => (
-              <Link
-                key={link}
-                href="#"
-                underline="hover"
-                sx={{
-                  color: 'text.disabled',
-                  fontSize: '0.8rem',
-                  fontWeight: 400,
-                  transition: 'color 0.2s cubic-bezier(0.4,0,0.2,1)',
-                  '&:hover': { color: 'primary.main' },
-                }}
-              >
-                {link}
-              </Link>
-            ))}
+            <Typography variant="caption" sx={{ color: 'text.disabled' }}>© 2026 TASC LMS</Typography>
           </Box>
         </Box>
       </Box>

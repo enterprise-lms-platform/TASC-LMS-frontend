@@ -46,6 +46,7 @@ const SuperadminMessagesPage   = lazy(() => import('../pages/superadmin/Superadm
 const CourseApprovalPage       = lazy(() => import('../pages/manager/CourseApprovalPage'));
 const CourseApprovalDetailPage = lazy(() => import('../pages/manager/CourseApprovalDetailPage'));
 const SuperadminReviewsPage    = lazy(() => import('../pages/superadmin/SuperadminReviewsPage'));
+const DemoRequestsPage         = lazy(() => import('../pages/superadmin/DemoRequestsPage'));
 
 export const superadminRoutes = (queryClient: QueryClient): RouteObject[] => [
   { path: '/superadmin', element: <SW><PR><SuperadminDashboard /></PR></SW>, errorElement: <ErrorPage />, loader: async () => superadminLoaders.superadminDashboardLoader(queryClient) },
@@ -73,6 +74,7 @@ export const superadminRoutes = (queryClient: QueryClient): RouteObject[] => [
   { path: '/superadmin/approvals', element: <SW><PR><CourseApprovalPage /></PR></SW>, loader: async () => superadminLoaders.approvalQueueLoader(queryClient) },
   { path: '/superadmin/approvals/:requestId', element: <SW><PR><CourseApprovalDetailPage /></PR></SW>, loader: async (args: any) => superadminLoaders.approvalDetailLoader(queryClient, args) },
   { path: '/superadmin/reviews', element: <SW><PR><SuperadminReviewsPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
+  { path: '/superadmin/demo-requests', element: <SW><PR><DemoRequestsPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
   { path: '/superadmin/messages', element: <SW><PR><SuperadminMessagesPage /></PR></SW> },
   { path: '/superadmin/profile', element: <SW><PR><SuperadminProfilePage /></PR></SW> },
 ];
