@@ -24,7 +24,7 @@ import {
   Undo as RefundIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
-import { useMySubscription, usePesapalInitiateSubscription, useSubscriptions } from '../../hooks/usePayments';
+import { useMySubscription, usePesapalInitiateSubscriptionOnetime, useSubscriptions } from '../../hooks/usePayments';
 import { initiatePaymentError } from '../../utils/paymentErrors';
 import type { Subscription } from '../../types/types';
 
@@ -51,7 +51,7 @@ const CheckoutPaymentPage: React.FC = () => {
   const { user } = useAuth();
   const { data: subStatus } = useMySubscription();
   const { data: plansResponse = [], isLoading: plansLoading } = useSubscriptions();
-  const pesapalInitiate = usePesapalInitiateSubscription();
+  const pesapalInitiate = usePesapalInitiateSubscriptionOnetime();
 
   // ── State declared before any conditional return (Rules of Hooks) ──
   const [firstName, setFirstName] = useState(user?.first_name ?? '');

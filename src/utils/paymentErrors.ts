@@ -97,7 +97,8 @@ export function createSubscriptionError(error: unknown, ctx?: SubscriptionContex
 }
 
 /**
- * Maps errors from usePesapalInitiateSubscription / usePesapalInitiatePayment.
+ * Maps errors from usePesapalInitiateSubscriptionOnetime / usePesapalInitiateSubscription /
+ * usePesapalInitiatePayment.
  */
 export function initiatePaymentError(error: unknown, ctx?: { planName?: string | null; currency?: string }): string {
   const raw = getErrorMessage(error);
