@@ -234,11 +234,26 @@ export interface PesapalRecurringInitiateResponse {
   subscription_id: number;
 }
 
+/** Same body as recurring initiate; hits standard one-time Pesapal order for plan checkout. */
+export type PesapalSubscriptionOneTimeInitiateRequest = PesapalRecurringInitiateRequest;
+
+export interface PesapalSubscriptionOneTimeInitiateResponse {
+  payment_id: string;
+  redirect_url: string;
+  order_tracking_id: string;
+  user_subscription_id?: number;
+}
+
 export const pesapalApi = {
   initiate: (data: PesapalInitiateRequest) =>
     apiClient.post<PesapalInitiateResponse>(`${BASE_PATH}/pesapal/initiate/`, data),
   initiateRecurring: (data: PesapalRecurringInitiateRequest) =>
     apiClient.post<PesapalRecurringInitiateResponse>(`${BASE_PATH}/pesapal/recurring/initiate/`, data),
+  initiateSubscriptionOnetime: (data: PesapalSubscriptionOneTimeInitiateRequest) =>
+    apiClient.post<PesapalSubscriptionOneTimeInitiateResponse>(
+      `${BASE_PATH}/pesapal/initiate-subscription-onetime/`,
+      data,
+    ),
   getStatus: (paymentId: string) =>
     apiClient.get<PesapalPaymentStatusResponse>(`${BASE_PATH}/pesapal/${paymentId}/status/`),
 };

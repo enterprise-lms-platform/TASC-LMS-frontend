@@ -13,6 +13,7 @@ import {
   type UserSubscriptionParams,
   type PesapalInitiateRequest,
   type PesapalRecurringInitiateRequest,
+  type PesapalSubscriptionOneTimeInitiateRequest,
 } from '../services/payments.services';
 import { reportsApi, type ReportListParams } from '../services/reports.services';
 import { queryKeys } from './queryKeys';
@@ -289,6 +290,20 @@ export const usePesapalInitiateSubscription = () => {
   return useMutation({
     mutationFn: (data: PesapalRecurringInitiateRequest) =>
       pesapalApi.initiateRecurring(data).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.subscriptions.myStatus });
+      qc.invalidateQueries({ queryKey: queryKeys.userSubscriptions.all() });
+    },
+    onError: (error) => initiatePaymentError(error),
+  });
+};
+
+/** Learner plan checkout: standard Pesapal order + local UserSubscription after payment. */
+export const usePesapalInitiateSubscriptionOnetime = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: PesapalSubscriptionOneTimeInitiateRequest) =>
+      pesapalApi.initiateSubscriptionOnetime(data).then((r) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.subscriptions.myStatus });
       qc.invalidateQueries({ queryKey: queryKeys.userSubscriptions.all() });
