@@ -20,7 +20,9 @@ const PesapalReturnPage: React.FC = () => {
     }
   }, []);
 
-  const { data: paymentStatus } = usePesapalPaymentStatus(context.paymentId);
+  const effectivePaymentId = context.paymentId ?? searchParams.get('ref') ?? undefined;
+
+  const { data: paymentStatus } = usePesapalPaymentStatus(effectivePaymentId);
   const { data: subStatus, refetch, isFetching } = useMySubscription();
 
   React.useEffect(() => {
@@ -61,9 +63,9 @@ const PesapalReturnPage: React.FC = () => {
               Tracking ID: {trackingId}
             </Typography>
           )}
-          {context.paymentId && (
+          {effectivePaymentId && (
             <Typography variant="caption" color="text.secondary">
-              Payment ID: {context.paymentId}
+              Payment ID: {effectivePaymentId}
             </Typography>
           )}
           {paymentStatus?.status && (
