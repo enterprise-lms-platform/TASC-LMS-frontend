@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Box, CssBaseline, Toolbar, Typography, Paper, Chip, Grid, Button, Divider, Tabs, Tab,
+  Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert,
 } from '@mui/material';
 import {
   CheckCircle as CheckIcon,
@@ -8,9 +9,13 @@ import {
   Edit as EditIcon,
   Sell as PricingIcon,
   Close as CloseIcon,
+  People as PeopleIcon,
+  AttachMoney as MoneyIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
+import { useUserSubscriptions, useTransactions } from '../../hooks/usePayments';
 
 /* ──────────────── Individual plan ──────────────── */
 const individualPlan = {
@@ -110,8 +115,38 @@ const cardSx = {
 };
 
 const FinancePricingPage: React.FC = () => {
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [tab, setTab] = useState(0);
+  const [managePlan, setManagePlan] = useState<{ name: string; color: string } | null>(null);
+  const [editToast, setEditToast] = useState(false);
+
+  const { data: subscriptions } = useUserSubscriptions();
+  const { data: transactions } = useTransactions();
+
+  const kpis = useMemo(() => {
+    const subs = subscriptions || [];
+    const txns = transactions || [];
+    const active = subs.filter(s => s.status === 'active');
+    const mrr = active.reduce((sum, s) => sum + parseFloat(s.price || '0'), 0);
+    const totalRevenue = txns.filter(t => t.status === 'completed').reduce((sum, t) => sum + parseFloat(t.amount || '0'), 0);
+    const arpu = active.length > 0 ? (totalRevenue / active.length) : 0;
+    const conversionRate = subs.length > 0 ? Math.round((active.length / subs.length) * 100) : 0;
+    return {
+      totalSubscribers: subs.length,
+      mrr,
+      arpu,
+      conversionRate,
+    };
+  }, [subscriptions, transactions]);
+
+  const getPlanStats = (planName: string) => {
+    const subs = subscriptions || [];
+    const planSubs = subs.filter(s => (s.plan_name || '').toLowerCase().includes(planName.toLowerCase()));
+    const active = planSubs.filter(s => s.status === 'active');
+    const mrr = active.reduce((sum, s) => sum + parseFloat(s.price || '0'), 0);
+    return { total: planSubs.length, active: active.length, mrr };
+  };
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -131,6 +166,7 @@ const FinancePricingPage: React.FC = () => {
               </Box>
             </Box>
             <Button size="small" variant="contained" startIcon={<EditIcon />}
+              onClick={() => { navigate('/superadmin/settings'); }}
               sx={{ textTransform: 'none', borderRadius: 2, boxShadow: 'none', '&:hover': { boxShadow: '0 2px 8px rgba(255,164,36,0.3)' } }}>
               Edit Plans
             </Button>
@@ -140,10 +176,10 @@ const FinancePricingPage: React.FC = () => {
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {(() => {
               const kpiCards = [
-                { label: 'Total Subscribers', value: '—', icon: <PricingIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
-                { label: 'Monthly Recurring', value: '—', icon: <CheckIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-                { label: 'Avg. Revenue / User', value: '—', icon: <StarIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-                { label: 'Conversion Rate', value: '—', icon: <EditIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+                { label: 'Total Subscribers', value: kpis.totalSubscribers.toLocaleString(), icon: <PricingIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
+                { label: 'Monthly Recurring', value: `$${kpis.mrr.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, icon: <CheckIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+                { label: 'Avg. Revenue / User', value: kpis.arpu > 0 ? `$${kpis.arpu.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—', icon: <StarIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+                { label: 'Conversion Rate', value: `${kpis.conversionRate}%`, icon: <EditIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
               ];
               return kpiCards.map((s) => (
                 <Grid size={{ xs: 6, sm: 6, md: 3 }} key={s.label}>
@@ -226,6 +262,7 @@ const FinancePricingPage: React.FC = () => {
 
                   <Box sx={{ p: 2, pt: 0, textAlign: 'center' }}>
                     <Button variant="contained" fullWidth
+                      onClick={() => setManagePlan({ name: individualPlan.name, color: individualPlan.color })}
                       sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 2, boxShadow: 'none', '&:hover': { boxShadow: '0 2px 12px rgba(255,164,36,0.4)' } }}>
                       Manage Plan
                     </Button>
@@ -286,6 +323,7 @@ const FinancePricingPage: React.FC = () => {
 
                     <Box sx={{ p: 2, pt: 0, textAlign: 'center' }}>
                       <Button variant={plan.popular ? 'contained' : 'outlined'} fullWidth
+                        onClick={() => setManagePlan({ name: plan.name, color: plan.color })}
                         sx={{
                           textTransform: 'none', fontWeight: 600, borderRadius: 2,
                           ...(plan.popular
@@ -302,6 +340,51 @@ const FinancePricingPage: React.FC = () => {
           )}
         </Box>
       </Box>
+
+      {/* Manage Plan Dialog */}
+      {managePlan && (() => {
+        const stats = getPlanStats(managePlan.name);
+        return (
+          <Dialog open onClose={() => setManagePlan(null)} maxWidth="xs" fullWidth>
+            <DialogTitle sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: managePlan.color }} />
+              {managePlan.name} Plan
+            </DialogTitle>
+            <DialogContent dividers>
+              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                <Paper elevation={0} sx={{ flex: 1, p: 2, borderRadius: 2, bgcolor: 'rgba(99,102,241,0.06)', textAlign: 'center' }}>
+                  <PeopleIcon sx={{ color: '#6366f1', mb: 0.5 }} />
+                  <Typography variant="h5" fontWeight={700} color="#312e81">{stats.active}</Typography>
+                  <Typography variant="caption" color="text.secondary">Active</Typography>
+                </Paper>
+                <Paper elevation={0} sx={{ flex: 1, p: 2, borderRadius: 2, bgcolor: 'rgba(16,185,129,0.06)', textAlign: 'center' }}>
+                  <MoneyIcon sx={{ color: '#10b981', mb: 0.5 }} />
+                  <Typography variant="h5" fontWeight={700} color="#14532d">${stats.mrr.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
+                  <Typography variant="caption" color="text.secondary">MRR</Typography>
+                </Paper>
+                <Paper elevation={0} sx={{ flex: 1, p: 2, borderRadius: 2, bgcolor: 'rgba(245,158,11,0.06)', textAlign: 'center' }}>
+                  <PeopleIcon sx={{ color: '#f59e0b', mb: 0.5 }} />
+                  <Typography variant="h5" fontWeight={700} color="#7c2d12">{stats.total}</Typography>
+                  <Typography variant="caption" color="text.secondary">Total Subs</Typography>
+                </Paper>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                To edit plan pricing or features, go to Superadmin › System Settings.
+              </Typography>
+            </DialogContent>
+            <DialogActions sx={{ p: 2 }}>
+              <Button onClick={() => setManagePlan(null)} color="inherit">Close</Button>
+              <Button variant="outlined" onClick={() => { navigate('/finance/subscriptions'); setManagePlan(null); }}>
+                View Subscribers
+              </Button>
+            </DialogActions>
+          </Dialog>
+        );
+      })()}
+
+      <Snackbar open={editToast} autoHideDuration={3000} onClose={() => setEditToast(false)} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity="info" onClose={() => setEditToast(false)}>Plan editing is available in Superadmin › System Settings.</Alert>
+      </Snackbar>
     </Box>
   );
 };

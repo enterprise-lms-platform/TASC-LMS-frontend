@@ -11,6 +11,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Divider,
+  LinearProgress,
 } from '@mui/material';
 import {
   History as HistoryIcon,
@@ -19,8 +20,11 @@ import {
   EmojiEvents as CompletionIcon,
   Assignment as SubmissionIcon,
 } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { managerActivityApi } from '../../services/organization.services';
+import type { ActivityEvent } from '../../services/organization.services';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -40,41 +44,35 @@ const headerSx = {
   gap: 2,
 };
 
-// ── Action Type Config ──
 const actionTypeConfig: Record<string, { bg: string; color: string; icon: React.ReactNode }> = {
-  Enrollment: { bg: 'rgba(59,130,246,0.1)', color: '#3b82f6', icon: <EnrollmentIcon sx={{ fontSize: 16 }} /> },
-  Completion: { bg: 'rgba(16,185,129,0.1)', color: '#10b981', icon: <CompletionIcon sx={{ fontSize: 16 }} /> },
-  Submission: { bg: 'rgba(245,158,11,0.1)', color: '#f59e0b', icon: <SubmissionIcon sx={{ fontSize: 16 }} /> },
-  Login: { bg: 'rgba(99,102,241,0.1)', color: '#6366f1', icon: <LoginIcon sx={{ fontSize: 16 }} /> },
+  Enrollment: { bg: 'rgba(59,130,246,0.1)',  color: '#3b82f6', icon: <EnrollmentIcon sx={{ fontSize: 16 }} /> },
+  Completion: { bg: 'rgba(16,185,129,0.1)',  color: '#10b981', icon: <CompletionIcon sx={{ fontSize: 16 }} /> },
+  Submission: { bg: 'rgba(245,158,11,0.1)',  color: '#f59e0b', icon: <SubmissionIcon sx={{ fontSize: 16 }} /> },
+  Login:      { bg: 'rgba(99,102,241,0.1)',  color: '#6366f1', icon: <LoginIcon sx={{ fontSize: 16 }} /> },
 };
 
-// ── Mock Activity Items ──
-const activityItems = [
-  { user: 'Sarah Mitchell', initials: 'SM', action: 'enrolled in Advanced React Patterns', timestamp: '10 minutes ago', type: 'Enrollment' },
-  { user: 'James Rodriguez', initials: 'JR', action: 'completed Quiz: TypeScript Generics', timestamp: '25 minutes ago', type: 'Completion' },
-  { user: 'Emily Chen', initials: 'EC', action: 'submitted Assignment: REST API Design Project', timestamp: '42 minutes ago', type: 'Submission' },
-  { user: 'David Kim', initials: 'DK', action: 'logged in from Chrome on macOS', timestamp: '1 hour ago', type: 'Login' },
-  { user: 'Priya Sharma', initials: 'PS', action: 'enrolled in AWS Solutions Architect Prep', timestamp: '1.5 hours ago', type: 'Enrollment' },
-  { user: 'Michael Thompson', initials: 'MT', action: 'completed Course: Python for Data Science', timestamp: '2 hours ago', type: 'Completion' },
-  { user: 'Laura Bennett', initials: 'LB', action: 'submitted Assignment: Machine Learning Capstone', timestamp: '2.5 hours ago', type: 'Submission' },
-  { user: 'Alex Okafor', initials: 'AO', action: 'logged in from Firefox on Windows', timestamp: '3 hours ago', type: 'Login' },
-  { user: 'Rachel Green', initials: 'RG', action: 'enrolled in Docker & Kubernetes Fundamentals', timestamp: '3.5 hours ago', type: 'Enrollment' },
-  { user: 'Tom Nguyen', initials: 'TN', action: 'completed Quiz: Cloud Security Basics', timestamp: '4 hours ago', type: 'Completion' },
-  { user: 'Jessica Park', initials: 'JP', action: 'submitted Assignment: Database Optimization Report', timestamp: '5 hours ago', type: 'Submission' },
-  { user: 'Carlos Mendez', initials: 'CM', action: 'enrolled in TypeScript Mastery', timestamp: '6 hours ago', type: 'Enrollment' },
-];
-
-// ── Activity Summary ──
-const summaryStats = [
-  { label: 'Logins Today', value: 145, color: '#6366f1' },
-  { label: 'Enrollments', value: 23, color: '#3b82f6' },
-  { label: 'Completions', value: 18, color: '#10b981' },
-  { label: 'Submissions', value: 31, color: '#f59e0b' },
-];
+const getInitials = (name: string): string => {
+  if (!name) return '?';
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+};
 
 const ManagerActivityPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [dateRange, setDateRange] = useState('7days');
+  const [dateRange, setDateRange] = useState<'today' | '7days' | '30days'>('7days');
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['manager-activity', dateRange],
+    queryFn: () => managerActivityApi.getActivity(dateRange).then(r => r.data),
+  });
+
+  const events: ActivityEvent[] = data?.events ?? [];
+  const summary = data?.summary;
+
+  const summaryStats = [
+    { label: 'Enrollments', value: summary?.enrollments ?? 0, color: '#3b82f6' },
+    { label: 'Completions', value: summary?.completions ?? 0, color: '#10b981' },
+    { label: 'Submissions', value: summary?.submissions ?? 0, color: '#f59e0b' },
+  ];
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -95,6 +93,8 @@ const ManagerActivityPage: React.FC = () => {
         <Toolbar />
 
         <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400 }}>
+          {isLoading && <LinearProgress sx={{ mb: 2 }} />}
+
           {/* Page Header */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -113,16 +113,11 @@ const ManagerActivityPage: React.FC = () => {
                 <HistoryIcon />
               </Box>
               <Box>
-                <Typography variant="h5" fontWeight={700}>
-                  User Activity
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Track user actions and engagement
-                </Typography>
+                <Typography variant="h5" fontWeight={700}>User Activity</Typography>
+                <Typography variant="body2" color="text.secondary">Track user actions and engagement</Typography>
               </Box>
             </Box>
 
-            {/* Date Range Filter */}
             <ToggleButtonGroup
               value={dateRange}
               exclusive
@@ -148,7 +143,6 @@ const ManagerActivityPage: React.FC = () => {
               <ToggleButton value="today">Today</ToggleButton>
               <ToggleButton value="7days">Last 7 days</ToggleButton>
               <ToggleButton value="30days">Last 30 days</ToggleButton>
-              <ToggleButton value="custom">Custom</ToggleButton>
             </ToggleButtonGroup>
           </Box>
 
@@ -159,12 +153,17 @@ const ManagerActivityPage: React.FC = () => {
                 <Box sx={headerSx}>
                   <Typography fontWeight={700}>Activity Feed</Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {activityItems.length} activities
+                    {events.length} activities
                   </Typography>
                 </Box>
                 <Box>
-                  {activityItems.map((item, idx) => {
-                    const config = actionTypeConfig[item.type];
+                  {events.length === 0 && !isLoading && (
+                    <Box sx={{ p: 4, textAlign: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">No activity in this period.</Typography>
+                    </Box>
+                  )}
+                  {events.map((item, idx) => {
+                    const config = actionTypeConfig[item.type] ?? actionTypeConfig.Enrollment;
                     return (
                       <Box key={idx}>
                         <Box
@@ -187,15 +186,15 @@ const ManagerActivityPage: React.FC = () => {
                               background: 'linear-gradient(135deg, #ffa424, #f97316)',
                             }}
                           >
-                            {item.initials}
+                            {getInitials(item.user_name)}
                           </Avatar>
                           <Box sx={{ flex: 1, minWidth: 0 }}>
                             <Typography variant="body2" sx={{ lineHeight: 1.5 }}>
-                              <Box component="span" fontWeight={600}>{item.user}</Box>
-                              {' '}{item.action}
+                              <Box component="span" fontWeight={600}>{item.user_name}</Box>
+                              {' '}{item.description}
                             </Typography>
                             <Typography variant="caption" color="text.disabled">
-                              {item.timestamp}
+                              {item.relative_time}
                             </Typography>
                           </Box>
                           <Chip
@@ -212,7 +211,7 @@ const ManagerActivityPage: React.FC = () => {
                             }}
                           />
                         </Box>
-                        {idx < activityItems.length - 1 && <Divider />}
+                        {idx < events.length - 1 && <Divider />}
                       </Box>
                     );
                   })}
@@ -225,27 +224,16 @@ const ManagerActivityPage: React.FC = () => {
               <Paper elevation={0} sx={cardSx}>
                 <Box sx={headerSx}>
                   <Typography fontWeight={700}>Activity Summary</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {dateRange === 'today' ? 'Today' : dateRange === '7days' ? 'Last 7 days' : 'Last 30 days'}
+                  </Typography>
                 </Box>
                 <Box sx={{ p: 3 }}>
                   {summaryStats.map((stat, idx) => (
                     <Box key={stat.label}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          py: 2,
-                        }}
-                      >
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                          <Box
-                            sx={{
-                              width: 10,
-                              height: 10,
-                              borderRadius: '50%',
-                              bgcolor: stat.color,
-                            }}
-                          />
+                          <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: stat.color }} />
                           <Typography variant="body2" color="text.secondary" fontWeight={500}>
                             {stat.label}
                           </Typography>
@@ -255,50 +243,6 @@ const ManagerActivityPage: React.FC = () => {
                         </Typography>
                       </Box>
                       {idx < summaryStats.length - 1 && <Divider />}
-                    </Box>
-                  ))}
-                </Box>
-              </Paper>
-
-              {/* Peak Activity Hours */}
-              <Paper elevation={0} sx={{ ...cardSx, mt: 3 }}>
-                <Box sx={headerSx}>
-                  <Typography fontWeight={700}>Peak Hours</Typography>
-                </Box>
-                <Box sx={{ p: 3 }}>
-                  {[
-                    { time: '9:00 AM - 11:00 AM', users: 342, pct: 85 },
-                    { time: '1:00 PM - 3:00 PM', users: 278, pct: 70 },
-                    { time: '4:00 PM - 6:00 PM', users: 198, pct: 50 },
-                    { time: '7:00 PM - 9:00 PM', users: 124, pct: 31 },
-                  ].map((slot) => (
-                    <Box key={slot.time} sx={{ mb: 2, '&:last-child': { mb: 0 } }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                        <Typography variant="caption" fontWeight={600}>
-                          {slot.time}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {slot.users} users
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{
-                          height: 8,
-                          borderRadius: 4,
-                          bgcolor: 'grey.100',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            height: '100%',
-                            width: `${slot.pct}%`,
-                            borderRadius: 4,
-                            background: 'linear-gradient(90deg, #ffa424, #f97316)',
-                            transition: 'width 0.5s ease',
-                          }}
-                        />
-                      </Box>
                     </Box>
                   ))}
                 </Box>

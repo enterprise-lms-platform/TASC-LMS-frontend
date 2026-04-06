@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Box, CssBaseline, Toolbar, Typography, Paper, Grid, Button,
   Select, MenuItem, FormControl, InputLabel, CircularProgress,
+  Snackbar, Alert,
 } from '@mui/material';
 import {
   AccountBalance as StatementsIcon,
@@ -14,6 +15,7 @@ import {
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
 import { useInvoiceStats, useRevenueStats } from '../../services/learning.services';
+import { useCreateReport } from '../../hooks/usePayments';
 
 const cardSx = {
   borderRadius: '1rem', overflow: 'hidden',
@@ -26,14 +28,35 @@ const headerSx = { p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor
 const FinanceStatementsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [period, setPeriod] = useState('q1-2026');
+  const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({ open: false, message: '', severity: 'info' });
 
   const { data: invoiceStats, isLoading: invLoading } = useInvoiceStats();
   const { data: revenueStats, isLoading: revLoading } = useRevenueStats(6);
+  const createReport = useCreateReport();
 
   const totalRev = parseFloat(revenueStats?.total_revenue || '0');
   const paidInv = parseFloat(invoiceStats?.total_revenue || '0');
+  // Net income: proxy using collected (paid invoices) vs total revenue
+  const netIncome = paidInv > 0 ? paidInv : totalRev;
+  // Profit margin: ratio of collected to total revenue
+  const profitMargin = totalRev > 0 ? Math.round((netIncome / totalRev) * 100) : 0;
 
   const totalRevFmt = totalRev > 0 ? `$${totalRev.toLocaleString()}` : '—';
+  const netIncomeFmt = netIncome > 0 ? `$${netIncome.toLocaleString()}` : '—';
+  const profitMarginFmt = totalRev > 0 ? `${profitMargin}%` : '—';
+
+  const handleDownloadPdf = () => {
+    const dateParam = period === 'fy-2025'
+      ? { date_from: '2025-01-01', date_to: '2025-12-31' }
+      : { date_from: '2026-01-01', date_to: '2026-03-31' };
+    createReport.mutate(
+      { report_type: 'revenue', parameters: dateParam },
+      {
+        onSuccess: () => setToast({ open: true, message: 'Statement report queued. Check Export Data when ready.', severity: 'success' }),
+        onError: () => setToast({ open: true, message: 'Failed to generate statement report.', severity: 'error' }),
+      },
+    );
+  };
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -61,8 +84,10 @@ const FinanceStatementsPage: React.FC = () => {
                 </Select>
               </FormControl>
               <Button size="small" variant="contained" startIcon={<DownloadIcon />}
+                onClick={handleDownloadPdf}
+                disabled={createReport.isPending}
                 sx={{ textTransform: 'none', borderRadius: 2, boxShadow: 'none', '&:hover': { boxShadow: '0 2px 8px rgba(255,164,36,0.3)' } }}>
-                Download PDF
+                {createReport.isPending ? 'Queuing...' : 'Download PDF'}
               </Button>
             </Box>
           </Box>
@@ -75,9 +100,9 @@ const FinanceStatementsPage: React.FC = () => {
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 {[
                   { label: 'Total Revenue', value: totalRevFmt, icon: <WalletIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-                  { label: 'Net Income', value: '—', icon: <SavingsIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
+                  { label: 'Net Income', value: netIncomeFmt, icon: <SavingsIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
                   { label: 'Total Invoices', value: invoiceStats?.total?.toString() || '—', icon: <UpIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-                  { label: 'Profit Margin', value: '—', icon: <AssessmentIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+                  { label: 'Collection Rate', value: profitMarginFmt, icon: <AssessmentIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
                 ].map((s) => (
                   <Grid size={{ xs: 6, sm: 6, md: 3 }} key={s.label}>
                     <Paper elevation={0} sx={{
@@ -119,6 +144,12 @@ const FinanceStatementsPage: React.FC = () => {
           )}
         </Box>
       </Box>
+
+      <Snackbar open={toast.open} autoHideDuration={5000} onClose={() => setToast(p => ({ ...p, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity={toast.severity} onClose={() => setToast(p => ({ ...p, open: false }))} sx={{ width: '100%' }}>
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

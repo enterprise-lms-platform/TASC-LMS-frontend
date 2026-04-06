@@ -483,6 +483,8 @@ const ManagerBulkEnrollPage: React.FC = () => {
                     <Button
                       variant="contained"
                       size="large"
+                      onClick={handleEnroll}
+                      disabled={!selectedCourse || selectedUserIds.length === 0 || enrollMutation.isPending}
                       sx={{
                         background: 'linear-gradient(135deg, #ffa424, #f97316)',
                         textTransform: 'none',
@@ -493,6 +495,7 @@ const ManagerBulkEnrollPage: React.FC = () => {
                         '&:hover': { background: 'linear-gradient(135deg, #f59e0b, #ea580c)' },
                       }}
                     >
+                      {enrollMutation.isPending ? <CircularProgress size={20} sx={{ mr: 1 }} /> : null}
                       Enroll Learners
                     </Button>
                   </Box>

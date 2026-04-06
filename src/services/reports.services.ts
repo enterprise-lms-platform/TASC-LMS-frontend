@@ -59,6 +59,10 @@ export const reportsApi = {
   // Download report
   download: (id: number) =>
     apiClient.get<{ download_url: string; file_size: string }>(`${BASE_PATH}/${id}/download/`),
+
+  // Delete report
+  delete: (id: number) =>
+    apiClient.delete(`${BASE_PATH}/${id}/`),
 };
 
 export default reportsApi;

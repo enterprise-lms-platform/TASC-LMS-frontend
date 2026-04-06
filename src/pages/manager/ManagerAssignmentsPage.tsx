@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   CssBaseline,
@@ -22,6 +22,7 @@ import {
   IconButton,
   Tooltip,
   Badge,
+  LinearProgress,
 } from '@mui/material';
 import {
   Task as TaskIcon,
@@ -33,8 +34,13 @@ import {
   TrendingUp as SubmissionIcon,
   Grade as GradeIcon,
 } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { submissionApi } from '../../services/learning.services';
+import { sessionApi, courseApi } from '../../services/catalogue.services';
+import type { Submission, Session, CourseList } from '../../types/types';
 
 // ── Shared styles ──
 const cardSx = {
@@ -55,33 +61,18 @@ const headerSx = {
   gap: 2,
 };
 
-// ── KPI data ──
-const kpis = [
-  { label: 'Total Assignments', value: '64', icon: <TotalIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-  { label: 'Pending Grading', value: '12', icon: <PendingIcon />, bgcolor: '#fef9c3', iconBg: '#facc15', color: '#713f12', subColor: '#854d0e' },
-  { label: 'Submission Rate', value: '89%', icon: <SubmissionIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-  { label: 'Avg Grade', value: '78%', icon: <GradeIcon />, bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f', subColor: '#1e40af' },
+const kpiConfig = [
+  { label: 'Total Assignments', icon: <TotalIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+  { label: 'Pending Grading',   icon: <PendingIcon />, bgcolor: '#fef9c3', iconBg: '#facc15', color: '#713f12', subColor: '#854d0e' },
+  { label: 'Total Submitted',   icon: <SubmissionIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+  { label: 'Avg Grade',         icon: <GradeIcon />, bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f', subColor: '#1e40af' },
 ];
-
-// ── Mock assignment data ──
-const assignments = [
-  { id: 1, title: 'Build a Todo App with React', course: 'Advanced React Patterns', dueDate: 'Mar 15, 2026', submissions: 38, totalStudents: 45, pendingGrading: 4, avgGrade: 82, status: 'Active' },
-  { id: 2, title: 'Data Cleaning with Pandas', course: 'Python for Data Science', dueDate: 'Mar 12, 2026', submissions: 32, totalStudents: 40, pendingGrading: 0, avgGrade: 75, status: 'Graded' },
-  { id: 3, title: 'Design a VPC Architecture', course: 'AWS Solutions Architect', dueDate: 'Mar 8, 2026', submissions: 24, totalStudents: 35, pendingGrading: 0, avgGrade: 79, status: 'Graded' },
-  { id: 4, title: 'Type-Safe API Client', course: 'TypeScript Mastery', dueDate: 'Mar 18, 2026', submissions: 28, totalStudents: 30, pendingGrading: 5, avgGrade: 84, status: 'Active' },
-  { id: 5, title: 'Containerize a Microservice', course: 'Docker & Kubernetes', dueDate: 'Mar 5, 2026', submissions: 18, totalStudents: 28, pendingGrading: 0, avgGrade: 71, status: 'Past Due' },
-  { id: 6, title: 'Normalize a Database Schema', course: 'Database Management', dueDate: 'Mar 20, 2026', submissions: 15, totalStudents: 32, pendingGrading: 3, avgGrade: 77, status: 'Active' },
-  { id: 7, title: 'Penetration Testing Report', course: 'Cybersecurity Fundamentals', dueDate: 'Mar 2, 2026', submissions: 36, totalStudents: 42, pendingGrading: 0, avgGrade: 68, status: 'Past Due' },
-  { id: 8, title: 'Sprint Retrospective Analysis', course: 'Project Management Pro', dueDate: 'Mar 22, 2026', submissions: 20, totalStudents: 25, pendingGrading: 0, avgGrade: 88, status: 'Graded' },
-];
-
-const courses = ['All Courses', 'Advanced React Patterns', 'Python for Data Science', 'AWS Solutions Architect', 'TypeScript Mastery', 'Docker & Kubernetes', 'Database Management', 'Cybersecurity Fundamentals', 'Project Management Pro'];
 
 const getStatusChip = (status: string) => {
   const config: Record<string, { bgcolor: string; color: string }> = {
-    Active: { bgcolor: 'rgba(16,185,129,0.1)', color: '#10b981' },
-    'Past Due': { bgcolor: 'rgba(239,68,68,0.1)', color: '#ef4444' },
-    Graded: { bgcolor: 'rgba(59,130,246,0.1)', color: '#3b82f6' },
+    Active:     { bgcolor: 'rgba(16,185,129,0.1)', color: '#10b981' },
+    'Past Due': { bgcolor: 'rgba(239,68,68,0.1)',  color: '#ef4444' },
+    Graded:     { bgcolor: 'rgba(59,130,246,0.1)', color: '#3b82f6' },
   };
   const c = config[status] || config.Active;
   return (
@@ -93,13 +84,117 @@ const getStatusChip = (status: string) => {
   );
 };
 
+const formatDate = (dateStr: string | null | undefined): string => {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
 const ManagerAssignmentsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [courseFilter, setCourseFilter] = useState('All Courses');
   const [statusFilter, setStatusFilter] = useState('All');
+  const navigate = useNavigate();
 
-  const filteredAssignments = assignments.filter((a) => {
+  const { data: sessionsData, isLoading: loadingSessions } = useQuery({
+    queryKey: ['sessions', 'assignment'],
+    queryFn: () => sessionApi.getAll({ type: 'assignment', page_size: 200 }).then(r => r.data),
+  });
+
+  const { data: submissionsData, isLoading: loadingSubmissions } = useQuery({
+    queryKey: ['submissions', 'manager'],
+    queryFn: () => submissionApi.getAll({ page_size: 1000 }).then(r => r.data),
+  });
+
+  const { data: coursesData } = useQuery({
+    queryKey: ['courses', 'manager-assignments'],
+    queryFn: () => courseApi.getAll({ limit: 200 }).then(r => r.data),
+  });
+
+  const isLoading = loadingSessions || loadingSubmissions;
+
+  // Build course lookup: id -> title
+  const courseMap = useMemo(() => {
+    const raw = coursesData as any;
+    const list: CourseList[] = Array.isArray(raw) ? raw : (raw?.results ?? []);
+    return Object.fromEntries(list.map((c: CourseList) => [c.id, c.title]));
+  }, [coursesData]);
+
+  // Normalize sessions (handle paginated or array response)
+  const sessions = useMemo(() => {
+    const raw = sessionsData as any;
+    return (Array.isArray(raw) ? raw : (raw?.results ?? [])) as Session[];
+  }, [sessionsData]);
+
+  // Normalize submissions
+  const submissions = useMemo(() => {
+    const raw = submissionsData as any;
+    return (Array.isArray(raw) ? raw : (raw?.results ?? [])) as Submission[];
+  }, [submissionsData]);
+
+  // Group submissions by session ID
+  const submissionsBySession = useMemo(() => {
+    const map: Record<number, Submission[]> = {};
+    for (const sub of submissions) {
+      const sid = sub.session;
+      if (sid != null) {
+        if (!map[sid]) map[sid] = [];
+        map[sid].push(sub);
+      }
+    }
+    return map;
+  }, [submissions]);
+
+  // Build assignment rows from sessions
+  const assignmentRows = useMemo(() => {
+    return sessions
+      .filter(s => s.session_type === 'assignment')
+      .map(s => {
+        const subs = submissionsBySession[s.id] ?? [];
+        const submitted = subs.filter(sub => sub.status !== 'draft');
+        const pending = subs.filter(sub => sub.status === 'submitted').length;
+        const graded = subs.filter(sub => sub.status === 'graded' && sub.grade != null);
+        const avgGrade = graded.length > 0
+          ? Math.round(graded.reduce((acc, sub) => acc + (sub.grade ?? 0), 0) / graded.length)
+          : null;
+        const courseTitle = courseMap[s.course] ?? `Course #${s.course}`;
+        const rowStatus = pending > 0 ? 'Active' : submitted.length > 0 ? 'Graded' : 'Active';
+        return {
+          id: s.id,
+          courseId: s.course,
+          title: s.title,
+          course: courseTitle,
+          submissions: submitted.length,
+          pendingGrading: pending,
+          avgGrade,
+          status: rowStatus,
+        };
+      });
+  }, [sessions, submissionsBySession, courseMap]);
+
+  // KPI values
+  const kpis = useMemo(() => {
+    const totalPending = submissions.filter(s => s.status === 'submitted').length;
+    const totalSubmitted = submissions.filter(s => s.status !== 'draft').length;
+    const graded = submissions.filter(s => s.status === 'graded' && s.grade != null);
+    const avgGrade = graded.length > 0
+      ? Math.round(graded.reduce((acc, s) => acc + (s.grade ?? 0), 0) / graded.length)
+      : null;
+    return [
+      { ...kpiConfig[0], value: sessions.filter(s => s.session_type === 'assignment').length.toString() },
+      { ...kpiConfig[1], value: totalPending.toString() },
+      { ...kpiConfig[2], value: totalSubmitted.toString() },
+      { ...kpiConfig[3], value: avgGrade != null ? `${avgGrade}%` : '—' },
+    ];
+  }, [sessions, submissions]);
+
+  // Unique course options for filter
+  const courseOptions = useMemo(() => {
+    const titles = [...new Set(assignmentRows.map(r => r.course))].sort();
+    return ['All Courses', ...titles];
+  }, [assignmentRows]);
+
+  const filtered = assignmentRows.filter(a => {
     const matchSearch = a.title.toLowerCase().includes(search.toLowerCase()) || a.course.toLowerCase().includes(search.toLowerCase());
     const matchCourse = courseFilter === 'All Courses' || a.course === courseFilter;
     const matchStatus = statusFilter === 'All' || a.status === statusFilter;
@@ -116,6 +211,8 @@ const ManagerAssignmentsPage: React.FC = () => {
         <Toolbar />
 
         <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400 }}>
+          {isLoading && <LinearProgress sx={{ mb: 2 }} />}
+
           {/* Page Header */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
             <Box sx={{ width: 44, height: 44, borderRadius: '12px', bgcolor: '#fff3e0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -150,22 +247,7 @@ const ManagerAssignmentsPage: React.FC = () => {
                     '&:hover': { transform: 'translateY(-4px)' },
                   }}
                 >
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 16,
-                      right: 16,
-                      width: 40,
-                      height: 40,
-                      borderRadius: '50%',
-                      bgcolor: kpi.iconBg,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      '& svg': { fontSize: 20 },
-                    }}
-                  >
+                  <Box sx={{ position: 'absolute', top: 16, right: 16, width: 40, height: 40, borderRadius: '50%', bgcolor: kpi.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', '& svg': { fontSize: 20 } }}>
                     {kpi.icon}
                   </Box>
                   <Typography variant="h3" sx={{ fontWeight: 700, color: kpi.color, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1, mb: 1 }}>
@@ -201,7 +283,7 @@ const ManagerAssignmentsPage: React.FC = () => {
                 <FormControl size="small" sx={{ minWidth: 180 }}>
                   <InputLabel>Course</InputLabel>
                   <Select value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)} label="Course" sx={{ borderRadius: '10px' }}>
-                    {courses.map((c) => (
+                    {courseOptions.map((c) => (
                       <MenuItem key={c} value={c}>{c}</MenuItem>
                     ))}
                   </Select>
@@ -223,7 +305,6 @@ const ManagerAssignmentsPage: React.FC = () => {
                   <TableRow sx={{ '& th': { fontWeight: 700, fontSize: '0.8rem', color: 'text.secondary', bgcolor: 'grey.50', borderBottom: 2, borderColor: 'divider' } }}>
                     <TableCell>Assignment Title</TableCell>
                     <TableCell>Course</TableCell>
-                    <TableCell align="center">Due Date</TableCell>
                     <TableCell align="center">Submissions</TableCell>
                     <TableCell align="center">Pending Grading</TableCell>
                     <TableCell align="center">Avg Grade</TableCell>
@@ -232,7 +313,7 @@ const ManagerAssignmentsPage: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredAssignments.map((a) => (
+                  {filtered.map((a) => (
                     <TableRow key={a.id} sx={{ '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' }, '& td': { py: 1.5 } }}>
                       <TableCell>
                         <Typography variant="body2" fontWeight={600}>{a.title}</Typography>
@@ -241,12 +322,7 @@ const ManagerAssignmentsPage: React.FC = () => {
                         <Typography variant="body2" color="text.secondary">{a.course}</Typography>
                       </TableCell>
                       <TableCell align="center">
-                        <Typography variant="body2">{a.dueDate}</Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography variant="body2" fontWeight={600}>
-                          {a.submissions}/{a.totalStudents}
-                        </Typography>
+                        <Typography variant="body2" fontWeight={600}>{a.submissions}</Typography>
                       </TableCell>
                       <TableCell align="center">
                         {a.pendingGrading > 0 ? (
@@ -254,24 +330,34 @@ const ManagerAssignmentsPage: React.FC = () => {
                             <Box sx={{ width: 24 }} />
                           </Badge>
                         ) : (
-                          <Typography variant="body2" color="text.secondary">--</Typography>
+                          <Typography variant="body2" color="text.secondary">—</Typography>
                         )}
                       </TableCell>
                       <TableCell align="center">
-                        <Typography variant="body2" fontWeight={600}>{a.avgGrade}%</Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {a.avgGrade != null ? `${a.avgGrade}%` : '—'}
+                        </Typography>
                       </TableCell>
                       <TableCell align="center">
                         {getStatusChip(a.status)}
                       </TableCell>
                       <TableCell align="center">
                         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
-                          <Tooltip title="View">
-                            <IconButton size="small" sx={{ color: '#3b82f6' }}>
+                          <Tooltip title="View course">
+                            <IconButton
+                              size="small"
+                              sx={{ color: '#3b82f6' }}
+                              onClick={() => navigate(`/manager/courses/${a.courseId}`)}
+                            >
                               <ViewIcon sx={{ fontSize: 18 }} />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Edit">
-                            <IconButton size="small" sx={{ color: '#ffa424' }}>
+                          <Tooltip title="Edit course structure">
+                            <IconButton
+                              size="small"
+                              sx={{ color: '#ffa424' }}
+                              onClick={() => navigate(`/manager/courses/${a.courseId}/structure`)}
+                            >
                               <EditIcon sx={{ fontSize: 18 }} />
                             </IconButton>
                           </Tooltip>
@@ -279,10 +365,10 @@ const ManagerAssignmentsPage: React.FC = () => {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {filteredAssignments.length === 0 && (
+                  {filtered.length === 0 && !isLoading && (
                     <TableRow>
-                      <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                        <Typography variant="body2" color="text.secondary">No assignments found matching your filters.</Typography>
+                      <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                        <Typography variant="body2" color="text.secondary">No assignments found.</Typography>
                       </TableCell>
                     </TableRow>
                   )}

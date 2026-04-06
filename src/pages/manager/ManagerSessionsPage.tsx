@@ -141,10 +141,15 @@ const ManagerSessionsPage: React.FC = () => {
       return start >= now && start <= weekFromNow;
     }).length;
     const totalHours = sessions.reduce((acc: number, s: Session) => acc + (s.duration_minutes || 0), 0);
+    const completedSessions = sessions.filter((s: Session) => {
+      const end = s.end_date ? new Date(s.end_date) : null;
+      return end && end < now;
+    }).length;
+    const avgAttendance = completedSessions > 0 ? Math.round((completedSessions / sessions.length) * 100) : 0;
     return [
       { label: 'Total Sessions', value: sessions.length.toString(), ...getKpiConfig('Total Sessions') },
       { label: 'This Week', value: thisWeek.toString(), ...getKpiConfig('This Week') },
-      { label: 'Avg Attendance', value: '82%', ...getKpiConfig('Avg Attendance') },
+      { label: 'Avg Attendance', value: `${avgAttendance}%`, ...getKpiConfig('Avg Attendance') },
       { label: 'Total Hours', value: totalHours.toString(), ...getKpiConfig('Total Hours') },
     ];
   }, [sessions]);

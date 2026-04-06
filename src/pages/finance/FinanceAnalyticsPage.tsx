@@ -66,9 +66,16 @@ const FinanceAnalyticsPage: React.FC = () => {
       const amount = parseFloat(t.amount) || 0;
       return sum + amount;
     }, 0);
-    
+
     const activeSubscriptions = subscriptions.filter((s) => s.status === 'active');
-    
+
+    // Calculate monthly growth
+    const recentTransactions = completedTransactions.slice(0, Math.min(30, completedTransactions.length));
+    const midpoint = Math.floor(recentTransactions.length / 2);
+    const firstHalf = recentTransactions.slice(0, midpoint).reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    const secondHalf = recentTransactions.slice(midpoint).reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    const monthlyGrowth = firstHalf > 0 ? Math.round(((secondHalf - firstHalf) / firstHalf) * 100) : 0;
+
     const gatewayTotals: Record<string, number> = {};
     completedTransactions.forEach((t) => {
       const method = t.payment_method || 'Other';
@@ -80,6 +87,7 @@ const FinanceAnalyticsPage: React.FC = () => {
       totalRevenue,
       activeSubscriptions: activeSubscriptions.length,
       totalTransactions: completedTransactions.length,
+      monthlyGrowth,
       gatewayBreakdown: Object.entries(gatewayTotals).map(([name, amount]) => ({
         name: name.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
         amount,
@@ -179,7 +187,7 @@ const FinanceAnalyticsPage: React.FC = () => {
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {[
               { label: 'Total Revenue', value: `$${kpis.totalRevenue.toLocaleString()}`, icon: <RevenueIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-              { label: 'Monthly Growth', value: '—', icon: <GrowthIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+              { label: 'Monthly Growth', value: `${kpis.monthlyGrowth >= 0 ? '+' : ''}${kpis.monthlyGrowth}%`, icon: <GrowthIcon />, bgcolor: kpis.monthlyGrowth >= 0 ? '#f0fdf4' : '#fee2e2', iconBg: kpis.monthlyGrowth >= 0 ? '#86efac' : '#fca5a5', color: kpis.monthlyGrowth >= 0 ? '#14532d' : '#7f1d1d', subColor: kpis.monthlyGrowth >= 0 ? '#166534' : '#991b1b' },
               { label: 'Active Subscribers', value: kpis.activeSubscriptions.toLocaleString(), icon: <SubscribersIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
               { label: 'Total Transactions', value: kpis.totalTransactions.toLocaleString(), icon: <TransactionsIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
             ].map((kpi) => (

@@ -37,6 +37,7 @@ const headerSx = { p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor
 const GatewayPesapalPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
 
   const { data: transactions = [], isLoading, refetch } = useTransactions(
     statusFilter !== 'all' ? { status: statusFilter } : undefined
@@ -182,7 +183,11 @@ const GatewayPesapalPage: React.FC = () => {
                       height: 24, fontSize: '0.7rem', fontWeight: 600, textTransform: 'capitalize',
                       bgcolor: cfg.bg, color: cfg.color, '& .MuiChip-icon': { color: cfg.color },
                     }} />
-                    <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: '#ffa424' } }}><ViewIcon sx={{ fontSize: 18 }} /></IconButton>
+                    <IconButton size="small"
+                      onClick={() => setSelectedTransaction(t)}
+                      sx={{ color: 'text.disabled', '&:hover': { color: '#ffa424' } }}>
+                      <ViewIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
                   </Box>
                 );
               })

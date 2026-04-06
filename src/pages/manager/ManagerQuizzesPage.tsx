@@ -54,28 +54,19 @@ const headerSx = {
   gap: 2,
 };
 
-// ── KPI data ── HARD CODED FOR DEMO PURPOSES ONLY, REPLACE WITH API DATA IN PRODUCTION
+// TODO: Wire to quizzesApi.getKPIs() for real data
 const kpis = [
-  { label: 'Total Quizzes', value: '89', icon: <TotalQuizzesIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-  { label: 'Avg Pass Rate', value: '76.3%', icon: <PassRateIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-  { label: 'Total Attempts', value: '4,521', icon: <AttemptsIcon />, bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f', subColor: '#1e40af' },
-  { label: 'Avg Score', value: '72%', icon: <ScoreIcon />, bgcolor: '#fef9c3', iconBg: '#facc15', color: '#713f12', subColor: '#854d0e' },
+  { label: 'Total Quizzes', value: '—', icon: <TotalQuizzesIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+  { label: 'Avg Pass Rate', value: '—', icon: <PassRateIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+  { label: 'Total Attempts', value: '—', icon: <AttemptsIcon />, bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f', subColor: '#1e40af' },
+  { label: 'Avg Score', value: '—', icon: <ScoreIcon />, bgcolor: '#fef9c3', iconBg: '#facc15', color: '#713f12', subColor: '#854d0e' },
 ];
 
-// ── Mock quiz data ── HARD CODED FOR DEMO PURPOSES ONLY, REPLACE WITH API DATA IN PRODUCTION
-const quizzes = [
-  { id: 1, title: 'React Fundamentals Quiz', course: 'Advanced React Patterns', questions: 25, timeLimit: '30 min', attempts: 842, passRate: 82, avgScore: 78, status: 'Active' },
-  { id: 2, title: 'Python Basics Assessment', course: 'Python for Data Science', questions: 30, timeLimit: '45 min', attempts: 716, passRate: 74, avgScore: 71, status: 'Active' },
-  { id: 3, title: 'AWS Cloud Practitioner Mock', course: 'AWS Solutions Architect', questions: 65, timeLimit: '90 min', attempts: 534, passRate: 68, avgScore: 65, status: 'Active' },
-  { id: 4, title: 'TypeScript Generics Quiz', course: 'TypeScript Mastery', questions: 20, timeLimit: '25 min', attempts: 623, passRate: 79, avgScore: 76, status: 'Active' },
-  { id: 5, title: 'Docker Essentials Test', course: 'Docker & Kubernetes', questions: 35, timeLimit: '40 min', attempts: 412, passRate: 71, avgScore: 69, status: 'Active' },
-  { id: 6, title: 'SQL Joins & Subqueries', course: 'Database Management', questions: 20, timeLimit: '30 min', attempts: 389, passRate: 85, avgScore: 82, status: 'Active' },
-  { id: 7, title: 'Cybersecurity Awareness', course: 'Cybersecurity Fundamentals', questions: 40, timeLimit: '50 min', attempts: 567, passRate: 48, avgScore: 54, status: 'Draft' },
-  { id: 8, title: 'Agile & Scrum Principles', course: 'Project Management Pro', questions: 15, timeLimit: '20 min', attempts: 438, passRate: 91, avgScore: 88, status: 'Draft' },
-];
+// TODO: Wire to quizzesApi.getAll() for real data
+const quizzes = [] as any[];
 
-// ── Course options ── HARD CODED FOR DEMO PURPOSES ONLY, REPLACE WITH API DATA IN PRODUCTION
-const courses = ['All Courses', 'Advanced React Patterns', 'Python for Data Science', 'AWS Solutions Architect', 'TypeScript Mastery', 'Docker & Kubernetes', 'Database Management', 'Cybersecurity Fundamentals', 'Project Management Pro']; // ── Utility function to determine pass rate color ──
+// TODO: Wire to courseApi.getAll() for real data
+const courses = ['All Courses']; // ── Utility function to determine pass rate color ──
 
 const getPassRateColor = (rate: number) => {
   if (rate > 70) return '#16a34a';

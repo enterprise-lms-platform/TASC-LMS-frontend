@@ -67,6 +67,18 @@ const FinanceRevenueReportsPage: React.FC = () => {
                 </Select>
               </FormControl>
               <Button size="small" variant="contained" startIcon={<ExportIcon />}
+                onClick={() => {
+                  const csvData = `Period,Revenue,Growth\n${monthlyBreakdown.map(m => `${m.month},${m.revenue},${m.growth_percent}%`).join('\n')}`;
+                  const blob = new Blob([csvData], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `revenue-report-${period}m.csv`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }}
                 sx={{ textTransform: 'none', borderRadius: 2, boxShadow: 'none', '&:hover': { boxShadow: '0 2px 8px rgba(255,164,36,0.3)' } }}>
                 Download Report
               </Button>

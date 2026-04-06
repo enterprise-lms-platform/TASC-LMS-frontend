@@ -39,6 +39,30 @@ export const managerSettingsApi = {
     apiClient.patch<Organization>(`/api/v1/auth/manager/organization-settings/`, data),
 };
 
+export interface ActivityEvent {
+  type: 'Enrollment' | 'Completion' | 'Submission';
+  user_name: string;
+  description: string;
+  timestamp: string;
+  relative_time: string;
+}
+
+export interface ActivitySummary {
+  enrollments: number;
+  completions: number;
+  submissions: number;
+}
+
+export interface ActivityResponse {
+  events: ActivityEvent[];
+  summary: ActivitySummary;
+}
+
+export const managerActivityApi = {
+  getActivity: (range: 'today' | '7days' | '30days' = '7days') =>
+    apiClient.get<ActivityResponse>(`/api/v1/auth/manager/activity/`, { params: { range } }),
+};
+
 export interface ManagerBillingPlan {
   plan_name: string | null;
   price: string;

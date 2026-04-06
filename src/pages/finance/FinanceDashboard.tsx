@@ -92,11 +92,16 @@ const FinanceDashboard: React.FC = () => {
             © 2025 TASC Learning Management System. All rights reserved.
           </Box>
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 3 }}>
-            {['Privacy Policy', 'Terms of Service', 'Support', 'Documentation'].map((link) => (
+            {[
+              { label: 'Privacy Policy', href: '/privacy' },
+              { label: 'Terms of Service', href: '/terms' },
+              { label: 'Support', href: '/support' },
+              { label: 'Documentation', href: '/docs' },
+            ].map((link) => (
               <Box
-                key={link}
+                key={link.label}
                 component="a"
-                href="#"
+                href={link.href}
                 sx={{
                   color: 'text.secondary',
                   textDecoration: 'none',
@@ -104,7 +109,7 @@ const FinanceDashboard: React.FC = () => {
                   '&:hover': { color: 'primary.main', textDecoration: 'underline' },
                 }}
               >
-                {link}
+                {link.label}
               </Box>
             ))}
           </Box>

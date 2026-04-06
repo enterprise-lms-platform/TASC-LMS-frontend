@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box, CssBaseline, Toolbar, Typography, Paper, Chip, IconButton, Button, Switch, FormControlLabel, Grid,
 } from '@mui/material';
@@ -13,6 +14,7 @@ import {
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
+import { alertsApi } from '../../services/alerts.services';
 
 type AlertSeverity = 'critical' | 'warning' | 'info' | 'success';
 
@@ -46,6 +48,21 @@ const headerSx = { p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor
 const FinanceAlertsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const queryClient = useQueryClient();
+
+  const markAllReadMutation = useMutation({
+    mutationFn: () => alertsApi.markAllAsRead(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alerts'] });
+    },
+  });
+
+  const deleteAlertMutation = useMutation({
+    mutationFn: (alertId: string) => alertsApi.delete(alertId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alerts'] });
+    },
+  });
 
   const filtered = showUnreadOnly ? alertsData.filter((a) => !a.read) : alertsData;
   const unreadCount = alertsData.filter((a) => !a.read).length;
@@ -74,8 +91,10 @@ const FinanceAlertsPage: React.FC = () => {
                 label={<Typography variant="body2">Unread only</Typography>}
               />
               <Button size="small" variant="outlined" startIcon={<MarkReadIcon />}
+                onClick={() => markAllReadMutation.mutate()}
+                disabled={markAllReadMutation.isPending}
                 sx={{ textTransform: 'none', fontSize: '0.8rem', borderColor: 'divider', color: 'text.secondary' }}>
-                Mark all read
+                {markAllReadMutation.isPending ? 'Marking...' : 'Mark all read'}
               </Button>
             </Box>
           </Box>
@@ -153,7 +172,10 @@ const FinanceAlertsPage: React.FC = () => {
                       <Typography variant="caption" color="text.disabled">{alert.time}</Typography>
                     </Box>
                   </Box>
-                  <IconButton size="small" sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}>
+                  <IconButton size="small"
+                    onClick={() => deleteAlertMutation.mutate(alert.id)}
+                    disabled={deleteAlertMutation.isPending}
+                    sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}>
                     <DeleteIcon sx={{ fontSize: 18 }} />
                   </IconButton>
                 </Box>

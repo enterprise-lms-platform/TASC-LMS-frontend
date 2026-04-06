@@ -42,14 +42,14 @@ const headerSx = {
   gap: 2,
 };
 
-// ── Role Definitions ──
+// TODO: Wire to rolesApi.getRoles() for real data with user counts
 const roles = [
   {
     name: 'Learner',
     icon: <SchoolIcon />,
     iconBg: '#3b82f6',
     description: 'Standard learner access for browsing, enrolling in courses, taking assessments, and tracking personal progress.',
-    userCount: 2184,
+    userCount: 0,
     permissions: ['Browse Catalog', 'Enroll in Courses', 'Take Quizzes', 'Submit Assignments', 'View Certificates', 'Track Progress'],
   },
   {
@@ -57,7 +57,7 @@ const roles = [
     icon: <PersonIcon />,
     iconBg: '#10b981',
     description: 'Course creation and management access including content authoring, grading, and learner engagement monitoring.',
-    userCount: 48,
+    userCount: 0,
     permissions: ['Create Courses', 'Manage Content', 'Grade Assignments', 'View Learner Progress', 'Host Live Sessions', 'Issue Certificates'],
   },
   {
@@ -65,19 +65,13 @@ const roles = [
     icon: <AdminIcon />,
     iconBg: '#6366f1',
     description: 'Full administrative access to all platform features including user management, analytics, and organizational settings.',
-    userCount: 6,
+    userCount: 0,
     permissions: ['Manage Users', 'Assign Roles', 'View Analytics', 'Approve Courses', 'Organization Settings', 'Billing Management', 'Bulk Import', 'Full Reports Access'],
   },
 ];
 
-// ── Recent Role Changes ── HARD CODED FOR DEMO PURPOSES ONLY, REPLACE WITH API DATA IN PRODUCTION
-const recentRoleChanges = [
-  { user: 'Sarah Mitchell', initials: 'SM', previousRole: 'Learner', newRole: 'Instructor', changedBy: 'Alex Okafor', date: 'Mar 8, 2026' },
-  { user: 'David Kim', initials: 'DK', previousRole: 'Learner', newRole: 'Instructor', changedBy: 'Alex Okafor', date: 'Mar 5, 2026' },
-  { user: 'Priya Sharma', initials: 'PS', previousRole: 'Instructor', newRole: 'Manager', changedBy: 'Alex Okafor', date: 'Feb 28, 2026' },
-  { user: 'Laura Bennett', initials: 'LB', previousRole: 'Instructor', newRole: 'Learner', changedBy: 'Sarah Mitchell', date: 'Feb 20, 2026' },
-  { user: 'Michael Thompson', initials: 'MT', previousRole: 'Learner', newRole: 'Instructor', changedBy: 'Alex Okafor', date: 'Feb 14, 2026' },
-];
+// TODO: Wire to rolesApi.getRecentChanges() for real data
+const recentRoleChanges = [] as any[];
 
 const roleChipColors: Record<string, { bg: string; color: string }> = {
   Learner: { bg: 'rgba(59,130,246,0.1)', color: '#3b82f6' },

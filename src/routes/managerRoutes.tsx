@@ -46,7 +46,6 @@ const ManagerRecordingsPage     = lazy(() => import('../pages/manager/ManagerRec
 const ManagerScheduleNewPage    = lazy(() => import('../pages/manager/ManagerScheduleNewPage'));
 const ManagerSettingsPage       = lazy(() => import('../pages/manager/ManagerSettingsPage'));
 const ManagerNotificationsPage  = lazy(() => import('../pages/manager/ManagerNotificationsPage'));
-const ManagerIntegrationsPage   = lazy(() => import('../pages/manager/ManagerIntegrationsPage'));
 const ManagerBillingPage        = lazy(() => import('../pages/manager/ManagerBillingPage'));
 const ManagerProfilePage        = lazy(() => import('../pages/manager/ManagerProfilePage'));
 const ManagerMessagesPage       = lazy(() => import('../pages/manager/ManagerMessagesPage'));
@@ -95,7 +94,6 @@ export const managerRoutes = (queryClient: QueryClient): RouteObject[] => [
   { path: '/manager/schedule-new', element: <SW><PR><ManagerScheduleNewPage /></PR></SW>, loader: async () => managerLoaders.managerRouteLoader(queryClient) },
   { path: '/manager/settings', element: <SW><PR><ManagerSettingsPage /></PR></SW>, loader: async () => managerLoaders.managerRouteLoader(queryClient) },
   { path: '/manager/notifications', element: <SW><PR><ManagerNotificationsPage /></PR></SW>, loader: async () => managerLoaders.managerRouteLoader(queryClient) },
-  { path: '/manager/integrations', element: <SW><PR><ManagerIntegrationsPage /></PR></SW>, loader: async () => managerLoaders.managerRouteLoader(queryClient) },
   { path: '/manager/billing', element: <SW><PR><ManagerBillingPage /></PR></SW>, loader: async () => managerLoaders.managerRouteLoader(queryClient) },
   { path: '/manager/profile', element: <SW><PR><ManagerProfilePage /></PR></SW> },
   { path: '/manager/messages', element: <SW><PR><ManagerMessagesPage /></PR></SW>, loader: async () => managerLoaders.managerRouteLoader(queryClient) },

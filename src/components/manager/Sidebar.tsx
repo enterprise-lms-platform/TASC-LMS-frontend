@@ -38,7 +38,6 @@ import {
   CalendarMonth as ScheduleIcon,
   Settings as SettingsIcon,
   Notifications as NotificationsIcon,
-  Extension as IntegrationsIcon,
   CreditCard as BillingIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -107,7 +106,7 @@ const buildNavSections = (unreadCount?: number): NavSection[] => [
     title: 'Assessments',
     items: [
       { text: 'Quizzes', icon: <QuizzesIcon />, path: '/manager/quizzes' },
-      { text: 'Assignments', icon: <AssignmentsIcon />, path: '/manager/assignments', badge: 12 },
+      { text: 'Assignments', icon: <AssignmentsIcon />, path: '/manager/assignments' },
       { text: 'Gradebook', icon: <GradebookIcon />, path: '/manager/gradebook' },
     ],
   },
@@ -123,7 +122,6 @@ const buildNavSections = (unreadCount?: number): NavSection[] => [
     title: 'Settings',
     items: [
       { text: 'Organization Settings', icon: <SettingsIcon />, path: '/manager/settings' },
-      { text: 'Integrations', icon: <IntegrationsIcon />, path: '/manager/integrations' },
       { text: 'Billing', icon: <BillingIcon />, path: '/manager/billing' },
     ],
   },

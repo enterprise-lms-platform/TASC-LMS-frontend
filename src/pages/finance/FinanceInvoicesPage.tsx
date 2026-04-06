@@ -37,6 +37,7 @@ const FinanceInvoicesPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
   const queryClient = useQueryClient();
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -108,6 +109,18 @@ const FinanceInvoicesPage: React.FC = () => {
             </Box>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button size="small" variant="outlined" startIcon={<ExportIcon />}
+                onClick={() => {
+                  const csvData = (invoices || []).map(inv => `${inv.invoice_number},${inv.user_email},${inv.amount},${inv.status}`).join('\n');
+                  const blob = new Blob([csvData], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'invoices.csv';
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }}
                 sx={{ textTransform: 'none', borderColor: 'divider', color: 'text.secondary' }}>
                 Export
               </Button>
@@ -206,7 +219,9 @@ const FinanceInvoicesPage: React.FC = () => {
                       <SendIcon sx={{ fontSize: 16 }} />
                     </IconButton>
                   )}
-                  <IconButton size="small" sx={{ color: 'text.secondary' }}>
+                  <IconButton size="small"
+                    onClick={() => setSelectedInvoice(inv)}
+                    sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}>
                     <ViewIcon fontSize="small" />
                   </IconButton>
                 </Box>

@@ -47,33 +47,16 @@ const headerSx = {
   gap: 2,
 };
 
-// ── KPI data ──
+// TODO: Wire to progressApi.getKPIs() for real data
 const kpis = [
-  { label: 'Active Learners', value: '1,892', icon: <ActiveLearnersIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-  { label: 'Avg Completion', value: '64.2%', icon: <CompletionIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-  { label: 'At Risk', value: '156', icon: <AtRiskIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#7f1d1d', subColor: '#991b1b' },
-  { label: 'On Track', value: '1,248', icon: <OnTrackIcon />, bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f', subColor: '#1e40af' },
+  { label: 'Active Learners', value: '—', icon: <ActiveLearnersIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+  { label: 'Avg Completion', value: '—', icon: <CompletionIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+  { label: 'At Risk', value: '—', icon: <AtRiskIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#7f1d1d', subColor: '#991b1b' },
+  { label: 'On Track', value: '—', icon: <OnTrackIcon />, bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f', subColor: '#1e40af' },
 ];
 
-// ── Course progress overview ── HARD CODED FOR DEMO PURPOSES ONLY, REPLACE WITH API DATA IN PRODUCTION
-const courseProgress = [
-  { name: 'Advanced React Patterns', enrolled: 452, avgProgress: 72, completionRate: 68, color: '#ffa424' },
-  { name: 'Python for Data Science', enrolled: 386, avgProgress: 65, completionRate: 58, color: '#3b82f6' },
-  { name: 'AWS Solutions Architect', enrolled: 321, avgProgress: 54, completionRate: 42, color: '#10b981' },
-  { name: 'TypeScript Mastery', enrolled: 278, avgProgress: 81, completionRate: 74, color: '#8b5cf6' },
-  { name: 'Docker & Kubernetes', enrolled: 234, avgProgress: 48, completionRate: 35, color: '#f59e0b' },
-  { name: 'Cybersecurity Fundamentals', enrolled: 198, avgProgress: 59, completionRate: 51, color: '#ef4444' },
-];
-
-// ── At-risk learners ── HARD CODED FOR DEMO PURPOSES ONLY, REPLACE WITH API DATA IN PRODUCTION
-const atRiskLearners = [
-  { id: 1, name: 'Michael Torres', initials: 'MT', course: 'AWS Solutions Architect', progress: 12, daysInactive: 21, lastActivity: 'Feb 17, 2026' },
-  { id: 2, name: 'Rachel Green', initials: 'RG', course: 'Docker & Kubernetes', progress: 8, daysInactive: 18, lastActivity: 'Feb 20, 2026' },
-  { id: 3, name: 'Daniel Park', initials: 'DP', course: 'Python for Data Science', progress: 15, daysInactive: 14, lastActivity: 'Feb 24, 2026' },
-  { id: 4, name: 'Jessica Liu', initials: 'JL', course: 'Cybersecurity Fundamentals', progress: 22, daysInactive: 16, lastActivity: 'Feb 22, 2026' },
-  { id: 5, name: 'Brandon Scott', initials: 'BS', course: 'Advanced React Patterns', progress: 18, daysInactive: 12, lastActivity: 'Feb 26, 2026' },
-  { id: 6, name: 'Priya Sharma', initials: 'PS', course: 'TypeScript Mastery', progress: 10, daysInactive: 25, lastActivity: 'Feb 13, 2026' },
-];
+// TODO: Wire to progressApi.getCourseProgress() for real data
+const courseProgress = [] as any[];
 
 const getInactiveColor = (days: number) => {
   if (days >= 20) return '#ef4444';
@@ -86,6 +69,9 @@ const getInactiveLabel = (days: number) => {
   if (days >= 14) return 'High';
   return 'Medium';
 };
+
+// TODO: Wire to progressApi.getAtRiskLearners() for real data
+const atRiskLearners = [] as any[];
 
 const ManagerProgressPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);

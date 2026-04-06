@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import {
   Box, CssBaseline, Toolbar, Typography, Paper, Chip, Avatar, IconButton,
   Button, TextField, InputAdornment, Select, MenuItem, FormControl, InputLabel, Grid,
@@ -16,6 +17,7 @@ import {
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
 import { useTransactions } from '../../hooks/usePayments';
+import { transactionApi } from '../../services/payments.services';
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   completed: { bg: 'rgba(16,185,129,0.1)', color: '#10b981' },
@@ -43,8 +45,23 @@ const FinancePaymentsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
 
   const { data: transactions, isLoading } = useTransactions();
+
+  const exportMutation = useMutation({
+    mutationFn: async () => {
+      const response = await transactionApi.exportCSV({ status: statusFilter !== 'all' ? statusFilter : undefined });
+      const url = URL.createObjectURL(response.data as Blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'payments.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },
+  });
 
   const filtered = (transactions || []).filter((p) => {
     if (statusFilter !== 'all' && p.status !== statusFilter) return false;
@@ -70,8 +87,10 @@ const FinancePaymentsPage: React.FC = () => {
               <Typography variant="body2" color="text.secondary">Manage and track all payment transactions</Typography>
             </Box>
             <Button size="small" variant="contained" startIcon={<ExportIcon />}
+              onClick={() => exportMutation.mutate()}
+              disabled={exportMutation.isPending}
               sx={{ textTransform: 'none', borderRadius: 2, boxShadow: 'none', '&:hover': { boxShadow: '0 2px 8px rgba(255,164,36,0.3)' } }}>
-              Export CSV
+              {exportMutation.isPending ? 'Exporting...' : 'Export CSV'}
             </Button>
           </Box>
 
@@ -159,7 +178,9 @@ const FinancePaymentsPage: React.FC = () => {
                   bgcolor: statusColors[p.status]?.bg || 'rgba(0,0,0,0.05)',
                   color: statusColors[p.status]?.color || 'text.secondary',
                 }} />
-                <IconButton size="small" sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'flex' } }}>
+                <IconButton size="small"
+                  onClick={() => setSelectedTransaction(p)}
+                  sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'flex' }, '&:hover': { color: 'primary.main' } }}>
                   <ViewIcon fontSize="small" />
                 </IconButton>
               </Box>

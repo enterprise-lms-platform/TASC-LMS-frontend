@@ -123,13 +123,13 @@ const ManagerDashboard: React.FC = () => {
             © 2025 TASC LMS - Acme Corporation
           </Typography>
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 3 }}>
-            <Link href="#" underline="hover" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+            <Link href="/help" underline="hover" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
               Help Center
             </Link>
-            <Link href="#" underline="hover" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+            <Link href="/documentation" underline="hover" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
               Documentation
             </Link>
-            <Link href="#" underline="hover" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+            <Link href="/support" underline="hover" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
               Support
             </Link>
           </Box>

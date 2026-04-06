@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Box, CssBaseline, Toolbar, Typography, Paper, Chip, Avatar, IconButton,
   Button, TextField, InputAdornment, Select, MenuItem, FormControl, InputLabel, Grid,
-  CircularProgress,
+  CircularProgress, Menu,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -36,6 +36,8 @@ const FinanceSubscriptionsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [moreMenuAnchor, setMoreMenuAnchor] = useState<null | HTMLElement>(null);
+  const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
 
   const { data: subscriptions, isLoading } = useUserSubscriptions();
 
@@ -69,9 +71,20 @@ const FinanceSubscriptionsPage: React.FC = () => {
               <Typography variant="body2" color="text.secondary">Active plans and customer recurring billing</Typography>
             </Box>
             <Button size="small" variant="contained" startIcon={<FilterIcon />}
+              onClick={(e) => setMoreMenuAnchor(e.currentTarget)}
               sx={{ textTransform: 'none', borderRadius: 2, boxShadow: 'none', '&:hover': { boxShadow: '0 2px 8px rgba(255,164,36,0.3)' } }}>
               Advanced Filters
             </Button>
+            <Menu
+              anchorEl={moreMenuAnchor}
+              open={Boolean(moreMenuAnchor)}
+              onClose={() => setMoreMenuAnchor(null)}
+            >
+              <MenuItem onClick={() => { setStatusFilter('active'); setMoreMenuAnchor(null); }}>Active Only</MenuItem>
+              <MenuItem onClick={() => { setStatusFilter('paused'); setMoreMenuAnchor(null); }}>Paused Only</MenuItem>
+              <MenuItem onClick={() => { setStatusFilter('cancelled'); setMoreMenuAnchor(null); }}>Cancelled Only</MenuItem>
+              <MenuItem onClick={() => { setSearch(''); setStatusFilter('all'); setMoreMenuAnchor(null); }}>Clear All Filters</MenuItem>
+            </Menu>
           </Box>
 
           {/* Stats */}
@@ -151,7 +164,19 @@ const FinanceSubscriptionsPage: React.FC = () => {
                   bgcolor: statusColors[sub.status]?.bg || 'rgba(0,0,0,0.05)',
                   color: statusColors[sub.status]?.color || 'text.secondary',
                 }} />
-                <IconButton size="small"><MoreIcon fontSize="small" /></IconButton>
+                <IconButton size="small"
+                  onClick={(e) => { setSelectedSubId(sub.id); setMoreMenuAnchor(e.currentTarget); }}>
+                  <MoreIcon fontSize="small" />
+                </IconButton>
+                <Menu
+                  anchorEl={moreMenuAnchor}
+                  open={Boolean(moreMenuAnchor) && selectedSubId === sub.id}
+                  onClose={() => { setMoreMenuAnchor(null); setSelectedSubId(null); }}
+                >
+                  <MenuItem onClick={() => { setMoreMenuAnchor(null); setSelectedSubId(null); }}>Edit Plan</MenuItem>
+                  <MenuItem onClick={() => { setMoreMenuAnchor(null); setSelectedSubId(null); }}>Pause Subscription</MenuItem>
+                  <MenuItem onClick={() => { setMoreMenuAnchor(null); setSelectedSubId(null); }} sx={{ color: 'error.main' }}>Cancel Subscription</MenuItem>
+                </Menu>
               </Box>
             ))}
           </Paper>

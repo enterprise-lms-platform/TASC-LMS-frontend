@@ -90,6 +90,10 @@ export const transactionApi = {
   //  Get transaction details by ID
   getById: (id: number) =>
     apiClient.get<Transaction>(`${BASE_PATH}/transactions/${id}/`),
+
+  //  Export transactions as CSV blob
+  exportCSV: (params?: { status?: string }) =>
+    apiClient.get<Blob>(`${BASE_PATH}/transactions/export-csv/`, { params, responseType: 'blob' }),
 };
 
 // PAYMENT METHODS
