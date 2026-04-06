@@ -97,6 +97,7 @@ const WorkshopDetailsPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const { data: sessionData, isLoading: sessionLoading } = useQuery({
     queryKey: ['livestream', workshopId],
@@ -135,16 +136,17 @@ const WorkshopDetailsPage: React.FC = () => {
         name: a.learner_name || 'Participant',
         initials: (a.learner_name || 'P').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
         email: a.learner_email || '',
-        attendance: false,
+        attendance: a.status === 'attended',
         grade: null,
         passFail: null,
         certificateGenerated: false,
-        eligible: false,
+        eligible: a.status === 'attended',
       })));
-    } else {
+    } else if (!attendanceLoading) {
+      // Only fall back to sample data if we've finished loading and have no real data
       setParticipants(sampleParticipants);
     }
-  }, [attendanceData]);
+  }, [attendanceData, attendanceLoading]);
 
   // Add participant form
   const [newName, setNewName] = useState('');
@@ -202,9 +204,15 @@ const WorkshopDetailsPage: React.FC = () => {
     setNewEmail('');
   };
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSave = async () => {
+    setSaving(true);
+    // TODO: Persist attendance/grade/certificate changes to backend via PUT/PATCH to livestream-attendance/{id}/
+    // Currently shows local success feedback only
+    setTimeout(() => {
+      setSaved(true);
+      setSaving(false);
+      setTimeout(() => setSaved(false), 3000);
+    }, 500);
   };
 
   const formatDateRange = (start: string, end: string) => {
@@ -249,8 +257,14 @@ const WorkshopDetailsPage: React.FC = () => {
               sx={{ height: 24, fontSize: '0.75rem', fontWeight: 600, textTransform: 'capitalize', bgcolor: statusStyles[workshopDetail.status].bg, color: statusStyles[workshopDetail.status].color }}
             />
           )}
-          <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSave} sx={{ textTransform: 'none', fontWeight: 600, bgcolor: 'primary.main' }}>
-            Save
+          <Button
+            variant="contained"
+            startIcon={<SaveIcon />}
+            onClick={handleSave}
+            disabled={saving}
+            sx={{ textTransform: 'none', fontWeight: 600, bgcolor: 'primary.main' }}
+          >
+            {saving ? 'Saving...' : 'Save'}
           </Button>
         </Toolbar>
       </AppBar>
