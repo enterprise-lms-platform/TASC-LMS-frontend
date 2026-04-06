@@ -115,10 +115,14 @@ const ManagerInstructorsPage: React.FC = () => {
   const kpis = useMemo(() => {
     const total = instructors.length;
     const active = instructors.filter((i: any) => i.is_active).length;
+    const rated = instructors.filter((i: any) => i.average_rating != null && i.average_rating > 0);
+    const avgRating = rated.length > 0
+      ? (rated.reduce((sum: number, i: any) => sum + i.average_rating, 0) / rated.length).toFixed(1)
+      : '—';
     return [
       { label: 'Total Instructors', value: total.toString(), bgcolor: '#fff3e0', color: '#7c2d12' },
       { label: 'Active', value: active.toString(), bgcolor: '#dcfce7', color: '#14532d' },
-      { label: 'Avg Rating', value: '4.5', bgcolor: '#fef9c3', color: '#713f12' },
+      { label: 'Avg Rating', value: avgRating, bgcolor: '#fef9c3', color: '#713f12' },
       { label: 'Total Courses', value: instructors.reduce((sum: number, i: any) => sum + (i.courses_count || 0), 0).toString(), bgcolor: '#eff6ff', color: '#1e3a5f' },
     ];
   }, [instructors]);
