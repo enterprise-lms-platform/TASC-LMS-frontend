@@ -70,8 +70,8 @@ export interface GatewaySettings {
 }
 
 export const gatewaySettingsApi = {
-  save: (data: Partial<GatewaySettings>) =>
-    apiClient.patch(`${BASE_PATH}/system/gateway/`, data),
+  getStatus: () =>
+    apiClient.get<{ environment: string; ipn_url: string; configured: boolean }>(`${BASE_PATH}/system/gateway/`),
   test: () =>
     apiClient.post<{ detail: string }>(`${BASE_PATH}/system/gateway/test/`),
 };

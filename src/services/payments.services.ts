@@ -260,4 +260,6 @@ export const pesapalApi = {
     ),
   getStatus: (paymentId: string) =>
     apiClient.get<PesapalPaymentStatusResponse>(`${BASE_PATH}/pesapal/${paymentId}/status/`),
+  registerIPN: () =>
+    apiClient.post<{ ipn_id: string; url: string; environment: string }>(`${BASE_PATH}/pesapal/ipn/register/`),
 };
