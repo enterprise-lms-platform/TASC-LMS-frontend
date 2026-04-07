@@ -108,8 +108,8 @@ const ManagerAnalyticsPage: React.FC = () => {
   const { data: categoryStats } = useCoursesByCategory();
 
   const courses = (coursesData?.results ?? []) as CourseWithCategory[];
-  const enrollments = (enrollmentsData ?? []) as EnrollmentWithDate[];
-  const certificates = (certificatesData ?? []) as Array<{ id: number }>;
+  const enrollments = (Array.isArray(enrollmentsData) ? enrollmentsData : (enrollmentsData as any)?.results ?? []) as EnrollmentWithDate[];
+  const certificates = (Array.isArray(certificatesData) ? certificatesData : (certificatesData as any)?.results ?? []) as Array<{ id: number }>;
 
   const courseMap = useMemo(() => {
     const map = new Map<number, CourseWithCategory>();

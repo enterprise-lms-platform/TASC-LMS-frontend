@@ -24,7 +24,6 @@ import {
 import {
   Search as SearchIcon,
   Send as SendIcon,
-  AttachFile as AttachIcon,
   Add as AddIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
@@ -361,7 +360,6 @@ const MessagingPanel: React.FC<MessagingPanelProps> = ({ height = 'calc(100vh - 
           </Box>
 
           <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', display: 'flex', gap: 1, alignItems: 'center' }}>
-            <IconButton size="small"><AttachIcon /></IconButton>
             <TextField
               fullWidth
               size="small"

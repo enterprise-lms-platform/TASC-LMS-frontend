@@ -99,7 +99,7 @@ const PaymentsPage: React.FC = () => {
     }),
   });
 
-  const transactions = (transactionsData?.data ?? []) as Transaction[];
+  const transactions = (Array.isArray(transactionsData?.data) ? transactionsData.data : (transactionsData?.data as any)?.results ?? []) as Transaction[];
 
   const kpis = useMemo(() => {
     const completed = transactions.filter(t => t.status === 'completed');

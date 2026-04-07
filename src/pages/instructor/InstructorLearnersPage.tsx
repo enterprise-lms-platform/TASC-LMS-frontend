@@ -97,13 +97,13 @@ const InstructorLearnersPage: React.FC = () => {
     queryFn: () => submissionApi.getAll().then(r => r.data),
   });
 
-  const courses = (coursesData?.results ?? []) as Array<{ id: number }>;
-  const enrollments = (enrollmentsData ?? []) as Array<{
+  const courses = (Array.isArray(coursesData) ? coursesData : coursesData?.results ?? []) as Array<{ id: number }>;
+  const enrollments = (Array.isArray(enrollmentsData) ? enrollmentsData : (enrollmentsData as any)?.results ?? []) as Array<{
     id: number; user: number; user_name: string; user_email: string;
     course: number; course_title: string; progress_percentage: number;
     status: string; enrolled_at: string; last_accessed_at: string;
   }>;
-  const submissions = (submissionsData ?? []) as Array<{ user: number; enrollment: number; grade: number | null }>;
+  const submissions = (Array.isArray(submissionsData) ? submissionsData : (submissionsData as any)?.results ?? []) as Array<{ user: number; enrollment: number; grade: number | null }>;
 
   const isLoading = coursesLoading || enrollmentsLoading;
 

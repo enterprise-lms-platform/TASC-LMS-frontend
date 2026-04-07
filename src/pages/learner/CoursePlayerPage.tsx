@@ -143,6 +143,7 @@ const CoursePlayerPage: React.FC = () => {
   });
   const attachments = Array.isArray(attachmentsData) ? attachmentsData : (attachmentsData as any)?.results ?? [];
   const [questionText, setQuestionText] = useState('');
+  const [replyText, setReplyText] = useState('');
 
   // Real completed sessions array based on backend progress
   const completedSessions = recordedProgressList.filter(p => p.is_completed).map(p => p.session);
@@ -203,6 +204,16 @@ const CoursePlayerPage: React.FC = () => {
   const lockMutation = useMutation({
     mutationFn: (id: number) => discussionApi.lock(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['discussions', 'session', activeSessionId] }),
+  });
+
+  const createReplyMutation = useMutation({
+    mutationFn: (data: { discussion: number; content: string }) =>
+      discussionReplyApi.create(data),
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['discussion-replies', vars.discussion] });
+      queryClient.invalidateQueries({ queryKey: ['discussions', 'session', activeSessionId] });
+      setReplyText('');
+    },
   });
 
   const handleAskQuestion = () => {
@@ -881,7 +892,13 @@ const CoursePlayerPage: React.FC = () => {
                       <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{q.title}</Typography>
                       <Typography variant="body2" sx={{ mb: 1.5 }}>{q.content}</Typography>
                       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                        <Button size="small" sx={{ textTransform: 'none', color: 'text.secondary', fontSize: '0.8rem' }}>{q.reply_count} replies</Button>
+                        <Button
+                          size="small"
+                          onClick={() => setExpandedQuestionId(expandedQuestionId === q.id ? null : q.id)}
+                          sx={{ textTransform: 'none', color: expandedQuestionId === q.id ? '#ffa424' : 'text.secondary', fontSize: '0.8rem', fontWeight: expandedQuestionId === q.id ? 600 : 400 }}
+                        >
+                          {q.reply_count} {q.reply_count === 1 ? 'reply' : 'replies'}
+                        </Button>
                         {isModeratorRole && (
                           <>
                             <Tooltip title={q.is_pinned ? 'Unpin' : 'Pin'}>
@@ -897,6 +914,66 @@ const CoursePlayerPage: React.FC = () => {
                           </>
                         )}
                       </Box>
+
+                      {/* ── Reply section (expanded) ── */}
+                      <Collapse in={expandedQuestionId === q.id}>
+                        <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #f0f0f0' }}>
+                          {replies.length === 0 ? (
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                              No replies yet. Be the first to reply!
+                            </Typography>
+                          ) : (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 1.5 }}>
+                              {replies.map(reply => (
+                                <Box key={reply.id} sx={{ display: 'flex', gap: 1.5 }}>
+                                  <Avatar sx={{ width: 26, height: 26, fontSize: '0.7rem', bgcolor: '#e5e7eb', color: '#374151', flexShrink: 0 }}>
+                                    {reply.user_name?.[0] || '?'}
+                                  </Avatar>
+                                  <Box sx={{ flex: 1 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
+                                      <Typography variant="caption" fontWeight={600}>{reply.user_name}</Typography>
+                                      <Typography variant="caption" color="text.disabled">· {new Date(reply.created_at).toLocaleDateString()}</Typography>
+                                    </Box>
+                                    <Typography variant="body2" sx={{ fontSize: '0.85rem', lineHeight: 1.6 }}>{reply.content}</Typography>
+                                  </Box>
+                                </Box>
+                              ))}
+                            </Box>
+                          )}
+
+                          {q.is_locked ? (
+                            <Typography variant="caption" color="text.disabled" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              <LockIcon sx={{ fontSize: 13 }} /> This question is locked — no new replies.
+                            </Typography>
+                          ) : (
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              <TextField
+                                fullWidth
+                                size="small"
+                                placeholder="Write a reply..."
+                                value={replyText}
+                                onChange={(e) => setReplyText(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey && replyText.trim()) {
+                                    e.preventDefault();
+                                    createReplyMutation.mutate({ discussion: q.id, content: replyText.trim() });
+                                  }
+                                }}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px', fontSize: '0.85rem' } }}
+                              />
+                              <IconButton
+                                onClick={() => {
+                                  if (replyText.trim()) createReplyMutation.mutate({ discussion: q.id, content: replyText.trim() });
+                                }}
+                                disabled={createReplyMutation.isPending || !replyText.trim()}
+                                sx={{ bgcolor: '#ffa424', color: '#fff', borderRadius: '10px', flexShrink: 0, '&:hover': { bgcolor: '#e6931f' }, '&.Mui-disabled': { bgcolor: '#f3f4f6', color: '#d1d5db' } }}
+                              >
+                                <SendIcon sx={{ fontSize: 18 }} />
+                              </IconButton>
+                            </Box>
+                          )}
+                        </Box>
+                      </Collapse>
                     </Box>
                   )) : (
                     <Box sx={{ p: 3, textAlign: 'center', bgcolor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb' }}>

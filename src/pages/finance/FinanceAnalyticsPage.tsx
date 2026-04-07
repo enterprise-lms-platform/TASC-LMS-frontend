@@ -56,9 +56,9 @@ const FinanceAnalyticsPage: React.FC = () => {
     queryFn: () => userSubscriptionApi.getAll().then(r => r.data),
   });
 
-  const transactions = (transactionsData ?? []) as Array<{ id: number; user_name: string; amount: string; status: string; payment_method: string; transaction_id: string; created_at: string; course_title: string }>;
-  const invoices = (invoicesData ?? []) as Array<{ id: number; status: string }>;
-  const subscriptions = (subscriptionsData ?? []) as Array<{ id: number; status: string }>;
+  const transactions = (Array.isArray(transactionsData) ? transactionsData : (transactionsData as any)?.results ?? []) as Array<{ id: number; user_name: string; amount: string; status: string; payment_method: string; transaction_id: string; created_at: string; course_title: string }>;
+  const invoices = (Array.isArray(invoicesData) ? invoicesData : (invoicesData as any)?.results ?? []) as Array<{ id: number; status: string }>;
+  const subscriptions = (Array.isArray(subscriptionsData) ? subscriptionsData : (subscriptionsData as any)?.results ?? []) as Array<{ id: number; status: string }>;
 
   const kpis = useMemo(() => {
     const completedTransactions = transactions.filter((t) => t.status === 'completed');

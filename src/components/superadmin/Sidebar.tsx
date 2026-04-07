@@ -22,7 +22,6 @@ import {
   Assignment as AuditIcon,
   Business as OrganizationsIcon,
   AddBusiness as AddOrgIcon,
-  Handshake as PartnershipsIcon,
   MenuBook as CoursesIcon,
   School as InstructorsIcon,
   CardMembership as CertificationsIcon,
@@ -33,7 +32,6 @@ import {
   Receipt as InvoicesIcon,
   Settings as SettingsIcon,
   Extension as IntegrationsIcon,
-  Storage as DataMigrationIcon,
   Security as SecurityIcon,
   SettingsApplications as GatewayIcon,
   Person as ProfileIcon,
@@ -80,7 +78,6 @@ const buildNavSections = (unreadCount?: number): NavSection[] => [
     items: [
       { text: 'All Organizations', icon: <OrganizationsIcon />, path: '/superadmin/organizations' },
       { text: 'Add Organization', icon: <AddOrgIcon />, path: '/superadmin/organizations/add' },
-      { text: 'Partnerships', icon: <PartnershipsIcon />, path: '/superadmin/partnerships' },
       { text: 'Demo Requests', icon: <DemoRequestsIcon />, path: '/superadmin/demo-requests' },
     ],
   },
@@ -109,7 +106,6 @@ const buildNavSections = (unreadCount?: number): NavSection[] => [
     items: [
       { text: 'System Settings', icon: <SettingsIcon />, path: '/superadmin/settings' },
       { text: 'Integrations', icon: <IntegrationsIcon />, path: '/superadmin/integrations' },
-      { text: 'Data Migration', icon: <DataMigrationIcon />, path: '/superadmin/data-migration' },
       { text: 'Security', icon: <SecurityIcon />, path: '/superadmin/security' },
     ],
   },

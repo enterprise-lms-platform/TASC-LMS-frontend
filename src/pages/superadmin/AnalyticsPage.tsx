@@ -105,7 +105,8 @@ const AnalyticsPage: React.FC = () => {
 
   const orgPerformance = useMemo(() => {
     if (orgsData?.data) {
-      return orgsData.data.slice(0, 8).map((org: { name: string }) => ({
+      const orgsList = Array.isArray(orgsData.data) ? orgsData.data : (orgsData.data as any)?.results || [];
+      return orgsList.slice(0, 8).map((org: { name: string }) => ({
         name: org.name,
         users: 0,
         activeRate: 0,

@@ -52,7 +52,7 @@ const InstructorAnalyticsPage: React.FC = () => {
   const { data: stats } = useLearningStats();
 
   const courses = (coursesData?.results ?? []) as Array<{ id: number; title: string; status: string }>;
-  const enrollments = (enrollmentsData ?? []) as Array<{ course: number; completed_at: string | null | undefined }>;
+  const enrollments = (Array.isArray(enrollmentsData) ? enrollmentsData : (enrollmentsData as any)?.results ?? []) as Array<{ course: number; completed_at: string | null | undefined }>;
 
   const instructorCourseIds = useMemo(() => new Set(courses.map((c) => c.id)), [courses]);
 

@@ -25,7 +25,6 @@ const RolesPermissionsPage     = lazy(() => import('../pages/superadmin/RolesPer
 const AuditLogsPage            = lazy(() => import('../pages/superadmin/AuditLogsPage'));
 const AllOrganizationsPage     = lazy(() => import('../pages/superadmin/AllOrganizationsPage'));
 const AddOrganizationPage      = lazy(() => import('../pages/superadmin/AddOrganizationPage'));
-const PartnershipsPage         = lazy(() => import('../pages/superadmin/PartnershipsPage'));
 const AllCoursesPage           = lazy(() => import('../pages/superadmin/AllCoursesPage'));
 const InstructorsPage          = lazy(() => import('../pages/superadmin/InstructorsPage'));
 const CertificationsPage       = lazy(() => import('../pages/superadmin/CertificationsPage'));
@@ -36,7 +35,6 @@ const InvoicesPage             = lazy(() => import('../pages/superadmin/Invoices
 const GatewaySettingsPage      = lazy(() => import('../pages/superadmin/GatewaySettingsPage'));
 const SystemSettingsPage       = lazy(() => import('../pages/superadmin/SystemSettingsPage'));
 const IntegrationsPage         = lazy(() => import('../pages/superadmin/IntegrationsPage'));
-const DataMigrationPage        = lazy(() => import('../pages/superadmin/DataMigrationPage'));
 const SecurityPage             = lazy(() => import('../pages/superadmin/SecurityPage'));
 const AnalyticsPage            = lazy(() => import('../pages/superadmin/AnalyticsPage'));
 const NotificationsPage        = lazy(() => import('../pages/superadmin/NotificationsPage'));
@@ -55,7 +53,6 @@ export const superadminRoutes = (queryClient: QueryClient): RouteObject[] => [
   { path: '/superadmin/audit-logs', element: <SW><PR><AuditLogsPage /></PR></SW>, loader: async () => superadminLoaders.auditLogsLoader(queryClient) },
   { path: '/superadmin/organizations', element: <SW><PR><AllOrganizationsPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
   { path: '/superadmin/organizations/add', element: <SW><PR><AddOrganizationPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
-  { path: '/superadmin/partnerships', element: <SW><PR><PartnershipsPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
   { path: '/superadmin/courses', element: <SW><PR><AllCoursesPage /></PR></SW>, loader: async () => superadminLoaders.allCoursesLoader(queryClient) },
   { path: '/superadmin/instructors', element: <SW><PR><InstructorsPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
   { path: '/superadmin/certifications', element: <SW><PR><CertificationsPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
@@ -66,7 +63,6 @@ export const superadminRoutes = (queryClient: QueryClient): RouteObject[] => [
   { path: '/superadmin/gateway-settings', element: <SW><PR><GatewaySettingsPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
   { path: '/superadmin/settings', element: <SW><PR><SystemSettingsPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
   { path: '/superadmin/integrations', element: <SW><PR><IntegrationsPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
-  { path: '/superadmin/data-migration', element: <SW><PR><DataMigrationPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
   { path: '/superadmin/security', element: <SW><PR><SecurityPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
   { path: '/superadmin/analytics', element: <SW><PR><AnalyticsPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
   { path: '/superadmin/notifications', element: <SW><PR><NotificationsPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
