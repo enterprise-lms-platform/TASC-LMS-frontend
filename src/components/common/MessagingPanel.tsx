@@ -30,7 +30,6 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { messagingApi } from '../../services/messaging.services';
 import type { ConversationResponse, MessageResponse } from '../../services/messaging.services';
-import { usersApi } from '../../services/users.services';
 import { useAuth } from '../../contexts/AuthContext';
 
 const getInitials = (name: string) => {
@@ -95,15 +94,10 @@ const MessagingPanel: React.FC<MessagingPanelProps> = ({ height = 'calc(100vh - 
     return () => clearTimeout(timer);
   }, [userSearch]);
 
-  // Search users for new conversation
+  // Search users for new conversation — uses messaging-scoped endpoint (works for all roles)
   const { data: searchResults, isLoading: searchLoading } = useQuery({
     queryKey: ['userSearch', debouncedSearch],
-    queryFn: () => usersApi.getAll({ search: debouncedSearch, page_size: 20 }).then(r => {
-      const data = r.data;
-      const list = Array.isArray(data) ? data : data?.results ?? [];
-      // Exclude self
-      return list.filter(u => u.id !== myId);
-    }),
+    queryFn: () => messagingApi.searchUsers(debouncedSearch),
     enabled: debouncedSearch.length >= 2,
   });
 

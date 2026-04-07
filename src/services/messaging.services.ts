@@ -46,6 +46,15 @@ export interface MessageListParams {
   page_size?: number;
 }
 
+export interface UserSearchResult {
+  id: number;
+  name: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: string;
+}
+
 export const messagingApi = {
   // List conversations for the current user
   getAll: (params?: ConversationListParams) =>
@@ -70,6 +79,11 @@ export const messagingApi = {
   // Mark all messages in a conversation as read
   markAsRead: (conversationId: number) =>
     apiClient.post<{ status: string; messages_marked_read: number }>(`${BASE_PATH}/${conversationId}/read/`),
+
+  // Search users to start a conversation with (works for all roles, org-scoped)
+  searchUsers: (query: string) =>
+    apiClient.get<UserSearchResult[]>(`${BASE_PATH}/user-search/`, { params: { search: query } })
+      .then(r => r.data),
 };
 
 export default messagingApi;
