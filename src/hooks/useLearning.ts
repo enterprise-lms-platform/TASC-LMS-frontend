@@ -17,6 +17,7 @@ import {
 } from '../utils/learningErrors';
 import { queryKeys } from './queryKeys';
 import type {
+  Certificate,
   Enrollment,
   EnrollmentCreateRequest,
   SessionProgressUpdateRequest,
@@ -37,6 +38,15 @@ export function normalizeEnrollmentListResponse(data: unknown): Enrollment[] {
     Array.isArray((data as PaginatedResponse<Enrollment>).results)
   ) {
     return (data as PaginatedResponse<Enrollment>).results;
+  }
+  return [];
+}
+
+/** Normalize GET /learning/certificates/ whether the API returns a raw array or paginated { results }. */
+export function normalizeCertificateListResponse(data: unknown): Certificate[] {
+  if (Array.isArray(data)) return data as Certificate[];
+  if (data && typeof data === 'object' && Array.isArray((data as { results?: unknown }).results)) {
+    return (data as { results: Certificate[] }).results;
   }
   return [];
 }
@@ -184,10 +194,8 @@ export const useMarkSessionCompleted = () => {
 export const useCertificates = () =>
   useQuery({
     queryKey: queryKeys.certificates.all,
-    queryFn: () => certificateApi.getAll().then((r) => {
-      const data = r.data;
-      return Array.isArray(data) ? data : (data as any).results ?? [];
-    }),
+    queryFn: () =>
+      certificateApi.getAll().then((r) => normalizeCertificateListResponse(r.data)),
   });
 
 export const useCertificate = (id: number) =>

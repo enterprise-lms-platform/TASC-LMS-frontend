@@ -6,7 +6,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { type LoaderFunctionArgs, redirect } from 'react-router-dom';
 import { queryKeys } from '../../hooks/queryKeys';
-import { normalizeEnrollmentListResponse } from '../../hooks/useLearning';
+import { normalizeCertificateListResponse, normalizeEnrollmentListResponse } from '../../hooks/useLearning';
 import { enrollmentApi, sessionProgressApi, certificateApi } from '../../services/learning.services';
 import { courseApi } from '../../services/catalogue.services';
 
@@ -37,7 +37,8 @@ export const learnerDashboardLoader = async (queryClient: QueryClient) => {
     const certificates = await queryClient
       .ensureQueryData({
         queryKey: queryKeys.certificates.all,
-        queryFn: () => certificateApi.getAll().then((r) => r.data),
+        queryFn: () =>
+          certificateApi.getAll().then((r) => normalizeCertificateListResponse(r.data)),
         staleTime: 15 * 60 * 1000,
       })
       .catch(() => []);
@@ -251,7 +252,8 @@ export const learnerCertificatesLoader = async (queryClient: QueryClient) => {
   try {
     const certificates = await queryClient.ensureQueryData({
       queryKey: queryKeys.certificates.all,
-      queryFn: () => certificateApi.getAll().then((r) => r.data),
+      queryFn: () =>
+        certificateApi.getAll().then((r) => normalizeCertificateListResponse(r.data)),
       staleTime: 15 * 60 * 1000,
     });
 

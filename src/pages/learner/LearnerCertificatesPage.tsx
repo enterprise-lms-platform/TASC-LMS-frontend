@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
 import CertificatePreview from '../../components/learner/CertificatePreview';
-import { useCertificates } from '../../hooks/useLearning';
+import { normalizeCertificateListResponse, useCertificates } from '../../hooks/useLearning';
 import type { Certificate } from '../../types/types';
 import '../../styles/LearnerDashboard.css';
 import '../../styles/CertificatePrint.css';
@@ -34,7 +34,7 @@ const LearnerCertificatesPage: React.FC = () => {
 
   const { data: apiCertificates, isLoading } = useCertificates();
 
-  const certificates = apiCertificates || [];
+  const certificates = normalizeCertificateListResponse(apiCertificates);
 
   const validCount = certificates.filter((c) => c.is_valid && !c.is_expired).length;
   const expiredCount = certificates.filter((c) => c.is_expired).length;
