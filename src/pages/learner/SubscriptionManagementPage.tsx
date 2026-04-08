@@ -60,7 +60,7 @@ import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
 import { useNavigate } from 'react-router-dom';
-import { useEnrollments, useCertificates } from '../../hooks/useLearning';
+import { normalizeCertificateListResponse, useEnrollments, useCertificates } from '../../hooks/useLearning';
 import {
   useUserSubscriptions,
   useCancelUserSubscription,
@@ -98,7 +98,8 @@ const SubscriptionManagementPage: React.FC = () => {
 
   // ─── Fetch real data ───
   const { data: enrollments = [] } = useEnrollments();
-  const { data: certificates = [] } = useCertificates();
+  const { data: certificatesData } = useCertificates();
+  const certificates = normalizeCertificateListResponse(certificatesData);
   const { data: invoicesResponse } = useQuery({
     queryKey: ['learnerInvoices'],
     queryFn: () => invoiceApi.getAll().then((r) => {

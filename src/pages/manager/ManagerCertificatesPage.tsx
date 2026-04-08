@@ -34,6 +34,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { normalizeCertificateListResponse } from '../../hooks/useLearning';
 import { certificateApi, courseApi } from '../../services/main.api';
 
 // ─── Styles ────────────────────────────────────────────────
@@ -75,7 +76,8 @@ const ManagerCertificatesPage: React.FC = () => {
 
   const { data: certificatesData } = useQuery({
     queryKey: ['certificates'],
-    queryFn: () => certificateApi.getAll().then(r => r.data),
+    queryFn: () =>
+      certificateApi.getAll().then((r) => normalizeCertificateListResponse(r.data)),
   });
 
   const { data: coursesData } = useQuery({
@@ -83,7 +85,7 @@ const ManagerCertificatesPage: React.FC = () => {
     queryFn: () => courseApi.getAll({ limit: 100 }).then(r => r.data),
   });
 
-  const certificates = Array.isArray(certificatesData) ? certificatesData : (certificatesData as any)?.results ?? [];
+  const certificates = normalizeCertificateListResponse(certificatesData);
   const courses = coursesData?.results ?? [];
 
   const courseOptions: Array<{ id: number | 'all'; title: string }> = [
