@@ -83,6 +83,7 @@ const LoginPage = () => {
     if (isAuthenticated && user) {
       const roleRoutes: Record<string, string> = {
         learner: '/learner',
+        org_admin: '/org-admin',
         instructor: '/instructor',
         lms_manager: '/manager',
         finance: '/finance',

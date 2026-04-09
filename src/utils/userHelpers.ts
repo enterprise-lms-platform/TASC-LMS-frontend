@@ -10,6 +10,7 @@ export const getRoleDisplayName = (role: UserRole): string => {
     instructor: 'Instructor',
     finance: 'Finance Manager',
     learner: 'Learner',
+    org_admin: 'Organization Admin',
   };
   
   return roleMap[role] || role.replace('_', ' ');
