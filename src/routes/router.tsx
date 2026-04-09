@@ -23,6 +23,7 @@ import { publicRoutes }     from './publicRoutes';
 import { learnerRoutes }    from './learnerRoutes';
 import { instructorRoutes } from './instructorRoutes';
 import { managerRoutes }    from './managerRoutes';
+import { orgAdminRoutes }   from './orgAdminRoutes';
 import { financeRoutes }    from './financeRoutes';
 import { superadminRoutes } from './superadminRoutes';
 
@@ -32,6 +33,7 @@ export const createAppRouter = (queryClient: QueryClient) =>
     ...learnerRoutes(queryClient),
     ...instructorRoutes(queryClient),
     ...managerRoutes(queryClient),
+    ...orgAdminRoutes(queryClient),
     ...financeRoutes(queryClient),
     ...superadminRoutes(queryClient),
   ]);
