@@ -24,11 +24,8 @@ const INVITE_ROLES: { value: UserRole; label: string }[] = [
   { value: 'org_admin', label: 'Organization Admin' },
 ];
 
-// Roles where organization is required
+// Roles where organization is required (and the dropdown is enabled)
 const ROLES_REQUIRING_ORG: UserRole[] = ['org_admin'];
-
-// Roles that suggest an organization assignment (but it's always optional)
-const ROLES_SUGGESTING_ORG: UserRole[] = ['lms_manager', 'instructor'];
 
 const InviteUserPage: React.FC = () => {
   const navigate = useNavigate();
@@ -62,7 +59,6 @@ const InviteUserPage: React.FC = () => {
   const { data: organizations = [], isLoading: orgsLoading } = useOrganizations({ is_active: true });
 
   const requiresOrg = ROLES_REQUIRING_ORG.includes(formData.role);
-  const suggestsOrg = ROLES_SUGGESTING_ORG.includes(formData.role);
 
   const validateForm = (): boolean => {
     const newErrors = {
@@ -214,7 +210,7 @@ const InviteUserPage: React.FC = () => {
           <TextField
             fullWidth
             select
-            label={requiresOrg ? 'Organisation (Required)' : 'Organisation (Optional)'}
+            label={requiresOrg ? 'Organisation (Required)' : 'Organisation'}
             value={formData.organization ?? ''}
             onChange={(e) =>
               setFormData({ ...formData, organization: e.target.value ? Number(e.target.value) : null })
@@ -222,12 +218,10 @@ const InviteUserPage: React.FC = () => {
             error={!!errors.organization}
             helperText={errors.organization || (
               requiresOrg
-                ? 'Required — this role must be linked to an organisation'
-                : suggestsOrg
-                  ? 'Recommended for this role'
-                  : 'Optionally assign to an organisation'
+                ? 'Required — select the organisation this admin will manage'
+                : 'Available when Organization Admin role is selected'
             )}
-            disabled={isLoading || orgsLoading}
+            disabled={isLoading || orgsLoading || !requiresOrg}
             sx={{ mb: 4 }}
           >
             <MenuItem value="">
