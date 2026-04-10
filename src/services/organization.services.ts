@@ -85,6 +85,27 @@ export const managerBillingApi = {
     apiClient.get<ManagerBillingUsage>(`/api/v1/auth/manager/billing/usage/`),
 };
 
+export interface ManagerMemberItem {
+  id: number;
+  email: string;
+  name: string;
+  role: string;
+  is_active: boolean;
+  email_verified: boolean;
+  date_joined: string;
+  last_login: string | null;
+}
+
+export interface ManagerMembersParams {
+  search?: string;
+  role?: string;
+}
+
+export const managerMembersApi = {
+  getAll: (params?: ManagerMembersParams) =>
+    apiClient.get<ManagerMemberItem[]>(`/api/v1/auth/manager/members/`, { params }),
+};
+
 export interface SecurityStats {
   failed_logins_today: number;
   locked_accounts: number;

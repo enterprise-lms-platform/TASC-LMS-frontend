@@ -9,7 +9,10 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
-import { Dashboard as DashboardIcon } from '@mui/icons-material';
+import {
+  Dashboard as DashboardIcon,
+  People as PeopleIcon,
+} from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const DRAWER_WIDTH = 260;
@@ -19,11 +22,17 @@ interface SidebarProps {
   onMobileClose?: () => void;
 }
 
+const NAV_ITEMS = [
+  { text: 'Dashboard', icon: <DashboardIcon />, path: '/org-admin', exact: true },
+  { text: 'Members', icon: <PeopleIcon />, path: '/org-admin/members', exact: false },
+];
+
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose = () => {} }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isActive = location.pathname === '/org-admin';
+  const isActive = (path: string, exact: boolean) =>
+    exact ? location.pathname === path : location.pathname.startsWith(path);
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -60,51 +69,56 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose = (
       </Box>
 
       <List disablePadding sx={{ px: 1.5 }}>
-        <ListItem disablePadding>
-          <ListItemButton
-            onClick={() => {
-              navigate('/org-admin');
-              onMobileClose();
-            }}
-            sx={{
-              py: 0.75,
-              px: 1.5,
-              borderRadius: '10px',
-              position: 'relative',
-              ...(isActive && {
-                bgcolor: 'rgba(255, 164, 36, 0.08)',
-                color: 'primary.dark',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  left: 0,
-                  top: '20%',
-                  bottom: '20%',
-                  width: 4,
-                  borderRadius: 4,
-                  bgcolor: 'primary.main',
-                  boxShadow: '0 0 8px rgba(255,164,36,0.4)',
-                },
-              }),
-            }}
-          >
-            <ListItemIcon
-              sx={{
-                minWidth: 36,
-                color: isActive ? 'primary.dark' : 'text.secondary',
-              }}
-            >
-              <DashboardIcon />
-            </ListItemIcon>
-            <ListItemText
-              primary="Dashboard"
-              primaryTypographyProps={{
-                fontSize: '0.82rem',
-                fontWeight: isActive ? 600 : 500,
-              }}
-            />
-          </ListItemButton>
-        </ListItem>
+        {NAV_ITEMS.map((item) => {
+          const active = isActive(item.path, item.exact);
+          return (
+            <ListItem key={item.path} disablePadding>
+              <ListItemButton
+                onClick={() => {
+                  navigate(item.path);
+                  onMobileClose();
+                }}
+                sx={{
+                  py: 0.75,
+                  px: 1.5,
+                  borderRadius: '10px',
+                  position: 'relative',
+                  ...(active && {
+                    bgcolor: 'rgba(255, 164, 36, 0.08)',
+                    color: 'primary.dark',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      left: 0,
+                      top: '20%',
+                      bottom: '20%',
+                      width: 4,
+                      borderRadius: 4,
+                      bgcolor: 'primary.main',
+                      boxShadow: '0 0 8px rgba(255,164,36,0.4)',
+                    },
+                  }),
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 36,
+                    color: active ? 'primary.dark' : 'text.secondary',
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.text}
+                  primaryTypographyProps={{
+                    fontSize: '0.82rem',
+                    fontWeight: active ? 600 : 500,
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
       </List>
     </Box>
   );
