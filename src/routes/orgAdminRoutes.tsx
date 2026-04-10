@@ -22,9 +22,11 @@ const PR = ({ children }: { children: React.ReactElement }) => (
 
 const OrgAdminDashboardPage = lazy(() => import('../pages/orgadmin/OrgAdminDashboardPage'));
 const MembersPage = lazy(() => import('../pages/orgadmin/MembersPage'));
+const InviteMemberPage = lazy(() => import('../pages/orgadmin/InviteMemberPage'));
 
 export const orgAdminRoutes = (_queryClient: QueryClient): RouteObject[] => [
   { path: '/org-admin', element: <SW><PR><OrgAdminDashboardPage /></PR></SW> },
   { path: '/org-admin/members', element: <SW><PR><MembersPage /></PR></SW> },
+  { path: '/org-admin/invite', element: <SW><PR><InviteMemberPage /></PR></SW> },
 ];
 
