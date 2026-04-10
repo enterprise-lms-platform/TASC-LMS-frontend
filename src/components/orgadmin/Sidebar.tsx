@@ -12,6 +12,7 @@ import {
 import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
+  PersonAdd as PersonAddIcon,
 } from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -24,7 +25,8 @@ interface SidebarProps {
 
 const NAV_ITEMS = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/org-admin', exact: true },
-  { text: 'Members', icon: <PeopleIcon />, path: '/org-admin/members', exact: false },
+  { text: 'Members', icon: <PeopleIcon />, path: '/org-admin/members', exact: true },
+  { text: 'Add Member', icon: <PersonAddIcon />, path: '/org-admin/invite', exact: true },
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose = () => {} }) => {
