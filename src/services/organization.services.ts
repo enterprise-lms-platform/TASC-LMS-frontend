@@ -101,9 +101,28 @@ export interface ManagerMembersParams {
   role?: string;
 }
 
+export interface BulkImportMembersResult {
+  message: string;
+  total_rows: number;
+  imported: number;
+  failed: number;
+  errors: Array<{ row: number; email: string; error: string }>;
+}
+
 export const managerMembersApi = {
   getAll: (params?: ManagerMembersParams) =>
     apiClient.get<ManagerMemberItem[]>(`/api/v1/auth/manager/members/`, { params }),
+
+  bulkImport: async (file: File): Promise<BulkImportMembersResult> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post<BulkImportMembersResult>(
+      `/api/v1/auth/manager/members/import/`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    );
+    return response.data;
+  },
 };
 
 export interface SecurityStats {
