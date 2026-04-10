@@ -21,7 +21,11 @@ const INVITE_ROLES: { value: UserRole; label: string }[] = [
   { value: 'lms_manager', label: 'LMS Manager' },
   { value: 'instructor', label: 'Instructor' },
   { value: 'finance', label: 'Finance' },
+  { value: 'org_admin', label: 'Organization Admin' },
 ];
+
+// Roles where organization is required
+const ROLES_REQUIRING_ORG: UserRole[] = ['org_admin'];
 
 // Roles that suggest an organization assignment (but it's always optional)
 const ROLES_SUGGESTING_ORG: UserRole[] = ['lms_manager', 'instructor'];
@@ -57,6 +61,7 @@ const InviteUserPage: React.FC = () => {
   // Fetch organizations for the dropdown
   const { data: organizations = [], isLoading: orgsLoading } = useOrganizations({ is_active: true });
 
+  const requiresOrg = ROLES_REQUIRING_ORG.includes(formData.role);
   const suggestsOrg = ROLES_SUGGESTING_ORG.includes(formData.role);
 
   const validateForm = (): boolean => {
@@ -81,7 +86,9 @@ const InviteUserPage: React.FC = () => {
       newErrors.last_name = 'Last name is required';
     }
 
-    // Organisation is always optional
+    if (ROLES_REQUIRING_ORG.includes(formData.role) && !formData.organization) {
+      newErrors.organization = 'Organization is required for this role';
+    }
 
     setErrors(newErrors);
     return !Object.values(newErrors).some((error) => error !== '');
@@ -128,7 +135,8 @@ const InviteUserPage: React.FC = () => {
   };
 
   const handleRoleChange = (role: UserRole) => {
-    setFormData({ ...formData, role });
+    const clearOrg = !ROLES_REQUIRING_ORG.includes(role) && ROLES_REQUIRING_ORG.includes(formData.role);
+    setFormData({ ...formData, role, ...(clearOrg ? { organization: null } : {}) });
     setErrors({ ...errors, organization: '' });
   };
 
@@ -206,16 +214,18 @@ const InviteUserPage: React.FC = () => {
           <TextField
             fullWidth
             select
-            label="Organisation (Optional)"
+            label={requiresOrg ? 'Organisation (Required)' : 'Organisation (Optional)'}
             value={formData.organization ?? ''}
             onChange={(e) =>
               setFormData({ ...formData, organization: e.target.value ? Number(e.target.value) : null })
             }
             error={!!errors.organization}
             helperText={errors.organization || (
-              suggestsOrg
-                ? 'Recommended for this role'
-                : 'Optionally assign to an organisation'
+              requiresOrg
+                ? 'Required — this role must be linked to an organisation'
+                : suggestsOrg
+                  ? 'Recommended for this role'
+                  : 'Optionally assign to an organisation'
             )}
             disabled={isLoading || orgsLoading}
             sx={{ mb: 4 }}
