@@ -53,21 +53,24 @@ const OrgAdminDashboardPage: React.FC = () => {
   const handleLogout = useLogout();
   const navigate = useNavigate();
 
-  const { data: members = [], isLoading } = useQuery({
-    queryKey: ['manager-members'],
-    queryFn: () => managerMembersApi.getAll().then((r) => r.data),
+  const { data: membersData, isLoading } = useQuery({
+    queryKey: ['manager-members-dashboard'],
+    queryFn: () => managerMembersApi.getAll({ page_size: 200 }).then((r) => r.data),
   });
+
+  const members = membersData?.results ?? [];
+  const totalCount = membersData?.count ?? 0;
 
   const stats = useMemo(() => {
     const now = Date.now();
     const cutoff = now - RECENT_DAYS * 24 * 60 * 60 * 1000;
     return {
-      total: members.length,
+      total: totalCount,
       active: members.filter((m) => m.is_active).length,
       verified: members.filter((m) => m.email_verified).length,
       recentlyJoined: members.filter((m) => new Date(m.date_joined).getTime() >= cutoff).length,
     };
-  }, [members]);
+  }, [members, totalCount]);
 
   const recentMembers = useMemo(
     () => members.slice(0, 5),

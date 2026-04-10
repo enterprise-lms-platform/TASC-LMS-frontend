@@ -4,7 +4,7 @@
  */
 
 import { apiClient } from '../utils/config';
-import type { Organization } from '../types/types';
+import type { Organization, PaginatedResponse } from '../types/types';
 
 export interface OrganizationListParams {
   search?: string;
@@ -99,6 +99,8 @@ export interface ManagerMemberItem {
 export interface ManagerMembersParams {
   search?: string;
   role?: string;
+  page?: number;
+  page_size?: number;
 }
 
 export interface BulkImportMembersResult {
@@ -111,7 +113,7 @@ export interface BulkImportMembersResult {
 
 export const managerMembersApi = {
   getAll: (params?: ManagerMembersParams) =>
-    apiClient.get<ManagerMemberItem[]>(`/api/v1/auth/manager/members/`, { params }),
+    apiClient.get<PaginatedResponse<ManagerMemberItem>>(`/api/v1/auth/manager/members/`, { params }),
 
   bulkImport: async (file: File): Promise<BulkImportMembersResult> => {
     const formData = new FormData();
