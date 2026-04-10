@@ -24,6 +24,8 @@ import {
   Menu as MenuIcon,
   Logout as LogoutIcon,
   Search as SearchIcon,
+  ChevronLeft as PrevIcon,
+  ChevronRight as NextIcon,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/orgadmin/Sidebar';
@@ -32,20 +34,39 @@ import { managerMembersApi } from '../../services/organization.services';
 import { getRoleDisplayName } from '../../utils/userHelpers';
 import type { UserRole } from '../../types/types';
 
+const PAGE_SIZE = 20;
+
 const MembersPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const handleLogout = useLogout();
 
   const debouncedSearch = useDebounce(search, 300);
 
-  const { data: members = [], isLoading, error } = useQuery({
-    queryKey: ['manager-members', debouncedSearch],
+  const prevSearch = React.useRef(debouncedSearch);
+  React.useEffect(() => {
+    if (prevSearch.current !== debouncedSearch) {
+      setPage(1);
+      prevSearch.current = debouncedSearch;
+    }
+  }, [debouncedSearch]);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['manager-members', debouncedSearch, page],
     queryFn: () =>
       managerMembersApi
-        .getAll(debouncedSearch ? { search: debouncedSearch } : undefined)
+        .getAll({
+          ...(debouncedSearch ? { search: debouncedSearch } : {}),
+          page,
+          page_size: PAGE_SIZE,
+        })
         .then((r) => r.data),
   });
+
+  const members = data?.results ?? [];
+  const totalCount = data?.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const formatDate = (iso: string | null) => {
     if (!iso) return '—';
@@ -157,65 +178,103 @@ const MembersPage: React.FC = () => {
                 </Typography>
               </Box>
             ) : (
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow sx={{ '& th': { fontWeight: 600, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' } }}>
-                      <TableCell>Name</TableCell>
-                      <TableCell>Email</TableCell>
-                      <TableCell>Role</TableCell>
-                      <TableCell>Active</TableCell>
-                      <TableCell>Verified</TableCell>
-                      <TableCell>Joined</TableCell>
-                      <TableCell>Last Login</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {members.map((m) => (
-                      <TableRow key={m.id} hover sx={{ '&:last-child td': { borderBottom: 0 } }}>
-                        <TableCell sx={{ fontWeight: 500 }}>{m.name}</TableCell>
-                        <TableCell sx={{ color: 'text.secondary' }}>{m.email}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={getRoleDisplayName(m.role as UserRole)}
-                            size="small"
-                            sx={{
-                              fontWeight: 600,
-                              fontSize: '0.7rem',
-                              bgcolor: 'rgba(255,164,36,0.08)',
-                              color: 'primary.dark',
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={m.is_active ? 'Active' : 'Inactive'}
-                            size="small"
-                            color={m.is_active ? 'success' : 'default'}
-                            variant="outlined"
-                            sx={{ fontWeight: 500, fontSize: '0.7rem' }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={m.email_verified ? 'Yes' : 'No'}
-                            size="small"
-                            color={m.email_verified ? 'success' : 'warning'}
-                            variant="outlined"
-                            sx={{ fontWeight: 500, fontSize: '0.7rem' }}
-                          />
-                        </TableCell>
-                        <TableCell sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
-                          {formatDate(m.date_joined)}
-                        </TableCell>
-                        <TableCell sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
-                          {formatDate(m.last_login)}
-                        </TableCell>
+              <>
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ '& th': { fontWeight: 600, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' } }}>
+                        <TableCell>Name</TableCell>
+                        <TableCell>Email</TableCell>
+                        <TableCell>Role</TableCell>
+                        <TableCell>Active</TableCell>
+                        <TableCell>Verified</TableCell>
+                        <TableCell>Joined</TableCell>
+                        <TableCell>Last Login</TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                      {members.map((m) => (
+                        <TableRow key={m.id} hover sx={{ '&:last-child td': { borderBottom: 0 } }}>
+                          <TableCell sx={{ fontWeight: 500 }}>{m.name}</TableCell>
+                          <TableCell sx={{ color: 'text.secondary' }}>{m.email}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={getRoleDisplayName(m.role as UserRole)}
+                              size="small"
+                              sx={{
+                                fontWeight: 600,
+                                fontSize: '0.7rem',
+                                bgcolor: 'rgba(255,164,36,0.08)',
+                                color: 'primary.dark',
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={m.is_active ? 'Active' : 'Inactive'}
+                              size="small"
+                              color={m.is_active ? 'success' : 'default'}
+                              variant="outlined"
+                              sx={{ fontWeight: 500, fontSize: '0.7rem' }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={m.email_verified ? 'Yes' : 'No'}
+                              size="small"
+                              color={m.email_verified ? 'success' : 'warning'}
+                              variant="outlined"
+                              sx={{ fontWeight: 500, fontSize: '0.7rem' }}
+                            />
+                          </TableCell>
+                          <TableCell sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
+                            {formatDate(m.date_joined)}
+                          </TableCell>
+                          <TableCell sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
+                            {formatDate(m.last_login)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+
+                {/* Pagination controls */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    px: 2,
+                    py: 1.5,
+                    borderTop: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <IconButton
+                      size="small"
+                      disabled={page <= 1}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    >
+                      <PrevIcon />
+                    </IconButton>
+                    <Typography variant="body2" fontWeight={600}>
+                      {page} / {totalPages}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      disabled={page >= totalPages}
+                      onClick={() => setPage((p) => p + 1)}
+                    >
+                      <NextIcon />
+                    </IconButton>
+                  </Box>
+                </Box>
+              </>
             )}
           </Paper>
         </Box>
