@@ -27,11 +27,11 @@ import {
   ChevronLeft as PrevIcon,
   ChevronRight as NextIcon,
 } from '@mui/icons-material';
-import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/orgadmin/Sidebar';
 import { useLogout } from '../../hooks/useLogout';
-import { managerMembersApi } from '../../services/organization.services';
-import { getRoleDisplayName } from '../../utils/userHelpers';
+import { useOrgAdminMembers } from '../../hooks/useOrgAdmin';
+import { useDebounce } from '../../hooks/useDebounce';
+import { getRoleDisplayName, formatDate } from '../../utils/userHelpers';
 import type { UserRole } from '../../types/types';
 
 const PAGE_SIZE = 20;
@@ -52,28 +52,15 @@ const MembersPage: React.FC = () => {
     }
   }, [debouncedSearch]);
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['manager-members', debouncedSearch, page],
-    queryFn: () =>
-      managerMembersApi
-        .getAll({
-          ...(debouncedSearch ? { search: debouncedSearch } : {}),
-          page,
-          page_size: PAGE_SIZE,
-        })
-        .then((r) => r.data),
+  const { data, isLoading, error } = useOrgAdminMembers({
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
+    page,
+    page_size: PAGE_SIZE,
   });
 
   const members = data?.results ?? [];
   const totalCount = data?.count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-
-  const formatDate = (iso: string | null) => {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleDateString('en-US', {
-      year: 'numeric', month: 'short', day: 'numeric',
-    });
-  };
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -282,14 +269,5 @@ const MembersPage: React.FC = () => {
     </Box>
   );
 };
-
-function useDebounce<T>(value: T, delayMs: number): T {
-  const [debounced, setDebounced] = React.useState(value);
-  React.useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), delayMs);
-    return () => clearTimeout(id);
-  }, [value, delayMs]);
-  return debounced;
-}
 
 export default MembersPage;

@@ -30,6 +30,16 @@ export const getUserInitials = (firstName?: string, lastName?: string): string =
 };
 
 /**
+ * Formats an ISO date string to a human-readable date
+ */
+export const formatDate = (iso: string | null): string => {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric',
+  });
+};
+
+/**
  * Gets user display name (first + last name or email)
  */
 export const getUserDisplayName = (

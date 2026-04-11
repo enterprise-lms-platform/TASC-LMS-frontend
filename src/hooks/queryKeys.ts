@@ -11,7 +11,7 @@ import type { BankQuestionListParams } from '../types/types';
 import type { SessionProgressParams, DiscussionParams, DiscussionReplyParams, SubmissionParams } from '../services/learning.services';
 import type { InvoiceParams, TransactionParams, UserSubscriptionParams } from '../services/payments.services';
 import type { PublicCourseParams } from '../services/public.services';
-import type { OrganizationListParams } from '../services/organization.services';
+import type { OrganizationListParams, ManagerMembersParams } from '../services/organization.services';
 import type { AuditLogFilters } from '../types/types';
 import type { LivestreamListParams, LivestreamAttendanceParams } from '../services/livestream.services';
 
@@ -153,6 +153,12 @@ export const queryKeys = {
   },
   publicInstructor: {
     detail: (id: number) => ['public-instructor', id] as const,
+  },
+
+  // OrgAdmin
+  orgAdminMembers: {
+    all: (params?: ManagerMembersParams) => ['org-admin-members', params] as const,
+    dashboard: ['org-admin-members', 'dashboard'] as const,
   },
 
   // Organizations

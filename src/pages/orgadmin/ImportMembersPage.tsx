@@ -31,7 +31,8 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/orgadmin/Sidebar';
-import { managerMembersApi, type BulkImportMembersResult } from '../../services/organization.services';
+import { useBulkImportMembers } from '../../hooks/useOrgAdmin';
+import type { BulkImportMembersResult } from '../../services/organization.services';
 
 const SAMPLE_CSV = `email,first_name,last_name
 alice@example.com,Alice,Smith
@@ -41,7 +42,8 @@ const ImportMembersPage: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const bulkImport = useBulkImportMembers();
+  const isUploading = bulkImport.isPending;
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [result, setResult] = useState<BulkImportMembersResult | null>(null);
   const [snackbar, setSnackbar] = useState<{
@@ -68,26 +70,25 @@ const ImportMembersPage: React.FC = () => {
     [handleFileSelect],
   );
 
-  const handleUpload = async () => {
+  const handleUpload = () => {
     if (!selectedFile) return;
-    setIsUploading(true);
     setResult(null);
-    try {
-      const data = await managerMembersApi.bulkImport(selectedFile);
-      setResult(data);
-      if (data.imported > 0 && data.failed === 0) {
-        setSnackbar({ open: true, message: `Successfully imported ${data.imported} members.`, severity: 'success' });
-      } else if (data.imported > 0) {
-        setSnackbar({ open: true, message: `Imported ${data.imported} members with ${data.failed} errors.`, severity: 'success' });
-      } else {
-        setSnackbar({ open: true, message: 'Import completed with errors. No members were imported.', severity: 'error' });
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Import failed. Please try again.';
-      setSnackbar({ open: true, message, severity: 'error' });
-    } finally {
-      setIsUploading(false);
-    }
+    bulkImport.mutate(selectedFile, {
+      onSuccess: (data) => {
+        setResult(data);
+        if (data.imported > 0 && data.failed === 0) {
+          setSnackbar({ open: true, message: `Successfully imported ${data.imported} members.`, severity: 'success' });
+        } else if (data.imported > 0) {
+          setSnackbar({ open: true, message: `Imported ${data.imported} members with ${data.failed} errors.`, severity: 'success' });
+        } else {
+          setSnackbar({ open: true, message: 'Import completed with errors. No members were imported.', severity: 'error' });
+        }
+      },
+      onError: (err: unknown) => {
+        const message = err instanceof Error ? err.message : 'Import failed. Please try again.';
+        setSnackbar({ open: true, message, severity: 'error' });
+      },
+    });
   };
 
   const handleReset = () => {

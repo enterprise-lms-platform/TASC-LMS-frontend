@@ -29,12 +29,11 @@ import {
   Schedule as ScheduleIcon,
   ArrowForward as ArrowForwardIcon,
 } from '@mui/icons-material';
-import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/orgadmin/Sidebar';
 import { useLogout } from '../../hooks/useLogout';
-import { managerMembersApi } from '../../services/organization.services';
-import { getRoleDisplayName } from '../../utils/userHelpers';
+import { useOrgAdminDashboardMembers } from '../../hooks/useOrgAdmin';
+import { getRoleDisplayName, formatDate } from '../../utils/userHelpers';
 import type { ManagerMemberItem } from '../../services/organization.services';
 import type { UserRole } from '../../types/types';
 
@@ -53,10 +52,7 @@ const OrgAdminDashboardPage: React.FC = () => {
   const handleLogout = useLogout();
   const navigate = useNavigate();
 
-  const { data: membersData, isLoading } = useQuery({
-    queryKey: ['manager-members-dashboard'],
-    queryFn: () => managerMembersApi.getAll({ page_size: 200 }).then((r) => r.data),
-  });
+  const { data: membersData, isLoading } = useOrgAdminDashboardMembers();
 
   const members = membersData?.results ?? [];
   const totalCount = membersData?.count ?? 0;
@@ -83,13 +79,6 @@ const OrgAdminDashboardPage: React.FC = () => {
     { label: 'Email Verified', value: stats.verified, icon: <VerifiedUserIcon />, color: '#8b5cf6' },
     { label: `Joined (Last ${RECENT_DAYS}d)`, value: stats.recentlyJoined, icon: <ScheduleIcon />, color: '#f59e0b' },
   ];
-
-  const formatDate = (iso: string | null) => {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleDateString('en-US', {
-      year: 'numeric', month: 'short', day: 'numeric',
-    });
-  };
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>

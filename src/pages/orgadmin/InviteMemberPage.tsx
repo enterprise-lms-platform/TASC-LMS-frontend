@@ -20,12 +20,13 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/orgadmin/Sidebar';
-import { getErrorMessage, adminApi } from '../../services/main.api';
+import { getErrorMessage } from '../../services/main.api';
+import { useInviteMember } from '../../hooks/useOrgAdmin';
 
 const InviteMemberPage: React.FC = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const inviteMember = useInviteMember();
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -59,29 +60,23 @@ const InviteMemberPage: React.FC = () => {
     return !Object.values(newErrors).some((e) => e !== '');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    setIsLoading(true);
-    try {
-      const response = await adminApi.inviteUser({
-        email: formData.email,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        role: 'learner',
-      });
-      setSnackbar({
-        open: true,
-        message: `Invitation sent successfully to ${response.data.email}`,
-        severity: 'success',
-      });
-      setFormData({ email: '', first_name: '', last_name: '' });
-    } catch (error) {
-      setSnackbar({ open: true, message: getErrorMessage(error), severity: 'error' });
-    } finally {
-      setIsLoading(false);
-    }
+    inviteMember.mutate(formData, {
+      onSuccess: (response) => {
+        setSnackbar({
+          open: true,
+          message: `Invitation sent successfully to ${response.data.email}`,
+          severity: 'success',
+        });
+        setFormData({ email: '', first_name: '', last_name: '' });
+      },
+      onError: (error) => {
+        setSnackbar({ open: true, message: getErrorMessage(error), severity: 'error' });
+      },
+    });
   };
 
   return (
@@ -140,7 +135,7 @@ const InviteMemberPage: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 error={!!errors.email}
                 helperText={errors.email}
-                disabled={isLoading}
+                disabled={inviteMember.isPending}
                 sx={{ mb: 3 }}
               />
               <TextField
@@ -150,7 +145,7 @@ const InviteMemberPage: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                 error={!!errors.first_name}
                 helperText={errors.first_name}
-                disabled={isLoading}
+                disabled={inviteMember.isPending}
                 sx={{ mb: 3 }}
               />
               <TextField
@@ -160,7 +155,7 @@ const InviteMemberPage: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                 error={!!errors.last_name}
                 helperText={errors.last_name}
-                disabled={isLoading}
+                disabled={inviteMember.isPending}
                 sx={{ mb: 3 }}
               />
 
@@ -184,7 +179,7 @@ const InviteMemberPage: React.FC = () => {
                 <Button
                   type="submit"
                   variant="contained"
-                  disabled={isLoading}
+                  disabled={inviteMember.isPending}
                   sx={{
                     flex: 1,
                     bgcolor: 'primary.main',
@@ -195,12 +190,12 @@ const InviteMemberPage: React.FC = () => {
                     '&:hover': { bgcolor: 'primary.dark' },
                   }}
                 >
-                  {isLoading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Send Invitation'}
+                  {inviteMember.isPending ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Send Invitation'}
                 </Button>
                 <Button
                   variant="outlined"
                   onClick={() => navigate('/org-admin/members')}
-                  disabled={isLoading}
+                  disabled={inviteMember.isPending}
                   sx={{ flex: 1, textTransform: 'none', fontWeight: 600, py: 1.5 }}
                 >
                   Cancel
