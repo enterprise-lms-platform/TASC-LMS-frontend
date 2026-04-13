@@ -25,7 +25,7 @@ import {
 import {
   TrendingUp as ProgressIcon,
   People as ActiveLearnersIcon,
-  CheckCircle as AvgCompletionIcon,
+  Speed as AvgCompletionIcon,
   Warning as AtRiskIcon,
   CheckCircle as OnTrackIcon,
   Notifications as ReminderIcon,

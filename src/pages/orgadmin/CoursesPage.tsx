@@ -66,7 +66,7 @@ const CoursesPage: React.FC = () => {
     return [
       { label: 'Total Courses', value: courses.length, bgcolor: '#fff3e0', color: '#7c2d12' },
       { label: 'Published', value: published, bgcolor: '#dcfce7', color: '#14532d' },
-      { label: 'Available', value: published, bgcolor: '#eff6ff', color: '#1e3a5f' },
+      { label: 'With Enrollments', value: new Set(enrollments.map(e => e.course.id)).size, bgcolor: '#eff6ff', color: '#1e3a5f' },
       { label: 'Draft', value: draft, bgcolor: '#f3f4f6', color: '#374151' },
     ];
   }, [courses]);

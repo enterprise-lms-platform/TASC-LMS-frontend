@@ -69,6 +69,11 @@ const ReportsPage: React.FC = () => {
 
   const reports: Report[] = (reportsData as unknown as { results?: Report[] })?.results ?? [];
 
+  // Use API-supplied report types when available, fall back to static config
+  const reportTypeKeys: string[] = reportTypesData && reportTypesData.length > 0
+    ? reportTypesData.map((t: { id: string }) => t.id).filter((id: string) => id in reportTypeConfig)
+    : Object.keys(reportTypeConfig);
+
   const handleGenerate = (reportType: string) => {
     generate.mutate(reportType);
   };
@@ -105,7 +110,7 @@ const ReportsPage: React.FC = () => {
           </Box>
 
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            {Object.entries(reportTypeConfig).map(([type, config]) => (
+            {reportTypeKeys.map((type) => { const config = reportTypeConfig[type]; return (
               <Grid size={{ xs: 12, sm: 6 }} key={type}>
                 <Paper elevation={0} sx={{ ...cardSx, p: 3, transition: 'transform 0.2s, box-shadow 0.2s', '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 4px 12px rgba(0,0,0,0.1), 0 12px 28px rgba(0,0,0,0.08)' } }}>
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
@@ -128,7 +133,7 @@ const ReportsPage: React.FC = () => {
                   </Button>
                 </Paper>
               </Grid>
-            ))}
+            ); })}
           </Grid>
 
           <Paper elevation={0} sx={cardSx}>

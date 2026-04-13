@@ -24,11 +24,10 @@ import {
   School as ActiveLearnersIcon,
   TrendingUp as CompletionIcon,
   Assignment as EnrollmentsIcon,
-  MenuBook as CourseIcon,
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/orgadmin/Sidebar';
 import TopBar from '../../components/orgadmin/TopBar';
-import { useOrgEnrollments, useOrgCourses, useOrgBillingUsage, useOrgActivity } from '../../hooks/useOrgAdmin';
+import { useOrgEnrollments, useOrgCourses, useOrgBillingUsage } from '../../hooks/useOrgAdmin';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -60,15 +59,12 @@ const AnalyticsPage: React.FC = () => {
   const { data: enrollmentsData, isLoading: enrollmentsLoading } = useOrgEnrollments({ page_size: 200 });
   const { data: coursesData, isLoading: coursesLoading } = useOrgCourses({ page_size: 100 });
   const { data: billingData } = useOrgBillingUsage();
-  const { data: activityData } = useOrgActivity(period === '7days' ? '7days' : period === '30days' ? '30days' : '30days');
 
   const enrollments: OrgEnrollment[] = ((enrollmentsData as unknown as { results?: OrgEnrollment[] })?.results ?? []);
   const courses = coursesData?.results ?? [];
 
   const activeUsers = billingData?.active_users ?? 0;
-  const activeCourses = billingData?.active_courses ?? 0;
 
-  const summary = activityData?.summary;
   const completedCount = enrollments.filter(e => e.progress_percentage >= 100).length;
   const avgCompletion = enrollments.length > 0 ? Math.round(enrollments.reduce((sum, e) => sum + e.progress_percentage, 0) / enrollments.length) : 0;
 
