@@ -8,12 +8,29 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
+  Tooltip,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
+  Analytics as AnalyticsIcon,
+  Assessment as ReportsIcon,
+  Notifications as NotificationsIcon,
+  Message as MessageIcon,
   People as PeopleIcon,
   PersonAdd as PersonAddIcon,
   Upload as UploadIcon,
+  History as ActivityIcon,
+  School as CoursesIcon,
+  AssignmentInd as EnrollmentsIcon,
+  GroupAdd as BulkEnrollIcon,
+  TrendingUp as ProgressIcon,
+  CardMembership as CertificatesIcon,
+  Quiz as QuizzesIcon,
+  Assignment as AssignmentsIcon,
+  Videocam as SessionsIcon,
+  VideoLibrary as RecordingsIcon,
+  Settings as SettingsIcon,
+  Person as ProfileIcon,
 } from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -24,11 +41,75 @@ interface SidebarProps {
   onMobileClose?: () => void;
 }
 
-const NAV_ITEMS = [
-  { text: 'Dashboard', icon: <DashboardIcon />, path: '/org-admin', exact: true },
-  { text: 'Members', icon: <PeopleIcon />, path: '/org-admin/members', exact: true },
-  { text: 'Add Member', icon: <PersonAddIcon />, path: '/org-admin/invite', exact: true },
-  { text: 'Import Members', icon: <UploadIcon />, path: '/org-admin/import', exact: true },
+interface NavItem {
+  text: string;
+  icon: React.ReactNode;
+  path: string;
+  exact?: boolean;
+  disabled?: boolean;
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    title: 'Overview',
+    items: [
+      { text: 'Dashboard', icon: <DashboardIcon />, path: '/org-admin', exact: true },
+      { text: 'Analytics', icon: <AnalyticsIcon />, path: '/org-admin/analytics' },
+      { text: 'Reports', icon: <ReportsIcon />, path: '/org-admin/reports' },
+      { text: 'Notifications', icon: <NotificationsIcon />, path: '/org-admin/notifications' },
+      { text: 'Messages', icon: <MessageIcon />, path: '/org-admin/messages', disabled: true },
+    ],
+  },
+  {
+    title: 'Members',
+    items: [
+      { text: 'All Members', icon: <PeopleIcon />, path: '/org-admin/members', exact: true },
+      { text: 'Add Member', icon: <PersonAddIcon />, path: '/org-admin/invite', exact: true },
+      { text: 'Bulk Import', icon: <UploadIcon />, path: '/org-admin/import', exact: true },
+      { text: 'Member Activity', icon: <ActivityIcon />, path: '/org-admin/activity' },
+    ],
+  },
+  {
+    title: 'Courses',
+    items: [
+      { text: 'Browse Courses', icon: <CoursesIcon />, path: '/org-admin/courses' },
+    ],
+  },
+  {
+    title: 'Learning',
+    items: [
+      { text: 'Enrollments', icon: <EnrollmentsIcon />, path: '/org-admin/enrollments' },
+      { text: 'Bulk Enroll', icon: <BulkEnrollIcon />, path: '/org-admin/bulk-enroll' },
+      { text: 'Progress Tracking', icon: <ProgressIcon />, path: '/org-admin/progress' },
+      { text: 'Certificates', icon: <CertificatesIcon />, path: '/org-admin/certificates' },
+    ],
+  },
+  {
+    title: 'Assessments',
+    items: [
+      { text: 'Quizzes', icon: <QuizzesIcon />, path: '/org-admin/quizzes', disabled: true },
+      { text: 'Assignments', icon: <AssignmentsIcon />, path: '/org-admin/assignments', disabled: true },
+    ],
+  },
+  {
+    title: 'Live Sessions',
+    items: [
+      { text: 'Sessions', icon: <SessionsIcon />, path: '/org-admin/sessions', disabled: true },
+      { text: 'Recordings', icon: <RecordingsIcon />, path: '/org-admin/recordings', disabled: true },
+    ],
+  },
+  {
+    title: 'Account',
+    items: [
+      { text: 'Settings', icon: <SettingsIcon />, path: '/org-admin/settings' },
+      { text: 'My Profile', icon: <ProfileIcon />, path: '/org-admin/profile' },
+    ],
+  },
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose = () => {} }) => {
@@ -37,6 +118,71 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose = (
 
   const isActive = (path: string, exact: boolean) =>
     exact ? location.pathname === path : location.pathname.startsWith(path);
+
+  const renderNavItem = (item: NavItem) => {
+    const active = !item.disabled && isActive(item.path, item.exact ?? false);
+    const listItem = (
+      <ListItem key={item.path} disablePadding>
+        <ListItemButton
+          onClick={() => {
+            if (!item.disabled) {
+              navigate(item.path);
+              onMobileClose();
+            }
+          }}
+          disabled={item.disabled}
+          sx={{
+            py: 0.75,
+            px: 1.5,
+            borderRadius: '10px',
+            position: 'relative',
+            opacity: item.disabled ? 0.45 : 1,
+            ...(active && {
+              bgcolor: 'rgba(255, 164, 36, 0.08)',
+              color: 'primary.dark',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                left: 0,
+                top: '20%',
+                bottom: '20%',
+                width: 4,
+                borderRadius: 4,
+                bgcolor: 'primary.main',
+                boxShadow: '0 0 8px rgba(255,164,36,0.4)',
+              },
+            }),
+          }}
+        >
+          <ListItemIcon
+            sx={{
+              minWidth: 36,
+              color: active ? 'primary.dark' : 'text.secondary',
+            }}
+          >
+            {item.icon}
+          </ListItemIcon>
+          <ListItemText
+            primary={item.text}
+            primaryTypographyProps={{
+              fontSize: '0.82rem',
+              fontWeight: active ? 600 : 500,
+            }}
+          />
+        </ListItemButton>
+      </ListItem>
+    );
+
+    if (item.disabled) {
+      return (
+        <Tooltip key={item.path} title="Coming soon" placement="right">
+          {listItem}
+        </Tooltip>
+      );
+    }
+
+    return listItem;
+  };
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -72,58 +218,25 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose = (
         </Typography>
       </Box>
 
-      <List disablePadding sx={{ px: 1.5 }}>
-        {NAV_ITEMS.map((item) => {
-          const active = isActive(item.path, item.exact);
-          return (
-            <ListItem key={item.path} disablePadding>
-              <ListItemButton
-                onClick={() => {
-                  navigate(item.path);
-                  onMobileClose();
-                }}
-                sx={{
-                  py: 0.75,
-                  px: 1.5,
-                  borderRadius: '10px',
-                  position: 'relative',
-                  ...(active && {
-                    bgcolor: 'rgba(255, 164, 36, 0.08)',
-                    color: 'primary.dark',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      left: 0,
-                      top: '20%',
-                      bottom: '20%',
-                      width: 4,
-                      borderRadius: 4,
-                      bgcolor: 'primary.main',
-                      boxShadow: '0 0 8px rgba(255,164,36,0.4)',
-                    },
-                  }),
-                }}
-              >
-                <ListItemIcon
-                  sx={{
-                    minWidth: 36,
-                    color: active ? 'primary.dark' : 'text.secondary',
-                  }}
-                >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.text}
-                  primaryTypographyProps={{
-                    fontSize: '0.82rem',
-                    fontWeight: active ? 600 : 500,
-                  }}
-                />
-              </ListItemButton>
-            </ListItem>
-          );
-        })}
-      </List>
+      {NAV_SECTIONS.map((section) => (
+        <Box key={section.title} sx={{ px: 2, pt: 2.5, pb: 0.5 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              fontWeight: 600,
+              color: 'text.disabled',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              fontSize: '0.65rem',
+            }}
+          >
+            {section.title}
+          </Typography>
+          <List disablePadding sx={{ mt: 0.5 }}>
+            {section.items.map(renderNavItem)}
+          </List>
+        </Box>
+      ))}
     </Box>
   );
 

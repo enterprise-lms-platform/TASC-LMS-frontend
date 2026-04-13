@@ -160,6 +160,15 @@ export const queryKeys = {
     all: (params?: ManagerMembersParams) => ['org-admin-members', params] as const,
     dashboard: ['org-admin-members', 'dashboard'] as const,
   },
+  orgAdmin: {
+    settings: ['org-admin', 'settings'] as const,
+    billingUsage: ['org-admin', 'billing-usage'] as const,
+    activity: (range: string) => ['org-admin', 'activity', range] as const,
+    courses: (params?: object) => ['org-admin', 'courses', params] as const,
+    enrollments: (params?: object) => ['org-admin', 'enrollments', params] as const,
+    certificates: (params?: object) => ['org-admin', 'certificates', params] as const,
+    notifications: (params?: object) => ['org-admin', 'notifications', params] as const,
+  },
 
   // Organizations
   organizations: {
