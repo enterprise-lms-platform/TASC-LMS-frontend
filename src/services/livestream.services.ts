@@ -79,7 +79,7 @@ export interface LivestreamAttendance {
   learner: number;
   learner_name?: string;
   learner_email?: string;
-  status: 'registered' | 'attended' | 'absent';
+  status: 'registered' | 'joined' | 'left' | 'attended' | 'absent' | 'completed' | 'no_show';
   joined_at: string | null;
   left_at: string | null;
   duration_seconds: number;
@@ -167,6 +167,10 @@ export const livestreamApi = {
   // Get attendance report
   attendanceReport: (id: string) =>
     apiClient.get(`${BASE_PATH}/livestreams/${id}/attendance_report/`),
+
+  // Update recording URL after session ends
+  updateRecordingUrl: (id: string, recording_url: string) =>
+    apiClient.patch<LivestreamSession>(`${BASE_PATH}/livestreams/${id}/`, { recording_url }),
 };
 
 export const livestreamAttendanceApi = {
@@ -180,5 +184,17 @@ export const livestreamAttendanceApi = {
   getById: (id: string) =>
     apiClient.get<LivestreamAttendance>(
       `${BASE_PATH}/livestream-attendance/${id}/`
+    ),
+
+  // Learner self-check-in (time-gated: 10 min before to 30 min after start)
+  checkIn: (sessionId: string) =>
+    apiClient.post<LivestreamAttendance>(
+      `${BASE_PATH}/livestream-attendance/check_in/`, { session_id: sessionId }
+    ),
+
+  // Instructor manually sets a learner's status
+  updateStatus: (id: string, status: LivestreamAttendance['status']) =>
+    apiClient.patch<LivestreamAttendance>(
+      `${BASE_PATH}/livestream-attendance/${id}/update-status/`, { status }
     ),
 };

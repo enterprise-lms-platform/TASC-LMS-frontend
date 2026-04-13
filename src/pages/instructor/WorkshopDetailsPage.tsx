@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box,
   CssBaseline,
@@ -46,10 +46,12 @@ import {
   CardMembership as CertIcon,
   Download as DownloadIcon,
   Email as EmailIcon,
+  VideoLibrary as RecordingIcon,
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
 import { livestreamApi, livestreamAttendanceApi } from '../../services/livestream.services';
+import type { LivestreamAttendance } from '../../services/livestream.services';
 
 interface Participant {
   id: string;
@@ -86,9 +88,12 @@ const statusStyles: Record<string, { bg: string; color: string }> = {
 const WorkshopDetailsPage: React.FC = () => {
   const navigate = useNavigate();
   const { workshopId } = useParams<{ workshopId: string }>();
+  const qc = useQueryClient();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [tab, setTab] = useState(0);
   const [participants, setParticipants] = useState<Participant[]>([]);
+  const [attendanceChanges, setAttendanceChanges] = useState<Record<string, boolean>>({});
+  const [recordingUrl, setRecordingUrl] = useState('');
   const [workshopDetail, setWorkshopDetail] = useState<{
     id: string; title: string; description: string; location: string;
     startDate: string; endDate: string; status: 'upcoming' | 'ongoing' | 'completed';
@@ -98,6 +103,17 @@ const WorkshopDetailsPage: React.FC = () => {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: LivestreamAttendance['status'] }) =>
+      livestreamAttendanceApi.updateStatus(id, status),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['livestream-attendance', workshopId] }),
+  });
+
+  const updateRecordingMutation = useMutation({
+    mutationFn: (url: string) => livestreamApi.updateRecordingUrl(workshopId!, url),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['livestream', workshopId] }),
+  });
 
   const { data: sessionData, isLoading: sessionLoading } = useQuery({
     queryKey: ['livestream', workshopId],
@@ -125,6 +141,7 @@ const WorkshopDetailsPage: React.FC = () => {
         gradingType: 'score',
         category: s.course_title || 'General',
       });
+      if (s.recording_url) setRecordingUrl(s.recording_url);
     }
   }, [sessionData]);
 
@@ -136,14 +153,14 @@ const WorkshopDetailsPage: React.FC = () => {
         name: a.learner_name || 'Participant',
         initials: (a.learner_name || 'P').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
         email: a.learner_email || '',
-        attendance: a.status === 'attended',
+        attendance: a.status === 'attended' || a.status === 'completed',
         grade: null,
         passFail: null,
         certificateGenerated: false,
-        eligible: a.status === 'attended',
+        eligible: a.status === 'attended' || a.status === 'completed',
       })));
+      setAttendanceChanges({});
     } else if (!attendanceLoading) {
-      // Only fall back to sample data if we've finished loading and have no real data
       setParticipants(sampleParticipants);
     }
   }, [attendanceData, attendanceLoading]);
@@ -157,7 +174,12 @@ const WorkshopDetailsPage: React.FC = () => {
   );
 
   const handleToggleAttendance = (id: string) => {
-    setParticipants(participants.map((p) => (p.id === id ? { ...p, attendance: !p.attendance, eligible: !p.attendance ? p.eligible : false } : p)));
+    setParticipants(participants.map((p) => {
+      if (p.id !== id) return p;
+      const newAttendance = !p.attendance;
+      setAttendanceChanges((prev) => ({ ...prev, [id]: newAttendance }));
+      return { ...p, attendance: newAttendance, eligible: newAttendance ? p.eligible : false };
+    }));
   };
 
   const handleGradeChange = (id: string, grade: number) => {
@@ -206,13 +228,26 @@ const WorkshopDetailsPage: React.FC = () => {
 
   const handleSave = async () => {
     setSaving(true);
-    // TODO: Persist attendance/grade/certificate changes to backend via PUT/PATCH to livestream-attendance/{id}/
-    // Currently shows local success feedback only
-    setTimeout(() => {
+    try {
+      // Persist all toggled attendance records
+      const statusPatches = Object.entries(attendanceChanges).map(([id, present]) =>
+        updateStatusMutation.mutateAsync({ id, status: present ? 'attended' : 'absent' })
+      );
+      // Persist recording URL if changed and non-empty
+      const recordingPatch =
+        workshopId && recordingUrl && recordingUrl !== (sessionData?.data?.recording_url ?? '')
+          ? updateRecordingMutation.mutateAsync(recordingUrl)
+          : Promise.resolve();
+
+      await Promise.all([...statusPatches, recordingPatch]);
+      setAttendanceChanges({});
       setSaved(true);
-      setSaving(false);
       setTimeout(() => setSaved(false), 3000);
-    }, 500);
+    } catch {
+      // errors surface through mutation state
+    } finally {
+      setSaving(false);
+    }
   };
 
   const formatDateRange = (start: string, end: string) => {
@@ -294,6 +329,19 @@ const WorkshopDetailsPage: React.FC = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><LocationIcon sx={{ fontSize: 16 }} /> {workshopDetail?.location || '—'}</Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><DateIcon sx={{ fontSize: 16 }} /> {workshopDetail ? formatDateRange(workshopDetail.startDate, workshopDetail.endDate) : '—'}</Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}><PeopleIcon sx={{ fontSize: 16 }} /> {participants.length} participants</Box>
+                </Box>
+                {/* Recording URL — editable after session ends */}
+                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <RecordingIcon sx={{ fontSize: 18, color: 'text.secondary', flexShrink: 0 }} />
+                  <TextField
+                    size="small"
+                    fullWidth
+                    placeholder="Paste recording URL (Zoom cloud, Google Drive, etc.)"
+                    value={recordingUrl}
+                    onChange={(e) => setRecordingUrl(e.target.value)}
+                    label="Recording URL"
+                    InputProps={{ sx: { fontSize: '0.85rem' } }}
+                  />
                 </Box>
               </Box>
               <Box sx={{ display: 'flex', gap: 1 }}>
