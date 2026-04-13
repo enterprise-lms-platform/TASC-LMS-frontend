@@ -3,6 +3,7 @@ import { managerMembersApi, managerSettingsApi, managerBillingApi, managerActivi
 import { courseApi } from '../services/catalogue.services';
 import { enrollmentApi, certificateApi, sessionProgressApi } from '../services/learning.services';
 import { notificationApi } from '../services/notifications.services';
+import { reportsApi, type ReportType, type Report, type ReportListParams } from '../services/reports.services';
 import { adminApi } from '../services/auth.services';
 import type { InviteUserRequest, Organization } from '../types/types';
 import type { ActivityResponse, ManagerBillingUsage } from '../services/organization.services';
@@ -117,16 +118,35 @@ export const useBulkEnrollMembers = () => {
   return useMutation({
     mutationFn: async ({ courseId, memberIds }: { courseId: number; memberIds: number[] }) => {
       const results = { enrolled: 0, failed: 0 };
-      for (const memberId of memberIds) {
-        try {
-          await enrollmentApi.create({ user: memberId, course: courseId });
-          results.enrolled++;
-        } catch {
-          results.failed++;
-        }
+for (const memberId of memberIds) {
+      try {
+        await enrollmentApi.create({ user: memberId, course: courseId });
+        results.enrolled++;
+      } catch {
+        results.failed++;
       }
-      return results;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.orgAdmin.enrollments({}) }),
+    }
+    return results;
+  },
+  onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.orgAdmin.enrollments({}) }),
   });
+};
+
+export const useOrgReportTypes = () =>
+  useQuery<ReportType[]>({
+    queryKey: ['org-admin', 'report-types'],
+    queryFn: () => reportsApi.getTypes().then((r) => r.data),
+  });
+
+export const useOrgReports = (params?: ReportListParams) => {
+  const qc = useQueryClient();
+  const query = useQuery<PaginatedResponse<Report>>({
+    queryKey: ['org-admin', 'reports', params],
+    queryFn: () => reportsApi.getAll(params ?? { page_size: 20 }).then((r) => r.data),
+  });
+  const generate = useMutation({
+    mutationFn: (reportType: string) => reportsApi.generate({ report_type: reportType }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['org-admin', 'reports'] }),
+  });
+  return { ...query, generate };
 };

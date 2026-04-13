@@ -62,7 +62,7 @@ const NAV_SECTIONS: NavSection[] = [
       { text: 'Analytics', icon: <AnalyticsIcon />, path: '/org-admin/analytics' },
       { text: 'Reports', icon: <ReportsIcon />, path: '/org-admin/reports' },
       { text: 'Notifications', icon: <NotificationsIcon />, path: '/org-admin/notifications' },
-      { text: 'Messages', icon: <MessageIcon />, path: '/org-admin/messages', disabled: true },
+      { text: 'Messages', icon: <MessageIcon />, path: '/org-admin/messages' },
     ],
   },
   {

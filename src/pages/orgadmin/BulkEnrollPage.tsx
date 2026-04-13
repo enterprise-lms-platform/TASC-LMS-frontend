@@ -187,7 +187,7 @@ const BulkEnrollPage: React.FC = () => {
                     >
                       {bulkEnroll.isPending ? 'Enrolling...' : `Enroll ${selectedMembers.length} Member${selectedMembers.length > 1 ? 's' : ''}`}
                     </Button>
-                    {enrolling && (
+                    {bulkEnroll.isPending && (
                       <Box sx={{ mt: 2 }}>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                           Enrolling {progress.current} of {progress.total}...
