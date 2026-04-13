@@ -25,10 +25,6 @@ import {
   GroupAdd as BulkEnrollIcon,
   TrendingUp as ProgressIcon,
   CardMembership as CertificatesIcon,
-  Quiz as QuizzesIcon,
-  Assignment as AssignmentsIcon,
-  Videocam as SessionsIcon,
-  VideoLibrary as RecordingsIcon,
   Settings as SettingsIcon,
   Person as ProfileIcon,
 } from '@mui/icons-material';
@@ -80,30 +76,16 @@ const NAV_SECTIONS: NavSection[] = [
       { text: 'Browse Courses', icon: <CoursesIcon />, path: '/org-admin/courses' },
     ],
   },
-  {
-    title: 'Learning',
-    items: [
-      { text: 'Enrollments', icon: <EnrollmentsIcon />, path: '/org-admin/enrollments' },
-      { text: 'Bulk Enroll', icon: <BulkEnrollIcon />, path: '/org-admin/bulk-enroll' },
-      { text: 'Progress Tracking', icon: <ProgressIcon />, path: '/org-admin/progress' },
-      { text: 'Certificates', icon: <CertificatesIcon />, path: '/org-admin/certificates' },
-    ],
-  },
-  {
-    title: 'Assessments',
-    items: [
-      { text: 'Quizzes', icon: <QuizzesIcon />, path: '/org-admin/quizzes', disabled: true },
-      { text: 'Assignments', icon: <AssignmentsIcon />, path: '/org-admin/assignments', disabled: true },
-    ],
-  },
-  {
-    title: 'Live Sessions',
-    items: [
-      { text: 'Sessions', icon: <SessionsIcon />, path: '/org-admin/sessions', disabled: true },
-      { text: 'Recordings', icon: <RecordingsIcon />, path: '/org-admin/recordings', disabled: true },
-    ],
-  },
-  {
+{
+  title: 'Learning',
+  items: [
+    { text: 'Enrollments', icon: <EnrollmentsIcon />, path: '/org-admin/enrollments' },
+    { text: 'Bulk Enroll', icon: <BulkEnrollIcon />, path: '/org-admin/bulk-enroll' },
+    { text: 'Progress Tracking', icon: <ProgressIcon />, path: '/org-admin/progress' },
+    { text: 'Certificates', icon: <CertificatesIcon />, path: '/org-admin/certificates' },
+  ],
+},
+{
     title: 'Account',
     items: [
       { text: 'Settings', icon: <SettingsIcon />, path: '/org-admin/settings' },

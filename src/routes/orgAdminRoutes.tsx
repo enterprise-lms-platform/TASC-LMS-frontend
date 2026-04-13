@@ -34,10 +34,6 @@ const EnrollmentsPage = lazy(() => import('../pages/orgadmin/EnrollmentsPage'));
 const BulkEnrollPage = lazy(() => import('../pages/orgadmin/BulkEnrollPage'));
 const ProgressPage = lazy(() => import('../pages/orgadmin/ProgressPage'));
 const CertificatesPage = lazy(() => import('../pages/orgadmin/CertificatesPage'));
-const QuizzesPage = lazy(() => import('../pages/orgadmin/QuizzesPage'));
-const AssignmentsPage = lazy(() => import('../pages/orgadmin/AssignmentsPage'));
-const SessionsPage = lazy(() => import('../pages/orgadmin/SessionsPage'));
-const RecordingsPage = lazy(() => import('../pages/orgadmin/RecordingsPage'));
 const SettingsPage = lazy(() => import('../pages/orgadmin/SettingsPage'));
 const ProfilePage = lazy(() => import('../pages/orgadmin/ProfilePage'));
 
@@ -56,10 +52,6 @@ export const orgAdminRoutes = (_queryClient: QueryClient): RouteObject[] => [
   { path: '/org-admin/bulk-enroll', element: <SW><PR><BulkEnrollPage /></PR></SW> },
   { path: '/org-admin/progress', element: <SW><PR><ProgressPage /></PR></SW> },
   { path: '/org-admin/certificates', element: <SW><PR><CertificatesPage /></PR></SW> },
-  { path: '/org-admin/quizzes', element: <SW><PR><QuizzesPage /></PR></SW> },
-  { path: '/org-admin/assignments', element: <SW><PR><AssignmentsPage /></PR></SW> },
-  { path: '/org-admin/sessions', element: <SW><PR><SessionsPage /></PR></SW> },
-  { path: '/org-admin/recordings', element: <SW><PR><RecordingsPage /></PR></SW> },
   { path: '/org-admin/settings', element: <SW><PR><SettingsPage /></PR></SW> },
   { path: '/org-admin/profile', element: <SW><PR><ProfilePage /></PR></SW> },
 ];
