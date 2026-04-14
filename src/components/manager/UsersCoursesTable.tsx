@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import {
   Box, Paper, Typography, Tabs, Tab, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Avatar, Chip, IconButton, Button, Skeleton, LinearProgress,
+  Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, Divider, Grid,
 } from '@mui/material';
 import {
-  People as UsersIcon, Visibility as ViewIcon, Edit as EditIcon,
-  Delete as DeleteIcon, FilterList as FilterIcon, PersonAdd as PersonAddIcon,
+  People as UsersIcon, Visibility as ViewIcon,
+  FilterList as FilterIcon, PersonAdd as PersonAddIcon,
   ArrowForward as ArrowIcon, MenuBook as CourseIcon, School as EnrollIcon,
+  Close as CloseIcon, Email as EmailIcon, Phone as PhoneIcon,
+  Public as CountryIcon, Schedule as TimezoneIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -41,8 +44,16 @@ const cardSx = {
 };
 const thSx = { fontWeight: 600, fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: '#71717a', py: 1.5 };
 
+function safeDateLabel(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 const UsersCoursesTable: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
+  const [profileId, setProfileId] = useState<number | null>(null);
   const navigate = useNavigate();
 
   const { data: usersRaw, isLoading } = useQuery({
@@ -61,6 +72,13 @@ const UsersCoursesTable: React.FC = () => {
     queryFn: () => enrollmentApi.getAll({ page_size: 5 }).then(r => r.data),
     enabled: tabValue === 2,
   });
+
+  const { data: profileResp, isLoading: profileLoading } = useQuery({
+    queryKey: ['manager', 'user', profileId],
+    queryFn: () => usersApi.getById(profileId!).then(r => r.data),
+    enabled: profileId !== null,
+  });
+  const profileData = profileResp as UserListItem | undefined;
 
   const paginatedData = usersRaw as PaginatedResponse<UserListItem> | undefined;
   const users = paginatedData?.results ?? [];
@@ -160,24 +178,15 @@ const UsersCoursesTable: React.FC = () => {
                         </TableCell>
                         <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                           <Typography variant="body2" color="text.secondary">
-                            {new Date(user.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                            {safeDateLabel(user.date_joined)}
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          <Box sx={{ display: 'flex', gap: 0.5 }}>
-                            <IconButton size="small" onClick={() => navigate('/manager/users')}
-                              sx={{ borderRadius: '8px', bgcolor: 'rgba(99,102,241,0.06)', '&:hover': { bgcolor: 'rgba(99,102,241,0.12)', color: '#6366f1' } }}>
-                              <ViewIcon sx={{ fontSize: 16 }} />
-                            </IconButton>
-                            <IconButton size="small" onClick={() => navigate('/manager/users')}
-                              sx={{ borderRadius: '8px', bgcolor: 'rgba(245,158,11,0.06)', '&:hover': { bgcolor: 'rgba(245,158,11,0.12)', color: '#f59e0b' } }}>
-                              <EditIcon sx={{ fontSize: 16 }} />
-                            </IconButton>
-                            <IconButton size="small"
-                              sx={{ borderRadius: '8px', bgcolor: 'rgba(239,68,68,0.06)', '&:hover': { bgcolor: 'rgba(239,68,68,0.12)', color: '#ef4444' } }}>
-                              <DeleteIcon sx={{ fontSize: 16 }} />
-                            </IconButton>
-                          </Box>
+                          <IconButton size="small" onClick={() => setProfileId(user.id)}
+                            title="View user"
+                            sx={{ borderRadius: '8px', bgcolor: 'rgba(99,102,241,0.06)', '&:hover': { bgcolor: 'rgba(99,102,241,0.12)', color: '#6366f1' } }}>
+                            <ViewIcon sx={{ fontSize: 16 }} />
+                          </IconButton>
                         </TableCell>
                       </TableRow>
                     );
@@ -336,6 +345,137 @@ const UsersCoursesTable: React.FC = () => {
           </Box>
         </>
       )}
+      {/* ─── User Profile Dialog ──────────────────────────── */}
+      <Dialog
+        open={profileId !== null}
+        onClose={() => setProfileId(null)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '16px' } }}
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 700 }}>
+          User Profile
+          <IconButton onClick={() => setProfileId(null)} size="small" sx={{ color: 'text.secondary' }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {profileLoading ? (
+            <Box sx={{ py: 6, textAlign: 'center' }}>
+              <CircularProgress size={36} sx={{ color: '#ffa424' }} />
+            </Box>
+          ) : profileData ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, pt: 1 }}>
+              <Avatar
+                sx={{
+                  width: 88, height: 88, fontSize: '2rem', fontWeight: 700,
+                  background: 'linear-gradient(135deg, #ffa424, #f97316)',
+                }}
+                src={profileData.avatar || profileData.google_picture || undefined}
+              >
+                {(() => {
+                  const f = profileData.first_name?.[0] || '';
+                  const l = profileData.last_name?.[0] || '';
+                  return (f + l).toUpperCase() || profileData.email[0].toUpperCase();
+                })()}
+              </Avatar>
+
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h6" fontWeight={700}>
+                  {profileData.name || profileData.email.split('@')[0]}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mt: 0.5 }}>
+                  <EmailIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                  <Typography variant="body2" color="text.secondary">{profileData.email}</Typography>
+                </Box>
+              </Box>
+
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Chip
+                  label={profileData.role.charAt(0).toUpperCase() + profileData.role.slice(1).replace('_', ' ')}
+                  size="small"
+                  sx={{ fontWeight: 600, bgcolor: 'rgba(99,102,241,0.08)', color: '#6366f1' }}
+                />
+                <Chip
+                  label={profileData.is_active ? 'Active' : 'Inactive'}
+                  size="small"
+                  color={profileData.is_active ? 'success' : 'default'}
+                  sx={{ fontWeight: 600 }}
+                />
+              </Box>
+
+              <Divider sx={{ width: '100%', my: 1 }} />
+
+              <Grid container spacing={2} sx={{ width: '100%' }}>
+                {profileData.phone_number && (
+                  <Grid size={{ xs: 12 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <PhoneIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">Phone</Typography>
+                        <Typography variant="body2">{profileData.phone_number}</Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                )}
+                {profileData.country && (
+                  <Grid size={{ xs: 6 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CountryIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">Country</Typography>
+                        <Typography variant="body2">{profileData.country}</Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                )}
+                {profileData.timezone && (
+                  <Grid size={{ xs: 6 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <TimezoneIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">Timezone</Typography>
+                        <Typography variant="body2">{profileData.timezone}</Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                )}
+                <Grid size={{ xs: 6 }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Joined</Typography>
+                    <Typography variant="body2">{safeDateLabel(profileData.date_joined)}</Typography>
+                  </Box>
+                </Grid>
+                <Grid size={{ xs: 6 }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Last Login</Typography>
+                    <Typography variant="body2">{safeDateLabel(profileData.last_login)}</Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+
+              {profileData.bio && (
+                <Box sx={{ width: '100%', mt: 1 }}>
+                  <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>Bio</Typography>
+                  <Typography variant="body2" color="text.secondary">{profileData.bio}</Typography>
+                </Box>
+              )}
+            </Box>
+          ) : (
+            <Typography color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+              Could not load user profile.
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setProfileId(null)}
+            sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 };

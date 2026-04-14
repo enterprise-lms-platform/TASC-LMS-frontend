@@ -323,7 +323,7 @@ const ManagerUsersPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
-                          {formatDate(user.created_at || '')}
+                          {formatDate(user.date_joined || '')}
                         </Typography>
                       </TableCell>
                       <TableCell>
