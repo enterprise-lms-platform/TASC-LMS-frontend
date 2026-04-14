@@ -23,7 +23,7 @@ import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
 import { courseApi, categoryApi, enrollmentApi, certificateApi } from '../../services/main.api';
-import { useEnrollmentTrends, useLearningStats, useCoursesByCategory } from '../../services/learning.services';
+import { useEnrollmentTrends, useLearningStats, useCoursesByCategory, useTopCoursePerformance } from '../../services/learning.services';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -105,16 +105,15 @@ const ManagerAnalyticsPage: React.FC = () => {
   const { data: trends } = useEnrollmentTrends(monthsMap[timePeriod] || 6);
   const { data: stats } = useLearningStats();
   const { data: categoryStats } = useCoursesByCategory();
+  const {
+    data: topCourseRows,
+    isError: topCoursePerformanceError,
+    isLoading: topCoursePerformanceLoading,
+  } = useTopCoursePerformance(5);
 
   const courses = (coursesData?.results ?? []) as CourseWithCategory[];
   const enrollments = (Array.isArray(enrollmentsData) ? enrollmentsData : (enrollmentsData as any)?.results ?? []) as EnrollmentWithDate[];
   const certificates = (Array.isArray(certificatesData) ? certificatesData : (certificatesData as any)?.results ?? []) as Array<{ id: number }>;
-
-  const courseMap = useMemo(() => {
-    const map = new Map<number, CourseWithCategory>();
-    courses.forEach(c => map.set(c.id, c));
-    return map;
-  }, [courses]);
 
   const filteredEnrollments = useMemo(() => {
     if (timePeriod === 'all') return enrollments;
@@ -159,30 +158,6 @@ const ManagerAnalyticsPage: React.FC = () => {
       color: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'][idx % 5],
     }));
   }, [categoryStats]);
-
-  const topCourses = useMemo(() => {
-    const courseStats: Record<string, { enrollments: number; completed: number }> = {};
-    filteredEnrollments.forEach((e) => {
-      const course = courseMap.get(e.course);
-      const key = course?.title || e.course_title || `Course ${e.course}`;
-      if (!courseStats[key]) {
-        courseStats[key] = { enrollments: 0, completed: 0 };
-      }
-      courseStats[key].enrollments += 1;
-      if (e.completed_at) {
-        courseStats[key].completed += 1;
-      }
-    });
-    
-    return Object.entries(courseStats)
-      .map(([name, stats]) => ({
-        name,
-        enrollments: stats.enrollments,
-        completion: stats.enrollments > 0 ? Math.round((stats.completed / stats.enrollments) * 100) : 0,
-      }))
-      .sort((a, b) => b.enrollments - a.enrollments)
-      .slice(0, 5);
-  }, [filteredEnrollments, courseMap]);
 
   const learningMetrics = useMemo(() => {
     const totalEnrollments = filteredEnrollments.length;
@@ -410,33 +385,45 @@ const ManagerAnalyticsPage: React.FC = () => {
                   <Typography fontWeight={700}>Top Course Performance</Typography>
                 </Box>
                 <Box sx={{ overflow: 'auto' }}>
-                  {topCourses.length > 0 ? topCourses.map((course, i) => (
-                    <Box
-                      key={course.name}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        p: 2,
-                        px: 3,
-                        borderBottom: i < topCourses.length - 1 ? 1 : 0,
-                        borderColor: 'divider',
-                        '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' },
-                      }}
-                    >
-                      <Typography variant="body2" fontWeight={700} color="text.secondary" sx={{ width: 24 }}>
-                        {i + 1}
+                  {topCoursePerformanceError ? (
+                    <Box sx={{ p: 3, textAlign: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Unable to load course performance data. Please try again later.
                       </Typography>
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="body2" fontWeight={600} noWrap>{course.name}</Typography>
-                        <Typography variant="caption" color="text.secondary">{course.enrollments} enrolled</Typography>
-                      </Box>
-                      <Box sx={{ textAlign: 'center', minWidth: 70 }}>
-                        <Typography variant="body2" fontWeight={700} color="primary.main">{course.completion}%</Typography>
-                        <Typography variant="caption" color="text.secondary">Complete</Typography>
-                      </Box>
                     </Box>
-                  )) : (
+                  ) : topCoursePerformanceLoading ? (
+                    <Box sx={{ p: 3, textAlign: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">Loading…</Typography>
+                    </Box>
+                  ) : (topCourseRows?.length ?? 0) > 0 ? (
+                    (topCourseRows ?? []).map((row, i, arr) => (
+                      <Box
+                        key={row.course_id}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 2,
+                          p: 2,
+                          px: 3,
+                          borderBottom: i < arr.length - 1 ? 1 : 0,
+                          borderColor: 'divider',
+                          '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' },
+                        }}
+                      >
+                        <Typography variant="body2" fontWeight={700} color="text.secondary" sx={{ width: 24 }}>
+                          {i + 1}
+                        </Typography>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography variant="body2" fontWeight={600} noWrap>{row.course_title}</Typography>
+                          <Typography variant="caption" color="text.secondary">{row.enrollments} enrolled</Typography>
+                        </Box>
+                        <Box sx={{ textAlign: 'center', minWidth: 70 }}>
+                          <Typography variant="body2" fontWeight={700} color="primary.main">{row.completion_rate}%</Typography>
+                          <Typography variant="caption" color="text.secondary">Complete</Typography>
+                        </Box>
+                      </Box>
+                    ))
+                  ) : (
                     <Box sx={{ p: 3, textAlign: 'center' }}>
                       <Typography variant="body2" color="text.secondary">
                         Per-course enrollment performance data is not yet available for this view

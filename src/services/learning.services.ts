@@ -202,6 +202,14 @@ export interface LearningStats {
   avg_quiz_score: number;
 }
 
+export interface TopCoursePerformanceRow {
+  course_id: number;
+  course_title: string;
+  enrollments: number;
+  completed: number;
+  completion_rate: number;
+}
+
 export interface CoursesByCategory {
   name: string;
   count: number;
@@ -304,6 +312,11 @@ export const analyticsApi = {
 
   getLearningStats: () =>
     apiClient.get<LearningStats>(`${BASE_PATH}/analytics/learning-stats/`),
+
+  getTopCoursePerformance: (limit: number = 5) =>
+    apiClient.get<TopCoursePerformanceRow[]>(`${BASE_PATH}/analytics/top-course-performance/`, {
+      params: { limit },
+    }),
 
   getCoursesByCategory: () =>
     apiClient.get<CoursesByCategory[]>(`/api/v1/catalogue/analytics/courses-by-category/`),
@@ -452,6 +465,13 @@ export const useLearningStats = () => {
   return useQuery({
     queryKey: ['analytics', 'stats'],
     queryFn: () => analyticsApi.getLearningStats().then(res => res.data),
+  });
+};
+
+export const useTopCoursePerformance = (limit: number = 5) => {
+  return useQuery({
+    queryKey: ['analytics', 'top-course-performance', limit],
+    queryFn: () => analyticsApi.getTopCoursePerformance(limit).then((res) => res.data),
   });
 };
 
