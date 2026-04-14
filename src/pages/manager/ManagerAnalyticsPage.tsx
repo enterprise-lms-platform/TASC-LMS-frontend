@@ -17,7 +17,6 @@ import {
   MenuBook as CoursesIcon,
   TrendingUp as EnrollmentIcon,
   EmojiEvents as CompletionIcon,
-  Star as StarIcon,
   School as InstructorIcon,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
@@ -180,8 +179,6 @@ const ManagerAnalyticsPage: React.FC = () => {
         name,
         enrollments: stats.enrollments,
         completion: stats.enrollments > 0 ? Math.round((stats.completed / stats.enrollments) * 100) : 0,
-        avgScore: 0,
-        rating: 0,
       }))
       .sort((a, b) => b.enrollments - a.enrollments)
       .slice(0, 5);
@@ -438,19 +435,11 @@ const ManagerAnalyticsPage: React.FC = () => {
                         <Typography variant="body2" fontWeight={700} color="primary.main">{course.completion}%</Typography>
                         <Typography variant="caption" color="text.secondary">Complete</Typography>
                       </Box>
-                      <Box sx={{ textAlign: 'center', minWidth: 70 }}>
-                        <Typography variant="body2" fontWeight={700}>{course.avgScore}%</Typography>
-                        <Typography variant="caption" color="text.secondary">Avg Score</Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 50 }}>
-                        <StarIcon sx={{ fontSize: 16, color: '#f59e0b' }} />
-                        <Typography variant="body2" fontWeight={600}>{course.rating}</Typography>
-                      </Box>
                     </Box>
                   )) : (
                     <Box sx={{ p: 3, textAlign: 'center' }}>
                       <Typography variant="body2" color="text.secondary">
-                        No course data available
+                        Per-course enrollment performance data is not yet available for this view
                       </Typography>
                     </Box>
                   )}
