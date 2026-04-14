@@ -20,16 +20,21 @@ export interface UserListParams {
 export interface UserListItem {
   id: number;
   email: string;
-  first_name: string;
-  last_name: string;
+  first_name?: string;
+  last_name?: string;
   name: string;
   role: string;
   is_active: boolean;
   email_verified: boolean;
   avatar?: string | null;
   google_picture?: string | null;
-  created_at: string;
+  date_joined: string;
   last_login?: string | null;
+  phone_number?: string | null;
+  country?: string | null;
+  timezone?: string | null;
+  bio?: string | null;
+  username?: string;
 }
 
 export interface UserUpdateRequest {

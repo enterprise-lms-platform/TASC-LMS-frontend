@@ -116,7 +116,7 @@ const InstructorsPage: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">
-                        {inst.created_at ? new Date(inst.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}
+                        {inst.date_joined ? new Date(inst.date_joined).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}
                       </Typography>
                     </TableCell>
                     <TableCell>
