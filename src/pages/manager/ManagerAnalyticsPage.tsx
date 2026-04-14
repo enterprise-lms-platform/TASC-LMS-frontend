@@ -502,20 +502,20 @@ const ManagerAnalyticsPage: React.FC = () => {
                 </Box>
                 <Box sx={{ p: 0 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, px: 3, borderBottom: 1, borderColor: 'divider' }}>
-                    <Typography variant="body2" color="text.secondary">Total Enrollments</Typography>
-                    <Typography variant="body2" fontWeight={700}>{kpis[0]?.value || '0'}</Typography>
+                    <Typography variant="body2" color="text.secondary">Total Learners</Typography>
+                    <Typography variant="body2" fontWeight={700}>{(stats?.total_learners || 0).toLocaleString()}</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, px: 3, borderBottom: 1, borderColor: 'divider' }}>
                     <Typography variant="body2" color="text.secondary">Active Courses</Typography>
-                    <Typography variant="body2" fontWeight={700}>{kpis[1]?.value || '0'}</Typography>
+                    <Typography variant="body2" fontWeight={700}>{courses.filter((c) => c.status === 'published').length}</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, px: 3, borderBottom: 1, borderColor: 'divider' }}>
-                    <Typography variant="body2" color="text.secondary">Enrollment Rate</Typography>
-                    <Typography variant="body2" fontWeight={700}>{kpis[2]?.value || '0%'}</Typography>
+                    <Typography variant="body2" color="text.secondary">Completed Courses</Typography>
+                    <Typography variant="body2" fontWeight={700}>{(stats?.total_completed_courses || 0).toLocaleString()}</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, px: 3 }}>
-                    <Typography variant="body2" color="text.secondary">Completion Rate</Typography>
-                    <Typography variant="body2" fontWeight={700}>{kpis[3]?.value || '0%'}</Typography>
+                    <Typography variant="body2" color="text.secondary">Avg. Completion</Typography>
+                    <Typography variant="body2" fontWeight={700}>{`${stats?.avg_completion_rate || 0}%`}</Typography>
                   </Box>
                 </Box>
               </Paper>
