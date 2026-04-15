@@ -22,8 +22,14 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
-import { courseApi, categoryApi, enrollmentApi, certificateApi } from '../../services/main.api';
-import { useEnrollmentTrends, useLearningStats, useCoursesByCategory, useTopCoursePerformance } from '../../services/learning.services';
+import { courseApi, categoryApi, enrollmentApi } from '../../services/main.api';
+import {
+  useEnrollmentTrends,
+  useLearningStats,
+  useCertificateStats,
+  useCoursesByCategory,
+  useTopCoursePerformance,
+} from '../../services/learning.services';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -93,17 +99,13 @@ const ManagerAnalyticsPage: React.FC = () => {
     queryFn: () => enrollmentApi.getAll().then(r => r.data),
   });
 
-  const { data: certificatesData } = useQuery({
-    queryKey: ['certificates', 'analytics'],
-    queryFn: () => certificateApi.getAll().then(r => r.data),
-  });
-
   // New Analytics API Hooks
   const monthsMap: Record<string, number> = {
     '7days': 1, '30days': 1, '90days': 3, '6months': 6, 'year': 12
   };
   const { data: trends } = useEnrollmentTrends(monthsMap[timePeriod] || 6);
   const { data: stats } = useLearningStats();
+  const { data: certStats } = useCertificateStats();
   const { data: categoryStats } = useCoursesByCategory();
   const {
     data: topCourseRows,
@@ -113,8 +115,6 @@ const ManagerAnalyticsPage: React.FC = () => {
 
   const courses = (coursesData?.results ?? []) as CourseWithCategory[];
   const enrollments = (Array.isArray(enrollmentsData) ? enrollmentsData : (enrollmentsData as any)?.results ?? []) as EnrollmentWithDate[];
-  const certificates = (Array.isArray(certificatesData) ? certificatesData : (certificatesData as any)?.results ?? []) as Array<{ id: number }>;
-
   const filteredEnrollments = useMemo(() => {
     if (timePeriod === 'all') return enrollments;
     
@@ -160,16 +160,22 @@ const ManagerAnalyticsPage: React.FC = () => {
   }, [categoryStats]);
 
   const learningMetrics = useMemo(() => {
-    const totalEnrollments = filteredEnrollments.length;
-    const completedEnrollments = filteredEnrollments.filter((e) => e.completed_at).length;
-    const certificatesCount = certificates.length;
-    
+    const fmt = (n: number) => n.toLocaleString();
     return [
-      { label: 'Total Enrollments', value: totalEnrollments.toLocaleString() },
-      { label: 'Completed', value: completedEnrollments.toLocaleString() },
-      { label: 'Certificates Issued', value: certificatesCount.toLocaleString() },
+      {
+        label: 'Enrolled Learners',
+        value: stats == null ? '—' : fmt(stats.total_learners ?? 0),
+      },
+      {
+        label: 'Completed Enrollments',
+        value: stats == null ? '—' : fmt(stats.total_completed_courses ?? 0),
+      },
+      {
+        label: 'Certificates Issued',
+        value: certStats == null ? '—' : fmt(certStats.total ?? 0),
+      },
     ];
-  }, [filteredEnrollments, certificates]);
+  }, [stats, certStats]);
 
   const weeklyEngagement = useMemo(() => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
