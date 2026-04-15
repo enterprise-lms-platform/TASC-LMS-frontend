@@ -33,6 +33,10 @@ export interface EnrollmentParams {
   page_size?: number;
   dateRange?: string;
   role?: 'instructor';
+  /** Filter by backend enrollment status (active, completed, dropped, expired) */
+  status?: string;
+  /** Whitelist enforced server-side */
+  ordering?: string;
 }
 
 export const enrollmentApi = {
