@@ -8,6 +8,7 @@ import {
   type SessionProgressParams,
   type DiscussionParams,
   type DiscussionReplyParams,
+  type EnrollmentParams,
 } from '../services/learning.services';
 import {
   enrollmentError,
@@ -42,6 +43,46 @@ export function normalizeEnrollmentListResponse(data: unknown): Enrollment[] {
   return [];
 }
 
+/** Typed paginated envelope for GET /learning/enrollments/ (DRF or raw array). */
+export interface PaginatedEnrollmentList {
+  results: Enrollment[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+}
+
+export function normalizeEnrollmentPaginatedResponse(data: unknown): PaginatedEnrollmentList {
+  if (data && typeof data === 'object' && 'results' in data) {
+    const d = data as PaginatedResponse<Enrollment>;
+    return {
+      results: Array.isArray(d.results) ? d.results : [],
+      count: typeof d.count === 'number' ? d.count : 0,
+      next: d.next ?? null,
+      previous: d.previous ?? null,
+    };
+  }
+  if (Array.isArray(data)) {
+    const arr = data as Enrollment[];
+    return { results: arr, count: arr.length, next: null, previous: null };
+  }
+  return { results: [], count: 0, next: null, previous: null };
+}
+
+export type EnrollmentListParams = EnrollmentParams;
+
+/** Paginated enrollment list for manager-style pages (server search, filters, ordering). */
+export const useEnrollmentList = (params: EnrollmentListParams) => {
+  const page = params.page ?? 1;
+  const page_size = params.page_size ?? 20;
+  return useQuery({
+    queryKey: queryKeys.enrollments.list({ ...params, page, page_size }),
+    queryFn: () =>
+      enrollmentApi
+        .getAll({ ...params, page, page_size })
+        .then((r) => normalizeEnrollmentPaginatedResponse(r.data)),
+  });
+};
+
 /** Normalize GET /learning/certificates/ whether the API returns a raw array or paginated { results }. */
 export function normalizeCertificateListResponse(data: unknown): Certificate[] {
   if (Array.isArray(data)) return data as Certificate[];
@@ -73,6 +114,7 @@ export const useCreateEnrollment = () => {
       enrollmentApi.create(data).then((r) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.enrollments.all });
+      qc.invalidateQueries({ queryKey: ['enrollments', 'list'] });
       qc.invalidateQueries({ queryKey: ['learner', 'my-courses'] });
       qc.invalidateQueries({ queryKey: ['learner', 'enrollments', 'active'] });
       qc.invalidateQueries({ queryKey: ['learner', 'enrollments', 'stats'] });

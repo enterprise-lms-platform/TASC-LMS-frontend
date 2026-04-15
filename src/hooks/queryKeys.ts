@@ -8,7 +8,13 @@ import type {
   ModuleListParams,
 } from '../services/catalogue.services';
 import type { BankQuestionListParams } from '../types/types';
-import type { SessionProgressParams, DiscussionParams, DiscussionReplyParams, SubmissionParams } from '../services/learning.services';
+import type {
+  SessionProgressParams,
+  DiscussionParams,
+  DiscussionReplyParams,
+  SubmissionParams,
+  EnrollmentParams,
+} from '../services/learning.services';
 import type { InvoiceParams, TransactionParams, UserSubscriptionParams } from '../services/payments.services';
 import type { PublicCourseParams } from '../services/public.services';
 import type { OrganizationListParams, ManagerMembersParams } from '../services/organization.services';
@@ -61,6 +67,19 @@ export const queryKeys = {
   // Learning
   enrollments: {
     all: ['enrollments'] as const,
+    /** Paginated / filtered list (distinct from learner `all` cache shape). */
+    list: (params: EnrollmentParams & { page?: number }) =>
+      [
+        'enrollments',
+        'list',
+        params.search ?? '',
+        params.course ?? '',
+        params.status ?? '',
+        params.ordering ?? '',
+        params.page ?? 1,
+        params.page_size ?? 20,
+        params.role ?? '',
+      ] as const,
     detail: (id: number) => ['enrollments', 'detail', id] as const,
   },
   sessionProgress: {
