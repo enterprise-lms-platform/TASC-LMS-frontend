@@ -19,7 +19,7 @@ const Certificates: React.FC = () => {
 
   const { data: certsData, isLoading } = useQuery({
     queryKey: ['learner', 'certificates', 'dashboard'],
-    queryFn: () => certificateApi.getAll().then(r => r.data),
+    queryFn: () => certificateApi.getAll({ page: 1, page_size: 100 }).then((r) => r.data),
   });
 
   const certs: CertificateResult[] = Array.isArray(certsData)

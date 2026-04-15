@@ -23,7 +23,7 @@ const CertificationsPage: React.FC = () => {
 
   const { data: certsRaw, isLoading } = useQuery({
     queryKey: ['superadmin', 'certificates'],
-    queryFn: () => managerCertificateApi.getAll({ page_size: 100 }).then((r) => r.data),
+    queryFn: () => managerCertificateApi.getAll({ page: 1, page_size: 100 }).then((r) => r.data),
   });
 
   const certs = Array.isArray(certsRaw) ? certsRaw : (certsRaw as any)?.results ?? [];

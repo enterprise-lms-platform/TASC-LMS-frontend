@@ -118,22 +118,28 @@ export const sessionProgressApi = {
 
 // CERTIFICATES
 
+export interface CertificateListParams {
+  page?: number;
+  page_size?: number;
+  search?: string;
+  /** Filter by enrollment course id */
+  course?: number;
+}
+
 export const certificateApi = {
+  /** Role-scoped list; supports pagination and filters (server-side). */
+  getAll: (params?: CertificateListParams) =>
+    apiClient.get<Certificate[] | PaginatedResponse<Certificate>>(`${BASE_PATH}/certificates/`, {
+      params,
+    }),
 
-  //  List all certificates for the authenticated user
-  getAll: () =>
-    apiClient.get<Certificate[]>(`${BASE_PATH}/certificates/`),
-
-
-  //  Get certificate details by ID
   getById: (id: number) =>
     apiClient.get<Certificate>(`${BASE_PATH}/certificates/${id}/`),
 
-
-  //  Verify a certificate by certificate number
+  /** Backend expects query param `number`. */
   verify: (certificateNumber: string) =>
     apiClient.get<Certificate>(`${BASE_PATH}/certificates/verify/`, {
-      params: { certificate_number: certificateNumber },
+      params: { number: certificateNumber },
     }),
 };
 
@@ -415,16 +421,9 @@ export const managerSessionProgressApi = {
     apiClient.patch(`${BASE_PATH}/session-progress/${id}/`, data),
 };
 
-// MANAGER CERTIFICATE API
+/** Read-only certificate list (same URL as learner); backend has no POST/DELETE on this resource. */
 export const managerCertificateApi = {
-  getAll: (params?: { enrollment?: number; course?: number; is_verified?: boolean; page?: number; page_size?: number }) =>
-    apiClient.get(`${BASE_PATH}/certificates/`, { params }),
-
-  issue: (data: { enrollment: number }) =>
-    apiClient.post(`${BASE_PATH}/certificates/`, data),
-
-  revoke: (id: number) =>
-    apiClient.delete(`${BASE_PATH}/certificates/${id}/`),
+  getAll: (params?: CertificateListParams) => certificateApi.getAll(params),
 };
 
 // MANAGER GRADES API

@@ -27,7 +27,7 @@ const QuickStats: React.FC = () => {
 
   const { data: certificatesData, isLoading: loadingCerts } = useQuery({
     queryKey: ['learner', 'certificates', 'stats'],
-    queryFn: () => certificateApi.getAll().then(r => r.data),
+    queryFn: () => certificateApi.getAll({ page: 1, page_size: 100 }).then((r) => r.data),
   });
 
   const enrollments = normalizeEnrollmentListResponse(enrollmentsData);

@@ -9,6 +9,7 @@ import {
   type DiscussionParams,
   type DiscussionReplyParams,
   type EnrollmentParams,
+  type CertificateListParams,
 } from '../services/learning.services';
 import {
   enrollmentError,
@@ -92,6 +93,43 @@ export function normalizeCertificateListResponse(data: unknown): Certificate[] {
   return [];
 }
 
+export interface PaginatedCertificateList {
+  results: Certificate[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+}
+
+export function normalizeCertificatePaginatedResponse(data: unknown): PaginatedCertificateList {
+  if (data && typeof data === 'object' && 'results' in data) {
+    const d = data as PaginatedResponse<Certificate>;
+    return {
+      results: Array.isArray(d.results) ? d.results : [],
+      count: typeof d.count === 'number' ? d.count : 0,
+      next: d.next ?? null,
+      previous: d.previous ?? null,
+    };
+  }
+  if (Array.isArray(data)) {
+    const arr = data as Certificate[];
+    return { results: arr, count: arr.length, next: null, previous: null };
+  }
+  return { results: [], count: 0, next: null, previous: null };
+}
+
+export type CertificateListQueryParams = CertificateListParams;
+
+/** Paginated, server-filtered certificate list (role scope enforced by API). */
+export const useCertificateList = (params: CertificateListQueryParams) => {
+  const page = params.page ?? 1;
+  const page_size = params.page_size ?? 20;
+  return useQuery({
+    queryKey: queryKeys.certificates.list({ ...params, page, page_size }),
+    queryFn: () =>
+      certificateApi.getAll({ ...params, page, page_size }).then((r) => normalizeCertificatePaginatedResponse(r.data)),
+  });
+};
+
 // ── Enrollments ──
 
 export const useEnrollments = () =>
@@ -129,7 +167,9 @@ export const useGenerateCertificate = () => {
     mutationFn: (enrollmentId: number) =>
       enrollmentApi.generateCertificate(enrollmentId).then((r) => r.data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['certificates'] });
+      qc.invalidateQueries({
+        predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === 'certificates',
+      });
       qc.invalidateQueries({ queryKey: ['enrollments'] });
     },
     onError: (error) => certificateError(error),
@@ -235,9 +275,11 @@ export const useMarkSessionCompleted = () => {
 
 export const useCertificates = () =>
   useQuery({
-    queryKey: queryKeys.certificates.all,
+    queryKey: queryKeys.certificates.list({ page: 1, page_size: 100 }),
     queryFn: () =>
-      certificateApi.getAll().then((r) => normalizeCertificateListResponse(r.data)),
+      certificateApi
+        .getAll({ page: 1, page_size: 100 })
+        .then((r) => normalizeCertificatePaginatedResponse(r.data).results),
   });
 
 export const useCertificate = (id: number) =>
