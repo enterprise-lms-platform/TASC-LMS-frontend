@@ -14,6 +14,7 @@ import type {
   DiscussionReplyParams,
   SubmissionParams,
   EnrollmentParams,
+  CertificateListParams,
 } from '../services/learning.services';
 import type { InvoiceParams, TransactionParams, UserSubscriptionParams } from '../services/payments.services';
 import type { PublicCourseParams } from '../services/public.services';
@@ -88,6 +89,15 @@ export const queryKeys = {
   },
   certificates: {
     all: ['certificates'] as const,
+    list: (params: CertificateListParams) =>
+      [
+        'certificates',
+        'list',
+        params.page ?? 1,
+        params.page_size ?? 20,
+        params.search ?? '',
+        params.course ?? '',
+      ] as const,
     detail: (id: number) => ['certificates', 'detail', id] as const,
     verify: (certNumber: string) => ['certificates', 'verify', certNumber] as const,
   },

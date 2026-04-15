@@ -36,9 +36,11 @@ export const learnerDashboardLoader = async (queryClient: QueryClient) => {
     // Fetch certificates (non-critical, can fail silently)
     const certificates = await queryClient
       .ensureQueryData({
-        queryKey: queryKeys.certificates.all,
+        queryKey: queryKeys.certificates.list({ page: 1, page_size: 100 }),
         queryFn: () =>
-          certificateApi.getAll().then((r) => normalizeCertificateListResponse(r.data)),
+          certificateApi
+            .getAll({ page: 1, page_size: 100 })
+            .then((r) => normalizeCertificateListResponse(r.data)),
         staleTime: 15 * 60 * 1000,
       })
       .catch(() => []);
@@ -251,9 +253,11 @@ export const learnerProgressLoader = async (queryClient: QueryClient) => {
 export const learnerCertificatesLoader = async (queryClient: QueryClient) => {
   try {
     const certificates = await queryClient.ensureQueryData({
-      queryKey: queryKeys.certificates.all,
+      queryKey: queryKeys.certificates.list({ page: 1, page_size: 100 }),
       queryFn: () =>
-        certificateApi.getAll().then((r) => normalizeCertificateListResponse(r.data)),
+        certificateApi
+          .getAll({ page: 1, page_size: 100 })
+          .then((r) => normalizeCertificateListResponse(r.data)),
       staleTime: 15 * 60 * 1000,
     });
 
