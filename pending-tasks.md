@@ -892,7 +892,6 @@ These pages are blocked purely on backend. Once the backend task is completed, t
 |------|-------|------------------------|
 | `SuperadminNotificationsPage` | `/superadmin/notifications` | ❌ Not blocked — existing `notificationApi` works |
 | `ManagerActivityPage` | `/manager/activity` | Task 45 (audit log summary — optional) |
-| `ManagerRolesPage` | `/manager/roles` | Task 40 (user counts by role) |
 | `PartnershipsPage` | `/superadmin/partnerships` | Task 41 (Phase 2) |
 | `DataMigrationPage` | `/superadmin/data-migration` | Task 42 (Phase 2) |
 | `GatewaySettingsPage` | `/superadmin/gateway-settings` | Task 42 (Phase 2) |

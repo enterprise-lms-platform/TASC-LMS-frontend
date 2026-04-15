@@ -28,7 +28,6 @@ const CourseApprovalPage        = lazy(() => import('../pages/manager/CourseAppr
 const CourseApprovalDetailPage  = lazy(() => import('../pages/manager/CourseApprovalDetailPage'));
 const ManagerReportsPage        = lazy(() => import('../pages/manager/ManagerReportsPage'));
 const ManagerUsersPage          = lazy(() => import('../pages/manager/ManagerUsersPage'));
-const ManagerRolesPage          = lazy(() => import('../pages/manager/ManagerRolesPage'));
 const ManagerBulkImportPage     = lazy(() => import('../pages/manager/ManagerBulkImportPage'));
 const ManagerActivityPage       = lazy(() => import('../pages/manager/ManagerActivityPage'));
 const ManagerCoursesPage        = lazy(() => import('../pages/manager/ManagerCoursesPage'));
@@ -67,7 +66,6 @@ export const managerRoutes = (queryClient: QueryClient): RouteObject[] => [
   { path: '/manager/invite-user', element: <SW><PR><ManagerInviteUserPage /></PR></SW>, loader: async () => managerLoaders.managerRouteLoader(queryClient) },
   { path: '/manager/reports', element: <SW><PR><ManagerReportsPage /></PR></SW>, loader: async () => managerLoaders.managerRouteLoader(queryClient) },
   { path: '/manager/users', element: <SW><PR><ManagerUsersPage /></PR></SW>, loader: async () => managerLoaders.managerRouteLoader(queryClient) },
-  { path: '/manager/roles', element: <SW><PR><ManagerRolesPage /></PR></SW>, loader: async () => managerLoaders.managerRouteLoader(queryClient) },
   { path: '/manager/import', element: <SW><PR><ManagerBulkImportPage /></PR></SW>, loader: async () => managerLoaders.managerRouteLoader(queryClient) },
   { path: '/manager/activity', element: <SW><PR><ManagerActivityPage /></PR></SW>, loader: async () => managerLoaders.managerRouteLoader(queryClient) },
   { path: '/manager/courses', element: <SW><PR><ManagerCoursesPage /></PR></SW>, loader: async () => managerLoaders.managerRouteLoader(queryClient) },
