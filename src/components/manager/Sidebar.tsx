@@ -18,7 +18,6 @@ import {
   Description as ReportsIcon,
   People as UsersIcon,
   PersonAdd as PersonAddIcon,
-  Badge as RoleIcon,
   FileUpload as ImportIcon,
   History as ActivityIcon,
   MenuBook as CoursesIcon,
@@ -78,7 +77,6 @@ const buildNavSections = (unreadCount?: number): NavSection[] => [
     items: [
       { text: 'All Users', icon: <UsersIcon />, path: '/manager/users' },
       { text: 'Add / Invite Users', icon: <PersonAddIcon />, path: '/manager/invite-user' },
-      { text: 'Role Assignment', icon: <RoleIcon />, path: '/manager/roles' },
       { text: 'Bulk Import', icon: <ImportIcon />, path: '/manager/import' },
       { text: 'User Activity', icon: <ActivityIcon />, path: '/manager/activity' },
     ],
