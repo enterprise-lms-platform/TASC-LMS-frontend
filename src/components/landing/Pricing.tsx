@@ -44,8 +44,8 @@ const Pricing: React.FC = () => {
   const months = plan ? (monthsMap[plan.billing_cycle] || 6) : 6;
   const monthlyPrice = (price / months).toFixed(2);
 
-  const features = plan?.features && typeof plan.features === 'object' && Array.isArray((plan.features as { list?: string[] }).list)
-    ? (plan.features as { list: string[] }).list
+  const features = Array.isArray(plan?.features)
+    ? plan.features
     : [
         'Unlimited access to all courses',
         'Earn professional certificates',

@@ -149,6 +149,7 @@ export interface SubscriptionPlan {
   currency: string;
   billing_cycle: 'monthly' | 'quarterly' | 'yearly';
   features: string[];
+  duration_days: number;
   max_courses: number | null;
   max_users: number | null;
   trial_days: number;
@@ -164,6 +165,7 @@ export interface SubscriptionPlanCreate {
   currency: string;
   billing_cycle: 'monthly' | 'quarterly' | 'yearly';
   features?: string[];
+  duration_days: number;
   max_courses?: number | null;
   max_users?: number | null;
   trial_days?: number;
@@ -172,7 +174,7 @@ export interface SubscriptionPlanCreate {
 
 export const subscriptionApi = {
 
-  // List all subscription plans (TASC Admin sees all, others see active only)
+  // List subscription plans (TASC admins see all, others see active only)
   getAll: () =>
     apiClient.get<Subscription[]>(`${BASE_PATH}/subscriptions/`),
 
