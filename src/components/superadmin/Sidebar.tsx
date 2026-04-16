@@ -38,6 +38,7 @@ import {
   Chat as MessagesIcon,
   RateReview as ReviewsIcon,
   ContactMail as DemoRequestsIcon,
+  AttachMoney as PricingIcon,
 } from '@mui/icons-material';
 
 const DRAWER_WIDTH = 280;
@@ -92,15 +93,16 @@ const buildNavSections = (unreadCount?: number): NavSection[] => [
       { text: 'Assessments', icon: <AssessmentsIcon />, path: '/superadmin/assessments' },
     ],
   },
-  {
-    title: 'Financial',
-    items: [
-      { text: 'Payments', icon: <PaymentsIcon />, path: '/superadmin/payments' },
-      { text: 'Revenue Reports', icon: <RevenueIcon />, path: '/superadmin/revenue' },
-      { text: 'Invoices', icon: <InvoicesIcon />, path: '/superadmin/invoices' },
-      { text: 'Gateway Settings', icon: <GatewayIcon />, path: '/superadmin/gateway-settings' },
-    ],
-  },
+{
+  title: 'Financial',
+  items: [
+    { text: 'Payments', icon: <PaymentsIcon />, path: '/superadmin/payments' },
+    { text: 'Revenue Reports', icon: <RevenueIcon />, path: '/superadmin/revenue' },
+    { text: 'Invoices', icon: <InvoicesIcon />, path: '/superadmin/invoices' },
+    { text: 'Pricing Settings', icon: <PricingIcon />, path: '/superadmin/pricing' },
+    { text: 'Gateway Settings', icon: <GatewayIcon />, path: '/superadmin/gateway-settings' },
+  ],
+},
   {
     title: 'System',
     items: [

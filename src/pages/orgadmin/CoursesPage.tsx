@@ -61,7 +61,7 @@ const CoursesPage: React.FC = () => {
 
   const summaryStats = useMemo(() => {
     if (!courses.length) return [];
-    const published = courses.filter(c => c.is_published).length;
+    const published = courses.filter(c => c.status === 'published').length;
     const draft = courses.length - published;
     return [
       { label: 'Total Courses', value: courses.length, bgcolor: '#fff3e0', color: '#7c2d12' },
@@ -73,15 +73,15 @@ const CoursesPage: React.FC = () => {
 
   const filteredCourses = useMemo(() => {
     return courses.filter(c => {
-      if (statusFilter === 'published') return c.is_published;
-      if (statusFilter === 'draft') return !c.is_published;
+      if (statusFilter === 'published') return c.status === 'published';
+      if (statusFilter === 'draft') return c.status !== 'published';
       return true;
     });
   }, [courses, statusFilter]);
 
   const getEnrollmentCount = (courseId: number) => enrollments.filter(e => e.course.id === courseId).length;
 
-  const getCourseStatus = (course: CourseList) => (course.is_published ? 'Published' : 'Draft');
+  const getCourseStatus = (course: CourseList) => (course.status === 'published' ? 'Published' : 'Draft');
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>

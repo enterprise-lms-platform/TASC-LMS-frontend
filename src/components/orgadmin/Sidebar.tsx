@@ -12,10 +12,7 @@ import {
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
-  Analytics as AnalyticsIcon,
-  Assessment as ReportsIcon,
-  Notifications as NotificationsIcon,
-  Message as MessageIcon,
+  People as MembersIcon,
   People as PeopleIcon,
   PersonAdd as PersonAddIcon,
   Upload as UploadIcon,
@@ -27,6 +24,11 @@ import {
   CardMembership as CertificatesIcon,
   Settings as SettingsIcon,
   Person as ProfileIcon,
+  RateReview as TestimonialIcon,
+  Analytics as AnalyticsIcon,
+  Assessment as ReportsIcon,
+  Notifications as NotificationsIcon,
+  Message as MessageIcon,
 } from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -86,12 +88,13 @@ const NAV_SECTIONS: NavSection[] = [
   ],
 },
 {
-    title: 'Account',
-    items: [
-      { text: 'Settings', icon: <SettingsIcon />, path: '/org-admin/settings' },
-      { text: 'My Profile', icon: <ProfileIcon />, path: '/org-admin/profile' },
-    ],
-  },
+  title: 'Account',
+  items: [
+    { text: 'Leave a Testimonial', icon: <TestimonialIcon />, path: '/org-admin/testimonial' },
+    { text: 'Settings', icon: <SettingsIcon />, path: '/org-admin/settings' },
+    { text: 'My Profile', icon: <ProfileIcon />, path: '/org-admin/profile' },
+  ],
+},
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose = () => {} }) => {

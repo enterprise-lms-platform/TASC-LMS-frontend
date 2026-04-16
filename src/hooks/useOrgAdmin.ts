@@ -8,8 +8,9 @@ import { adminApi } from '../services/auth.services';
 import type { InviteUserRequest, Organization } from '../types/types';
 import type { ActivityResponse, ManagerBillingUsage } from '../services/organization.services';
 import type { CourseListParams } from '../services/catalogue.services';
-import type { EnrollmentListParams, CertificateListParams, SessionProgressListParams } from '../services/learning.services';
-import type { PaginatedResponse, Notification } from '../types/types';
+import type { EnrollmentParams, CertificateListParams, SessionProgressParams } from '../services/learning.services';
+import type { PaginatedResponse } from '../types/types';
+import type { Notification } from '../services/notifications.services';
 import { queryKeys } from './queryKeys';
 
 export const useOrgAdminMembers = (params?: ManagerMembersParams) =>
@@ -65,7 +66,7 @@ export const useOrgCourses = (params?: CourseListParams) =>
     queryFn: () => courseApi.getAll(params ?? {}).then((r) => r.data),
   });
 
-export const useOrgEnrollments = (params?: EnrollmentListParams) =>
+export const useOrgEnrollments = (params?: EnrollmentParams) =>
   useQuery({
     queryKey: queryKeys.orgAdmin.enrollments(params),
     queryFn: () => enrollmentApi.getAll(params ?? {}).then((r) => r.data),
@@ -86,7 +87,7 @@ export const useOrgNotifications = (params?: { page?: number; page_size?: number
 export const useMarkAllNotificationsRead = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => notificationApi.markAllRead(),
+    mutationFn: () => notificationApi.markAllAsRead(),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.orgAdmin.notifications({}) }),
   });
 };
@@ -99,7 +100,7 @@ export const useUpdateOrgSettings = () => {
   });
 };
 
-export const useOrgSessionProgress = (params?: SessionProgressListParams) =>
+export const useOrgSessionProgress = (params?: SessionProgressParams) =>
   useQuery({
     queryKey: ['org-admin', 'session-progress', params],
     queryFn: () => sessionProgressApi.getAll(params ?? {}).then((r) => r.data),
@@ -108,7 +109,7 @@ export const useOrgSessionProgress = (params?: SessionProgressListParams) =>
 export const useEnrollMember = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ user, course }: { user: number; course: number }) => enrollmentApi.create({ user, course }),
+    mutationFn: ({ user, course }: { user: number; course: number }) => enrollmentApi.create({ course } as any),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.orgAdmin.enrollments({}) }),
   });
 };
@@ -120,7 +121,7 @@ export const useBulkEnrollMembers = () => {
       const results = { enrolled: 0, failed: 0 };
 for (const memberId of memberIds) {
       try {
-        await enrollmentApi.create({ user: memberId, course: courseId });
+        await enrollmentApi.create({ course: courseId } as any);
         results.enrolled++;
       } catch {
         results.failed++;

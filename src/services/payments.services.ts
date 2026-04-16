@@ -82,18 +82,22 @@ export interface TransactionParams {
 
 export const transactionApi = {
 
-  //  List all transactions (finance team sees all, users see their own)
+  // List all transactions (finance team sees all, users see their own)
   getAll: (params?: TransactionParams) =>
     apiClient.get<Transaction[]>(`${BASE_PATH}/transactions/`, { params }),
 
 
-  //  Get transaction details by ID
+  // Get transaction details by ID
   getById: (id: number) =>
     apiClient.get<Transaction>(`${BASE_PATH}/transactions/${id}/`),
 
-  //  Export transactions as CSV blob
+  // Export transactions as CSV blob
   exportCSV: (params?: { status?: string }) =>
     apiClient.get<Blob>(`${BASE_PATH}/transactions/export-csv/`, { params, responseType: 'blob' }),
+
+  // Retry a failed payment
+  retry: (id: number) =>
+    apiClient.post<{ message: string; transaction_id: string; status: string }>(`${BASE_PATH}/transactions/${id}/retry/`),
 };
 
 // PAYMENT METHODS
@@ -137,19 +141,64 @@ export const paymentMethodApi = {
 
 // SUBSCRIPTIONS (Plans)
 
+export interface SubscriptionPlan {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  billing_cycle: 'monthly' | 'quarterly' | 'yearly';
+  features: string[];
+  max_courses: number | null;
+  max_users: number | null;
+  trial_days: number;
+  status: 'active' | 'inactive' | 'archived';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubscriptionPlanCreate {
+  name: string;
+  description?: string;
+  price: number;
+  currency: string;
+  billing_cycle: 'monthly' | 'quarterly' | 'yearly';
+  features?: string[];
+  max_courses?: number | null;
+  max_users?: number | null;
+  trial_days?: number;
+  status?: 'active' | 'inactive' | 'archived';
+}
+
 export const subscriptionApi = {
 
-  //  List all active subscription plans
+  // List all subscription plans (TASC Admin sees all, others see active only)
   getAll: () =>
     apiClient.get<Subscription[]>(`${BASE_PATH}/subscriptions/`),
 
-  //  Get subscription plan details by ID
+  // Get subscription plan details by ID
   getById: (id: number) =>
     apiClient.get<Subscription>(`${BASE_PATH}/subscriptions/${id}/`),
 
-  //  Get the current user's subscription status
+  // Get the current user's subscription status
   getMyStatus: () =>
     apiClient.get<MySubscriptionStatus>(`${BASE_PATH}/subscription/me/`),
+
+  // Create a new subscription plan (TASC Admin only)
+  create: (data: SubscriptionPlanCreate) =>
+    apiClient.post<Subscription>(`${BASE_PATH}/subscriptions/`, data),
+
+  // Update a subscription plan (TASC Admin only)
+  update: (id: number, data: Partial<SubscriptionPlanCreate>) =>
+    apiClient.put<Subscription>(`${BASE_PATH}/subscriptions/${id}/`, data),
+
+  // Partially update a subscription plan (TASC Admin only)
+  partialUpdate: (id: number, data: Partial<SubscriptionPlanCreate>) =>
+    apiClient.patch<Subscription>(`${BASE_PATH}/subscriptions/${id}/`, data),
+
+  // Delete a subscription plan (TASC Admin only)
+  delete: (id: number) =>
+    apiClient.delete(`${BASE_PATH}/subscriptions/${id}/`),
 };
 
 // USER SUBSCRIPTIONS (Enrollments in subscription plans)

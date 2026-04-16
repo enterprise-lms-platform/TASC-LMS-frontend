@@ -117,8 +117,10 @@ const MessagingPanel: React.FC<MessagingPanelProps> = ({ height = 'calc(100vh - 
     const orgUserResults: UserSearchResult[] = orgMembers.map(m => ({
       id: m.id,
       name: m.name,
+      first_name: m.name.split(' ')[0] || '',
+      last_name: m.name.split(' ').slice(1).join(' ') || '',
       email: m.email,
-      avatar: null,
+      role: 'learner',
     }));
     return [...(searchResults ?? []), ...orgUserResults];
   }, [searchResults, orgMembersData]);

@@ -31,6 +31,20 @@ const LearnerProfilePage: React.FC = () => {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
+  const profileFields = [
+    { key: 'first_name', label: 'First name', value: user?.first_name },
+    { key: 'last_name', label: 'Last name', value: user?.last_name },
+    { key: 'phone_number', label: 'Phone', value: (user as any)?.phone_number },
+    { key: 'bio', label: 'Bio', value: (user as any)?.bio },
+    { key: 'country', label: 'Country', value: (user as any)?.country },
+    { key: 'timezone', label: 'Timezone', value: (user as any)?.timezone },
+    { key: 'avatar', label: 'Profile photo', value: user?.avatar },
+  ];
+  
+  const completedFields = profileFields.filter(f => f.value && String(f.value).trim()).length;
+  const completionPercent = Math.round((completedFields / profileFields.length) * 100);
+  const missingFields = profileFields.filter(f => !f.value || !String(f.value).trim()).map(f => f.label);
+
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -70,10 +84,39 @@ const LearnerProfilePage: React.FC = () => {
       <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
       <TopBar onMobileMenuToggle={() => setMobileOpen(!mobileOpen)} />
 
-      <Box component="main" sx={{ flexGrow: 1, p: 0, width: { md: `calc(100% - ${DRAWER_WIDTH}px)` }, overflowX: 'hidden', minWidth: 0, maxWidth: '100vw' }}>
-        <Toolbar />
+<Box component="main" sx={{ flexGrow: 1, p: 0, width: { md: `calc(100% - ${DRAWER_WIDTH}px)` }, overflowX: 'hidden', minWidth: 0, maxWidth: '100vw' }}>
+  <Toolbar />
 
-        {/* Cover Image */}
+  {/* Profile Completion Banner */}
+  {completionPercent < 100 && (
+    <Paper elevation={0} sx={{ mx: 3, mt: 2, p: 2, borderRadius: 2, bgcolor: '#fff7ed', border: '1px solid #fed7aa' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+        <Box sx={{ flex: 1, minWidth: 200 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+            <Typography variant="body2" fontWeight={600} color="#9a3412">
+              Profile Completion: {completionPercent}%
+            </Typography>
+            <Box sx={{ flex: 1, height: 6, bgcolor: '#fed7aa', borderRadius: 3, overflow: 'hidden' }}>
+              <Box sx={{ height: '100%', width: `${completionPercent}%`, bgcolor: completionPercent >= 80 ? '#10b981' : '#f97316', borderRadius: 3, transition: 'width 0.3s' }} />
+            </Box>
+          </Box>
+          <Typography variant="caption" color="#9a3412">
+            Complete your profile to get the most out of TASC LMS. Missing: {missingFields.slice(0, 3).join(', ')}{missingFields.length > 3 ? '...' : ''}
+          </Typography>
+        </Box>
+        <Button 
+          size="small" 
+          variant="contained" 
+          onClick={() => setActiveTab(1)}
+          sx={{ textTransform: 'none', bgcolor: '#f97316', '&:hover': { bgcolor: '#ea580c' } }}
+        >
+          Complete Profile
+        </Button>
+      </Box>
+    </Paper>
+  )}
+
+  {/* Cover Image */}
         <Box
           sx={{
             height: 200,

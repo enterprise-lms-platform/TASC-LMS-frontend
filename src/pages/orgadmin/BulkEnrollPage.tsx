@@ -23,7 +23,8 @@ import { Search as SearchIcon, GroupAdd as BulkEnrollIcon } from '@mui/icons-mat
 import Sidebar, { DRAWER_WIDTH } from '../../components/orgadmin/Sidebar';
 import TopBar from '../../components/orgadmin/TopBar';
 import { useOrgAdminMembers, useOrgCourses, useBulkEnrollMembers } from '../../hooks/useOrgAdmin';
-import type { CourseList, ManagerMemberItem } from '../../types/types';
+import type { CourseList } from '../../types/types';
+import type { ManagerMemberItem } from '../../services/organization.services';
 
 const cardSx = {
   borderRadius: '1rem',

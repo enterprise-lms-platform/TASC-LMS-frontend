@@ -53,12 +53,14 @@ import {
   Info as InfoIcon,
   Description as DescriptionIcon,
   CreditCard as CardIcon,
+  CreditCard as CreditCardIcon,
   AccountBalance as BankIcon,
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
 import { transactionApi } from '../../services/payments.services';
 import { apiClient } from '../../utils/config';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Transaction } from '../../types/types';
 
 const PAGE_SIZE = 10;
@@ -73,7 +75,7 @@ const PaymentHistoryPage: React.FC = () => {
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' as 'success' | 'warning' | 'error' });
 
   // Fetch transactions from API
-  const { data: txnData, isLoading } = useQuery({
+  const { data: txnData, isLoading, refetch } = useQuery({
     queryKey: ['learnerTransactions', statusFilter, page],
     queryFn: () => transactionApi.getAll({
       ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
@@ -83,6 +85,18 @@ const PaymentHistoryPage: React.FC = () => {
       if (Array.isArray(d)) return { results: d, count: d.length };
       return d as { results: Transaction[]; count: number };
     }),
+  });
+
+  const retryMutation = useMutation({
+    mutationFn: (id: number) => transactionApi.retry(id),
+    onSuccess: (data) => {
+      setToast({ open: true, message: 'Payment reset for retry. Please complete payment.', severity: 'success' });
+      setDetailModalOpen(false);
+      refetch();
+    },
+    onError: () => {
+      setToast({ open: true, message: 'Failed to retry payment. Please try again.', severity: 'error' });
+    },
   });
 
   const transactions = txnData?.results ?? (Array.isArray(txnData) ? txnData as Transaction[] : []);
@@ -415,12 +429,28 @@ const PaymentHistoryPage: React.FC = () => {
               </Box>
             </Box>
           )}
-        </DialogContent>
-        <DialogActions sx={{ p: 2, borderTop: '1px solid #e4e4e7', flexDirection: { xs: 'column', sm: 'row' }, gap: 1 }}>
-          <Button variant="outlined" onClick={() => setDetailModalOpen(false)} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}>Close</Button>
-          <Button variant="outlined" startIcon={<EmailIcon />} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}>Email Receipt</Button>
-          <Button variant="contained" startIcon={<DownloadIcon />} onClick={handleDownloadReceipt} sx={{ bgcolor: '#ffa424', textTransform: 'none', '&:hover': { bgcolor: '#f97316' }, width: { xs: '100%', sm: 'auto' } }}>Download Receipt</Button>
-        </DialogActions>
+</DialogContent>
+  <DialogActions sx={{ p: 2, borderTop: '1px solid #e4e4e7', flexDirection: { xs: 'column', sm: 'row' }, gap: 1 }}>
+    <Button variant="outlined" onClick={() => setDetailModalOpen(false)} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}>Close</Button>
+    {selectedTransaction?.status === 'failed' && (
+      <Button 
+        variant="contained" 
+        color="warning"
+        startIcon={retryMutation.isPending ? undefined : <CreditCardIcon />}
+        onClick={() => selectedTransaction && retryMutation.mutate(selectedTransaction.id)}
+        disabled={retryMutation.isPending}
+        sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+      >
+        {retryMutation.isPending ? 'Retrying...' : 'Retry Payment'}
+      </Button>
+    )}
+    {selectedTransaction?.status !== 'failed' && (
+      <>
+        <Button variant="outlined" startIcon={<EmailIcon />} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}>Email Receipt</Button>
+        <Button variant="contained" startIcon={<DownloadIcon />} onClick={handleDownloadReceipt} sx={{ bgcolor: '#ffa424', textTransform: 'none', '&:hover': { bgcolor: '#f97316' }, width: { xs: '100%', sm: 'auto' } }}>Download Receipt</Button>
+      </>
+    )}
+  </DialogActions>
       </Dialog>
 
       {/* Toast */}

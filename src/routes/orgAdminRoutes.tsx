@@ -36,6 +36,7 @@ const ProgressPage = lazy(() => import('../pages/orgadmin/ProgressPage'));
 const CertificatesPage = lazy(() => import('../pages/orgadmin/CertificatesPage'));
 const SettingsPage = lazy(() => import('../pages/orgadmin/SettingsPage'));
 const ProfilePage = lazy(() => import('../pages/orgadmin/ProfilePage'));
+const LeaveTestimonialPage = lazy(() => import('../pages/orgadmin/LeaveTestimonialPage'));
 
 export const orgAdminRoutes = (_queryClient: QueryClient): RouteObject[] => [
   { path: '/org-admin', element: <SW><PR><OrgAdminDashboardPage /></PR></SW> },
@@ -52,6 +53,7 @@ export const orgAdminRoutes = (_queryClient: QueryClient): RouteObject[] => [
   { path: '/org-admin/bulk-enroll', element: <SW><PR><BulkEnrollPage /></PR></SW> },
   { path: '/org-admin/progress', element: <SW><PR><ProgressPage /></PR></SW> },
   { path: '/org-admin/certificates', element: <SW><PR><CertificatesPage /></PR></SW> },
+  { path: '/org-admin/testimonial', element: <SW><PR><LeaveTestimonialPage /></PR></SW> },
   { path: '/org-admin/settings', element: <SW><PR><SettingsPage /></PR></SW> },
   { path: '/org-admin/profile', element: <SW><PR><ProfilePage /></PR></SW> },
 ];

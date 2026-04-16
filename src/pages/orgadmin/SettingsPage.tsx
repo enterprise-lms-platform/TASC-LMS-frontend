@@ -91,8 +91,8 @@ const SettingsPage: React.FC = () => {
                   onChange={(e) => setOrgName(e.target.value)}
                   fullWidth
                 />
-                <TextField label="Email" value={orgSettings?.email ?? ''} fullWidth disabled />
-                <TextField label="Subdomain" value={orgSettings?.subdomain ?? ''} fullWidth disabled helperText="Contact support to change subdomain" />
+                <TextField label="Email" value={orgSettings?.contact_email ?? ''} fullWidth disabled />
+                <TextField label="Subdomain" value={orgSettings?.slug ?? ''} fullWidth disabled helperText="Contact support to change subdomain" />
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <Button
                     variant="contained"

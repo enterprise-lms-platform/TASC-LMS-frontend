@@ -5,6 +5,7 @@ import TopBar from '../../components/orgadmin/TopBar';
 import WelcomeBanner from '../../components/orgadmin/WelcomeBanner';
 import KPIGrid from '../../components/orgadmin/KPIGrid';
 import QuickActions from '../../components/orgadmin/QuickActions';
+import SeatUsageCard from '../../components/orgadmin/SeatUsageCard';
 import RecentMembersTable from '../../components/orgadmin/RecentMembersTable';
 import RecentActivity from '../../components/orgadmin/RecentActivity';
 import TopCourses from '../../components/orgadmin/TopCourses';
@@ -32,11 +33,12 @@ const OrgAdminDashboardPage: React.FC = () => {
         <Toolbar sx={{ minHeight: '72px !important' }} />
 
         <Box sx={{ flex: 1, p: { xs: 2, md: 3 }, overflowX: 'hidden' }}>
-          <WelcomeBanner />
-          <KPIGrid />
-          <QuickActions />
+<WelcomeBanner />
+        <KPIGrid />
+        <QuickActions />
+        <SeatUsageCard />
 
-          <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 3 }}>
+        <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 3 }}>
             <Grid size={{ xs: 12, md: 7, lg: 8 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <RecentMembersTable />

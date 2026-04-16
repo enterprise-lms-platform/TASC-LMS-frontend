@@ -333,7 +333,28 @@ export const analyticsApi = {
 
   getRevenueTrends: (months: number = 6) =>
     apiClient.get<RevenueTrends>(`/api/v1/payments/analytics/revenue/`, { params: { months } }),
+    
+  getAtRiskLearners: () =>
+    apiClient.get<AtRiskLearnersResponse>(`${BASE_PATH}/analytics/at-risk-learners/`),
 };
+
+export interface AtRiskLearner {
+  id: number;
+  user_id: number;
+  user_name: string;
+  user_email: string;
+  course_id: number;
+  course_title: string;
+  progress_percentage: number;
+  last_accessed_at: string | null;
+  days_inactive: number | null;
+  risk_level: 'high' | 'medium';
+}
+
+export interface AtRiskLearnersResponse {
+  count: number;
+  results: AtRiskLearner[];
+}
 
 // QUIZ SUBMISSIONS
 
@@ -754,5 +775,91 @@ export const useDeleteWorkshop = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workshops'] });
     },
+  });
+};
+
+export interface WorkshopAttendance {
+  id: number;
+  workshop: number;
+  user: number;
+  user_name: string;
+  user_email: string;
+  status: 'present' | 'absent' | 'late';
+  grade: number | null;
+  notes: string;
+  marked_at: string;
+  updated_at: string;
+}
+
+export interface WorkshopAttendanceParams {
+  workshop?: number;
+  user?: number;
+}
+
+export const attendanceApi = {
+  getAll: (params?: WorkshopAttendanceParams) =>
+    apiClient.get<PaginatedResponse<WorkshopAttendance>>(`${BASE_PATH}/workshop-attendance/`, { params }),
+  
+  getByWorkshop: (workshopId: number) =>
+    attendanceApi.getAll({ workshop: workshopId }),
+  
+  create: (data: { workshop: number; user: number; status: string; grade?: number; notes?: string }) =>
+    apiClient.post<WorkshopAttendance>(`${BASE_PATH}/workshop-attendance/`, data),
+  
+  update: (id: number, data: { status?: string; grade?: number; notes?: string }) =>
+    apiClient.patch<WorkshopAttendance>(`${BASE_PATH}/workshop-attendance/${id}/`, data),
+  
+  delete: (id: number) =>
+    apiClient.delete(`${BASE_PATH}/workshop-attendance/${id}/`),
+};
+
+export const useWorkshopAttendance = (workshopId: number) => {
+  return useQuery({
+    queryKey: ['workshop-attendance', workshopId],
+    queryFn: () => attendanceApi.getByWorkshop(workshopId).then(res => res.data.results),
+    enabled: !!workshopId,
+  });
+};
+
+export const useUpdateAttendance = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: { status?: string; grade?: number; notes?: string } }) =>
+      attendanceApi.update(id, data).then(res => res.data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['workshop-attendance'] });
+    },
+  });
+};
+
+export const useCreateAttendance = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { workshop: number; user: number; status: string; grade?: number; notes?: string }) =>
+      attendanceApi.create(data).then(res => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workshop-attendance'] });
+    },
+  });
+};
+
+export interface UserSearchResult {
+  id: number;
+  email: string;
+  name: string;
+  initials: string;
+}
+
+export const userSearchApi = {
+  search: (search: string, workshopId?: number) =>
+    apiClient.get<{ results: UserSearchResult[] }>(`${BASE_PATH}/workshops/search-participants/`, {
+      params: { search, workshop: workshopId },
+    }),
+};
+
+export const useUserSearch = () => {
+  return useMutation({
+    mutationFn: ({ search, workshopId }: { search: string; workshopId?: number }) =>
+      userSearchApi.search(search, workshopId).then(res => res.data.results),
   });
 };

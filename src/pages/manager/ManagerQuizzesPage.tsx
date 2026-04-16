@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   CssBaseline,
@@ -8,10 +9,6 @@ import {
   Grid,
   TextField,
   InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -21,6 +18,7 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import {
   Assignment as QuizIcon,
@@ -34,6 +32,7 @@ import {
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
+import { useAssessmentStats, submissionApi } from '../../services/learning.services';
 
 // ── Shared styles ──
 const cardSx = {
@@ -54,20 +53,7 @@ const headerSx = {
   gap: 2,
 };
 
-// TODO: Wire to quizzesApi.getKPIs() for real data
-const kpis = [
-  { label: 'Total Quizzes', value: '—', icon: <TotalQuizzesIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-  { label: 'Avg Pass Rate', value: '—', icon: <PassRateIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-  { label: 'Total Attempts', value: '—', icon: <AttemptsIcon />, bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f', subColor: '#1e40af' },
-  { label: 'Avg Score', value: '—', icon: <ScoreIcon />, bgcolor: '#fef9c3', iconBg: '#facc15', color: '#713f12', subColor: '#854d0e' },
-];
-
-// TODO: Wire to quizzesApi.getAll() for real data
-const quizzes = [] as any[];
-
-// TODO: Wire to courseApi.getAll() for real data
-const courses = ['All Courses']; // ── Utility function to determine pass rate color ──
-
+// ── Utility function to determine pass rate color ──
 const getPassRateColor = (rate: number) => {
   if (rate > 70) return '#16a34a';
   if (rate >= 50) return '#f59e0b';
@@ -78,14 +64,42 @@ const ManagerQuizzesPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [courseFilter, setCourseFilter] = useState('All Courses');
-  const [statusFilter, setStatusFilter] = useState('All');
 
-  const filteredQuizzes = quizzes.filter((q) => {
-    const matchSearch = q.title.toLowerCase().includes(search.toLowerCase()) || q.course.toLowerCase().includes(search.toLowerCase());
-    const matchCourse = courseFilter === 'All Courses' || q.course === courseFilter;
-    const matchStatus = statusFilter === 'All' || q.status === statusFilter;
-    return matchSearch && matchCourse && matchStatus;
+  // Fetch assessment stats (includes quiz data)
+  const { data: stats, isLoading: statsLoading } = useAssessmentStats();
+
+  // Fetch quiz submissions using the API
+  const { data: submissionsData, isLoading: submissionsLoading } = useQuery({
+    queryKey: ['quiz-submissions', 'all'],
+    queryFn: () => submissionApi.getAll({ page_size: 100 }).then(r => r.data),
+    select: (data) => Array.isArray(data) ? data : (data as any).results || [],
   });
+
+  const submissions = submissionsData || [];
+
+  const courses = []; // Could be wired to course list if needed
+
+  const statsData = stats || {
+    total_quizzes: 0,
+    average_quiz_score: 0,
+    quiz_pass_rate: 0,
+    total_assignments: 0,
+  };
+
+  const kpis = [
+    { label: 'Total Quizzes', value: statsLoading ? '—' : (statsData.total_quizzes || '—'), icon: <TotalQuizzesIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+    { label: 'Avg Pass Rate', value: statsLoading ? '—' : (statsData.quiz_pass_rate ? `${statsData.quiz_pass_rate}%` : '—'), icon: <PassRateIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+    { label: 'Total Attempts', value: statsLoading ? '—' : (statsData.total_quizzes || '—'), icon: <AttemptsIcon />, bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f', subColor: '#1e40af' },
+    { label: 'Avg Score', value: statsLoading ? '—' : (statsData.average_quiz_score ? `${statsData.average_quiz_score}%` : '—'), icon: <ScoreIcon />, bgcolor: '#fef9c3', iconBg: '#facc15', color: '#713f12', subColor: '#854d0e' },
+  ];
+
+  const filteredQuizzes = submissions.filter((q) => {
+    const quizTitle = q.quiz_title || q.quiz?.title || 'Untitled Quiz';
+    const matchSearch = quizTitle.toLowerCase().includes(search.toLowerCase());
+    return matchSearch;
+  });
+
+  const isLoading = statsLoading || submissionsLoading;
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -163,120 +177,94 @@ const ManagerQuizzesPage: React.FC = () => {
           {/* Quizzes Table */}
           <Paper elevation={0} sx={cardSx}>
             <Box sx={headerSx}>
-              <Typography fontWeight={700}>All Quizzes</Typography>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-                <TextField
-                  size="small"
-                  placeholder="Search quizzes..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon sx={{ fontSize: 20, color: 'text.disabled' }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{ minWidth: 220, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
-                />
-                <FormControl size="small" sx={{ minWidth: 180 }}>
-                  <InputLabel>Course</InputLabel>
-                  <Select value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)} label="Course" sx={{ borderRadius: '10px' }}>
-                    {courses.map((c) => (
-                      <MenuItem key={c} value={c}>{c}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel>Status</InputLabel>
-                  <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} label="Status" sx={{ borderRadius: '10px' }}>
-                    <MenuItem value="All">All</MenuItem>
-                    <MenuItem value="Active">Active</MenuItem>
-                    <MenuItem value="Draft">Draft</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
+              <Typography fontWeight={700}>All Quiz Submissions</Typography>
+              <TextField
+                size="small"
+                placeholder="Search quizzes..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ fontSize: 20, color: 'text.disabled' }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ minWidth: 220, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
+              />
             </Box>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ '& th': { fontWeight: 700, fontSize: '0.8rem', color: 'text.secondary', bgcolor: 'grey.50', borderBottom: 2, borderColor: 'divider' } }}>
-                    <TableCell>Quiz Title</TableCell>
-                    <TableCell>Course</TableCell>
-                    <TableCell align="center">Questions</TableCell>
-                    <TableCell align="center">Time Limit</TableCell>
-                    <TableCell align="center">Attempts</TableCell>
-                    <TableCell align="center">Pass Rate</TableCell>
-                    <TableCell align="center">Avg Score</TableCell>
-                    <TableCell align="center">Status</TableCell>
-                    <TableCell align="center">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredQuizzes.map((quiz) => (
-                    <TableRow key={quiz.id} sx={{ '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' }, '& td': { py: 1.5 } }}>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight={600}>{quiz.title}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" color="text.secondary">{quiz.course}</Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography variant="body2">{quiz.questions}</Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography variant="body2">{quiz.timeLimit}</Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography variant="body2" fontWeight={600}>{quiz.attempts.toLocaleString()}</Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography variant="body2" fontWeight={700} sx={{ color: getPassRateColor(quiz.passRate) }}>
-                          {quiz.passRate}%
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography variant="body2" fontWeight={600}>{quiz.avgScore}%</Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip
-                          label={quiz.status}
-                          size="small"
-                          sx={{
-                            fontWeight: 600,
-                            fontSize: '0.72rem',
-                            height: 24,
-                            bgcolor: quiz.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(156,163,175,0.15)',
-                            color: quiz.status === 'Active' ? '#10b981' : '#6b7280',
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
-                          <Tooltip title="View">
-                            <IconButton size="small" sx={{ color: '#3b82f6' }}>
-                              <ViewIcon sx={{ fontSize: 18 }} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Edit">
-                            <IconButton size="small" sx={{ color: '#ffa424' }}>
-                              <EditIcon sx={{ fontSize: 18 }} />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      </TableCell>
+            {isLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ '& th': { fontWeight: 700, fontSize: '0.8rem', color: 'text.secondary', bgcolor: 'grey.50', borderBottom: 2, borderColor: 'divider' } }}>
+                      <TableCell>Quiz</TableCell>
+                      <TableCell>Learner</TableCell>
+                      <TableCell>Course</TableCell>
+                      <TableCell align="center">Score</TableCell>
+                      <TableCell align="center">Pass/Fail</TableCell>
+                      <TableCell align="center">Submitted</TableCell>
                     </TableRow>
-                  ))}
-                  {filteredQuizzes.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
-                        <Typography variant="body2" color="text.secondary">No quizzes found matching your filters.</Typography>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {filteredQuizzes.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                          <Typography color="text.secondary">No quiz submissions found</Typography>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredQuizzes.map((submission) => (
+                        <TableRow key={submission.id} sx={{ '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' }, '& td': { py: 1.5 } }}>
+                          <TableCell>
+                            <Typography variant="body2" fontWeight={600}>
+                              {submission.quiz?.session?.title || submission.quiz_title || 'Untitled Quiz'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              {submission.enrollment?.user?.first_name} {submission.enrollment?.user?.last_name}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary">
+                              {submission.enrollment?.course?.title || '—'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Typography variant="body2" fontWeight={600}>
+                              {submission.score}%
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Chip
+                              label={submission.passed ? 'Passed' : 'Failed'}
+                              size="small"
+                              sx={{
+                                fontWeight: 600,
+                                fontSize: '0.72rem',
+                                height: 24,
+                                bgcolor: submission.passed ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                color: submission.passed ? '#10b981' : '#ef4444',
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell align="center">
+                            <Typography variant="body2" color="text.secondary">
+                              {submission.submitted_at ? new Date(submission.submitted_at).toLocaleDateString() : '—'}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
           </Paper>
         </Box>
       </Box>
