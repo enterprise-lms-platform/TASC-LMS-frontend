@@ -1004,7 +1004,8 @@ export interface Subscription {
   price: string;
   currency: string;
   billing_cycle: BillingCycle;
-  features?: Record<string, unknown>;
+  features?: string[];
+  duration_days: number;
   max_courses?: number | null;
   max_users?: number | null;
   trial_days: number;

@@ -1,87 +1,117 @@
 import React, { useState } from 'react';
 import {
+  Alert,
   Box,
-  Typography,
+  Button,
+  Chip,
+  CircularProgress,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
+  Snackbar,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  IconButton,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
-  Chip,
-  CircularProgress,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
+  Typography,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import ArchiveIcon from '@mui/icons-material/Archive';
+import EditIcon from '@mui/icons-material/Edit';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import { subscriptionApi, type SubscriptionPlan, type SubscriptionPlanCreate } from '../../services/payments.services';
+import type { PaginatedResponse } from '../../types/types';
+
+const DEFAULT_FORM_DATA: SubscriptionPlanCreate = {
+  name: '',
+  description: '',
+  price: 0,
+  currency: 'USD',
+  billing_cycle: 'monthly',
+  features: [],
+  max_courses: null,
+  max_users: null,
+  duration_days: 180,
+  trial_days: 0,
+  status: 'active',
+};
 
 const PricingSettingsPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [planToDelete, setPlanToDelete] = useState<SubscriptionPlan | null>(null);
-
-  const [formData, setFormData] = useState<SubscriptionPlanCreate>({
-    name: '',
-    description: '',
-    price: 0,
-    currency: 'USD',
-    billing_cycle: 'monthly',
-    features: [],
-    max_courses: null,
-    max_users: null,
-    trial_days: 0,
-    status: 'active',
-  });
-
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [planToArchive, setPlanToArchive] = useState<SubscriptionPlan | null>(null);
+  const [formData, setFormData] = useState<SubscriptionPlanCreate>(DEFAULT_FORM_DATA);
   const [featuresText, setFeaturesText] = useState('');
-
-  const { data: plans, isLoading } = useQuery({
-    queryKey: ['subscription-plans'],
-    queryFn: () => subscriptionApi.getAll().then((r) => r.data),
+  const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
   });
+
+  const { data: plans = [], isLoading } = useQuery<SubscriptionPlan[]>({
+    queryKey: ['subscription-plans'],
+    queryFn: () => subscriptionApi.getAll().then((r) => {
+      const data = r.data as unknown as SubscriptionPlan[] | PaginatedResponse<SubscriptionPlan>;
+      return Array.isArray(data) ? data : data.results ?? [];
+    }),
+  });
+
+  const showToast = (message: string, severity: 'success' | 'error') => {
+    setToast({ open: true, message, severity });
+  };
+
+  const extractErrorMessage = (error: any, fallback: string) => {
+    const data = error?.response?.data;
+    if (typeof data?.detail === 'string') return data.detail;
+    if (Array.isArray(data?.non_field_errors) && data.non_field_errors[0]) return data.non_field_errors[0];
+    return fallback;
+  };
 
   const createMutation = useMutation({
-    mutationFn: (data: SubscriptionPlanCreate) => subscriptionApi.create(data),
+    mutationFn: (data: SubscriptionPlanCreate) => subscriptionApi.create(data).then((r) => r.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
       handleCloseDialog();
+      showToast('Subscription plan created.', 'success');
     },
+    onError: (error) => showToast(extractErrorMessage(error, 'Failed to create subscription plan.'), 'error'),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<SubscriptionPlanCreate> }) =>
-      subscriptionApi.update(id, data),
+      subscriptionApi.update(id, data).then((r) => r.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
       handleCloseDialog();
+      showToast('Subscription plan updated.', 'success');
     },
+    onError: (error) => showToast(extractErrorMessage(error, 'Failed to update subscription plan.'), 'error'),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => subscriptionApi.delete(id),
+  const archiveMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: 'inactive' | 'archived' }) =>
+      subscriptionApi.partialUpdate(id, { status }).then((r) => r.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
-      setDeleteDialogOpen(false);
-      setPlanToDelete(null);
+      setArchiveDialogOpen(false);
+      setPlanToArchive(null);
+      showToast('Subscription plan archived.', 'success');
     },
+    onError: (error) => showToast(extractErrorMessage(error, 'Failed to update plan status.'), 'error'),
   });
 
   const handleOpenDialog = (plan?: SubscriptionPlan) => {
@@ -96,24 +126,14 @@ const PricingSettingsPage: React.FC = () => {
         features: plan.features || [],
         max_courses: plan.max_courses,
         max_users: plan.max_users,
+        duration_days: plan.duration_days,
         trial_days: plan.trial_days,
         status: plan.status,
       });
       setFeaturesText((plan.features || []).join('\n'));
     } else {
       setEditingPlan(null);
-      setFormData({
-        name: '',
-        description: '',
-        price: 0,
-        currency: 'USD',
-        billing_cycle: 'monthly',
-        features: [],
-        max_courses: null,
-        max_users: null,
-        trial_days: 0,
-        status: 'active',
-      });
+      setFormData(DEFAULT_FORM_DATA);
       setFeaturesText('');
     }
     setDialogOpen(true);
@@ -122,43 +142,29 @@ const PricingSettingsPage: React.FC = () => {
   const handleCloseDialog = () => {
     setDialogOpen(false);
     setEditingPlan(null);
-    setFormData({
-      name: '',
-      description: '',
-      price: 0,
-      currency: 'USD',
-      billing_cycle: 'monthly',
-      features: [],
-      max_courses: null,
-      max_users: null,
-      trial_days: 0,
-      status: 'active',
-    });
+    setFormData(DEFAULT_FORM_DATA);
     setFeaturesText('');
   };
 
   const handleSave = () => {
-    const features = featuresText
-      .split('\n')
-      .map((f) => f.trim())
-      .filter((f) => f);
-
     const data: SubscriptionPlanCreate = {
       ...formData,
-      features,
+      features: featuresText
+        .split('\n')
+        .map((feature) => feature.trim())
+        .filter(Boolean),
     };
 
     if (editingPlan) {
       updateMutation.mutate({ id: editingPlan.id, data });
-    } else {
-      createMutation.mutate(data);
+      return;
     }
+    createMutation.mutate(data);
   };
 
-  const handleDelete = () => {
-    if (planToDelete) {
-      deleteMutation.mutate(planToDelete.id);
-    }
+  const handleArchive = () => {
+    if (!planToArchive) return;
+    archiveMutation.mutate({ id: planToArchive.id, status: 'archived' });
   };
 
   const getStatusColor = (status: string) => {
@@ -194,11 +200,7 @@ const PricingSettingsPage: React.FC = () => {
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
             Subscription Plans
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-          >
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
             Add Plan
           </Button>
         </Box>
@@ -215,13 +217,14 @@ const PricingSettingsPage: React.FC = () => {
                   <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Price</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Billing Cycle</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Duration</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Max Users</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {plans?.map((plan) => (
+                {plans.map((plan) => (
                   <TableRow key={plan.id} hover>
                     <TableCell>
                       <Typography fontWeight={600}>{plan.name}</Typography>
@@ -236,30 +239,25 @@ const PricingSettingsPage: React.FC = () => {
                       </Typography>
                     </TableCell>
                     <TableCell>{getBillingCycleLabel(plan.billing_cycle)}</TableCell>
+                    <TableCell>{plan.duration_days} days</TableCell>
                     <TableCell>{plan.max_users || 'Unlimited'}</TableCell>
                     <TableCell>
-                      <Chip
-                        label={plan.status}
-                        color={getStatusColor(plan.status) as any}
-                        size="small"
-                      />
+                      <Chip label={plan.status} color={getStatusColor(plan.status) as any} size="small" />
                     </TableCell>
                     <TableCell>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleOpenDialog(plan as any)}
-                      >
+                      <IconButton size="small" onClick={() => handleOpenDialog(plan)}>
                         <EditIcon fontSize="small" />
                       </IconButton>
                       <IconButton
                         size="small"
-                        color="error"
+                        color="warning"
+                        disabled={plan.status === 'archived'}
                         onClick={() => {
-                          setPlanToDelete(plan as any);
-                          setDeleteDialogOpen(true);
+                          setPlanToArchive(plan);
+                          setArchiveDialogOpen(true);
                         }}
                       >
-                        <DeleteIcon fontSize="small" />
+                        <ArchiveIcon fontSize="small" />
                       </IconButton>
                     </TableCell>
                   </TableRow>
@@ -269,11 +267,8 @@ const PricingSettingsPage: React.FC = () => {
           </TableContainer>
         )}
 
-        {/* Create/Edit Dialog */}
         <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-          <DialogTitle>
-            {editingPlan ? 'Edit Subscription Plan' : 'Create Subscription Plan'}
-          </DialogTitle>
+          <DialogTitle>{editingPlan ? 'Edit Subscription Plan' : 'Create Subscription Plan'}</DialogTitle>
           <DialogContent>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
               <TextField
@@ -312,6 +307,7 @@ const PricingSettingsPage: React.FC = () => {
                     <MenuItem value="USD">USD</MenuItem>
                     <MenuItem value="UGX">UGX</MenuItem>
                     <MenuItem value="KES">KES</MenuItem>
+                    <MenuItem value="TZS">TZS</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
@@ -322,7 +318,7 @@ const PricingSettingsPage: React.FC = () => {
                   <Select
                     value={formData.billing_cycle}
                     label="Billing Cycle"
-                    onChange={(e) => setFormData({ ...formData, billing_cycle: e.target.value as any })}
+                    onChange={(e) => setFormData({ ...formData, billing_cycle: e.target.value as SubscriptionPlanCreate['billing_cycle'] })}
                   >
                     <MenuItem value="monthly">Monthly</MenuItem>
                     <MenuItem value="quarterly">Quarterly</MenuItem>
@@ -334,7 +330,7 @@ const PricingSettingsPage: React.FC = () => {
                   <Select
                     value={formData.status}
                     label="Status"
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as SubscriptionPlanCreate['status'] })}
                   >
                     <MenuItem value="active">Active</MenuItem>
                     <MenuItem value="inactive">Inactive</MenuItem>
@@ -345,6 +341,14 @@ const PricingSettingsPage: React.FC = () => {
 
               <Box sx={{ display: 'flex', gap: 2 }}>
                 <TextField
+                  label="Duration Days"
+                  type="number"
+                  value={formData.duration_days}
+                  onChange={(e) => setFormData({ ...formData, duration_days: Number(e.target.value) })}
+                  fullWidth
+                  required
+                />
+                <TextField
                   label="Max Users (leave empty for unlimited)"
                   type="number"
                   value={formData.max_users || ''}
@@ -352,6 +356,21 @@ const PricingSettingsPage: React.FC = () => {
                     setFormData({
                       ...formData,
                       max_users: e.target.value ? Number(e.target.value) : null,
+                    })
+                  }
+                  fullWidth
+                />
+              </Box>
+
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField
+                  label="Max Courses (leave empty for unlimited)"
+                  type="number"
+                  value={formData.max_courses || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      max_courses: e.target.value ? Number(e.target.value) : null,
                     })
                   }
                   fullWidth
@@ -381,33 +400,47 @@ const PricingSettingsPage: React.FC = () => {
             <Button
               variant="contained"
               onClick={handleSave}
-              disabled={!formData.name || formData.price <= 0}
+              disabled={!formData.name || formData.price < 0 || formData.duration_days <= 0}
             >
               {editingPlan ? 'Update' : 'Create'}
             </Button>
           </DialogActions>
         </Dialog>
 
-        {/* Delete Confirmation Dialog */}
-        <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-          <DialogTitle>Delete Subscription Plan</DialogTitle>
+        <Dialog open={archiveDialogOpen} onClose={() => setArchiveDialogOpen(false)}>
+          <DialogTitle>Archive Subscription Plan</DialogTitle>
           <DialogContent>
             <Typography>
-              Are you sure you want to delete "{planToDelete?.name}"? This action cannot be undone.
+              Archive "{planToArchive?.name}" to retire it from learner and public plan lists.
             </Typography>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => setArchiveDialogOpen(false)}>Cancel</Button>
             <Button
               variant="contained"
-              color="error"
-              onClick={handleDelete}
-              disabled={deleteMutation.isPending}
+              color="warning"
+              onClick={handleArchive}
+              disabled={archiveMutation.isPending}
             >
-              Delete
+              Archive
             </Button>
           </DialogActions>
         </Dialog>
+
+        <Snackbar
+          open={toast.open}
+          autoHideDuration={4000}
+          onClose={() => setToast((current) => ({ ...current, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert
+            onClose={() => setToast((current) => ({ ...current, open: false }))}
+            severity={toast.severity}
+            variant="filled"
+          >
+            {toast.message}
+          </Alert>
+        </Snackbar>
       </Container>
     </SuperadminLayout>
   );
