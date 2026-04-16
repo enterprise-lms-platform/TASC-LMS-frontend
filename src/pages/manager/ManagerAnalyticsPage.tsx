@@ -96,7 +96,7 @@ const ManagerAnalyticsPage: React.FC = () => {
 
   const { data: enrollmentsData } = useQuery({
     queryKey: ['enrollments', 'analytics'],
-    queryFn: () => enrollmentApi.getAll().then(r => r.data),
+    queryFn: () => enrollmentApi.getAll({ page_size: 1000 } as any).then(r => r.data),
   });
 
   // New Analytics API Hooks
@@ -177,19 +177,6 @@ const ManagerAnalyticsPage: React.FC = () => {
     ];
   }, [stats, certStats]);
 
-  const weeklyEngagement = useMemo(() => {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const hoursPerDay = [2.5, 3.2, 2.8, 3.5, 2.1, 1.2, 0.8];
-    
-    return days.map((day, idx) => ({
-      day,
-      hours: Math.round(hoursPerDay[idx] * filteredEnrollments.length / 10),
-    }));
-  }, [filteredEnrollments]);
-
-  const maxHours = useMemo(() => {
-    return Math.max(...weeklyEngagement.map(d => d.hours), 1);
-  }, [weeklyEngagement]);
 
   const isLoading = coursesLoading;
 
@@ -446,31 +433,12 @@ const ManagerAnalyticsPage: React.FC = () => {
                 <Box sx={headerSx}>
                   <Typography fontWeight={700}>Weekly User Engagement</Typography>
                 </Box>
-                <Box sx={{ p: 3, display: 'flex', alignItems: 'flex-end', gap: 2, height: 220 }}>
-                  {weeklyEngagement.map((d) => (
-                    <Box key={d.day} sx={{ flex: 1, textAlign: 'center' }}>
-                      <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-                        {d.hours}h
-                      </Typography>
-                      <Box
-                        sx={{
-                          height: `${Math.max((d.hours / maxHours) * 150, 4)}px`,
-                          background: 'linear-gradient(180deg, #3b82f6, #93c5fd)',
-                          borderRadius: '6px 6px 0 0',
-                          transition: 'height 0.3s, opacity 0.2s',
-                          opacity: 0.85,
-                          '&:hover': { opacity: 1 },
-                        }}
-                      />
-                      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                        {d.day}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-                <Box sx={{ p: 2, px: 3, bgcolor: 'grey.50', borderTop: 1, borderColor: 'divider' }}>
+                <Box sx={{ p: 4, textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    Hourly engagement data is not yet available.
+                  </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Engagement hours are estimates based on enrollment activity.
+                    This metric requires session-level time tracking on the backend.
                   </Typography>
                 </Box>
               </Paper>

@@ -32,7 +32,7 @@ import {
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
-import { useAssessmentStats, submissionApi } from '../../services/learning.services';
+import { useAssessmentStats, quizSubmissionApi } from '../../services/learning.services';
 
 // ── Shared styles ──
 const cardSx = {
@@ -68,10 +68,10 @@ const ManagerQuizzesPage: React.FC = () => {
   // Fetch assessment stats (includes quiz data)
   const { data: stats, isLoading: statsLoading } = useAssessmentStats();
 
-  // Fetch quiz submissions using the API
+  // Fetch quiz submissions using the correct quiz-submissions API
   const { data: submissionsData, isLoading: submissionsLoading } = useQuery({
     queryKey: ['quiz-submissions', 'all'],
-    queryFn: () => submissionApi.getAll({ page_size: 100 }).then(r => r.data),
+    queryFn: () => quizSubmissionApi.getAll({ page_size: 100 }).then(r => r.data),
     select: (data) => Array.isArray(data) ? data : (data as any).results || [],
   });
 
@@ -89,7 +89,7 @@ const ManagerQuizzesPage: React.FC = () => {
   const kpis = [
     { label: 'Total Quizzes', value: statsLoading ? '—' : (statsData.total_quizzes || '—'), icon: <TotalQuizzesIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
     { label: 'Avg Pass Rate', value: statsLoading ? '—' : (statsData.quiz_pass_rate ? `${statsData.quiz_pass_rate}%` : '—'), icon: <PassRateIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-    { label: 'Total Attempts', value: statsLoading ? '—' : (statsData.total_quizzes || '—'), icon: <AttemptsIcon />, bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f', subColor: '#1e40af' },
+    { label: 'Total Attempts', value: submissionsLoading ? '—' : submissions.length.toString(), icon: <AttemptsIcon />, bgcolor: '#eff6ff', iconBg: '#3b82f6', color: '#1e3a5f', subColor: '#1e40af' },
     { label: 'Avg Score', value: statsLoading ? '—' : (statsData.average_quiz_score ? `${statsData.average_quiz_score}%` : '—'), icon: <ScoreIcon />, bgcolor: '#fef9c3', iconBg: '#facc15', color: '#713f12', subColor: '#854d0e' },
   ];
 
