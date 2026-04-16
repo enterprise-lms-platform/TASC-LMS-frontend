@@ -10,7 +10,8 @@ export * from '../types/types';
 // Services
 export * from './auth.services';
 export * from './catalogue.services';
-export * from './learning.services';
+export { enrollmentApi, sessionProgressApi, certificateApi, discussionApi, discussionReplyApi, submissionApi, quizSubmissionApi, gradeStatisticsApi, managerGradesApi, savedCourseApi, statsApi, workshopApi, attendanceApi, analyticsApi, managerEnrollmentApi, managerSessionProgressApi, managerCertificateApi, useEnrollmentTrends, useLearningStats, useTopCoursePerformance, useCoursesByCategory, useRevenueTrends, useSavedCourses, useToggleSavedCourse, useCourseStats, useCertificateStats, useAssessmentStats, useInvoiceStats, useRevenueStats, useInstructorStats, useWorkshops, useCreateWorkshop, useUpdateWorkshop, useDeleteWorkshop, useWorkshopAttendance, useUpdateAttendance, useCreateAttendance, useUserSearch } from './learning.services';
+export type { EnrollmentParams, SessionProgressParams, CertificateListParams, SubmissionParams, WorkshopItem, WorkshopAttendance, QuizSubmission } from './learning.services';
 export * from './payments.services';
 export * from './public.services';
 export * from './upload.services';

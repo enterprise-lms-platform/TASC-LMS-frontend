@@ -28,6 +28,7 @@ import {
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
   InsertDriveFile as FileIcon,
+  Download as DownloadIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/orgadmin/Sidebar';
@@ -97,6 +98,18 @@ const ImportMembersPage: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleDownloadTemplate = () => {
+    const blob = new Blob([SAMPLE_CSV], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'member_import_template.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
       <CssBaseline />
@@ -140,14 +153,14 @@ const ImportMembersPage: React.FC = () => {
             Upload a CSV file to add multiple learners to your organization at once. All imported users will be added as learners.
           </Typography>
 
-          {/* CSV format reference */}
-          <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-              CSV Format
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-              Your CSV file must include these columns: <strong>email</strong>, <strong>first_name</strong>, <strong>last_name</strong>
-            </Typography>
+{/* CSV format reference */}
+  <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+<Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+  CSV Format
+</Typography>
+    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+      Your CSV file must include these columns: <strong>email</strong>, <strong>first_name</strong>, <strong>last_name</strong>
+    </Typography>
             <Box
               component="pre"
               sx={{
@@ -216,33 +229,49 @@ const ImportMembersPage: React.FC = () => {
               )}
             </Box>
 
-            <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-              <Button
-                variant="contained"
-                onClick={handleUpload}
-                disabled={!selectedFile || isUploading}
-                startIcon={isUploading ? <CircularProgress size={18} sx={{ color: 'white' }} /> : <UploadIcon />}
-                sx={{
-                  flex: 1,
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  py: 1.5,
-                  '&:hover': { bgcolor: 'primary.dark' },
-                }}
-              >
-                {isUploading ? 'Importing...' : 'Import Members'}
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={handleReset}
-                disabled={isUploading}
-                sx={{ flex: 1, textTransform: 'none', fontWeight: 600, py: 1.5 }}
-              >
-                Reset
-              </Button>
-            </Box>
+<Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+  <Button
+    variant="contained"
+    color="secondary"
+    onClick={handleDownloadTemplate}
+    startIcon={<DownloadIcon />}
+    sx={{
+      flex: 1,
+      textTransform: 'none',
+      fontWeight: 600,
+      py: 1.5,
+      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+      '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.2)' },
+    }}
+  >
+    Download Template
+  </Button>
+  <Button
+    variant="contained"
+    onClick={handleUpload}
+    disabled={!selectedFile || isUploading}
+    startIcon={isUploading ? <CircularProgress size={18} sx={{ color: 'white' }} /> : <UploadIcon />}
+    sx={{
+      flex: 1,
+      bgcolor: 'primary.main',
+      color: 'white',
+      textTransform: 'none',
+      fontWeight: 600,
+      py: 1.5,
+      '&:hover': { bgcolor: 'primary.dark' },
+    }}
+  >
+    {isUploading ? 'Importing...' : 'Import Members'}
+  </Button>
+  <Button
+    variant="outlined"
+    onClick={handleReset}
+    disabled={isUploading}
+    sx={{ flex: 1, textTransform: 'none', fontWeight: 600, py: 1.5 }}
+  >
+    Reset
+  </Button>
+</Box>
           </Paper>
 
           {/* Results summary */}

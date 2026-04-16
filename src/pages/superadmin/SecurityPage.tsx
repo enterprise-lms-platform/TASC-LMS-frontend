@@ -4,6 +4,7 @@ import {
   Box, Paper, Typography, Grid, Button, Switch, FormControlLabel, TextField,
   Divider, Slider, Alert, CircularProgress, Snackbar, Dialog,
   DialogTitle, DialogContent, DialogContentText, DialogActions,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip,
 } from '@mui/material';
 import {
   VpnKey as MFAIcon, AccessTime as SessionIcon,
@@ -12,7 +13,7 @@ import {
 } from '@mui/icons-material';
 import SuperadminLayout from '../../components/superadmin/SuperadminLayout';
 import KPICard from '../../components/superadmin/KPICard';
-import { securityApi } from '../../services/organization.services';
+import { securityApi, type UserSession } from '../../services/organization.services';
 import { useSecurityPolicy, useSaveSecurityPolicy, useTerminateSessions } from '../../hooks/useSuperadmin';
 import type { SecurityPolicy } from '../../services/superadmin.services';
 
@@ -20,6 +21,11 @@ const SecurityPage: React.FC = () => {
   const { data: stats } = useQuery({
     queryKey: ['security', 'stats'],
     queryFn: () => securityApi.getStats().then(r => r.data),
+  });
+
+  const { data: sessionsData, isLoading: sessionsLoading, refetch: refetchSessions } = useQuery({
+    queryKey: ['security', 'sessions'],
+    queryFn: () => securityApi.getSessions({ recent: true }).then(r => r.data.results),
   });
 
   const { data: policy } = useSecurityPolicy();
@@ -211,15 +217,69 @@ const SecurityPage: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Active Sessions placeholder */}
-      <Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>Active Sessions</Typography>
-        <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
-          <SessionIcon sx={{ fontSize: 48, color: 'grey.300', mb: 1 }} />
-          <Typography variant="body2">Active session count: {stats?.active_sessions?.toLocaleString() ?? '—'}</Typography>
-          <Typography variant="caption">Per-session table will be available in a future update</Typography>
-        </Box>
-      </Paper>
+{/* Active Sessions Table */}
+<Paper elevation={0} sx={{ p: 3, borderRadius: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+    <Typography variant="h6" sx={{ fontWeight: 600 }}>Active Sessions</Typography>
+    <Button size="small" onClick={() => refetchSessions()} sx={{ textTransform: 'none' }}>Refresh</Button>
+  </Box>
+  {sessionsLoading ? (
+    <Box sx={{ textAlign: 'center', py: 4 }}><CircularProgress size={24} /></Box>
+  ) : sessionsData && sessionsData.length > 0 ? (
+    <TableContainer>
+      <Table size="small">
+        <TableHead>
+          <TableRow sx={{ bgcolor: 'grey.50' }}>
+            <TableCell><Typography variant="caption" fontWeight={600}>User</Typography></TableCell>
+            <TableCell><Typography variant="caption" fontWeight={600}>Email</Typography></TableCell>
+            <TableCell><Typography variant="caption" fontWeight={600}>IP Address</Typography></TableCell>
+            <TableCell><Typography variant="caption" fontWeight={600}>Last Activity</Typography></TableCell>
+            <TableCell><Typography variant="caption" fontWeight={600}>Status</Typography></TableCell>
+            <TableCell align="right"><Typography variant="caption" fontWeight={600}>Actions</Typography></TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {sessionsData.slice(0, 10).map((session: UserSession) => (
+            <TableRow key={session.id} hover>
+              <TableCell><Typography variant="body2" fontWeight={500}>{session.user_name}</Typography></TableCell>
+              <TableCell><Typography variant="body2" color="text.secondary">{session.user_email}</Typography></TableCell>
+              <TableCell><Typography variant="body2" color="text.secondary">{session.ip_address || '—'}</Typography></TableCell>
+              <TableCell><Typography variant="body2" color="text.secondary">{new Date(session.last_activity).toLocaleString()}</Typography></TableCell>
+              <TableCell>
+                <Chip 
+                  label={session.is_active ? 'Active' : 'Inactive'} 
+                  size="small" 
+                  sx={{ height: 20, fontSize: '0.7rem', bgcolor: session.is_active ? '#d1fae5' : '#f3f4f6', color: session.is_active ? '#059669' : '#6b7280' }} 
+                />
+              </TableCell>
+              <TableCell align="right">
+                <Button size="small" color="error" onClick={async () => {
+                  try {
+                    await securityApi.terminateSession(session.id);
+                    refetchSessions();
+                    showSnack('Session terminated', 'success');
+                  } catch {
+                    showSnack('Failed to terminate session', 'error');
+                  }
+                }}>Terminate</Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  ) : (
+    <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
+      <SessionIcon sx={{ fontSize: 48, color: 'grey.300', mb: 1 }} />
+      <Typography variant="body2">No active sessions found</Typography>
+    </Box>
+  )}
+  {sessionsData && sessionsData.length > 10 && (
+    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 2 }}>
+      Showing 10 of {sessionsData.length} sessions
+    </Typography>
+  )}
+</Paper>
 
       {/* Confirm terminate dialog */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>

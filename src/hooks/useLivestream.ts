@@ -10,6 +10,7 @@ import {
   type LivestreamSessionCreateRequest,
   type LivestreamActionRequest,
   type LivestreamAttendanceParams,
+  type LivestreamAttendance,
 } from '../services/livestream.services';
 import { livestreamError } from '../utils/livestreamErrors';
 import { queryKeys } from './queryKeys';
@@ -85,3 +86,38 @@ export const useLivestreamAttendance = (params?: LivestreamAttendanceParams) =>
     queryFn: () => livestreamAttendanceApi.getAll(params).then((r) => r.data),
     enabled: !!params?.session,
   });
+
+export const useCheckInAttendance = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (sessionId: string) =>
+      livestreamAttendanceApi.checkIn(sessionId).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['livestreams'] });
+      qc.invalidateQueries({ queryKey: queryKeys.livestreamAttendance.all() });
+    },
+  });
+};
+
+export const useUpdateAttendanceStatus = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: LivestreamAttendance['status'] }) =>
+      livestreamAttendanceApi.updateStatus(id, status).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.livestreamAttendance.all() });
+    },
+  });
+};
+
+export const useUpdateRecordingUrl = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, recording_url }: { id: string; recording_url: string }) =>
+      livestreamApi.updateRecordingUrl(id, recording_url).then((r) => r.data),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.livestreams.detail(variables.id) });
+      qc.invalidateQueries({ queryKey: ['livestreams'] });
+    },
+  });
+};

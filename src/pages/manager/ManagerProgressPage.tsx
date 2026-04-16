@@ -26,8 +26,9 @@ import {
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/manager/Sidebar';
 import TopBar from '../../components/manager/TopBar';
-import { useLearningStats, useTopCoursePerformance } from '../../services/learning.services';
+import { useLearningStats, useTopCoursePerformance, analyticsApi } from '../../services/learning.services';
 import { useEnrollmentList } from '../../hooks/useLearning';
+import { useQuery } from '@tanstack/react-query';
 import type { Enrollment } from '../../types/types';
 
 const cardSx = {
@@ -125,17 +126,32 @@ const ManagerProgressPage: React.FC = () => {
     [],
   );
 
-  const {
-    data: enrollmentPage,
-    isLoading: enrollmentsLoading,
-    isError: enrollmentsError,
-    error: enrollmentsErr,
-  } = useEnrollmentList(enrollmentListParams);
+const {
+  data: enrollmentPage,
+  isLoading: enrollmentsLoading,
+  isError: enrollmentsError,
+  error: enrollmentsErr,
+} = useEnrollmentList(enrollmentListParams);
 
-  const atRiskRows = useMemo(() => {
-    const results = enrollmentPage?.results ?? [];
-    return results.filter(isAtRiskEnrollment);
-  }, [enrollmentPage]);
+const { data: atRiskData, isLoading: atRiskLoading } = useQuery({
+  queryKey: ['analytics', 'at-risk-learners'],
+  queryFn: () => analyticsApi.getAtRiskLearners().then(res => res.data.results),
+});
+
+const atRiskRows = useMemo(() => {
+  if (atRiskData && atRiskData.length > 0) {
+    return atRiskData.map(a => ({
+      id: a.id,
+      user_name: a.user_name,
+      user_email: a.user_email,
+      course_title: a.course_title,
+      progress_percentage: a.progress_percentage,
+      last_accessed_at: a.last_accessed_at,
+    }));
+  }
+  const results = enrollmentPage?.results ?? [];
+  return results.filter(isAtRiskEnrollment);
+}, [atRiskData, enrollmentPage]);
 
   const statsKpis = useMemo(() => {
     const active = stats?.active_learners ?? 0;

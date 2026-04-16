@@ -1,28 +1,45 @@
 import React, { useState, useMemo } from 'react';
 import {
   Box, Toolbar, CssBaseline, Paper, Typography, Grid, Chip,
-  IconButton, Tabs, Tab, Button, CircularProgress,
+  IconButton, Tabs, Tab, Button, CircularProgress, Snackbar, Alert, Tooltip,
 } from '@mui/material';
 import {
   DateRange as CalendarIcon, AccessTime as TimeIcon, Person as PersonIcon,
   VideoCall as VideoIcon, ChevronLeft, ChevronRight,
   Today as TodayIcon, EventAvailable as CompletedIcon,
-  Event as UpcomingIcon,
+  Event as UpcomingIcon, HowToReg as CheckInIcon,
 } from '@mui/icons-material';
 import '../../styles/LearnerDashboard.css';
 
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
-import { useLivestreamSessions } from '../../hooks/useLivestream';
+import { useLivestreamSessions, useCheckInAttendance } from '../../hooks/useLivestream';
 import type { LivestreamSession } from '../../services/livestream.services';
 
 /* ── Component ── */
 
+/* Returns check-in window state for a session */
+function getCheckInState(session: LivestreamSession): { canCheckIn: boolean; hint: string } {
+  const now = new Date();
+  const start = new Date(session.start_time);
+  const windowStart = new Date(start.getTime() - 10 * 60 * 1000);
+  const windowEnd = new Date(start.getTime() + 30 * 60 * 1000);
+  if (now < windowStart) {
+    const minsUntil = Math.ceil((windowStart.getTime() - now.getTime()) / 60000);
+    return { canCheckIn: false, hint: `Check-in opens ${minsUntil} min before start` };
+  }
+  if (now > windowEnd) return { canCheckIn: false, hint: 'Check-in window has closed' };
+  return { canCheckIn: true, hint: 'Check in to confirm your attendance' };
+}
+
 const MySchedulePage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' });
+  const [checkedIn, setCheckedIn] = useState<Set<string>>(new Set());
 
   const { data, isLoading } = useLivestreamSessions();
+  const checkIn = useCheckInAttendance();
   const sessions: LivestreamSession[] = data?.results ?? [];
 
   // Compute KPIs from real data
@@ -284,22 +301,56 @@ const MySchedulePage: React.FC = () => {
                           </Box>
                         </Box>
 
-                        {/* Action */}
-                        {(session.status === 'scheduled' || session.status === 'live') && session.join_url && (
-                          <Button
-                            size="small"
-                            variant="contained"
-                            startIcon={<VideoIcon />}
-                            onClick={() => window.open(session.join_url, '_blank')}
-                            sx={{
-                              textTransform: 'none', fontWeight: 600, fontSize: '0.75rem',
-                              borderRadius: '50px', boxShadow: 'none', px: 2, color: 'white', flexShrink: 0,
-                              '&:hover': { boxShadow: '0 4px 12px rgba(249,115,22,0.3)' },
-                            }}
-                          >
-                            Join
-                          </Button>
-                        )}
+                        {/* Actions */}
+                        <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, flexWrap: 'wrap' }}>
+                          {(session.status === 'scheduled' || session.status === 'live') && session.join_url && (
+                            <Button
+                              size="small"
+                              variant="contained"
+                              startIcon={<VideoIcon />}
+                              onClick={() => window.open(session.join_url, '_blank')}
+                              sx={{
+                                textTransform: 'none', fontWeight: 600, fontSize: '0.75rem',
+                                borderRadius: '50px', boxShadow: 'none', px: 2, color: 'white',
+                                '&:hover': { boxShadow: '0 4px 12px rgba(249,115,22,0.3)' },
+                              }}
+                            >
+                              Join
+                            </Button>
+                          )}
+                          {(session.status === 'scheduled' || session.status === 'live') && (() => {
+                            const { canCheckIn, hint } = getCheckInState(session);
+                            const done = checkedIn.has(session.id);
+                            return (
+                              <Tooltip title={done ? 'Checked in' : hint}>
+                                <span>
+                                  <Button
+                                    size="small"
+                                    variant={done ? 'contained' : 'outlined'}
+                                    startIcon={<CheckInIcon />}
+                                    disabled={!canCheckIn || done || checkIn.isPending}
+                                    onClick={() => {
+                                      checkIn.mutate(session.id, {
+                                        onSuccess: () => {
+                                          setCheckedIn((prev) => new Set([...prev, session.id]));
+                                          setSnackbar({ open: true, message: 'Checked in successfully!', severity: 'success' });
+                                        },
+                                        onError: () => setSnackbar({ open: true, message: 'Check-in failed. Try again.', severity: 'error' }),
+                                      });
+                                    }}
+                                    sx={{
+                                      textTransform: 'none', fontWeight: 600, fontSize: '0.75rem',
+                                      borderRadius: '50px', px: 2,
+                                      ...(done && { bgcolor: '#dcfce7', color: '#16a34a', borderColor: '#16a34a' }),
+                                    }}
+                                  >
+                                    {done ? 'Checked In' : 'Check In'}
+                                  </Button>
+                                </span>
+                              </Tooltip>
+                            );
+                          })()}
+                        </Box>
                       </Box>
                     );
                   })}
@@ -309,6 +360,17 @@ const MySchedulePage: React.FC = () => {
           </Box>
         </Paper>
       </Box>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar((s) => ({ ...s, open: false }))}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

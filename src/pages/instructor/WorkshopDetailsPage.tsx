@@ -49,7 +49,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/instructor/Sidebar';
-import { livestreamApi, livestreamAttendanceApi } from '../../services/livestream.services';
+import { workshopApi } from '../../services/learning.services';
 
 interface Participant {
   id: string;
@@ -88,7 +88,7 @@ const WorkshopDetailsPage: React.FC = () => {
   const { workshopId } = useParams<{ workshopId: string }>();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [tab, setTab] = useState(0);
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [participants, setParticipants] = useState<Participant[]>(sampleParticipants);
   const [workshopDetail, setWorkshopDetail] = useState<{
     id: string; title: string; description: string; location: string;
     startDate: string; endDate: string; status: 'upcoming' | 'ongoing' | 'completed';
@@ -99,54 +99,28 @@ const WorkshopDetailsPage: React.FC = () => {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const { data: sessionData, isLoading: sessionLoading } = useQuery({
-    queryKey: ['livestream', workshopId],
-    queryFn: () => livestreamApi.getById(workshopId!),
-    enabled: !!workshopId,
-  });
-
-  const { data: attendanceData, isLoading: attendanceLoading } = useQuery({
-    queryKey: ['livestream-attendance', workshopId],
-    queryFn: () => livestreamAttendanceApi.getAll({ session: workshopId }),
+  const { data: workshopData, isLoading: sessionLoading } = useQuery({
+    queryKey: ['workshop', workshopId],
+    queryFn: () => workshopApi.getById(Number(workshopId)),
     enabled: !!workshopId,
   });
 
   React.useEffect(() => {
-    if (sessionData?.data) {
-      const s = sessionData.data;
+    if (workshopData?.data) {
+      const w = workshopData.data;
       setWorkshopDetail({
-        id: s.id,
-        title: s.title,
-        description: s.description,
-        location: s.platform === 'custom' ? s.join_url || 'Custom Platform' : s.platform,
-        startDate: s.start_time.split('T')[0],
-        endDate: s.end_time.split('T')[0],
-        status: s.status === 'live' ? 'ongoing' : s.status === 'scheduled' ? 'upcoming' : 'completed',
-        gradingType: 'score',
-        category: s.course_title || 'General',
+        id: String(w.id),
+        title: w.title,
+        description: w.description,
+        location: w.location,
+        startDate: w.start_date,
+        endDate: w.end_date,
+        status: w.status,
+        gradingType: w.grading_type,
+        category: w.category,
       });
     }
-  }, [sessionData]);
-
-  React.useEffect(() => {
-    if (attendanceData?.data) {
-      const attendees = attendanceData.data.results ?? [];
-      setParticipants(attendees.map((a): Participant => ({
-        id: String(a.id),
-        name: a.learner_name || 'Participant',
-        initials: (a.learner_name || 'P').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
-        email: a.learner_email || '',
-        attendance: a.status === 'attended',
-        grade: null,
-        passFail: null,
-        certificateGenerated: false,
-        eligible: a.status === 'attended',
-      })));
-    } else if (!attendanceLoading) {
-      // Only fall back to sample data if we've finished loading and have no real data
-      setParticipants(sampleParticipants);
-    }
-  }, [attendanceData, attendanceLoading]);
+  }, [workshopData]);
 
   // Add participant form
   const [newName, setNewName] = useState('');
@@ -157,7 +131,11 @@ const WorkshopDetailsPage: React.FC = () => {
   );
 
   const handleToggleAttendance = (id: string) => {
-    setParticipants(participants.map((p) => (p.id === id ? { ...p, attendance: !p.attendance, eligible: !p.attendance ? p.eligible : false } : p)));
+    setParticipants(participants.map((p) => {
+      if (p.id !== id) return p;
+      const newAttendance = !p.attendance;
+      return { ...p, attendance: newAttendance, eligible: newAttendance ? p.eligible : false };
+    }));
   };
 
   const handleGradeChange = (id: string, grade: number) => {
@@ -206,13 +184,13 @@ const WorkshopDetailsPage: React.FC = () => {
 
   const handleSave = async () => {
     setSaving(true);
-    // TODO: Persist attendance/grade/certificate changes to backend via PUT/PATCH to livestream-attendance/{id}/
-    // Currently shows local success feedback only
+    // TODO: Workshop per-learner attendance API not yet implemented.
+    // Attendance changes are held in local state only.
     setTimeout(() => {
       setSaved(true);
       setSaving(false);
       setTimeout(() => setSaved(false), 3000);
-    }, 500);
+    }, 300);
   };
 
   const formatDateRange = (start: string, end: string) => {

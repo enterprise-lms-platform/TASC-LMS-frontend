@@ -43,8 +43,9 @@ const SuperadminProfilePage    = lazy(() => import('../pages/superadmin/Superadm
 const SuperadminMessagesPage   = lazy(() => import('../pages/superadmin/SuperadminMessagesPage'));
 const CourseApprovalPage       = lazy(() => import('../pages/manager/CourseApprovalPage'));
 const CourseApprovalDetailPage = lazy(() => import('../pages/manager/CourseApprovalDetailPage'));
-const SuperadminReviewsPage    = lazy(() => import('../pages/superadmin/SuperadminReviewsPage'));
-const DemoRequestsPage         = lazy(() => import('../pages/superadmin/DemoRequestsPage'));
+const SuperadminReviewsPage = lazy(() => import('../pages/superadmin/SuperadminReviewsPage'));
+const DemoRequestsPage = lazy(() => import('../pages/superadmin/DemoRequestsPage'));
+const PricingSettingsPage = lazy(() => import('../pages/superadmin/PricingSettingsPage'));
 
 export const superadminRoutes = (queryClient: QueryClient): RouteObject[] => [
   { path: '/superadmin', element: <SW><PR><SuperadminDashboard /></PR></SW>, errorElement: <ErrorPage />, loader: async () => superadminLoaders.superadminDashboardLoader(queryClient) },
@@ -61,6 +62,7 @@ export const superadminRoutes = (queryClient: QueryClient): RouteObject[] => [
   { path: '/superadmin/revenue', element: <SW><PR><RevenuePage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
   { path: '/superadmin/invoices', element: <SW><PR><InvoicesPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
   { path: '/superadmin/gateway-settings', element: <SW><PR><GatewaySettingsPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
+  { path: '/superadmin/pricing', element: <SW><PR><PricingSettingsPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
   { path: '/superadmin/settings', element: <SW><PR><SystemSettingsPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
   { path: '/superadmin/integrations', element: <SW><PR><IntegrationsPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },
   { path: '/superadmin/security', element: <SW><PR><SecurityPage /></PR></SW>, loader: async () => superadminLoaders.superadminRouteLoader(queryClient) },

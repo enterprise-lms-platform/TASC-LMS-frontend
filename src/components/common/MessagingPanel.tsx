@@ -29,7 +29,9 @@ import {
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { messagingApi } from '../../services/messaging.services';
-import type { ConversationResponse, MessageResponse } from '../../services/messaging.services';
+import type { ConversationResponse, MessageResponse, UserSearchResult } from '../../services/messaging.services';
+import { managerMembersApi } from '../../services/organization.services';
+import { usersApi } from '../../services/users.services';
 import { useAuth } from '../../contexts/AuthContext';
 
 const getInitials = (name: string) => {
@@ -100,6 +102,28 @@ const MessagingPanel: React.FC<MessagingPanelProps> = ({ height = 'calc(100vh - 
     queryFn: () => messagingApi.searchUsers(debouncedSearch),
     enabled: debouncedSearch.length >= 2,
   });
+
+  // Also search org members by email (fallback for email-based search)
+  const { data: orgMembersData } = useQuery({
+    queryKey: ['orgMembersSearch', debouncedSearch],
+    queryFn: () => managerMembersApi.getAll({ search: debouncedSearch, page_size: 20 }).then(r => r.data.results ?? []),
+    enabled: debouncedSearch.length >= 2,
+  });
+
+  // Combine and dedupe results from both searches
+  const allSearchResults = React.useMemo(() => {
+    const messagingIds = new Set(searchResults?.map(u => u.id) ?? []);
+    const orgMembers = (orgMembersData ?? []).filter(m => !messagingIds.has(m.id));
+    const orgUserResults: UserSearchResult[] = orgMembers.map(m => ({
+      id: m.id,
+      name: m.name,
+      first_name: m.name.split(' ')[0] || '',
+      last_name: m.name.split(' ').slice(1).join(' ') || '',
+      email: m.email,
+      role: 'learner',
+    }));
+    return [...(searchResults ?? []), ...orgUserResults];
+  }, [searchResults, orgMembersData]);
 
   // Create conversation mutation
   const createConvoMutation = useMutation({
@@ -406,13 +430,13 @@ const MessagingPanel: React.FC<MessagingPanelProps> = ({ height = 'calc(100vh - 
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
               <CircularProgress size={24} />
             </Box>
-          ) : !searchResults || searchResults.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-              No users found
-            </Typography>
-          ) : (
-            <List sx={{ maxHeight: 300, overflow: 'auto' }}>
-              {searchResults.map((u) => (
+) : !allSearchResults || allSearchResults.length === 0 ? (
+  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+    No users found
+  </Typography>
+) : (
+  <List sx={{ maxHeight: 300, overflow: 'auto' }}>
+  {allSearchResults.map((u) => (
                 <ListItem key={u.id} disablePadding>
                   <ListItemButton
                     onClick={() => handleStartConversation(u.id)}
