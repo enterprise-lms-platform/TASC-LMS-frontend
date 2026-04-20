@@ -5,12 +5,12 @@ import { PlayArrow, Info, Person } from '@mui/icons-material';
 
 interface Course {
   id: string;
-  category: string;
+  category?: string;
   title: string;
-  instructor: string;
+  instructor?: string;
   progress: number;
-  lessonsCompleted: number;
-  totalLessons: number;
+  lessonsCompleted?: number;
+  totalLessons?: number;
   /** Omitted when the API does not provide a course rating on enrollment. */
   rating?: number;
   image?: string;
@@ -56,21 +56,23 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
             }}
           />
         )}
-        <Chip
-          label={course.category}
-          size="small"
-          sx={{
-            position: 'absolute',
-            top: 12,
-            left: 12,
-            bgcolor: 'rgba(255,255,255,0.92)',
-            backdropFilter: 'blur(4px)',
-            fontWeight: 600,
-            fontSize: '0.68rem',
-            height: 24,
-            borderRadius: '50px',
-          }}
-        />
+        {course.category && (
+          <Chip
+            label={course.category}
+            size="small"
+            sx={{
+              position: 'absolute',
+              top: 12,
+              left: 12,
+              bgcolor: 'rgba(255,255,255,0.92)',
+              backdropFilter: 'blur(4px)',
+              fontWeight: 600,
+              fontSize: '0.68rem',
+              height: 24,
+              borderRadius: '50px',
+            }}
+          />
+        )}
         {/* Progress Bar */}
         <Box
           sx={{
@@ -99,16 +101,18 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
         <Typography variant="h6" fontWeight={700} gutterBottom lineHeight={1.3} sx={{ fontSize: '0.95rem' }}>
           {course.title}
         </Typography>
-        <Typography
-          variant="body2"
-          color="text.disabled"
-          sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 2, fontSize: '0.8rem' }}
-        >
-          <Person sx={{ fontSize: 16 }} /> {course.instructor}
-        </Typography>
+        {course.instructor && (
+          <Typography
+            variant="body2"
+            color="text.disabled"
+            sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 2, fontSize: '0.8rem' }}
+          >
+            <Person sx={{ fontSize: 16 }} /> {course.instructor}
+          </Typography>
+        )}
 
         {/* Stats Row */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mb: 3 }}>
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.85rem' }}>
               {course.progress}%
@@ -117,22 +121,26 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
               Progress
             </Typography>
           </Box>
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.85rem' }}>
-              {course.totalLessons > 0 ? `${course.lessonsCompleted}/${course.totalLessons}` : '—'}
-            </Typography>
-            <Typography variant="caption" color="text.disabled" sx={{ textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.05em' }}>
-              Lessons
-            </Typography>
-          </Box>
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.85rem' }}>
-              {course.rating != null ? course.rating : '—'}
-            </Typography>
-            <Typography variant="caption" color="text.disabled" sx={{ textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.05em' }}>
-              Rating
-            </Typography>
-          </Box>
+          {typeof course.totalLessons === 'number' && course.totalLessons > 0 && typeof course.lessonsCompleted === 'number' && (
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.85rem' }}>
+                {`${course.lessonsCompleted}/${course.totalLessons}`}
+              </Typography>
+              <Typography variant="caption" color="text.disabled" sx={{ textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.05em' }}>
+                Lessons
+              </Typography>
+            </Box>
+          )}
+          {course.rating != null && (
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.85rem' }}>
+                {course.rating}
+              </Typography>
+              <Typography variant="caption" color="text.disabled" sx={{ textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.05em' }}>
+                Rating
+              </Typography>
+            </Box>
+          )}
         </Box>
 
         {/* Action Buttons */}

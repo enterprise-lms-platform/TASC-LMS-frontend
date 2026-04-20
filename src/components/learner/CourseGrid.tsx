@@ -21,12 +21,8 @@ const CourseGrid: React.FC = () => {
     .slice(0, 3)
     .map(e => ({
       id: String(e.course),
-      category: 'General',
       title: e.course_title || 'Untitled Course',
-      instructor: '—',
       progress: Number(e.progress_percentage) || 0,
-      lessonsCompleted: 0,
-      totalLessons: 0,
       image: e.course_thumbnail || undefined,
     }));
 
