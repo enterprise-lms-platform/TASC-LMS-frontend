@@ -65,7 +65,6 @@ const MyCoursesPage: React.FC = () => {
     id: String(e.course),
     title: e.course_title || 'Untitled Course',
     instructor: '—',
-    category: 'General',
     progress: Number(e.progress_percentage) ?? 0,
     progressLabel: `${Math.round(Number(e.progress_percentage) || 0)}% complete`,
     status: getStatus(Number(e.progress_percentage) || 0, e.last_accessed_session ?? null),
@@ -103,7 +102,6 @@ const MyCoursesPage: React.FC = () => {
     // Sort
     if (sortBy === 'progress') result = [...result].sort((a, b) => b.progress - a.progress);
     else if (sortBy === 'name') result = [...result].sort((a, b) => a.title.localeCompare(b.title));
-    else if (sortBy === 'rating') result = [...result].sort((a, b) => a.title.localeCompare(b.title));
     else if (sortBy === 'recent') result = [...result].sort((a, b) => b.sortKey - a.sortKey);
     return result;
   }, [courses, statusFilter, search, sortBy]);
@@ -232,7 +230,6 @@ const MyCoursesPage: React.FC = () => {
               <MenuItem value="recent">Last Accessed</MenuItem>
               <MenuItem value="progress">Progress</MenuItem>
               <MenuItem value="name">Name A-Z</MenuItem>
-              <MenuItem value="rating">Rating</MenuItem>
             </TextField>
           </Box>
 
@@ -313,7 +310,6 @@ const MyCoursesPage: React.FC = () => {
                       <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5, flexWrap: 'wrap' }}>
                           <Typography sx={{ fontWeight: 600, fontSize: '0.88rem' }} noWrap>{course.title}</Typography>
-                          <Chip label={course.category} size="small" sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, borderRadius: '50px', bgcolor: 'rgba(0,0,0,0.04)' }} />
                         </Box>
                         <Typography color="text.disabled" sx={{ fontSize: '0.78rem', mb: 1 }}>
                           {course.progressLabel} · Last accessed {course.lastAccessed}
@@ -349,10 +345,6 @@ const MyCoursesPage: React.FC = () => {
                             fontWeight: 600, fontSize: '0.7rem', borderRadius: '50px', height: 24,
                           }}
                         />
-                        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 0.25 }}>
-                          <StarIcon sx={{ fontSize: 14, color: 'text.disabled' }} />
-                          <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'text.disabled' }}>—</Typography>
-                        </Box>
                         {course.status === 'In Progress' && (
                           <Button
                             size="small"
