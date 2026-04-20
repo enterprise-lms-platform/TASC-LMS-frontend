@@ -4,10 +4,12 @@ import { Link, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMySubscription, usePesapalPaymentStatus } from '../../hooks/usePayments';
 import { queryKeys } from '../../hooks/queryKeys';
+import { useAuth } from '../../contexts/AuthContext';
 
 const PesapalReturnPage: React.FC = () => {
   const location = useLocation();
   const queryClient = useQueryClient();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const searchParams = React.useMemo(() => new URLSearchParams(location.search), [location.search]);
   const trackingId = searchParams.get('tracking_id');
   const routeStatus = location.pathname.split('/').pop() ?? 'pending';
@@ -26,15 +28,25 @@ const PesapalReturnPage: React.FC = () => {
   const { data: subStatus, refetch, isFetching } = useMySubscription();
 
   React.useEffect(() => {
+    if (!isAuthenticated) return;
     queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.myStatus });
     void refetch();
+  }, [isAuthenticated, queryClient, refetch]);
+
+  React.useEffect(() => {
     // Clean up stale checkout context when leaving this page
     return () => {
       localStorage.removeItem('pesapal_checkout_context');
     };
-  }, [queryClient, refetch]);
+  }, []);
 
   const hasActiveSubscription = subStatus?.has_active_subscription ?? false;
+  const shouldShowProcessingHint =
+    isAuthenticated &&
+    !hasActiveSubscription &&
+    (isFetching ||
+      routeStatus === 'success' ||
+      ((paymentStatus?.status || '').toUpperCase() === 'COMPLETED'));
   const titleByStatus: Record<string, string> = {
     success: 'Payment Return Received',
     failed: 'Payment Failed',
@@ -73,22 +85,41 @@ const PesapalReturnPage: React.FC = () => {
               Provider Status: <strong>{paymentStatus.status}</strong>
             </Typography>
           )}
-          {isFetching ? (
-            <Stack direction="row" spacing={1} alignItems="center">
-              <CircularProgress size={16} />
-              <Typography variant="body2">Refreshing subscription truth...</Typography>
-            </Stack>
+          {!isAuthenticated ? (
+            <Typography variant="body2" color="text.secondary">
+              Your payment return was received. Please log in to refresh your subscription status.
+            </Typography>
+          ) : shouldShowProcessingHint ? (
+            <>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <CircularProgress size={16} />
+                <Typography variant="body2">Refreshing subscription truth...</Typography>
+              </Stack>
+              <Typography variant="body2" color="text.secondary">
+                We are still confirming activation in the background. This can take a short moment.
+              </Typography>
+            </>
           ) : (
             <Typography variant="body2">
               Subscription Active: <strong>{hasActiveSubscription ? 'Yes' : 'No'}</strong>
             </Typography>
           )}
           <Stack direction="row" spacing={2}>
-            <Button component={Link} to={hasActiveSubscription ? '/learner/my-courses' : '/learner/subscription'} variant="contained">
-              {hasActiveSubscription ? 'Go to My Courses' : 'Go to Subscription'}
-            </Button>
-            <Button component={Link} to="/checkout" variant="outlined">
-              Back to Subscription Checkout
+            {!isAuthenticated ? (
+              <Button
+                component={Link}
+                to={isAuthLoading ? '/login' : `/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}
+                variant="contained"
+              >
+                Log In to Refresh Status
+              </Button>
+            ) : (
+              <Button component={Link} to={hasActiveSubscription ? '/learner/my-courses' : '/learner/subscription'} variant="contained">
+                {hasActiveSubscription ? 'Go to My Courses' : 'Go to Subscription'}
+              </Button>
+            )}
+            <Button component={Link} to={isAuthenticated ? '/checkout' : '/login'} variant="outlined">
+              {isAuthenticated ? 'Back to Subscription Checkout' : 'Go to Login'}
             </Button>
           </Stack>
         </Stack>
