@@ -10,7 +10,7 @@ import TopBar from '../../components/learner/TopBar';
 import CatalogHero from '../../components/learner/catalog/CatalogHero';
 import CatalogFilterBar from '../../components/learner/catalog/CatalogFilterBar';
 import CatalogCategoryCard, { defaultCategories } from '../../components/learner/catalog/CatalogCategoryCard';
-import CatalogCourseCard, { sampleCourses, type Course as CatalogCourse } from '../../components/learner/catalog/CatalogCourseCard';
+import CatalogCourseCard, { type Course as CatalogCourse } from '../../components/learner/catalog/CatalogCourseCard';
 import CatalogInstructorCard, { sampleInstructors } from '../../components/learner/catalog/CatalogInstructorCard';
 import CatalogPagination from '../../components/learner/catalog/CatalogPagination';
 import { publicCourseApi, publicCategoryApi } from '../../services/public.services';
@@ -58,8 +58,7 @@ const LearnerCourseCatalogPage: React.FC = () => {
     { label: 'Learners', value: '—', icon: <People />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
     { label: 'Avg Rating', value: '—', icon: <Star />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
   ], [totalCourses]);
-
-  const displayCourses = catalogCourses.length > 0 ? catalogCourses : sampleCourses;
+  const hasRealCourses = catalogCourses.length > 0;
 
   const handleMobileMenuToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -247,19 +246,38 @@ const LearnerCourseCatalogPage: React.FC = () => {
         {/* Most Popular Courses */}
         <Box sx={{ mb: 6 }}>
           <SectionHeader title="Most Popular Courses" viewAllText="View All Courses" />
-          <Grid container spacing={3}>
-            {displayCourses.map((course) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={course.id}>
-                <CatalogCourseCard
-                  course={course}
-                  isFavorite={favorites.includes(course.id)}
-                  onFavoriteToggle={handleFavoriteToggle}
-                  onEnroll={handleEnroll}
-                  onClick={handleCourseClick}
-                />
-              </Grid>
-            ))}
-          </Grid>
+          {hasRealCourses ? (
+            <Grid container spacing={3}>
+              {catalogCourses.map((course) => (
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={course.id}>
+                  <CatalogCourseCard
+                    course={course}
+                    isFavorite={favorites.includes(course.id)}
+                    onFavoriteToggle={handleFavoriteToggle}
+                    onEnroll={handleEnroll}
+                    onClick={handleCourseClick}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          ) : (
+            <Paper
+              elevation={0}
+              sx={{
+                border: '1px solid #e4e4e7',
+                borderRadius: 3,
+                p: { xs: 3, md: 4 },
+                bgcolor: 'white',
+              }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: 600, color: '#27272a', mb: 1 }}>
+                No published courses are available right now.
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Please check back shortly as new courses are being prepared.
+              </Typography>
+            </Paper>
+          )}
         </Box>
 
         {/* Featured Instructors */}
@@ -278,11 +296,13 @@ const LearnerCourseCatalogPage: React.FC = () => {
         </Box>
 
         {/* Pagination */}
-        <CatalogPagination
-          currentPage={currentPage}
-          totalPages={totalPages > 0 ? totalPages : 5}
-          onPageChange={setCurrentPage}
-        />
+        {hasRealCourses && totalPages > 1 && (
+          <CatalogPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
 
         {/* Footer */}
         <Box
