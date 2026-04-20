@@ -8,10 +8,10 @@ import type { PaginatedResponse } from '../../types/types';
 
 interface NotificationResult {
   id: number;
-  message?: string;
+  type?: string;
   title?: string;
+  description?: string;
   created_at?: string;
-  notification_type?: string;
 }
 
 const getTimeAgo = (dateStr?: string): string => {
@@ -96,7 +96,7 @@ const RecentActivity: React.FC = () => {
               <Box sx={{ display: 'flex', gap: 1.5, width: '100%' }}>
                 <Avatar
                   sx={{
-                    bgcolor: getActivityColor(notif.notification_type),
+                    bgcolor: getActivityColor(notif.type),
                     borderRadius: '50%',
                     width: 36,
                     height: 36,
@@ -107,7 +107,7 @@ const RecentActivity: React.FC = () => {
                 </Avatar>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.25, fontSize: '0.82rem', lineHeight: 1.4 }}>
-                    {notif.message || notif.title || 'Activity'}
+                    {notif.description || notif.title || 'Activity'}
                   </Typography>
                   <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.72rem' }}>
                     {getTimeAgo(notif.created_at)}
