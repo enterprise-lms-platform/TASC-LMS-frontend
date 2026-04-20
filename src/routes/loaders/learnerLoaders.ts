@@ -157,7 +157,7 @@ export const learnerCourseDetailLoader = async (
  */
 export const coursePlayerLoader = async (
   queryClient: QueryClient,
-  { params }: LoaderFunctionArgs
+  { params, request }: LoaderFunctionArgs
 ) => {
   const courseId = params.courseId ? parseInt(params.courseId, 10) : null;
 
@@ -172,6 +172,24 @@ export const coursePlayerLoader = async (
       queryFn: () => courseApi.getById(courseId).then((r) => r.data),
       staleTime: 5 * 60 * 1000,
     });
+
+    const enrollmentId = (course as { enrollment_id?: number | null })?.enrollment_id ?? null;
+    const currentUrl = new URL(request.url);
+    const requestedSessionId = currentUrl.searchParams.get('session');
+    const parsedSessionId = requestedSessionId ? parseInt(requestedSessionId, 10) : null;
+    const sessions = Array.isArray((course as { sessions?: unknown[] })?.sessions)
+      ? ((course as { sessions?: Array<{ id: number; is_free_preview?: boolean }> }).sessions ?? [])
+      : [];
+    const isFreePreviewAccess =
+      parsedSessionId !== null &&
+      Number.isFinite(parsedSessionId) &&
+      sessions.some((session) => session.id === parsedSessionId && session.is_free_preview);
+
+    // Guard against broken player state when learner has not enrolled.
+    // Keep intentional free-preview access intact.
+    if (!enrollmentId && !isFreePreviewAccess) {
+      return redirect(`/learner/course/${courseId}?reason=enrollment_required`);
+    }
 
     // Fetch user's progress in this course
     const progress = await queryClient

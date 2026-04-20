@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Stack, useMediaQuery, useTheme, CssBaseline, Toolbar, Alert, CircularProgress, Typography, Snackbar } from '@mui/material';
 
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
@@ -28,6 +28,7 @@ const LearnerCourseDetailPage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
   const { courseId } = useParams<{ courseId: string }>();
+  const [searchParams] = useSearchParams();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [enrollError, setEnrollError] = useState('');
   const [toast, setToast] = useState('');
@@ -160,6 +161,11 @@ const LearnerCourseDetailPage: React.FC = () => {
   const requirements = course?.prerequisites
     ? course.prerequisites.split('\n').filter(Boolean)
     : [];
+  const routeReason = searchParams.get('reason');
+  const routeMessage =
+    routeReason === 'enrollment_required'
+      ? 'You need to enroll in this course before you can start learning.'
+      : '';
 
   const handleMobileMenuToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -237,6 +243,11 @@ const LearnerCourseDetailPage: React.FC = () => {
         {enrollError && (
           <Alert severity="error" sx={{ mx: { xs: 2, md: 4 }, mt: 2 }} onClose={() => setEnrollError('')}>
             {enrollError}
+          </Alert>
+        )}
+        {routeMessage && (
+          <Alert severity="warning" sx={{ mx: { xs: 2, md: 4 }, mt: 2 }}>
+            {routeMessage}
           </Alert>
         )}
 
