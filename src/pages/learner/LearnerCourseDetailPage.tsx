@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Stack, useMediaQuery, useTheme, CssBaseline, Toolbar, Alert, CircularProgress, Typography, Snackbar } from '@mui/material';
 
@@ -34,6 +34,10 @@ const LearnerCourseDetailPage: React.FC = () => {
   const [toast, setToast] = useState('');
 
   const courseNumericId = courseId ? Number(courseId) : 0;
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [courseId]);
 
   const { data: course, isLoading: courseLoading, isError: courseError } = useCourse(courseNumericId, { enabled: !!courseId });
   const { data: reviewData } = useCourseReviews(courseNumericId);
