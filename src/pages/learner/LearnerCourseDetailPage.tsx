@@ -11,7 +11,8 @@ import { useCreateEnrollment } from '../../hooks/useLearning';
 import { useCourse } from '../../hooks/useCatalogue';
 import { useCourseReviews } from '../../hooks/usePublicCourse';
 import { sessionProgressApi } from '../../services/learning.services';
-import type { SessionProgress } from '../../types/types';
+import { publicCourseApi } from '../../services/public.services';
+import type { CourseList, SessionProgress } from '../../types/types';
 
 import CourseDetailHero from '../../components/learner/course/CourseDetailHero';
 import type { CourseHeroData } from '../../components/learner/course/CourseDetailHero';
@@ -48,6 +49,51 @@ const LearnerCourseDetailPage: React.FC = () => {
     queryKey: ['learner', 'course-detail', 'session-progress', courseNumericId],
     queryFn: () => sessionProgressApi.getAll({ course: courseNumericId }).then((r) => r.data),
     enabled: !!courseNumericId && !!course?.enrollment_id,
+  });
+  const { data: similarCourses } = useQuery({
+    queryKey: ['learner', 'course-detail', 'similar-courses', courseNumericId, course?.category?.id, course?.level],
+    queryFn: async () => {
+      const targetCount = 3;
+      const byId = new Map<number, CourseList>();
+      const includeCourses = (courses: CourseList[]) => {
+        courses.forEach((item) => {
+          if (item.id === courseNumericId) return;
+          if (!byId.has(item.id)) byId.set(item.id, item);
+        });
+      };
+
+      if (course?.category?.id) {
+        const categoryResp = await publicCourseApi.getAll({
+          page: 1,
+          page_size: 8,
+          category: course.category.id,
+          ordering: '-published_at',
+        });
+        includeCourses(categoryResp.data.results ?? []);
+      }
+
+      if (byId.size < targetCount && course?.level) {
+        const levelResp = await publicCourseApi.getAll({
+          page: 1,
+          page_size: 8,
+          level: course.level,
+          ordering: '-published_at',
+        });
+        includeCourses(levelResp.data.results ?? []);
+      }
+
+      if (byId.size < targetCount) {
+        const fallbackResp = await publicCourseApi.getAll({
+          page: 1,
+          page_size: 8,
+          ordering: '-published_at',
+        });
+        includeCourses(fallbackResp.data.results ?? []);
+      }
+
+      return Array.from(byId.values()).slice(0, targetCount);
+    },
+    enabled: !!course && !!courseNumericId,
   });
 
   const { data: subscriptionStatus, isLoading: subLoading } = useMySubscription();
@@ -247,6 +293,23 @@ const LearnerCourseDetailPage: React.FC = () => {
     }
   };
 
+  const sidebarSimilarCourses = useMemo(
+    () =>
+      (similarCourses ?? []).map((item) => ({
+        id: String(item.id),
+        title: item.title,
+        thumbnail: item.thumbnail,
+        category: item.category?.name?.trim() || undefined,
+        level: item.level
+          ? item.level
+              .split('_')
+              .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+              .join(' ')
+          : undefined,
+      })),
+    [similarCourses]
+  );
+
   if (courseLoading) {
     return (
       <Box sx={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', bgcolor: '#fafafa' }}>
@@ -355,6 +418,10 @@ const LearnerCourseDetailPage: React.FC = () => {
                   totalHours={sidebarStats.totalHours}
                   projects={0}
                   completionRate={sidebarStats.progress}
+                  similarCourses={sidebarSimilarCourses}
+                  onSimilarCourseClick={(id) => {
+                    navigate(`/learner/course/${id}`);
+                  }}
                 />
               </Box>
             )}

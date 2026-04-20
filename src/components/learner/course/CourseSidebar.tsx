@@ -16,6 +16,14 @@ interface CourseSidebarProps {
   projects: number;
   completionRate?: number;
   features?: string[];
+  similarCourses?: {
+    id: string;
+    title: string;
+    thumbnail?: string | null;
+    category?: string;
+    level?: string;
+  }[];
+  onSimilarCourseClick?: (courseId: string) => void;
 }
 
 const CourseSidebar: React.FC<CourseSidebarProps> = ({
@@ -32,6 +40,8 @@ const CourseSidebar: React.FC<CourseSidebarProps> = ({
     'Downloadable resources',
     'Certificate of completion',
   ],
+  similarCourses = [],
+  onSimilarCourseClick,
 }) => {
   const featureIcons = [VideoIcon, CodeIcon, DownloadIcon, CertificateIcon];
 
@@ -175,54 +185,69 @@ const CourseSidebar: React.FC<CourseSidebarProps> = ({
         <Typography fontWeight={600} color="text.primary" sx={{ mb: 2 }}>
           Similar Courses
         </Typography>
-        <Stack spacing={1.5}>
-          {[
-            { title: 'React Performance Masterclass', price: '$99.99' },
-            { title: 'Next.js for Production', price: '$149.99' },
-            { title: 'TypeScript Deep Dive', price: '$89.99' },
-          ].map((course) => (
-            <Stack
-              key={course.title}
-              direction="row"
-              alignItems="center"
-              spacing={1.5}
-              sx={{
-                p: 1.5,
-                borderRadius: 2,
-                cursor: 'pointer',
-                transition: 'background-color 0.2s',
-                '&:hover': { bgcolor: '#fafafa' },
-              }}
-            >
-              <Box
+        {similarCourses.length > 0 ? (
+          <Stack spacing={1.5}>
+            {similarCourses.map((course) => (
+              <Stack
+                key={course.id}
+                direction="row"
+                alignItems="center"
+                spacing={1.5}
+                onClick={() => onSimilarCourseClick?.(course.id)}
                 sx={{
-                  width: 60,
-                  height: 40,
-                  borderRadius: 1,
-                  background: 'linear-gradient(135deg, #ffb74d, #f97316)',
-                  flexShrink: 0,
+                  p: 1.5,
+                  borderRadius: 2,
+                  cursor: onSimilarCourseClick ? 'pointer' : 'default',
+                  transition: 'background-color 0.2s',
+                  '&:hover': { bgcolor: onSimilarCourseClick ? '#fafafa' : 'transparent' },
                 }}
-              />
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography
-                  variant="body2"
-                  fontWeight={500}
-                  color="text.primary"
+              >
+                <Box
                   sx={{
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    width: 60,
+                    height: 40,
+                    borderRadius: 1,
+                    bgcolor: '#f4f4f5',
+                    backgroundImage: course.thumbnail ? `url(${course.thumbnail})` : undefined,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    flexShrink: 0,
                   }}
-                >
-                  {course.title}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#ffa424', fontWeight: 600 }}>
-                  {course.price}
-                </Typography>
-              </Box>
-            </Stack>
-          ))}
-        </Stack>
+                />
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    color="text.primary"
+                    sx={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {course.title}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      display: 'block',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {[course.category, course.level].filter(Boolean).join(' • ') || 'Course'}
+                  </Typography>
+                </Box>
+              </Stack>
+            ))}
+          </Stack>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            No similar courses are available right now.
+          </Typography>
+        )}
       </Box>
     </Stack>
   );
