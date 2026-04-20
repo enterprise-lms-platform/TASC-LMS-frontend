@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Toolbar, CssBaseline, Typography, Grid, Stack, Link, Paper } from '@mui/material';
+import { Box, Toolbar, CssBaseline, Typography, Grid, Stack, Link, Paper, Button } from '@mui/material';
 import { ChevronRight, MenuBook, People, School, Star } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import '../../styles/LearnerDashboard.css';
@@ -21,7 +21,7 @@ const LearnerCourseCatalogPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [favorites, setFavorites] = useState<string[]>([]);
 
-  const { data: coursesData, isLoading: coursesLoading } = useQuery({
+  const { data: coursesData, isLoading: coursesLoading, isError: coursesError, refetch: refetchCourses } = useQuery({
     queryKey: ['public-courses', currentPage],
     queryFn: () => publicCourseApi.getAll({ page: currentPage, page_size: 8 }),
   });
@@ -246,7 +246,38 @@ const LearnerCourseCatalogPage: React.FC = () => {
         {/* Most Popular Courses */}
         <Box sx={{ mb: 6 }}>
           <SectionHeader title="Most Popular Courses" viewAllText="View All Courses" />
-          {hasRealCourses ? (
+          {coursesError ? (
+            <Paper
+              elevation={0}
+              sx={{
+                border: '1px solid #e4e4e7',
+                borderRadius: 3,
+                p: { xs: 3, md: 4 },
+                bgcolor: 'white',
+              }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: 600, color: '#27272a', mb: 1 }}>
+                We couldn&apos;t load the course catalog right now.
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Please try again in a moment.
+              </Typography>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  void refetchCourses();
+                }}
+                sx={{
+                  bgcolor: '#ffa424',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  '&:hover': { bgcolor: '#f97316' },
+                }}
+              >
+                Retry
+              </Button>
+            </Paper>
+          ) : hasRealCourses ? (
             <Grid container spacing={3}>
               {catalogCourses.map((course) => (
                 <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={course.id}>
