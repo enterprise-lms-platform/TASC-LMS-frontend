@@ -88,7 +88,7 @@ const buildNavSections = (unreadCount?: number) => [
 ];
 
 interface SidebarEnrollment {
-  progress_percentage?: number;
+  progress_percentage?: number | string | null;
 }
 
 interface SidebarProps {
@@ -139,8 +139,14 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
       ? enrollmentsRaw
       : (enrollmentsRaw as PaginatedResponse<SidebarEnrollment> | undefined)?.results ?? [];
     if (enrollments.length === 0) return 0;
-    const total = enrollments.reduce((sum, e) => sum + (e.progress_percentage ?? 0), 0);
-    return Math.round(total / enrollments.length);
+    const total = enrollments.reduce((sum, e) => {
+      const raw = e.progress_percentage ?? 0;
+      const parsed = Number(raw);
+      const safe = Number.isFinite(parsed) ? parsed : 0;
+      return sum + safe;
+    }, 0);
+    const avg = total / enrollments.length;
+    return Number.isFinite(avg) ? Math.round(avg) : 0;
   }, [enrollmentsRaw]);
   const showcaseBadges = earnedBadges.slice(0, 5);
 
