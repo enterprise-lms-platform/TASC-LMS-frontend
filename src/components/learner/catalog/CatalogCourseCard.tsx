@@ -9,7 +9,6 @@ import {
   Button,
   Stack,
   IconButton,
-  Rating,
 } from '@mui/material';
 import {
   AccessTime,
@@ -22,15 +21,15 @@ import {
 export interface Course {
   id: string;
   title: string;
-  instructor: string;
+  instructor?: string;
   description: string;
   image: string;
-  category: string;
+  category?: string;
   badge?: 'Bestseller' | 'New' | 'Sale';
   duration: string;
   level: 'Beginner' | 'Intermediate' | 'Advanced';
-  rating: number;
-  reviewCount: number;
+  rating?: number;
+  reviewCount?: number;
 }
 
 interface CatalogCourseCardProps {
@@ -167,19 +166,21 @@ const CatalogCourseCard: React.FC<CatalogCourseCardProps> = ({
         )}
         
         {/* Category */}
-        <Chip
-          label={course.category}
-          size="small"
-          sx={{
-            position: 'absolute',
-            top: 12,
-            left: 12,
-            bgcolor: 'rgba(255, 255, 255, 0.9)',
-            color: '#3f3f46',
-            fontWeight: 500,
-            fontSize: '0.75rem',
-          }}
-        />
+        {course.category && (
+          <Chip
+            label={course.category}
+            size="small"
+            sx={{
+              position: 'absolute',
+              top: 12,
+              left: 12,
+              bgcolor: 'rgba(255, 255, 255, 0.9)',
+              color: '#3f3f46',
+              fontWeight: 500,
+              fontSize: '0.75rem',
+            }}
+          />
+        )}
       </Box>
 
       {/* Content */}
@@ -198,10 +199,12 @@ const CatalogCourseCard: React.FC<CatalogCourseCardProps> = ({
           >
             {course.title}
           </Typography>
-          <Stack direction="row" alignItems="center" spacing={0.5} sx={{ color: '#71717a' }}>
-            <Person sx={{ fontSize: 16 }} />
-            <Typography variant="body2">{course.instructor}</Typography>
-          </Stack>
+          {course.instructor && (
+            <Stack direction="row" alignItems="center" spacing={0.5} sx={{ color: '#71717a' }}>
+              <Person sx={{ fontSize: 16 }} />
+              <Typography variant="body2">{course.instructor}</Typography>
+            </Stack>
+          )}
         </Box>
 
         {/* Description */}
@@ -232,12 +235,11 @@ const CatalogCourseCard: React.FC<CatalogCourseCardProps> = ({
             <SignalCellularAlt sx={{ fontSize: 16 }} />
             <Typography variant="caption">{course.level}</Typography>
           </Stack>
-          <Stack direction="row" alignItems="center" spacing={0.5}>
-            <Rating value={1} max={1} size="small" readOnly sx={{ color: '#f59e0b' }} />
+          {typeof course.rating === 'number' && typeof course.reviewCount === 'number' && (
             <Typography variant="caption" sx={{ color: '#f59e0b', fontWeight: 500 }}>
               {course.rating} ({course.reviewCount >= 1000 ? `${(course.reviewCount / 1000).toFixed(1)}k` : course.reviewCount})
             </Typography>
-          </Stack>
+          )}
         </Stack>
 
         {/* Footer */}

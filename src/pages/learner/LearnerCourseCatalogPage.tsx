@@ -40,15 +40,13 @@ const LearnerCourseCatalogPage: React.FC = () => {
     return courses.map(c => ({
       id: String(c.id),
       title: c.title,
-      instructor: c.instructor_name || 'Instructor',
+      instructor: c.instructor_name?.trim() || undefined,
       description: c.short_description || '',
       image: c.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=225&fit=crop',
-      category: c.category?.name || '',
+      category: c.category?.name?.trim() || undefined,
       badge: c.featured ? 'Bestseller' as const : undefined,
       duration: c.duration_hours ? `${c.duration_hours}h` : '—',
       level: (c.level?.charAt(0).toUpperCase() + c.level?.slice(1)) as CatalogCourse['level'] || 'Beginner',
-      rating: 0,
-      reviewCount: 0,
     }));
   }, [courses]);
 
