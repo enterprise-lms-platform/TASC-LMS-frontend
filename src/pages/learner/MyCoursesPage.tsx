@@ -68,7 +68,11 @@ const MyCoursesPage: React.FC = () => {
     progress: Number(e.progress_percentage) ?? 0,
     progressLabel: `${Math.round(Number(e.progress_percentage) || 0)}% complete`,
     status: getStatus(Number(e.progress_percentage) || 0, e.last_accessed_session ?? null),
-    lastAccessed: getTimeAgo(e.last_accessed_at || e.enrolled_at),
+    activityText: e.last_accessed_at
+      ? `Last accessed ${getTimeAgo(e.last_accessed_at)}`
+      : e.enrolled_at
+      ? `Enrolled ${getTimeAgo(e.enrolled_at)}`
+      : 'No activity yet',
     image: e.course_thumbnail || '',
     sortKey: new Date(e.last_accessed_at || e.enrolled_at || 0).getTime(),
     lastAccessedSession: e.last_accessed_session ?? null,
@@ -312,7 +316,7 @@ const MyCoursesPage: React.FC = () => {
                           <Typography sx={{ fontWeight: 600, fontSize: '0.88rem' }} noWrap>{course.title}</Typography>
                         </Box>
                         <Typography color="text.disabled" sx={{ fontSize: '0.78rem', mb: 1 }}>
-                          {course.progressLabel} · Last accessed {course.lastAccessed}
+                          {course.progressLabel} · {course.activityText}
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                           <LinearProgress
