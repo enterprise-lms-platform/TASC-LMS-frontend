@@ -4,6 +4,7 @@ import { EmojiEvents, ChevronRight } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { certificateApi } from '../../services/learning.services';
+import { queryKeys } from '../../hooks/queryKeys';
 import type { PaginatedResponse } from '../../types/types';
 
 interface CertificateResult {
@@ -18,7 +19,7 @@ const Certificates: React.FC = () => {
   const navigate = useNavigate();
 
   const { data: certsData, isLoading } = useQuery({
-    queryKey: ['learner', 'certificates', 'dashboard'],
+    queryKey: queryKeys.certificates.list({ page: 1, page_size: 100 }),
     queryFn: () => certificateApi.getAll({ page: 1, page_size: 100 }).then((r) => r.data),
   });
 

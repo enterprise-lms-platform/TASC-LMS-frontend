@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { useBadges } from '../../hooks/useBadges';
 import { enrollmentApi } from '../../services/learning.services';
+import { queryKeys } from '../../hooks/queryKeys';
 import type { PaginatedResponse } from '../../types/types';
 import {
   Dashboard as DashboardIcon,
@@ -128,8 +129,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) 
   const { earnedBadges } = useBadges();
 
   const { data: enrollmentsRaw } = useQuery({
-    queryKey: ['learner', 'sidebar', 'progress'],
-    queryFn: () => enrollmentApi.getAll({ page_size: 50 }).then(r => r.data),
+    queryKey: queryKeys.enrollments.all,
+    queryFn: () => enrollmentApi.getAll().then((r) => r.data),
     staleTime: 5 * 60 * 1000,
   });
 
