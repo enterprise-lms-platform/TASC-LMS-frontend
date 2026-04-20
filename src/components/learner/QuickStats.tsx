@@ -2,9 +2,9 @@ import React from 'react';
 import { Grid, Paper, Box, Typography, Skeleton } from '@mui/material';
 import { MenuBook, AccessTime, School, Star } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
-import { enrollmentApi, certificateApi } from '../../services/learning.services';
+import { enrollmentApi, certificateApi, sessionProgressApi } from '../../services/learning.services';
 import { normalizeEnrollmentListResponse } from '../../hooks/useLearning';
-import type { Certificate, PaginatedResponse } from '../../types/types';
+import type { Certificate, PaginatedResponse, SessionProgress } from '../../types/types';
 
 function normalizeCertificateList(data: unknown): Certificate[] {
   if (Array.isArray(data)) return data as Certificate[];
@@ -19,6 +19,19 @@ function normalizeCertificateList(data: unknown): Certificate[] {
   return [];
 }
 
+function normalizeSessionProgressList(data: unknown): SessionProgress[] {
+  if (Array.isArray(data)) return data as SessionProgress[];
+  if (
+    data &&
+    typeof data === 'object' &&
+    'results' in data &&
+    Array.isArray((data as PaginatedResponse<SessionProgress>).results)
+  ) {
+    return (data as PaginatedResponse<SessionProgress>).results;
+  }
+  return [];
+}
+
 const QuickStats: React.FC = () => {
   const { data: enrollmentsData, isLoading: loadingEnrollments } = useQuery({
     queryKey: ['learner', 'enrollments', 'stats'],
@@ -29,10 +42,21 @@ const QuickStats: React.FC = () => {
     queryKey: ['learner', 'certificates', 'stats'],
     queryFn: () => certificateApi.getAll({ page: 1, page_size: 100 }).then((r) => r.data),
   });
+  const { data: sessionProgressData, isLoading: loadingProgress } = useQuery({
+    queryKey: ['learner', 'session-progress', 'stats'],
+    queryFn: () => sessionProgressApi.getAll().then((r) => r.data),
+  });
 
   const enrollments = normalizeEnrollmentListResponse(enrollmentsData);
   const activeCourses = enrollments.filter(e => Number(e.progress_percentage) < 100).length;
   const certificates = normalizeCertificateList(certificatesData).length;
+  const sessionProgress = normalizeSessionProgressList(sessionProgressData);
+  const totalTimeSpentSeconds = sessionProgress.reduce(
+    (sum, progress) => sum + Number(progress.time_spent_seconds || 0),
+    0,
+  );
+  const learningHours = Math.round((totalTimeSpentSeconds / 3600) * 10) / 10;
+  const learningHoursLabel = `${learningHours % 1 === 0 ? learningHours.toFixed(0) : learningHours.toFixed(1)}h`;
   const avgProgress =
     enrollments.length > 0
       ? Math.round(
@@ -40,7 +64,7 @@ const QuickStats: React.FC = () => {
         )
       : 0;
 
-  const isLoading = loadingEnrollments || loadingCerts;
+  const isLoading = loadingEnrollments || loadingCerts || loadingProgress;
 
   const stats = [
     {
@@ -54,7 +78,7 @@ const QuickStats: React.FC = () => {
     },
     {
       label: 'Learning Hours',
-      value: '—',
+      value: learningHoursLabel,
       icon: <AccessTime />,
       bgcolor: '#f4f4f5',
       iconBg: '#a1a1aa',
