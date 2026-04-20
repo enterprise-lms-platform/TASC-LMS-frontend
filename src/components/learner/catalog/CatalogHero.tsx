@@ -4,22 +4,22 @@ import { useQuery } from '@tanstack/react-query';
 import { publicStatsApi } from '../../../services/public.services';
 
 const formatCount = (n: number): string => {
-  if (n >= 1000) return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}K+`;
-  return `${n}+`;
+  if (n >= 1000) return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}K`;
+  return `${n}`;
 };
 
 const CatalogHero: React.FC = () => {
-  const { data: statsData } = useQuery({
+  const { data: statsData, isSuccess: hasStats } = useQuery({
     queryKey: ['catalogHeroStats'],
     queryFn: () => publicStatsApi.getStats(),
   });
   const stats = statsData?.data;
 
   const heroStats = [
-    { value: stats ? formatCount(stats.courses) : '1,000+', label: 'Courses' },
-    { value: stats ? formatCount(stats.instructors) : '200+', label: 'Instructors' },
-    { value: stats ? formatCount(stats.learners) : '50K+', label: 'Learners' },
-    { value: '4.8', label: 'Avg Rating' },
+    { value: hasStats && stats ? formatCount(stats.courses) : '—', label: 'Courses' },
+    { value: hasStats && stats ? formatCount(stats.instructors) : '—', label: 'Instructors' },
+    { value: hasStats && stats ? formatCount(stats.learners) : '—', label: 'Learners' },
+    { value: '—', label: 'Avg Rating' },
   ];
 
   return (

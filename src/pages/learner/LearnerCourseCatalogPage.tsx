@@ -21,7 +21,7 @@ const LearnerCourseCatalogPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [favorites, setFavorites] = useState<string[]>([]);
 
-  const { data: coursesData, isLoading: coursesLoading, isError: coursesError, refetch: refetchCourses } = useQuery({
+  const { data: coursesData, isLoading: coursesLoading, isError: coursesError, isSuccess: hasCoursesData, refetch: refetchCourses } = useQuery({
     queryKey: ['public-courses', currentPage],
     queryFn: () => publicCourseApi.getAll({ page: currentPage, page_size: 8 }),
   });
@@ -51,11 +51,11 @@ const LearnerCourseCatalogPage: React.FC = () => {
   }, [courses]);
 
   const kpis = useMemo(() => [
-    { label: 'Courses', value: totalCourses > 0 ? `${totalCourses}+` : '—', icon: <MenuBook />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+    { label: 'Courses', value: hasCoursesData ? `${totalCourses}` : '—', icon: <MenuBook />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
     { label: 'Instructors', value: '—', icon: <School />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
     { label: 'Learners', value: '—', icon: <People />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
     { label: 'Avg Rating', value: '—', icon: <Star />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
-  ], [totalCourses]);
+  ], [hasCoursesData, totalCourses]);
   const hasRealCourses = catalogCourses.length > 0;
 
   const handleMobileMenuToggle = () => {
