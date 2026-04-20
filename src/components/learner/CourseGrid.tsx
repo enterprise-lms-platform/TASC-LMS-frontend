@@ -5,14 +5,15 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { enrollmentApi } from '../../services/learning.services';
 import { normalizeEnrollmentListResponse } from '../../hooks/useLearning';
+import { queryKeys } from '../../hooks/queryKeys';
 import CourseCard from './CourseCard';
 
 const CourseGrid: React.FC = () => {
   const navigate = useNavigate();
 
   const { data: enrollmentsData, isLoading } = useQuery({
-    queryKey: ['learner', 'enrollments', 'active'],
-    queryFn: () => enrollmentApi.getAll({ page_size: 6 }).then(r => r.data),
+    queryKey: queryKeys.enrollments.all,
+    queryFn: () => enrollmentApi.getAll().then((r) => r.data),
   });
 
   const enrollments = normalizeEnrollmentListResponse(enrollmentsData);

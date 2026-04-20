@@ -4,6 +4,7 @@ import { MenuBook, AccessTime, School, Star } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { enrollmentApi, certificateApi, sessionProgressApi } from '../../services/learning.services';
 import { normalizeEnrollmentListResponse } from '../../hooks/useLearning';
+import { queryKeys } from '../../hooks/queryKeys';
 import type { Certificate, PaginatedResponse, SessionProgress } from '../../types/types';
 
 function normalizeCertificateList(data: unknown): Certificate[] {
@@ -34,16 +35,16 @@ function normalizeSessionProgressList(data: unknown): SessionProgress[] {
 
 const QuickStats: React.FC = () => {
   const { data: enrollmentsData, isLoading: loadingEnrollments } = useQuery({
-    queryKey: ['learner', 'enrollments', 'stats'],
-    queryFn: () => enrollmentApi.getAll({}).then(r => r.data),
+    queryKey: queryKeys.enrollments.all,
+    queryFn: () => enrollmentApi.getAll().then((r) => r.data),
   });
 
   const { data: certificatesData, isLoading: loadingCerts } = useQuery({
-    queryKey: ['learner', 'certificates', 'stats'],
+    queryKey: queryKeys.certificates.list({ page: 1, page_size: 100 }),
     queryFn: () => certificateApi.getAll({ page: 1, page_size: 100 }).then((r) => r.data),
   });
   const { data: sessionProgressData, isLoading: loadingProgress } = useQuery({
-    queryKey: ['learner', 'session-progress', 'stats'],
+    queryKey: queryKeys.sessionProgress.all(),
     queryFn: () => sessionProgressApi.getAll().then((r) => r.data),
   });
 
