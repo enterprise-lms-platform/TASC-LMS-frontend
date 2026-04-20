@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Stack, useMediaQuery, useTheme, CssBaseline, Toolbar, Alert, CircularProgress, Typography, Snackbar } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
 
 import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
@@ -9,6 +10,8 @@ import { useMySubscription } from '../../hooks/usePayments';
 import { useCreateEnrollment } from '../../hooks/useLearning';
 import { useCourse } from '../../hooks/useCatalogue';
 import { useCourseReviews } from '../../hooks/usePublicCourse';
+import { sessionProgressApi } from '../../services/learning.services';
+import type { SessionProgress } from '../../types/types';
 
 import CourseDetailHero from '../../components/learner/course/CourseDetailHero';
 import type { CourseHeroData } from '../../components/learner/course/CourseDetailHero';
@@ -41,6 +44,11 @@ const LearnerCourseDetailPage: React.FC = () => {
 
   const { data: course, isLoading: courseLoading, isError: courseError } = useCourse(courseNumericId, { enabled: !!courseId });
   const { data: reviewData } = useCourseReviews(courseNumericId);
+  const { data: sessionProgressRaw } = useQuery({
+    queryKey: ['learner', 'course-detail', 'session-progress', courseNumericId],
+    queryFn: () => sessionProgressApi.getAll({ course: courseNumericId }).then((r) => r.data),
+    enabled: !!courseNumericId && !!course?.enrollment_id,
+  });
 
   const { data: subscriptionStatus, isLoading: subLoading } = useMySubscription();
   const createEnrollment = useCreateEnrollment();
@@ -165,6 +173,37 @@ const LearnerCourseDetailPage: React.FC = () => {
   const requirements = course?.prerequisites
     ? course.prerequisites.split('\n').filter(Boolean)
     : [];
+
+  const sessionProgressList: SessionProgress[] = useMemo(() => {
+    if (Array.isArray(sessionProgressRaw)) return sessionProgressRaw;
+    if (sessionProgressRaw && typeof sessionProgressRaw === 'object') {
+      const maybeResults = (sessionProgressRaw as { results?: unknown }).results;
+      if (Array.isArray(maybeResults)) return maybeResults as SessionProgress[];
+    }
+    return [];
+  }, [sessionProgressRaw]);
+
+  const sidebarStats = useMemo(() => {
+    const totalLessons = Number(course?.total_sessions ?? course?.sessions?.length ?? 0) || 0;
+    const totalHours = Number(course?.duration_hours ?? 0) || 0;
+    const completedLessons = sessionProgressList.filter((p) => p.is_completed).length;
+    const completedHours = Math.round(
+      (sessionProgressList.reduce((sum, p) => sum + Number(p.time_spent_seconds || 0), 0) / 3600) * 10
+    ) / 10;
+    const enrollmentProgressRaw = Number((course as { progress_percentage?: number | string | null } | null)?.progress_percentage ?? 0);
+    const enrollmentProgress = Number.isFinite(enrollmentProgressRaw) ? Math.max(0, Math.min(100, Math.round(enrollmentProgressRaw))) : 0;
+    const derivedProgress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+    const progress = enrollmentProgress > 0 ? enrollmentProgress : derivedProgress;
+
+    return {
+      progress,
+      completedLessons,
+      completedHours,
+      totalLessons,
+      totalHours,
+    };
+  }, [course, sessionProgressList]);
+
   const routeReason = searchParams.get('reason');
   const routeMessage =
     routeReason === 'enrollment_required'
@@ -309,12 +348,13 @@ const LearnerCourseDetailPage: React.FC = () => {
             {!isMobile && (
               <Box>
                 <CourseSidebar
-                  progress={0}
-                  completedLessons={0}
-                  totalLessons={course.total_sessions || 0}
-                  completedHours={0}
-                  totalHours={course.duration_hours || 0}
+                  progress={sidebarStats.progress}
+                  completedLessons={sidebarStats.completedLessons}
+                  totalLessons={sidebarStats.totalLessons}
+                  completedHours={sidebarStats.completedHours}
+                  totalHours={sidebarStats.totalHours}
                   projects={0}
+                  completionRate={sidebarStats.progress}
                 />
               </Box>
             )}

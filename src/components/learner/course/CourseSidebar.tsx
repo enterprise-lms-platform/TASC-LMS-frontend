@@ -97,7 +97,7 @@ const CourseSidebar: React.FC<CourseSidebarProps> = ({
             { value: totalLessons, label: 'Lessons' },
             { value: `${totalHours}h`, label: 'Video' },
             { value: projects, label: 'Projects' },
-            { value: `${completionRate}%`, label: 'Completion' },
+            { value: `${completionRate}%`, label: 'Your Completion' },
           ].map((stat) => (
             <Grid key={stat.label} size={{ xs: 6 }}>
               <Box
