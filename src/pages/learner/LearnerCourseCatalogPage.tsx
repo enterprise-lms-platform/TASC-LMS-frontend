@@ -11,7 +11,6 @@ import CatalogHero from '../../components/learner/catalog/CatalogHero';
 import CatalogFilterBar from '../../components/learner/catalog/CatalogFilterBar';
 import CatalogCategoryCard from '../../components/learner/catalog/CatalogCategoryCard';
 import CatalogCourseCard, { type Course as CatalogCourse } from '../../components/learner/catalog/CatalogCourseCard';
-import CatalogInstructorCard, { sampleInstructors } from '../../components/learner/catalog/CatalogInstructorCard';
 import CatalogPagination from '../../components/learner/catalog/CatalogPagination';
 import { publicCourseApi, publicCategoryApi } from '../../services/public.services';
 import type { Category } from '../../types/types';
@@ -120,10 +119,6 @@ const LearnerCourseCatalogPage: React.FC = () => {
       setSelectedCategoryId(parsed);
       setCurrentPage(1);
     }
-  };
-
-  const handleInstructorProfile = (instructor: any) => {
-    console.log('Viewing instructor:', instructor.name);
   };
 
   const SectionHeader = ({ title, viewAllText }: { title: string; viewAllText: string }) => (
@@ -371,21 +366,6 @@ const LearnerCourseCatalogPage: React.FC = () => {
               </Typography>
             </Paper>
           )}
-        </Box>
-
-        {/* Featured Instructors */}
-        <Box sx={{ mb: 6 }}>
-          <SectionHeader title="Featured Instructors" viewAllText="View All Instructors" />
-          <Grid container spacing={3}>
-            {sampleInstructors.map((instructor) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={instructor.id}>
-                <CatalogInstructorCard
-                  instructor={instructor}
-                  onViewProfile={handleInstructorProfile}
-                />
-              </Grid>
-            ))}
-          </Grid>
         </Box>
 
         {/* Pagination */}
