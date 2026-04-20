@@ -7,7 +7,7 @@ interface Category {
   name: string;
   description: string;
   courseCount: number;
-  startingPrice: number;
+  startingPrice?: number;
   icon: React.ReactNode;
   color: string;
   gradientEnd: string;
@@ -146,9 +146,11 @@ const CatalogCategoryCard: React.FC<CatalogCategoryCardProps> = ({ category, onC
           <Typography variant="body2" color="text.secondary">
             {category.courseCount} courses
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            From ${category.startingPrice}
-          </Typography>
+          {typeof category.startingPrice === 'number' && (
+            <Typography variant="body2" color="text.secondary">
+              From ${category.startingPrice}
+            </Typography>
+          )}
         </Box>
       </CardContent>
     </Card>

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Toolbar, CssBaseline, Typography, Grid, Stack, Link, Paper, Button } from '@mui/material';
-import { ChevronRight, MenuBook, People, School, Star } from '@mui/icons-material';
+import { ChevronRight, MenuBook, People, School, Star, Code, ShowChart, Security } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import '../../styles/LearnerDashboard.css';
 
@@ -9,21 +9,30 @@ import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
 import CatalogHero from '../../components/learner/catalog/CatalogHero';
 import CatalogFilterBar from '../../components/learner/catalog/CatalogFilterBar';
-import CatalogCategoryCard, { defaultCategories } from '../../components/learner/catalog/CatalogCategoryCard';
+import CatalogCategoryCard from '../../components/learner/catalog/CatalogCategoryCard';
 import CatalogCourseCard, { type Course as CatalogCourse } from '../../components/learner/catalog/CatalogCourseCard';
 import CatalogInstructorCard, { sampleInstructors } from '../../components/learner/catalog/CatalogInstructorCard';
 import CatalogPagination from '../../components/learner/catalog/CatalogPagination';
 import { publicCourseApi, publicCategoryApi } from '../../services/public.services';
+import type { Category } from '../../types/types';
 
 const LearnerCourseCatalogPage: React.FC = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined);
 
   const { data: coursesData, isLoading: coursesLoading, isError: coursesError, isSuccess: hasCoursesData, refetch: refetchCourses } = useQuery({
-    queryKey: ['public-courses', currentPage],
-    queryFn: () => publicCourseApi.getAll({ page: currentPage, page_size: 8 }),
+    queryKey: ['public-courses', currentPage, searchQuery, selectedCategoryId],
+    queryFn: () =>
+      publicCourseApi.getAll({
+        page: currentPage,
+        page_size: 8,
+        search: searchQuery || undefined,
+        category: selectedCategoryId,
+      }),
   });
 
   const { data: categoriesData } = useQuery({
@@ -34,7 +43,34 @@ const LearnerCourseCatalogPage: React.FC = () => {
   const courses = coursesData?.data?.results ?? [];
   const totalCourses = coursesData?.data?.count ?? 0;
   const totalPages = Math.ceil(totalCourses / 8);
-  const categories = categoriesData?.data ?? [];
+  const categories = (categoriesData?.data?.results ?? []) as Category[];
+
+  const categoryStyles = useMemo(
+    () => [
+      { icon: <Code />, color: '#ff6b6b', gradientEnd: '#ff8e8e' },
+      { icon: <ShowChart />, color: '#4ecdc4', gradientEnd: '#7ae6d8' },
+      { icon: <Security />, color: '#45b7d1', gradientEnd: '#6acae7' },
+      { icon: <School />, color: '#96ceb4', gradientEnd: '#b8e0cc' },
+    ],
+    []
+  );
+
+  const browseCategories = useMemo(
+    () =>
+      categories.slice(0, 3).map((category, index) => {
+        const style = categoryStyles[index % categoryStyles.length];
+        return {
+          id: String(category.id),
+          name: category.name,
+          description: category.description || 'Explore available courses in this category.',
+          courseCount: Number(category.courses_count ?? 0),
+          icon: style.icon,
+          color: style.color,
+          gradientEnd: style.gradientEnd,
+        };
+      }),
+    [categories, categoryStyles]
+  );
 
   const catalogCourses: CatalogCourse[] = useMemo(() => {
     return courses.map(c => ({
@@ -78,8 +114,12 @@ const LearnerCourseCatalogPage: React.FC = () => {
     navigate(`/learner/course/${course.id}`);
   };
 
-  const handleCategoryClick = (category: any) => {
-    console.log('Browsing category:', category.name);
+  const handleCategoryClick = (category: { id: string }) => {
+    const parsed = Number(category.id);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      setSelectedCategoryId(parsed);
+      setCurrentPage(1);
+    }
   };
 
   const handleInstructorProfile = (instructor: any) => {
@@ -224,21 +264,45 @@ const LearnerCourseCatalogPage: React.FC = () => {
         </Grid>
 
         {/* Filter Bar */}
-        <CatalogFilterBar />
+        <CatalogFilterBar
+          searchQuery={searchQuery}
+          selectedCategoryId={selectedCategoryId}
+          onSearch={(query, categoryId) => {
+            setSearchQuery(query.trim());
+            setSelectedCategoryId(categoryId);
+            setCurrentPage(1);
+          }}
+        />
 
         {/* Browse by Category */}
         <Box sx={{ mb: 6 }}>
           <SectionHeader title="Browse by Category" viewAllText="View All Categories" />
-          <Grid container spacing={3}>
-            {defaultCategories.slice(0, 3).map((category) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={category.id}>
-                <CatalogCategoryCard
-                  category={category}
-                  onClick={handleCategoryClick}
-                />
-              </Grid>
-            ))}
-          </Grid>
+          {browseCategories.length > 0 ? (
+            <Grid container spacing={3}>
+              {browseCategories.map((category) => (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={category.id}>
+                  <CatalogCategoryCard
+                    category={category}
+                    onClick={handleCategoryClick}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          ) : (
+            <Paper
+              elevation={0}
+              sx={{
+                border: '1px solid #e4e4e7',
+                borderRadius: 3,
+                p: { xs: 3, md: 4 },
+                bgcolor: 'white',
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                No course categories are available right now.
+              </Typography>
+            </Paper>
+          )}
         </Box>
 
         {/* Most Popular Courses */}
