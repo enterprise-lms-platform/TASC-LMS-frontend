@@ -35,6 +35,11 @@ interface CourseDetailHeroProps {
   hasSubscription?: boolean;
   isEnrolling?: boolean;
   isLoadingSubscription?: boolean;
+  subscriptionOffer?: {
+    planName: string;
+    priceDisplay: string;
+    billingPeriodLabel: string;
+  } | null;
 }
 
 const CourseDetailHero: React.FC<CourseDetailHeroProps> = ({
@@ -44,6 +49,7 @@ const CourseDetailHero: React.FC<CourseDetailHeroProps> = ({
   hasSubscription = false,
   isEnrolling = false,
   isLoadingSubscription = false,
+  subscriptionOffer = null,
 }) => {
   return (
     <Box
@@ -273,7 +279,7 @@ const CourseDetailHero: React.FC<CourseDetailHeroProps> = ({
               <>
                 <Box sx={{ mb: 3 }}>
                   <Chip
-                    label="Biannual Plan"
+                    label={subscriptionOffer?.planName || 'Subscription Plan'}
                     sx={{
                       bgcolor: 'rgba(255, 164, 36, 0.15)',
                       color: '#ffa424',
@@ -282,12 +288,18 @@ const CourseDetailHero: React.FC<CourseDetailHeroProps> = ({
                       border: '1px solid rgba(255, 164, 36, 0.3)',
                     }}
                   />
-                  <Typography variant="h4" fontWeight={700} sx={{ mb: 0.5 }}>
-                    $99.00{' '}
-                    <Typography component="span" variant="h6" sx={{ opacity: 0.8, fontWeight: 500 }}>
-                      / 6 months
+                  {subscriptionOffer ? (
+                    <Typography variant="h4" fontWeight={700} sx={{ mb: 0.5 }}>
+                      {subscriptionOffer.priceDisplay}{' '}
+                      <Typography component="span" variant="h6" sx={{ opacity: 0.8, fontWeight: 500 }}>
+                        / {subscriptionOffer.billingPeriodLabel}
+                      </Typography>
                     </Typography>
-                  </Typography>
+                  ) : (
+                    <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 600, mb: 0.5 }}>
+                      Plan pricing unavailable right now.
+                    </Typography>
+                  )}
                   <Typography variant="body2" sx={{ opacity: 0.8 }}>
                     Unlimited access to this and all other courses
                   </Typography>

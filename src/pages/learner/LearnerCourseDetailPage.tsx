@@ -7,12 +7,13 @@ import Sidebar, { DRAWER_WIDTH } from '../../components/learner/Sidebar';
 import TopBar from '../../components/learner/TopBar';
 
 import { useMySubscription } from '../../hooks/usePayments';
+import { useSubscriptions } from '../../hooks/usePayments';
 import { useCreateEnrollment } from '../../hooks/useLearning';
 import { useCourse } from '../../hooks/useCatalogue';
 import { useCourseReviews } from '../../hooks/usePublicCourse';
 import { sessionProgressApi } from '../../services/learning.services';
 import { publicCourseApi } from '../../services/public.services';
-import type { CourseList, SessionProgress } from '../../types/types';
+import type { CourseList, SessionProgress, Subscription } from '../../types/types';
 
 import CourseDetailHero from '../../components/learner/course/CourseDetailHero';
 import type { CourseHeroData } from '../../components/learner/course/CourseDetailHero';
@@ -97,8 +98,10 @@ const LearnerCourseDetailPage: React.FC = () => {
   });
 
   const { data: subscriptionStatus, isLoading: subLoading } = useMySubscription();
+  const { data: subscriptionsResponse = [] } = useSubscriptions();
   const createEnrollment = useCreateEnrollment();
   const hasSubscription = subscriptionStatus?.has_active_subscription ?? false;
+  const subscriptionPlans = (subscriptionsResponse ?? []) as Subscription[];
 
   const courseHeroData: CourseHeroData | null = useMemo(() => {
     if (!course) return null;
@@ -340,6 +343,48 @@ const LearnerCourseDetailPage: React.FC = () => {
     return items;
   }, [course]);
 
+  const heroSubscriptionOffer = useMemo(() => {
+    const isPaidPlan = (plan: Subscription) => {
+      const price = Number.parseFloat(plan.price || '0');
+      return (plan.trial_days ?? 0) <= 0 && price > 0 && !/trial/i.test(plan.name || '');
+    };
+
+    const canonicalPlan =
+      subscriptionPlans.filter(isPaidPlan).find((plan) => plan.status === 'active') ??
+      subscriptionPlans.filter(isPaidPlan)[0] ??
+      subscriptionPlans.find((plan) => plan.status === 'active') ??
+      subscriptionPlans[0];
+
+    if (!canonicalPlan) return null;
+
+    const amount = Number.parseFloat(canonicalPlan.price || '0');
+    if (!Number.isFinite(amount) || amount <= 0) return null;
+
+    const currency = (canonicalPlan.currency || 'USD').toUpperCase();
+    const formattedPrice = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+
+    const cycleLabels: Record<string, string> = {
+      monthly: 'month',
+      quarterly: '3 months',
+      biannual: '6 months',
+      yearly: 'year',
+    };
+    const billingPeriodLabel =
+      cycleLabels[canonicalPlan.billing_cycle] ||
+      (canonicalPlan.duration_days === 180 ? '6 months' : `${canonicalPlan.duration_days} days`);
+
+    return {
+      planName: canonicalPlan.name,
+      priceDisplay: formattedPrice,
+      billingPeriodLabel,
+    };
+  }, [subscriptionPlans]);
+
   if (courseLoading) {
     return (
       <Box sx={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', bgcolor: '#fafafa' }}>
@@ -394,6 +439,7 @@ const LearnerCourseDetailPage: React.FC = () => {
           hasSubscription={hasSubscription}
           isEnrolling={createEnrollment.isPending}
           isLoadingSubscription={subLoading}
+          subscriptionOffer={heroSubscriptionOffer}
         />
 
         <Box
