@@ -310,6 +310,36 @@ const LearnerCourseDetailPage: React.FC = () => {
     [similarCourses]
   );
 
+  const sidebarIncludeItems = useMemo(() => {
+    const items: { label: string; type: 'video' | 'lesson' | 'certificate' }[] = [];
+    const totalLessons = Number(course?.total_sessions ?? course?.sessions?.length ?? 0) || 0;
+    const totalHours = Number(course?.duration_hours ?? 0) || 0;
+
+    if (totalLessons > 0) {
+      items.push({
+        label: `${totalLessons} lesson${totalLessons === 1 ? '' : 's'}`,
+        type: 'lesson',
+      });
+    }
+
+    if (totalHours > 0) {
+      const formattedHours = Number.isInteger(totalHours) ? String(totalHours) : totalHours.toFixed(1);
+      items.push({
+        label: `${formattedHours} hours of video`,
+        type: 'video',
+      });
+    }
+
+    if (course?.certificate_on_completion) {
+      items.push({
+        label: 'Certificate of completion',
+        type: 'certificate',
+      });
+    }
+
+    return items;
+  }, [course]);
+
   if (courseLoading) {
     return (
       <Box sx={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', bgcolor: '#fafafa' }}>
@@ -418,6 +448,7 @@ const LearnerCourseDetailPage: React.FC = () => {
                   totalHours={sidebarStats.totalHours}
                   projects={0}
                   completionRate={sidebarStats.progress}
+                  includeItems={sidebarIncludeItems}
                   similarCourses={sidebarSimilarCourses}
                   onSimilarCourseClick={(id) => {
                     navigate(`/learner/course/${id}`);

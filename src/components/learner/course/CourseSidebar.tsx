@@ -3,7 +3,6 @@ import { Box, Typography, Stack, LinearProgress, Grid } from '@mui/material';
 import {
   VideoLibrary as VideoIcon,
   Code as CodeIcon,
-  Download as DownloadIcon,
   EmojiEvents as CertificateIcon,
 } from '@mui/icons-material';
 
@@ -15,7 +14,10 @@ interface CourseSidebarProps {
   totalHours: number;
   projects: number;
   completionRate?: number;
-  features?: string[];
+  includeItems?: {
+    label: string;
+    type: 'video' | 'lesson' | 'certificate';
+  }[];
   similarCourses?: {
     id: string;
     title: string;
@@ -34,16 +36,15 @@ const CourseSidebar: React.FC<CourseSidebarProps> = ({
   totalHours,
   projects,
   completionRate = 89,
-  features = [
-    '12 hours on-demand video',
-    '7 practical projects',
-    'Downloadable resources',
-    'Certificate of completion',
-  ],
+  includeItems = [],
   similarCourses = [],
   onSimilarCourseClick,
 }) => {
-  const featureIcons = [VideoIcon, CodeIcon, DownloadIcon, CertificateIcon];
+  const includeIconByType = {
+    video: VideoIcon,
+    lesson: CodeIcon,
+    certificate: CertificateIcon,
+  } as const;
 
   return (
     <Stack spacing={3}>
@@ -147,29 +148,35 @@ const CourseSidebar: React.FC<CourseSidebarProps> = ({
         <Typography fontWeight={600} color="text.primary" sx={{ mb: 2 }}>
           This Course Includes
         </Typography>
-        <Stack spacing={1.5}>
-          {features.map((feature, index) => {
-            const Icon = featureIcons[index % featureIcons.length];
-            return (
-              <Stack
-                key={feature}
-                direction="row"
-                alignItems="center"
-                spacing={1.5}
-                sx={{
-                  p: 1.5,
-                  bgcolor: '#fafafa',
-                  borderRadius: 2,
-                }}
-              >
-                <Icon sx={{ fontSize: 20, color: '#ffa424' }} />
-                <Typography variant="body2" color="text.primary">
-                  {feature}
-                </Typography>
-              </Stack>
-            );
-          })}
-        </Stack>
+        {includeItems.length > 0 ? (
+          <Stack spacing={1.5}>
+            {includeItems.map((item) => {
+              const Icon = includeIconByType[item.type];
+              return (
+                <Stack
+                  key={item.label}
+                  direction="row"
+                  alignItems="center"
+                  spacing={1.5}
+                  sx={{
+                    p: 1.5,
+                    bgcolor: '#fafafa',
+                    borderRadius: 2,
+                  }}
+                >
+                  <Icon sx={{ fontSize: 20, color: '#ffa424' }} />
+                  <Typography variant="body2" color="text.primary">
+                    {item.label}
+                  </Typography>
+                </Stack>
+              );
+            })}
+          </Stack>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            No additional course details are available right now.
+          </Typography>
+        )}
       </Box>
 
       {/* Similar Courses */}
