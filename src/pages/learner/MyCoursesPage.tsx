@@ -51,7 +51,7 @@ const MyCoursesPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('recent');
 
-  const { data: enrollmentsRaw, isLoading } = useQuery({
+  const { data: enrollmentsRaw, isLoading, isError, refetch } = useQuery({
     queryKey: ['learner', 'my-courses'],
     queryFn: () => enrollmentApi.getAll({ page_size: 50 }).then(r => r.data),
   });
@@ -249,6 +249,21 @@ const MyCoursesPage: React.FC = () => {
                   </Box>
                 </Box>
               ))
+            ) : isError ? (
+              <Box sx={{ py: 6, textAlign: 'center' }}>
+                <CourseIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
+                <Typography color="text.disabled">
+                  We couldn’t load your courses right now.
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => { void refetch(); }}
+                  sx={{ mt: 2, textTransform: 'none', borderRadius: 2 }}
+                >
+                  Retry
+                </Button>
+              </Box>
             ) : filtered.length === 0 ? (
               <Box sx={{ py: 6, textAlign: 'center' }}>
                 <CourseIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
