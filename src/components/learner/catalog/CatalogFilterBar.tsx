@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Box, Button, Select, MenuItem, InputBase } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
@@ -6,15 +6,25 @@ import { publicCategoryApi } from '../../../services/public.services';
 
 interface CatalogFilterBarProps {
   searchQuery?: string;
+  selectedCategoryId?: number;
   onSearch?: (query: string, categoryId?: number) => void;
 }
 
 const CatalogFilterBar: React.FC<CatalogFilterBarProps> = ({
   searchQuery: initialQuery = '',
+  selectedCategoryId,
   onSearch,
 }) => {
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState('');
+
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
+
+  useEffect(() => {
+    setCategory(selectedCategoryId ? String(selectedCategoryId) : '');
+  }, [selectedCategoryId]);
 
   const { data: categoriesData } = useQuery({
     queryKey: ['publicCategories'],
