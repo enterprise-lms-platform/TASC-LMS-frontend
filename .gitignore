@@ -43,3 +43,6 @@ FRONTEND_INTEGRATION_HANDOFF.md
 
 # add git
 .github/*
+
+# Graphify cache
+graphify-out/
