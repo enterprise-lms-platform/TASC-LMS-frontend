@@ -312,12 +312,21 @@ export const usePesapalInitiateSubscriptionOnetime = () => {
   });
 };
 
-export const usePesapalPaymentStatus = (paymentId?: string) =>
+export const usePesapalPaymentStatus = (paymentId?: string, enabled = true) =>
   useQuery({
     queryKey: ['pesapal', 'payment-status', paymentId],
     queryFn: () => pesapalApi.getStatus(paymentId as string).then((r) => r.data),
-    enabled: !!paymentId,
+    enabled: !!paymentId && enabled,
     refetchOnWindowFocus: false,
+    refetchInterval: (query) => {
+      const data = query?.state?.data;
+      const fetchCount = query?.state?.fetchFailureCount ?? 0;
+      // Stop polling after ~2 minutes (40 x 3s = 120s) or if not pending
+      if (fetchCount > 40) return false;
+      if (!data) return 3000;
+      const status = data.status?.toLowerCase();
+      return status === 'pending' ? 3000 : false;
+    },
   });
 
 // ── User Subscriptions ──

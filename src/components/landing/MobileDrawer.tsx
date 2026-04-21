@@ -21,8 +21,8 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ open, onClose }) => {
 
   const menuItems = [
     { label: 'Courses', href: '/courses', icon: 'book-open' },
-    { label: 'Features', href: '#features', icon: 'star' },
-    { label: 'Pricing', href: '#pricing', icon: 'tag' },
+        { label: 'Features', href: '/#features', icon: 'star' },
+        { label: 'Pricing', href: '/#pricing', icon: 'tag' },
     { label: 'For Business', href: '/for-business', icon: 'building' },
     { label: 'Verify Certificate', href: '/verify-certificate', icon: 'certificate' },
   ];

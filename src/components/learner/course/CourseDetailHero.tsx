@@ -87,19 +87,19 @@ const CourseDetailHero: React.FC<CourseDetailHeroProps> = ({
           spacing={1}
           sx={{ mb: 3, fontSize: '0.875rem', opacity: 0.9 }}
         >
-          <Typography
-            component="a"
-            href="#"
-            sx={{ color: 'white', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
-          >
-            Courses
-          </Typography>
-          <Typography sx={{ opacity: 0.7 }}>›</Typography>
-          <Typography
-            component="a"
-            href="#"
-            sx={{ color: 'white', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
-          >
+        <Typography
+          component="a"
+          href="/learner/courses"
+          sx={{ color: 'white', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+        >
+          Courses
+        </Typography>
+        <Typography sx={{ opacity: 0.7 }}>›</Typography>
+        <Typography
+          component="a"
+          href={`/learner/courses?category=${course?.category || ''}`}
+          sx={{ color: 'white', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+        >
             {course.category}
           </Typography>
           <Typography sx={{ opacity: 0.7 }}>›</Typography>

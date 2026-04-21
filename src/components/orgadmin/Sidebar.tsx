@@ -29,6 +29,7 @@ import {
   Assessment as ReportsIcon,
   Notifications as NotificationsIcon,
   Message as MessageIcon,
+  CreditCard as BillingIcon,
 } from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -87,14 +88,15 @@ const NAV_SECTIONS: NavSection[] = [
     { text: 'Certificates', icon: <CertificatesIcon />, path: '/org-admin/certificates' },
   ],
 },
-{
-  title: 'Account',
-  items: [
-    { text: 'Leave a Testimonial', icon: <TestimonialIcon />, path: '/org-admin/testimonial' },
-    { text: 'Settings', icon: <SettingsIcon />, path: '/org-admin/settings' },
-    { text: 'My Profile', icon: <ProfileIcon />, path: '/org-admin/profile' },
-  ],
-},
+  {
+    title: 'Account',
+    items: [
+      { text: 'Leave a Testimonial', icon: <TestimonialIcon />, path: '/org-admin/testimonial' },
+      { text: 'Billing', icon: <BillingIcon />, path: '/org-admin/billing' },
+      { text: 'Settings', icon: <SettingsIcon />, path: '/org-admin/settings' },
+      { text: 'My Profile', icon: <ProfileIcon />, path: '/org-admin/profile' },
+    ],
+  },
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose = () => {} }) => {

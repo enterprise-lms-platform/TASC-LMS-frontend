@@ -69,6 +69,8 @@ interface MappedOrg {
   initials: string;
   bgColor: string;
   plan: string;
+  subscriptionStatus: string | null;
+  subscriptionEndDate: string | null;
   users: string;
   courses: number;
   revenue: string;
@@ -125,6 +127,8 @@ const AllOrganizationsPage: React.FC = () => {
     initials: org.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase(),
     bgColor: 'linear-gradient(135deg, #ffb74d, #ffa424)',
     plan: '—',
+    subscriptionStatus: org.subscription_status || null,
+    subscriptionEndDate: org.subscription_end_date || null,
     users: String(org.users_count || 0),
     courses: org.courses_count || 0,
     revenue: '$0',
@@ -219,7 +223,7 @@ const AllOrganizationsPage: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                {['Organization', 'Plan', 'Users', 'Courses', 'Revenue', 'Status', 'Created', ''].map((h) => (
+                {['Organization', 'Plan', 'Subscription', 'Users', 'Courses', 'Revenue', 'Status', 'Created', ''].map((h) => (
                   <TableCell key={h} sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.7rem', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{h}</TableCell>
                 ))}
               </TableRow>
@@ -235,7 +239,31 @@ const AllOrganizationsPage: React.FC = () => {
                       <Typography variant="body2" sx={{ fontWeight: 500 }}>{org.name}</Typography>
                     </Box>
                   </TableCell>
-                  <TableCell><Typography variant="body2">{org.plan}</Typography></TableCell>
+                    <TableCell><Typography variant="body2">{org.plan}</Typography></TableCell>
+                    <TableCell>
+                      {org.subscriptionStatus ? (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                          <Chip
+                            label={org.subscriptionStatus}
+                            size="small"
+                            sx={{
+                              fontWeight: 500,
+                              fontSize: '0.7rem',
+                              bgcolor: org.subscriptionStatus === 'active' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                              color: org.subscriptionStatus === 'active' ? '#10b981' : '#ef4444',
+                              width: 'fit-content',
+                            }}
+                          />
+                          {org.subscriptionEndDate && (
+                            <Typography variant="caption" color="text.secondary">
+                              Exp: {new Date(org.subscriptionEndDate).toLocaleDateString()}
+                            </Typography>
+                          )}
+                        </Box>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">None</Typography>
+                      )}
+                    </TableCell>
                   <TableCell><Typography variant="body2">{org.users}</Typography></TableCell>
                   <TableCell><Typography variant="body2">{org.courses}</Typography></TableCell>
                   <TableCell><Typography variant="body2" sx={{ fontWeight: 500 }}>{org.revenue}</Typography></TableCell>
@@ -264,7 +292,7 @@ const AllOrganizationsPage: React.FC = () => {
               ))}
               {filteredOrganizations.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 4, color: 'text.secondary' }}>No organizations found</TableCell>
+                  <TableCell colSpan={9} align="center" sx={{ py: 4, color: 'text.secondary' }}>No organizations found</TableCell>
                 </TableRow>
               )}
             </TableBody>

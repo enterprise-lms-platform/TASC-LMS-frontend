@@ -139,7 +139,7 @@ const LearnerCourseCatalogPage: React.FC = () => {
         {title}
       </Typography>
       <Link
-        href="#"
+        href="/learner/courses"
         underline="hover"
         sx={{
           color: '#ffa424',
@@ -394,18 +394,18 @@ const LearnerCourseCatalogPage: React.FC = () => {
             © 2025 TASC Learning Management System. Discover endless learning opportunities.
           </Typography>
           <Stack direction="row" spacing={3}>
-            <Link href="#" underline="hover" color="text.secondary" variant="body2">
-              Become an Instructor
-            </Link>
-            <Link href="#" underline="hover" color="text.secondary" variant="body2">
-              Help Center
-            </Link>
-            <Link href="#" underline="hover" color="text.secondary" variant="body2">
-              Terms
-            </Link>
-            <Link href="#" underline="hover" color="text.secondary" variant="body2">
-              Privacy
-            </Link>
+                  <Link href="/become-instructor" underline="hover" color="text.secondary" variant="body2">
+                    Become an Instructor
+                  </Link>
+                  <Link href="/help-center" underline="hover" color="text.secondary" variant="body2">
+                    Help Center
+                  </Link>
+                  <Link href="/terms-of-service" underline="hover" color="text.secondary" variant="body2">
+                    Terms
+                  </Link>
+                  <Link href="/privacy-policy" underline="hover" color="text.secondary" variant="body2">
+                    Privacy
+                  </Link>
           </Stack>
         </Box>
       </Box>

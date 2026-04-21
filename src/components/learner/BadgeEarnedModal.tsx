@@ -11,7 +11,7 @@ const Transition = React.forwardRef(function Transition(props: any, ref) {
 const BadgeEarnedModal: React.FC = () => {
   const { newlyEarnedBadges, markAsSeen } = useBadges();
   const navigate = useNavigate();
-  const [currentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const activeBadge = newlyEarnedBadges[currentIndex];
   const isOpen = Boolean(activeBadge);
@@ -32,6 +32,9 @@ const BadgeEarnedModal: React.FC = () => {
   const handleNext = () => {
     if (activeBadge) {
       markAsSeen([activeBadge.id]);
+    }
+    if (currentIndex < newlyEarnedBadges.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
     }
   };
 

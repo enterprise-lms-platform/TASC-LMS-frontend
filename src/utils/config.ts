@@ -89,6 +89,7 @@ export const getErrorMessage = (error: unknown, fallback = 'An unexpected error 
     if (data) {
       if (typeof data === 'string') return data;
       if (data.detail) return String(data.detail);
+      if (data.message) return String(data.message);
       if (data.non_field_errors) return [].concat(data.non_field_errors).join(' ');
       // Handle validation errors (field: ["error1", "error2"])
       if (typeof data === 'object') {

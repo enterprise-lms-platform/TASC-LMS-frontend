@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { managerMembersApi, managerSettingsApi, managerBillingApi, managerActivityApi, type ManagerMembersParams } from '../services/organization.services';
+import { managerMembersApi, managerSettingsApi, managerBillingApi, managerActivityApi, seatManagementApi, type ManagerMembersParams } from '../services/organization.services';
 import { courseApi } from '../services/catalogue.services';
 import { enrollmentApi, certificateApi, sessionProgressApi } from '../services/learning.services';
 import { notificationApi } from '../services/notifications.services';
@@ -150,4 +150,16 @@ export const useOrgReports = (params?: ReportListParams) => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['org-admin', 'reports'] }),
   });
   return { ...query, generate };
+};
+
+export const useUnassignMember = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (memberId: number) => seatManagementApi.unassignMember(memberId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['org-admin-members'] });
+      qc.invalidateQueries({ queryKey: ['org-admin', 'billing', 'usage'] });
+      qc.invalidateQueries({ queryKey: ['seat-usage'] });
+    },
+  });
 };

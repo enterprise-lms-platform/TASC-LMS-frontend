@@ -166,14 +166,15 @@ export const managerBillingApi = {
 };
 
 export interface ManagerMemberItem {
-  id: number;
-  email: string;
-  name: string;
-  role: string;
-  is_active: boolean;
-  email_verified: boolean;
-  date_joined: string;
-  last_login: string | null;
+    id: number;
+    email: string;
+    name: string;
+    role: string;
+    is_active: boolean;
+    email_verified: boolean;
+    date_joined: string;
+    last_login: string | null;
+    membership_id: number | null;
 }
 
 export interface ManagerMembersParams {

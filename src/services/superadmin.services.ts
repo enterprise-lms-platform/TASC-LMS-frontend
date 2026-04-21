@@ -140,8 +140,8 @@ export const bulkImportApi = {
    * Download CSV template for bulk user import (generated client-side)
    */
   downloadTemplate: () => {
-    const headers = ['first_name', 'last_name', 'email', 'role', 'organization_id'];
-    const example = ['Jane', 'Doe', 'jane.doe@example.com', 'learner', ''];
+    const headers = ['email', 'first_name', 'last_name', 'role', 'phone_number'];
+    const example = ['jane.doe@example.com', 'Jane', 'Doe', 'learner', '+1234567890'];
     const csv = [headers.join(','), example.join(',')].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);

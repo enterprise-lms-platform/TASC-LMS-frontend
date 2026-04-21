@@ -18,7 +18,9 @@ import {
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
 import { useTransactions } from '../../hooks/usePayments';
+import { pesapalApi } from '../../services/payments.services';
 import { apiClient } from '../../utils/config';
+import { useMutation } from '@tanstack/react-query';
 
 const statusCfg = {
   completed: { color: '#10b981', bg: 'rgba(16,185,129,0.1)', icon: <SuccessIcon sx={{ fontSize: 14 }} /> },
@@ -63,6 +65,11 @@ const GatewayPesapalPage: React.FC = () => {
       // silently fail — export is best-effort
     }
   };
+
+  const verifyMutation = useMutation({
+    mutationFn: (paymentId: number) => pesapalApi.getStatus(paymentId.toString()),
+    onSuccess: () => refetch(),
+  });
 
   // Compute stats from real data
   const totalRevenue = transactions.reduce((sum: number, t: any) => {
@@ -183,11 +190,17 @@ const GatewayPesapalPage: React.FC = () => {
                       height: 24, fontSize: '0.7rem', fontWeight: 600, textTransform: 'capitalize',
                       bgcolor: cfg.bg, color: cfg.color, '& .MuiChip-icon': { color: cfg.color },
                     }} />
-                    <IconButton size="small"
-                      onClick={() => setSelectedTransaction(t)}
-                      sx={{ color: 'text.disabled', '&:hover': { color: '#ffa424' } }}>
-                      <ViewIcon sx={{ fontSize: 18 }} />
-                    </IconButton>
+<IconButton size="small"
+            onClick={() => setSelectedTransaction(t)}
+            sx={{ color: 'text.disabled', '&:hover': { color: '#ffa424' } }}>
+            <ViewIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+          <IconButton size="small"
+            onClick={() => verifyMutation.mutate(t.id)}
+            disabled={verifyMutation.isPending}
+            sx={{ color: 'text.disabled', '&:hover': { color: '#6366f1' } }}>
+            <RefreshIcon sx={{ fontSize: 18 }} />
+          </IconButton>
                   </Box>
                 );
               })

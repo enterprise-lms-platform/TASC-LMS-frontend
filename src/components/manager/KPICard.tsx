@@ -9,6 +9,7 @@ interface KPICardProps {
   trend: 'up' | 'down';
   trendText: string;
   linkText: string;
+  linkHref?: string;
   colorScheme: 'primary' | 'info' | 'success' | 'warning';
 }
 
@@ -38,6 +39,7 @@ const KPICard: React.FC<KPICardProps> = ({
   trend,
   trendText,
   linkText,
+  linkHref,
   colorScheme,
 }) => {
   const colors = colorSchemes[colorScheme];
@@ -117,9 +119,9 @@ const KPICard: React.FC<KPICardProps> = ({
           </Typography>
         </Box>
         <Link
-          href="#"
+          href={linkHref || undefined}
           underline="hover"
-          sx={{ fontSize: '0.75rem', fontWeight: 500, color: 'primary.dark' }}
+          sx={{ fontSize: '0.75rem', fontWeight: 500, color: 'primary.dark', cursor: linkHref ? 'pointer' : 'default' }}
         >
           {linkText}
         </Link>

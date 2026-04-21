@@ -29,7 +29,7 @@ const ExternalLinkForm: React.FC<ExternalLinkFormProps> = ({ onAdd }) => {
       <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
         <TextField
           fullWidth
-          placeholder="Enter YouTube, Vimeo, or website URL"
+          placeholder="Enter YouTube, Vimeo, Loom, or website URL"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           InputProps={{
@@ -86,7 +86,7 @@ const ExternalLinkForm: React.FC<ExternalLinkFormProps> = ({ onAdd }) => {
                 }}
               >
                 <WebIcon sx={{ fontSize: 14 }} />
-                {url.includes('youtube') ? 'YouTube' : url.includes('vimeo') ? 'Vimeo' : 'External Website'}
+                {url.includes('youtube') ? 'YouTube' : url.includes('vimeo') ? 'Vimeo' : url.includes('loom') ? 'Loom' : 'External Website'}
               </Typography>
             </Box>
           </Box>

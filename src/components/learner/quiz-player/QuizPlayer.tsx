@@ -390,24 +390,41 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
           You answered {answeredCount} of {questions.length} questions.
         </Typography>
 
-        {/* Show correct answers if settings allow */}
-        {settings.show_correct_answers && settings.show_feedback !== 'never' && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}>
-            {questions.map((q, idx) => {
-              const ans = attempt.answers[q.id];
-              return (
-                <Box key={q.id} sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 2, border: 1, borderColor: 'grey.200' }}>
-                  <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-                    {idx + 1}. {q.question_text}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Your answer: {ans == null ? 'Skipped' : String(ans)}
-                  </Typography>
-                </Box>
-              );
-            })}
-          </Box>
-        )}
+{/* Show correct answers if settings allow */}
+{settings.show_correct_answers && settings.show_feedback !== 'never' && (
+  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}>
+    {questions.map((q, idx) => {
+      const ans = attempt.answers[q.id];
+      const options = (q.answer_payload?.options as { text: string; is_correct: boolean }[]) ?? [];
+      const isCorrect = options.find(o => o.is_correct)?.text === String(ans);
+      const showExplanation =
+        q.explanation &&
+        (settings.show_feedback === 'always' ||
+          (settings.show_feedback === 'on_correct' && isCorrect) ||
+          (settings.show_feedback === 'on_incorrect' && !isCorrect));
+      return (
+        <Box key={q.id} sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 2, border: 1, borderColor: 'grey.200' }}>
+          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+            {idx + 1}. {q.question_text}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Your answer: {ans == null ? 'Skipped' : String(ans)}
+          </Typography>
+          {showExplanation && (
+            <Box sx={{ mt: 1, p: 1.5, bgcolor: 'primary.light', borderRadius: 1, opacity: 0.9 }}>
+              <Typography variant="caption" sx={{ color: 'primary.contrastText', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <InfoIcon sx={{ fontSize: 14 }} /> Explanation
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'primary.contrastText', mt: 0.5 }}>
+                {q.explanation}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      );
+    })}
+  </Box>
+)}
 
         {attemptsLeft - 1 > 0 && !attempt.passed && (
           <Button variant="outlined" startIcon={<RetryIcon />} fullWidth onClick={handleRetry} sx={{ fontWeight: 600 }}>

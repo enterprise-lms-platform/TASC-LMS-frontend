@@ -237,14 +237,15 @@ const ContentUploadPage: React.FC = () => {
       return false;
     }
 
-    const supportedDomains = ['youtube.com', 'vimeo.com', 'dailymotion.com', 'wistia.com'];
+    const supportedDomains = ['youtube.com', 'youtu.be', 'vimeo.com', 'loom.com'];
     try {
-      const hostname = new URL(url).hostname.replace('www.', '');
-      if (!supportedDomains.some((d) => hostname.includes(d))) {
-        setExternalVideoError('');
-      }
+        const hostname = new URL(url).hostname.replace('www.', '');
+        if (!supportedDomains.some((d) => hostname.includes(d))) {
+            setExternalVideoError('Supported video providers: YouTube, Vimeo, Loom');
+            return false;
+        }
     } catch {
-      // ignore
+        // ignore - already validated above
     }
 
     return true;

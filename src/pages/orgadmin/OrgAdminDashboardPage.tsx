@@ -6,6 +6,7 @@ import WelcomeBanner from '../../components/orgadmin/WelcomeBanner';
 import KPIGrid from '../../components/orgadmin/KPIGrid';
 import QuickActions from '../../components/orgadmin/QuickActions';
 import SeatUsageCard from '../../components/orgadmin/SeatUsageCard';
+import SubscriptionExpiryAlert from '../../components/orgadmin/SubscriptionExpiryAlert';
 import RecentMembersTable from '../../components/orgadmin/RecentMembersTable';
 import RecentActivity from '../../components/orgadmin/RecentActivity';
 import TopCourses from '../../components/orgadmin/TopCourses';
@@ -33,7 +34,8 @@ const OrgAdminDashboardPage: React.FC = () => {
         <Toolbar sx={{ minHeight: '72px !important' }} />
 
         <Box sx={{ flex: 1, p: { xs: 2, md: 3 }, overflowX: 'hidden' }}>
-<WelcomeBanner />
+        <WelcomeBanner />
+        <SubscriptionExpiryAlert />
         <KPIGrid />
         <QuickActions />
         <SeatUsageCard />

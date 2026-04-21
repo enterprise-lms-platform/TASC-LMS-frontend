@@ -98,6 +98,10 @@ export const transactionApi = {
   // Retry a failed payment
   retry: (id: number) =>
     apiClient.post<{ message: string; transaction_id: string; status: string }>(`${BASE_PATH}/transactions/${id}/retry/`),
+
+  // Refund a completed Pesapal payment
+  refund: (id: number, remarks?: string) =>
+    apiClient.post<{ success: boolean; message: string }>(`${BASE_PATH}/pesapal/${id}/refund/`, { remarks }),
 };
 
 // PAYMENT METHODS

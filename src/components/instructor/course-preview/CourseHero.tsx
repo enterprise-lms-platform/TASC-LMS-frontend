@@ -65,12 +65,12 @@ const CourseHero: React.FC<CourseHeroProps> = ({
             '& .MuiBreadcrumbs-separator': { color: 'rgba(255, 255, 255, 0.4)' },
           }}
         >
-          <Link href="#" underline="hover" sx={{ color: 'rgba(255, 255, 255, 0.7)', '&:hover': { color: '#ffb74d' } }}>
-            Home
-          </Link>
-          <Link href="#" underline="hover" sx={{ color: 'rgba(255, 255, 255, 0.7)', '&:hover': { color: '#ffb74d' } }}>
-            Courses
-          </Link>
+      <Link href="/instructor/courses" underline="hover" sx={{ color: 'rgba(255, 255, 255, 0.7)', '&:hover': { color: '#ffb74d' } }}>
+        Home
+      </Link>
+      <Link href="/instructor/courses" underline="hover" sx={{ color: 'rgba(255, 255, 255, 0.7)', '&:hover': { color: '#ffb74d' } }}>
+        Courses
+      </Link>
           <Typography sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>Preview</Typography>
         </Breadcrumbs>
 

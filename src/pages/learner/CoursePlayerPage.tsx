@@ -236,26 +236,56 @@ const CoursePlayerPage: React.FC = () => {
     is_locked: d.is_locked,
   }));
 
-  // Video resume: persist playback position in localStorage
-  const playerRef = useRef<HTMLVideoElement | null>(null);
-  const seekedRef = useRef(false);
+// Video resume: persist playback position in localStorage
+const playerRef = useRef<HTMLVideoElement | null>(null);
+const seekedRef = useRef(false);
+const lastSavedPositionRef = useRef(0);
 
-  const storageKey = activeSessionId != null ? `video-pos-${activeSessionId}` : null;
+// Mutation to save video position to backend
+const saveVideoPositionMutation = useMutation({
+  mutationFn: ({ progressId, position }: { progressId: number; position: number }) =>
+    sessionProgressApi.partialUpdate(progressId, { video_position_seconds: position }),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.sessionProgress.all({ course: Number(courseId) }) });
+  },
+});
 
-  const handleVideoProgress = useCallback((state: ReactPlayerProgressState) => {
+const storageKey = activeSessionId != null ? `video-pos-${activeSessionId}` : null;
+
+const handleVideoProgress = useCallback((state: ReactPlayerProgressState) => {
     if (storageKey && state.playedSeconds > 0) {
-      localStorage.setItem(storageKey, String(Math.floor(state.playedSeconds)));
+      const position = Math.floor(state.playedSeconds);
+      localStorage.setItem(storageKey, String(position));
+
+      // Save to backend every 10 seconds to avoid too many API calls
+      // Only save if progress record exists (session was started)
+      const activeProgress = recordedProgressList.find(p => p.session === activeSessionId);
+      if (activeProgress && activeProgress.id && position > 0 && Math.abs(position - lastSavedPositionRef.current) >= 10) {
+        lastSavedPositionRef.current = position;
+        saveVideoPositionMutation.mutate({ progressId: activeProgress.id, position });
+      }
     }
-  }, [storageKey]);
+  }, [storageKey, activeSessionId, recordedProgressList, saveVideoPositionMutation]);
+
+  // Reset lastSavedPositionRef when session changes to allow immediate save on new session
+  useEffect(() => {
+    lastSavedPositionRef.current = 0;
+  }, [activeSessionId]);
 
   const handleVideoReady = useCallback(() => {
-    if (seekedRef.current || !storageKey) return;
-    const saved = localStorage.getItem(storageKey);
-    if (saved && Number(saved) > 2) {
-      if (playerRef.current) playerRef.current.currentTime = Number(saved);
+    if (seekedRef.current || !storageKey || !playerRef.current) return;
+    // First check backend video_position_seconds, then fall back to localStorage
+    const activeProgress = recordedProgressList.find(p => p.session === activeSessionId);
+    if (activeProgress?.video_position_seconds && activeProgress.video_position_seconds > 2) {
+      playerRef.current.currentTime = activeProgress.video_position_seconds;
+    } else {
+      const saved = localStorage.getItem(storageKey);
+      if (saved && Number(saved) > 2) {
+        playerRef.current.currentTime = Number(saved);
+      }
     }
     seekedRef.current = true;
-  }, [storageKey]);
+  }, [storageKey, activeSessionId, recordedProgressList]);
 
   // Reset seek flag when session changes
   useEffect(() => {
@@ -375,9 +405,9 @@ const CoursePlayerPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sessionProgress.all({ course: Number(courseId) }) });
     },
-  });
+});
 
-  const addNote = () => {
+const addNote = () => {
     if (!newNote.trim() || !activeSession) return;
     const note: Note = { id: Date.now(), text: newNote, timestamp: '0:00', sessionTitle: activeSession.title };
     const updatedNotes = [note, ...notes];

@@ -97,6 +97,7 @@ export const TransactionStatus = {
   COMPLETED: 'completed',
   FAILED: 'failed',
   CANCELLED: 'cancelled',
+  REFUNDED: 'refunded',
 } as const;
 export type TransactionStatus = typeof TransactionStatus[keyof typeof TransactionStatus];
 
@@ -427,6 +428,7 @@ export interface QuizQuestion {
   question_text: string;
   points: number;
   answer_payload: Record<string, unknown>;
+  explanation?: string;
 }
 
 export interface QuizDetailResponse {
@@ -731,12 +733,14 @@ export interface SessionProgress {
   time_spent_minutes: number;
   last_accessed_at: string;
   notes?: string;
+  video_position_seconds?: number;
   duration_minutes: number;
 }
 
 export interface SessionProgressUpdateRequest {
   is_completed?: boolean;
   time_spent_seconds?: number;
+  video_position_seconds?: number;
   notes?: string;
 }
 
@@ -1139,11 +1143,16 @@ export interface Organization {
   city?: string | null;
   country?: string | null;
   is_active: boolean;
+  max_seats?: number | null;
+  billing_email?: string | null;
+  tax_id?: string | null;
   settings?: Record<string, any>;
   created_at: string;
   updated_at?: string;
   courses_count?: number;
   users_count?: number;
+  subscription_status?: string | null;
+  subscription_end_date?: string | null;
 }
 
 // COURSE APPROVAL TYPES
@@ -1194,11 +1203,16 @@ export interface SubscriptionPlanInfo {
 }
 
 export interface MySubscriptionStatus {
-  has_active_subscription: boolean;
-  status: string;
-  is_trial: boolean;
-  start_date: string | null;
-  end_date: string | null;
-  days_remaining: number;
-  plan: SubscriptionPlanInfo | null;
+    has_active_subscription: boolean;
+    status: string;
+    is_trial: boolean;
+    start_date: string | null;
+    end_date: string | null;
+    days_remaining: number;
+    plan: SubscriptionPlanInfo | null;
+    grace_period: {
+        in_grace_period: boolean;
+        days_in_grace_period: number;
+        grace_days_remaining: number;
+    } | null;
 }

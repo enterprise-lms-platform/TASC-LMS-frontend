@@ -110,10 +110,10 @@ const Categories: React.FC<CategoriesProps> = ({ isMobile }) => {
           }}
         >
           {categories.length > 0 ? categories.map((category, index) => (
-            <a
-              key={category.id || index}
-              href="#"
-              className="category-card"
+      <a
+        key={category.id || index}
+        href={`/courses?category=${category.id || ''}`}
+        className="category-card"
               style={{
                 backgroundColor: '#fafafa',
                 border: '1px solid #e4e4e7',

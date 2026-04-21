@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box, CssBaseline, Toolbar, Typography, Paper, Chip, Avatar, IconButton,
   Button, TextField, InputAdornment, Select, MenuItem, FormControl, InputLabel, Grid,
-  CircularProgress,
+  CircularProgress, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
+  Snackbar, Alert, Tooltip,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -13,16 +14,21 @@ import {
   PhoneAndroid as MpesaIcon,
   SimCard as MtnIcon,
   Wifi as AirtelIcon,
+  Refresh as RetryIcon,
+  Undo as RefundIcon,
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
 import { useTransactions } from '../../hooks/usePayments';
 import { transactionApi } from '../../services/payments.services';
+import type { Transaction } from '../../types/types';
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   completed: { bg: 'rgba(16,185,129,0.1)', color: '#10b981' },
   pending: { bg: 'rgba(245,158,11,0.1)', color: '#f59e0b' },
   failed: { bg: 'rgba(239,68,68,0.1)', color: '#ef4444' },
+  refunded: { bg: 'rgba(99,102,241,0.1)', color: '#6366f1' },
+  cancelled: { bg: 'rgba(107,114,128,0.1)', color: '#6b7280' },
 };
 
 const getMethodIcon = (method: string) => {
@@ -46,8 +52,37 @@ const FinancePaymentsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [actionTarget, setActionTarget] = useState<{ type: 'retry' | 'refund'; txn: Transaction } | null>(null);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' });
 
+  const queryClient = useQueryClient();
   const { data: transactions, isLoading } = useTransactions();
+
+  const retryMutation = useMutation({
+    mutationFn: (id: number) => transactionApi.retry(id).then((r) => r.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      setSnackbar({ open: true, message: 'Transaction reset for retry.', severity: 'success' });
+      setActionTarget(null);
+    },
+    onError: () => {
+      setSnackbar({ open: true, message: 'Failed to retry transaction.', severity: 'error' });
+      setActionTarget(null);
+    },
+  });
+
+  const refundMutation = useMutation({
+    mutationFn: ({ id, remarks }: { id: number; remarks?: string }) => transactionApi.refund(id, remarks).then((r) => r.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      setSnackbar({ open: true, message: 'Refund requested successfully.', severity: 'success' });
+      setActionTarget(null);
+    },
+    onError: () => {
+      setSnackbar({ open: true, message: 'Failed to request refund.', severity: 'error' });
+      setActionTarget(null);
+    },
+  });
 
   const exportMutation = useMutation({
     mutationFn: async () => {
@@ -178,6 +213,22 @@ const FinancePaymentsPage: React.FC = () => {
                   bgcolor: statusColors[p.status]?.bg || 'rgba(0,0,0,0.05)',
                   color: statusColors[p.status]?.color || 'text.secondary',
                 }} />
+                {p.status === 'failed' && (
+                  <Tooltip title="Retry payment">
+                    <IconButton size="small" onClick={() => setActionTarget({ type: 'retry', txn: p })}
+                      sx={{ color: '#f59e0b', '&:hover': { bgcolor: 'rgba(245,158,11,0.08)' } }}>
+                      <RetryIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {p.status === 'completed' && (
+                  <Tooltip title="Refund payment">
+                    <IconButton size="small" onClick={() => setActionTarget({ type: 'refund', txn: p })}
+                      sx={{ color: '#ef4444', '&:hover': { bgcolor: 'rgba(239,68,68,0.08)' } }}>
+                      <RefundIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
                 <IconButton size="small"
                   onClick={() => setSelectedTransaction(p)}
                   sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'flex' }, '&:hover': { color: 'primary.main' } }}>
@@ -185,11 +236,54 @@ const FinancePaymentsPage: React.FC = () => {
                 </IconButton>
               </Box>
             ))}
-          </Paper>
-        </Box>
+      </Paper>
       </Box>
-    </Box>
-  );
+      </Box>
+
+      <Dialog open={!!actionTarget} onClose={() => setActionTarget(null)}>
+        <DialogTitle>{actionTarget?.type === 'retry' ? 'Retry Payment' : 'Refund Payment'}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {actionTarget?.type === 'retry'
+              ? `Reset transaction ${actionTarget.txn.transaction_id} so the user can re-attempt payment?`
+              : `Request a refund for transaction ${actionTarget?.txn.transaction_id}? This will revoke the associated enrollment.`}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setActionTarget(null)} sx={{ textTransform: 'none' }}>Cancel</Button>
+          <Button
+            onClick={() => {
+              if (!actionTarget) return;
+              if (actionTarget.type === 'retry') {
+                retryMutation.mutate(actionTarget.txn.id);
+              } else {
+                refundMutation.mutate({ id: actionTarget.txn.id });
+              }
+            }}
+            color={actionTarget?.type === 'refund' ? 'error' : 'primary'}
+            variant="contained"
+            disabled={retryMutation.isPending || refundMutation.isPending}
+            sx={{ textTransform: 'none', fontWeight: 600 }}
+          >
+            {retryMutation.isPending || refundMutation.isPending
+              ? actionTarget?.type === 'retry' ? 'Retrying...' : 'Refunding...'
+              : actionTarget?.type === 'retry' ? 'Retry' : 'Refund'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setSnackbar((s) => ({ ...s, open: false }))} severity={snackbar.severity} variant="filled">
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+      </Box>
+    );
 };
 
 export default FinancePaymentsPage;

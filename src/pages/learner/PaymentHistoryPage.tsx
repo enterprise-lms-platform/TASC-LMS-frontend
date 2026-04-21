@@ -355,11 +355,11 @@ const PaymentHistoryPage: React.FC = () => {
                               <IconButton size="small" title="Download"><DownloadIcon fontSize="small" /></IconButton>
                             </>
                           )}
-                          {(txn.status === 'pending' || txn.status === 'failed') && (
-                            <Button size="small" variant="contained" startIcon={<RefreshIcon />} sx={{ bgcolor: '#ffa424', textTransform: 'none', fontSize: '0.7rem', px: 1.5, whiteSpace: 'nowrap', '&:hover': { bgcolor: '#f97316' } }}>
-                              Retry
-                            </Button>
-                          )}
+                        {(txn.status === 'pending' || txn.status === 'failed') && (
+                          <Button size="small" variant="contained" startIcon={<RefreshIcon />} onClick={() => retryMutation.mutate(txn.id)} disabled={retryMutation.isPending} sx={{ bgcolor: '#ffa424', textTransform: 'none', fontSize: '0.7rem', px: 1.5, whiteSpace: 'nowrap', '&:hover': { bgcolor: '#f97316' } }}>
+                            Retry
+                          </Button>
+                        )}
                         </Stack>
                       </TableCell>
                     </TableRow>

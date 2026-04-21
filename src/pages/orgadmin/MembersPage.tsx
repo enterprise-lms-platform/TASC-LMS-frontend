@@ -19,6 +19,13 @@ import {
   Chip,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Snackbar,
+  Tooltip,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -26,13 +33,15 @@ import {
   Search as SearchIcon,
   ChevronLeft as PrevIcon,
   ChevronRight as NextIcon,
+  PersonRemove as PersonRemoveIcon,
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/orgadmin/Sidebar';
 import { useLogout } from '../../hooks/useLogout';
-import { useOrgAdminMembers } from '../../hooks/useOrgAdmin';
+import { useOrgAdminMembers, useUnassignMember } from '../../hooks/useOrgAdmin';
 import { useDebounce } from '../../hooks/useDebounce';
 import { getRoleDisplayName, formatDate } from '../../utils/userHelpers';
 import type { UserRole } from '../../types/types';
+import type { ManagerMemberItem } from '../../services/organization.services';
 
 const PAGE_SIZE = 20;
 
@@ -40,7 +49,14 @@ const MembersPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [unassignTarget, setUnassignTarget] = useState<ManagerMemberItem | null>(null);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
   const handleLogout = useLogout();
+  const unassignMember = useUnassignMember();
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -61,6 +77,20 @@ const MembersPage: React.FC = () => {
   const members = data?.results ?? [];
   const totalCount = data?.count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  const handleUnassign = () => {
+    if (!unassignTarget?.membership_id) return;
+    unassignMember.mutate(unassignTarget.membership_id, {
+      onSuccess: () => {
+        setSnackbar({ open: true, message: `${unassignTarget.name} has been removed from the organization.`, severity: 'success' });
+        setUnassignTarget(null);
+      },
+      onError: () => {
+        setSnackbar({ open: true, message: 'Failed to remove member. Please try again.', severity: 'error' });
+        setUnassignTarget(null);
+      },
+    });
+  };
 
   return (
     <Box sx={{ display: 'flex', bgcolor: 'grey.50', minHeight: '100vh' }}>
@@ -177,6 +207,7 @@ const MembersPage: React.FC = () => {
                         <TableCell>Verified</TableCell>
                         <TableCell>Joined</TableCell>
                         <TableCell>Last Login</TableCell>
+                        <TableCell align="right">Actions</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -220,13 +251,25 @@ const MembersPage: React.FC = () => {
                           <TableCell sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
                             {formatDate(m.last_login)}
                           </TableCell>
+                        <TableCell align="right">
+                          {m.membership_id ? (
+                            <Tooltip title="Remove from organization">
+                              <IconButton
+                                size="small"
+                                onClick={() => setUnassignTarget(m)}
+                                sx={{ color: 'text.secondary', '&:hover': { color: '#ef4444', bgcolor: 'rgba(239,68,68,0.08)' } }}
+                              >
+                                <PersonRemoveIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          ) : null}
+                        </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </TableContainer>
 
-                {/* Pagination controls */}
                 <Box
                   sx={{
                     display: 'flex',
@@ -263,9 +306,47 @@ const MembersPage: React.FC = () => {
                 </Box>
               </>
             )}
-          </Paper>
+        </Paper>
         </Box>
-      </Box>
+
+        <Dialog open={!!unassignTarget} onClose={() => setUnassignTarget(null)}>
+            <DialogTitle>Unassign Member</DialogTitle>
+            <DialogContent>
+                <DialogContentText>
+                    Are you sure you want to unassign <strong>{unassignTarget?.name}</strong> from your organization?
+                    This will free up their seat. The user will lose access to organization content.
+                </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={() => setUnassignTarget(null)} sx={{ textTransform: 'none' }}>Cancel</Button>
+                <Button
+                    onClick={handleUnassign}
+                    color="error"
+                    variant="contained"
+                    disabled={unassignMember.isPending}
+                    sx={{ textTransform: 'none', fontWeight: 600 }}
+                >
+                    {unassignMember.isPending ? 'Unassigning...' : 'Unassign'}
+                </Button>
+            </DialogActions>
+        </Dialog>
+
+        <Snackbar
+            open={snackbar.open}
+            autoHideDuration={4000}
+            onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+            <Alert
+                onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+                severity={snackbar.severity}
+                variant="filled"
+            >
+                {snackbar.message}
+            </Alert>
+        </Snackbar>
+        </Box>
+        </Box>
     </Box>
   );
 };

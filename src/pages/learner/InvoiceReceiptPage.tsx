@@ -446,7 +446,7 @@ const InvoiceReceiptPage: React.FC = () => {
                 <Typography variant="body1" fontWeight={500} color="text.primary" sx={{ mb: 0.5 }}>Verify this Invoice</Typography>
                 <Typography variant="body2" color="text.secondary">
                   Scan to verify authenticity or visit:<br />
-                  <Box component="a" href="#" sx={{ color: '#ffa424' }}>tasclms.com/verify/{invoice.invoiceNumber}</Box>
+                  <Box component="a" href={`/verify/${invoice.invoiceNumber}`} sx={{ color: '#ffa424' }}>tasclms.com/verify/{invoice.invoiceNumber}</Box>
                 </Typography>
               </Box>
             </Stack>

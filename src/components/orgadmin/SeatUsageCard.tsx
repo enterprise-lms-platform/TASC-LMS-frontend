@@ -13,7 +13,10 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useQuery } from '@tanstack/react-query';
 import { seatManagementApi } from '../../services/organization.services';
 
+import { useNavigate } from 'react-router-dom';
+
 const SeatUsageCard: React.FC = () => {
+  const navigate = useNavigate();
   const { data: seatData, isLoading } = useQuery({
     queryKey: ['seat-usage'],
     queryFn: () => seatManagementApi.getSeatUsage().then((r) => r.data),
@@ -105,14 +108,14 @@ const SeatUsageCard: React.FC = () => {
         </Box>
       )}
 
-      {atWarning && !atCapacity && (
-        <Button variant="outlined" fullWidth size="small" href="/org-admin/billing">
-          Upgrade Plan
-        </Button>
-      )}
+  {atWarning && !atCapacity && (
+  <Button variant="outlined" fullWidth size="small" onClick={() => navigate('/org-admin/billing')}>
+    Upgrade Plan
+  </Button>
+)}
 
       {!atCapacity && !atWarning && (
-        <Button variant="outlined" fullWidth size="small" href="/org-admin/invite">
+        <Button variant="outlined" fullWidth size="small" onClick={() => navigate('/org-admin/invite')}>
           Add Members
         </Button>
       )}

@@ -100,12 +100,12 @@ const Header: React.FC<HeaderProps> = ({ scrolled }) => {
               <Link to="/courses" className="nav-link" style={{ color: '#52525b', textDecoration: 'none', whiteSpace: 'nowrap' }}>
                 Courses
               </Link>
-              <a href="#features" className="nav-link" style={{ color: '#52525b', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                Features
-              </a>
-              <a href="#pricing" className="nav-link" style={{ color: '#52525b', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                Pricing
-              </a>
+                <Link to="/#features" className="nav-link" style={{ color: '#52525b', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                    Features
+                </Link>
+                <Link to="/#pricing" className="nav-link" style={{ color: '#52525b', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                    Pricing
+                </Link>
               <Link to="/for-business" className="nav-link" style={{ color: '#52525b', textDecoration: 'none', whiteSpace: 'nowrap' }}>
                 For Business
               </Link>

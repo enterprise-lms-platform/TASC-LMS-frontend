@@ -519,18 +519,18 @@ const LearnerCourseDetailPage: React.FC = () => {
             gap: 2,
           }}
         >
-          <Box>© 2025 TASC Learning Management System</Box>
-          <Stack direction="row" spacing={4}>
-            <Box component="a" href="#" sx={{ color: '#71717a', textDecoration: 'none', '&:hover': { color: '#ffa424' } }}>
-              Learning Resources
-            </Box>
-            <Box component="a" href="#" sx={{ color: '#71717a', textDecoration: 'none', '&:hover': { color: '#ffa424' } }}>
-              Help Center
-            </Box>
-            <Box component="a" href="#" sx={{ color: '#71717a', textDecoration: 'none', '&:hover': { color: '#ffa424' } }}>
-              Community
-            </Box>
-          </Stack>
+        <Box>© 2025 TASC Learning Management System</Box>
+                        <Stack direction="row" spacing={4}>
+                            <Box component="a" href="/learner/courses" sx={{ color: '#71717a', textDecoration: 'none', '&:hover': { color: '#ffa424' } }}>
+                                Learning Resources
+                            </Box>
+                            <Box component="a" href="/learner/settings" sx={{ color: '#71717a', textDecoration: 'none', '&:hover': { color: '#ffa424' } }}>
+                                Help Center
+                            </Box>
+                            <Box component="a" href="/learner/courses" sx={{ color: '#71717a', textDecoration: 'none', '&:hover': { color: '#ffa424' } }}>
+                                Community
+                            </Box>
+                        </Stack>
         </Box>
       </Box>
       <Snackbar open={!!toast} autoHideDuration={3000} onClose={() => setToast('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>

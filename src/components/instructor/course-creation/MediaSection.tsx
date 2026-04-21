@@ -72,7 +72,7 @@ const MediaSection: React.FC<MediaSectionProps> = ({ data, onChange }) => {
           placeholder="https://www.youtube.com/watch?v=..."
           value={data.promoVideoUrl}
           onChange={(e) => onChange({ ...data, promoVideoUrl: e.target.value })}
-          helperText="A short video introducing your course (YouTube or Vimeo link)"
+          helperText="A short video introducing your course (YouTube, Vimeo, or Loom link)"
         />
       </Box>
     </Paper>
