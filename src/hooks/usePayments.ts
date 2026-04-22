@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   invoiceApi,
   transactionApi,
+  financePaymentApi,
   paymentMethodApi,
   subscriptionApi,
   userSubscriptionApi,
@@ -11,6 +12,7 @@ import {
   pesapalApi,
   type InvoiceParams,
   type TransactionParams,
+  type FinancePaymentParams,
   type UserSubscriptionParams,
   type PesapalInitiateRequest,
   type PesapalRecurringInitiateRequest,
@@ -139,6 +141,15 @@ export const useTransactions = (params?: TransactionParams) =>
   useQuery({
     queryKey: queryKeys.transactions.all(params),
     queryFn: () => transactionApi.getAll(params).then((r) => {
+      const data = r.data;
+      return Array.isArray(data) ? data : (data as any).results ?? [];
+    }),
+  });
+
+export const useFinancePayments = (params?: FinancePaymentParams) =>
+  useQuery({
+    queryKey: ['finance', 'payments', params],
+    queryFn: () => financePaymentApi.getAll(params).then((r) => {
       const data = r.data;
       return Array.isArray(data) ? data : (data as any).results ?? [];
     }),

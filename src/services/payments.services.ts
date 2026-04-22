@@ -80,6 +80,30 @@ export interface TransactionParams {
   to_date?: string;             // YYYY-MM-DD
 }
 
+export interface FinancePaymentParams {
+  status?: string;
+  payment_method?: string;
+  search?: string;
+  ordering?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface FinancePaymentRecord {
+  id: string;
+  user_email: string;
+  amount: string;
+  currency: string;
+  status: string;
+  payment_method: string;
+  provider_order_id?: string | null;
+  provider_payment_id?: string | null;
+  description?: string;
+  created_at: string;
+  completed_at?: string | null;
+  updated_at: string;
+}
+
 export const transactionApi = {
 
   // List all transactions (finance team sees all, users see their own)
@@ -100,7 +124,14 @@ export const transactionApi = {
     apiClient.post<{ message: string; transaction_id: string; status: string }>(`${BASE_PATH}/transactions/${id}/retry/`),
 
   // Refund a completed Pesapal payment
-  refund: (id: number, remarks?: string) =>
+  refund: (id: string | number, remarks?: string) =>
+    apiClient.post<{ success: boolean; message: string }>(`${BASE_PATH}/pesapal/${id}/refund/`, { remarks }),
+};
+
+export const financePaymentApi = {
+  getAll: (params?: FinancePaymentParams) =>
+    apiClient.get<FinancePaymentRecord[]>(`${BASE_PATH}/finance/payments/`, { params }),
+  refund: (id: string | number, remarks?: string) =>
     apiClient.post<{ success: boolean; message: string }>(`${BASE_PATH}/pesapal/${id}/refund/`, { remarks }),
 };
 
