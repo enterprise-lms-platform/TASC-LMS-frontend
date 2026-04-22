@@ -107,7 +107,7 @@ const SubscriptionManagementPage: React.FC = () => {
       return Array.isArray(d) ? d : (d as { results?: Invoice[] }).results ?? [];
     }),
   });
-  const { data: subStatus } = useMySubscription();
+  const { data: subStatus, isLoading: isLoadingSubscriptionStatus } = useMySubscription();
   const { data: plans = [] } = useSubscriptions();
   const { data: activeSubscriptions = [] } = useUserSubscriptions({ status: 'active' });
   const activeSubscriptionId = activeSubscriptions[0]?.id ?? null;
@@ -118,7 +118,7 @@ const SubscriptionManagementPage: React.FC = () => {
       return Array.isArray(d) ? d : (d as { results?: unknown[] }).results ?? [];
     }),
   });
-  const { data: paymentMethodsData } = useQuery({
+  const { data: paymentMethodsData, isLoading: isLoadingPaymentMethods } = useQuery({
     queryKey: ['learnerPaymentMethods'],
     queryFn: () => paymentMethodApi.getAll().then((r) => {
       const d = r.data;
@@ -158,9 +158,9 @@ const SubscriptionManagementPage: React.FC = () => {
   );
 
   // ─── Subscription plan info ───
-  const planName = subStatus?.plan?.name ?? 'Free Plan';
+  const planName = isLoadingSubscriptionStatus ? 'Loading plan…' : subStatus?.plan?.name ?? 'Free Plan';
   const planPrice = subStatus?.plan ? `${subStatus.plan.currency} ${parseFloat(subStatus.plan.price).toFixed(2)}` : '—';
-  const billingCycle = subStatus?.plan?.billing_cycle ?? '—';
+  const billingCycle = isLoadingSubscriptionStatus ? 'Loading…' : subStatus?.plan?.billing_cycle ?? '—';
   const startDate = subStatus?.start_date ? new Date(subStatus.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
   const endDate = subStatus?.end_date ? new Date(subStatus.end_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—';
   const nextPayment = subStatus?.end_date ? `${planPrice} on ${endDate}` : '—';
@@ -223,7 +223,19 @@ const SubscriptionManagementPage: React.FC = () => {
     paypal: { label: 'PayPal', icon: <SimCardIcon />, color: '#003087' },
     bank_transfer: { label: 'Bank Transfer', icon: <WalletIcon />, color: '#6366f1' },
   };
-  const paymentMethods = (paymentMethodsData ?? []).map((pm: PaymentMethod) => {
+  const paymentMethodsRaw: PaymentMethod[] = paymentMethodsData ?? [];
+  const defaultPaymentMethodRaw = paymentMethodsRaw.find((pm) => pm.is_default);
+  const topCardPaymentMethodValue = useMemo(() => {
+    if (isLoadingPaymentMethods) return 'Loading payment methods…';
+    if (!defaultPaymentMethodRaw) return 'No payment method saved';
+    if (defaultPaymentMethodRaw.display_name?.trim()) return defaultPaymentMethodRaw.display_name;
+    if (defaultPaymentMethodRaw.card_last_four?.trim()) return `**** ${defaultPaymentMethodRaw.card_last_four}`;
+    if (defaultPaymentMethodRaw.paypal_email?.trim()) return defaultPaymentMethodRaw.paypal_email;
+    if (defaultPaymentMethodRaw.bank_account_last_four?.trim()) return `**** ${defaultPaymentMethodRaw.bank_account_last_four}`;
+    return 'Saved payment method';
+  }, [defaultPaymentMethodRaw, isLoadingPaymentMethods]);
+
+  const paymentMethods = paymentMethodsRaw.map((pm: PaymentMethod) => {
     const display = METHOD_DISPLAY[pm.method_type] ?? { label: pm.method_type, icon: <PhoneIcon />, color: '#71717a' };
     const number = pm.display_name || pm.card_last_four ? `**** ${pm.card_last_four}` : pm.paypal_email || pm.bank_account_last_four ? `**** ${pm.bank_account_last_four}` : '';
     return { type: display.label, number, icon: display.icon, isDefault: pm.is_default, color: display.color, id: pm.id };
@@ -249,7 +261,7 @@ const SubscriptionManagementPage: React.FC = () => {
           </Button>
         </Box>
 
-        {!isActive && (
+        {!isLoadingSubscriptionStatus && !isActive && (
           <Alert
             severity="warning"
             sx={{ mb: 3, borderRadius: 2 }}
@@ -304,7 +316,7 @@ const SubscriptionManagementPage: React.FC = () => {
               { label: 'Billing Cycle', value: billingCycle },
               { label: 'Member Since', value: startDate },
               { label: 'Next Payment', value: nextPayment },
-              { label: 'Payment Method', value: 'M-Pesa (...4521)' },
+              { label: 'Payment Method', value: topCardPaymentMethodValue },
             ].map((item, i) => (
               <Grid size={{ xs: 12, sm: 6, md: 3 }} key={i}>
                 <Box sx={{ bgcolor: 'rgba(255,255,255,0.1)', p: 2, borderRadius: 2, backdropFilter: 'blur(10px)' }}>
@@ -316,9 +328,11 @@ const SubscriptionManagementPage: React.FC = () => {
           </Grid>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ position: 'relative', zIndex: 1 }}>
-            <Button variant="outlined" startIcon={<CloseIcon />} onClick={() => setCancelModalOpen(true)} sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.5)' }, textTransform: 'none' }}>
-              Cancel Subscription
-            </Button>
+            {isActive && (
+              <Button variant="outlined" startIcon={<CloseIcon />} onClick={() => setCancelModalOpen(true)} sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.5)' }, textTransform: 'none' }}>
+                Cancel Subscription
+              </Button>
+            )}
             {!isActive && (
               <Button
                 variant="contained"
