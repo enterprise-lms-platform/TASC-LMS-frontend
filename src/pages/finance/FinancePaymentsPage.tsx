@@ -6,6 +6,7 @@ import {
   CircularProgress, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
   Snackbar, Alert, Tooltip,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import {
   Search as SearchIcon,
   FileDownload as ExportIcon,
@@ -50,11 +51,11 @@ const FinancePaymentsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
-  const [selectedPayment, setSelectedPayment] = useState<FinancePaymentRecord | null>(null);
   const [actionTarget, setActionTarget] = useState<{ type: 'refund'; payment: FinancePaymentRecord } | null>(null);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' });
 
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { data: payments, isLoading } = useFinancePayments();
   const paymentsList: FinancePaymentRecord[] = Array.isArray(payments)
     ? payments
@@ -255,7 +256,7 @@ const FinancePaymentsPage: React.FC = () => {
                     </Tooltip>
                   )}
                   <IconButton size="small"
-                    onClick={() => setSelectedPayment(p)}
+                    onClick={() => navigate(`/finance/payments/${p.id}`)}
                     sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'flex' }, '&:hover': { color: 'primary.main' } }}>
                     <ViewIcon fontSize="small" />
                   </IconButton>
