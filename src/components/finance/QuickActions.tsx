@@ -12,11 +12,11 @@ import {
 
 const quickActions = [
   { icon: <InvoiceIcon />, label: 'Invoices', color: '#6366f1', path: '/finance/invoices' },
-  { icon: <PaymentsIcon />, label: 'Transactions', color: '#10b981', path: '/finance/transactions' },
+  { icon: <PaymentsIcon />, label: 'Payments', color: '#10b981', path: '/finance/payments' },
   { icon: <SubscribersIcon />, label: 'Subscriptions', color: '#3b82f6', path: '/finance/subscriptions' },
   { icon: <AddIcon />, label: 'New Invoice', color: '#ffa424', path: '/finance/invoices' },
-  { icon: <ReportIcon />, label: 'Reports', color: '#ef4444', path: '/finance/reports' },
-  { icon: <ExportIcon />, label: 'Export Data', color: '#71717a', path: '/finance/reports' },
+  { icon: <ReportIcon />, label: 'Reports', color: '#ef4444', path: '/finance/revenue-reports' },
+  { icon: <ExportIcon />, label: 'Export Data', color: '#71717a', path: '/finance/export' },
 ];
 
 const QuickActions: React.FC = () => {

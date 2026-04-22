@@ -7,6 +7,7 @@ import {
   paymentMethodApi,
   subscriptionApi,
   userSubscriptionApi,
+  financeDashboardApi,
   pesapalApi,
   type InvoiceParams,
   type TransactionParams,
@@ -141,6 +142,12 @@ export const useTransactions = (params?: TransactionParams) =>
       const data = r.data;
       return Array.isArray(data) ? data : (data as any).results ?? [];
     }),
+  });
+
+export const useFinanceDashboardOverview = () =>
+  useQuery({
+    queryKey: ['finance', 'dashboard-overview'],
+    queryFn: () => financeDashboardApi.getOverview().then((r) => r.data),
   });
 
 export const useTransaction = (id: number) =>

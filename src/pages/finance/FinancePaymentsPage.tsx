@@ -21,7 +21,7 @@ import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
 import { useTransactions } from '../../hooks/usePayments';
 import { transactionApi } from '../../services/payments.services';
-import type { Transaction } from '../../types/types';
+import type { PaginatedResponse, Transaction } from '../../types/types';
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   completed: { bg: 'rgba(16,185,129,0.1)', color: '#10b981' },
@@ -57,6 +57,9 @@ const FinancePaymentsPage: React.FC = () => {
 
   const queryClient = useQueryClient();
   const { data: transactions, isLoading } = useTransactions();
+  const transactionsList: Transaction[] = Array.isArray(transactions)
+    ? transactions
+    : (transactions as PaginatedResponse<Transaction> | undefined)?.results ?? [];
 
   const retryMutation = useMutation({
     mutationFn: (id: number) => transactionApi.retry(id).then((r) => r.data),
@@ -98,7 +101,7 @@ const FinancePaymentsPage: React.FC = () => {
     },
   });
 
-  const filtered = (transactions || []).filter((p) => {
+  const filtered = transactionsList.filter((p) => {
     if (statusFilter !== 'all' && p.status !== statusFilter) return false;
     const name = p.user_email || '';
     const id = p.transaction_id || '';
@@ -132,10 +135,10 @@ const FinancePaymentsPage: React.FC = () => {
           {/* Status Summary */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {[
-              { label: 'Total Payments', value: (transactions || []).length.toString(), icon: <CardIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
-              { label: 'Completed', value: (transactions || []).filter((p) => p.status === 'completed').length.toString(), icon: <ViewIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-              { label: 'Pending', value: (transactions || []).filter((p) => p.status === 'pending').length.toString(), icon: <MpesaIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-              { label: 'Failed', value: (transactions || []).filter((p) => p.status === 'failed').length.toString(), icon: <AirtelIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
+              { label: 'Total Payments', value: transactionsList.length.toString(), icon: <CardIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
+              { label: 'Completed', value: transactionsList.filter((p) => p.status === 'completed').length.toString(), icon: <ViewIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+              { label: 'Pending', value: transactionsList.filter((p) => p.status === 'pending').length.toString(), icon: <MpesaIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+              { label: 'Failed', value: transactionsList.filter((p) => p.status === 'failed').length.toString(), icon: <AirtelIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
             ].map((s) => (
               <Grid size={{ xs: 6, sm: 6, md: 3 }} key={s.label}>
                 <Paper elevation={0} sx={{

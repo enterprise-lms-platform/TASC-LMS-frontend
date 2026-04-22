@@ -1,19 +1,14 @@
 import React from 'react';
-import { Box, Paper, Typography, Button, IconButton } from '@mui/material';
-import {
-  FileDownload as ExportIcon,
-  FilterList as FilterIcon,
-  MoreVert as MoreIcon,
-} from '@mui/icons-material';
-import { useRevenueTrends } from '../../services/learning.services';
+import { Box, Paper, Typography } from '@mui/material';
+import { useFinanceDashboardOverview } from '../../hooks/usePayments';
 
 const RevenueChart: React.FC = () => {
-  const { data: trends } = useRevenueTrends(6);
+  const { data } = useFinanceDashboardOverview();
 
-  const monthlyRevenue = trends ? trends.labels.map((label, i) => ({
-    month: label,
-    amount: trends.revenue[i] || 0
-  })) : [];
+  const monthlyRevenue = (data?.revenue_trend || []).map((row) => ({
+    month: row.month,
+    amount: Number(row.collected_revenue || 0),
+  }));
 
   const maxRevenue = Math.max(...monthlyRevenue.map((d) => d.amount), 1);
 
@@ -42,28 +37,7 @@ const RevenueChart: React.FC = () => {
           alignItems: 'center',
         }}
       >
-        <Typography fontWeight={700}>Revenue Trends</Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<ExportIcon />}
-            sx={{ borderColor: 'divider', color: 'text.secondary', textTransform: 'none', fontSize: '0.75rem' }}
-          >
-            Export
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<FilterIcon />}
-            sx={{ borderColor: 'divider', color: 'text.secondary', textTransform: 'none', fontSize: '0.75rem' }}
-          >
-            Filter
-          </Button>
-          <IconButton size="small">
-            <MoreIcon fontSize="small" />
-          </IconButton>
-        </Box>
+        <Typography fontWeight={700}>Collected Revenue Trend</Typography>
       </Box>
 
       {/* Bar Chart */}
@@ -71,7 +45,7 @@ const RevenueChart: React.FC = () => {
         {monthlyRevenue.map((d) => (
           <Box key={d.month} sx={{ flex: 1, textAlign: 'center' }}>
             <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-              ${(d.amount / 1000).toFixed(0)}K
+              {Number(d.amount || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </Typography>
             <Box
               sx={{
