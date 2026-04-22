@@ -9,7 +9,6 @@ export interface InstructorData {
   initials: string;
   avatar?: string;
   bio: string;
-  rating: number;
   courseCount: number;
   studentCount: string;
 }
@@ -17,11 +16,14 @@ export interface InstructorData {
 interface CourseInstructorProps {
   instructor: InstructorData;
   onViewProfile?: () => void;
+  /** Approved learner reviews for this course (catalogue summary). Omit to hide rating — not instructor-specific. */
+  courseLearnerReviews?: { average: number; total: number };
 }
 
 const CourseInstructor: React.FC<CourseInstructorProps> = ({
   instructor,
   onViewProfile,
+  courseLearnerReviews,
 }) => {
   return (
     <Box
@@ -76,14 +78,20 @@ const CourseInstructor: React.FC<CourseInstructorProps> = ({
             spacing={4}
             sx={{ mb: 3, justifyContent: { xs: 'center', sm: 'flex-start' } }}
           >
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography fontWeight={700} color="text.primary">
-                {instructor.rating}/5.0
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Instructor Rating
-              </Typography>
-            </Box>
+            {courseLearnerReviews ? (
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography fontWeight={700} color="text.primary">
+                  {courseLearnerReviews.average.toFixed(1)}/5.0
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                  Course rating
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', opacity: 0.85 }}>
+                  {courseLearnerReviews.total}{' '}
+                  {courseLearnerReviews.total === 1 ? 'review' : 'reviews'}
+                </Typography>
+              </Box>
+            ) : null}
             <Box sx={{ textAlign: 'center' }}>
               <Typography fontWeight={700} color="text.primary">
                 {instructor.courseCount}

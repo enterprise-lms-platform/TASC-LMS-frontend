@@ -352,26 +352,33 @@ export interface CourseReview {
   user: number;
   user_name: string;
   course: number;
+  course_title?: string;
   rating: number;
   content: string;
   helpful_count: number;
   report_count: number;
   is_approved: boolean;
+  is_rejected?: boolean;
+  is_featured?: boolean;
   created_at: string;
   updated_at: string;
 }
 
+/** Response from GET /api/v1/catalogue/course-reviews/summary/?course=<id> */
 export interface CourseReviewSummary {
   average: number;
   total: number;
+  /** Counts per star level: index 0 = 5★, 1 = 4★, …, 4 = 1★ (matches backend CourseReviewViewSet.summary). */
   distribution: number[];
   reviews: CourseReview[];
 }
 
 export const courseReviewApi = {
-  // Get reviews for a course with summary
+  /** Learner-safe summary of approved reviews (CourseReviewViewSet.summary). */
   getSummary: (courseId: number) =>
-    apiClient.get<CourseReviewSummary>(`${BASE_PATH}/courses/${courseId}/reviews/`),
+    apiClient.get<CourseReviewSummary>(`${BASE_PATH}/course-reviews/summary/`, {
+      params: { course: courseId },
+    }),
 
   // Get all reviews (with optional filters)
   getAll: (params?: { course?: number; rating?: number; page?: number; page_size?: number }) =>

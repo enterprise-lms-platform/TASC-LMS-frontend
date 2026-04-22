@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box, Typography, Stack, Avatar, Rating, LinearProgress,
-  Button, TextField, Collapse, Alert,
+  Button, TextField, Collapse, Alert, CircularProgress,
 } from '@mui/material';
 import { Add as AddIcon, Star as StarIcon } from '@mui/icons-material';
 import { courseReviewApi } from '../../../services/catalogue.services';
@@ -24,16 +24,22 @@ export interface RatingDistribution {
   percentage: number;
 }
 
+export type CourseReviewsSummaryStatus = 'loading' | 'error' | 'empty' | 'ready';
+
 interface CourseReviewsProps {
   courseId: number;
+  summaryStatus: CourseReviewsSummaryStatus;
   averageRating: number;
   totalReviews: number;
   ratingDistribution: RatingDistribution[];
   reviews: Review[];
 }
 
+const REVIEWS_UNAVAILABLE = 'Reviews are temporarily unavailable.';
+
 const CourseReviews: React.FC<CourseReviewsProps> = ({
   courseId,
+  summaryStatus,
   averageRating,
   totalReviews,
   ratingDistribution,
@@ -54,7 +60,7 @@ const CourseReviews: React.FC<CourseReviewsProps> = ({
     mutationFn: (data: { course: number; rating: number; content: string }) =>
       courseReviewApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['course-reviews', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['course-reviews', 'summary', courseId] });
       setFormRating(null);
       setFormContent('');
       setShowForm(false);
@@ -191,49 +197,67 @@ const CourseReviews: React.FC<CourseReviewsProps> = ({
       </Collapse>
 
       {/* Rating Summary */}
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={4}
-        alignItems={{ xs: 'center', sm: 'flex-start' }}
-        sx={{ pb: 3, mb: 3, borderBottom: '1px solid #e4e4e7' }}
-      >
-        <Box sx={{ textAlign: 'center' }}>
-          <Typography variant="h2" fontWeight={700} color="text.primary">
-            {averageRating.toFixed(1)}
+      <Stack sx={{ pb: 3, mb: 3, borderBottom: '1px solid #e4e4e7' }}>
+        {summaryStatus === 'loading' ? (
+          <Stack direction="row" alignItems="center" spacing={2} sx={{ py: 2 }}>
+            <CircularProgress size={28} sx={{ color: '#ffa424' }} />
+            <Typography variant="body2" color="text.secondary">
+              Loading reviews…
+            </Typography>
+          </Stack>
+        ) : summaryStatus === 'error' ? (
+          <Alert severity="warning" variant="outlined" sx={{ borderColor: '#e4e4e7', color: 'text.primary' }}>
+            {REVIEWS_UNAVAILABLE}
+          </Alert>
+        ) : summaryStatus === 'empty' ? (
+          <Typography variant="body1" color="text.secondary" sx={{ py: 1 }}>
+            No reviews yet.
           </Typography>
-          <Rating value={averageRating} precision={0.1} readOnly size="medium" sx={{ mb: 1 }} />
-          <Typography variant="body2" color="text.secondary">
-            {totalReviews.toLocaleString()} reviews
-          </Typography>
-        </Box>
+        ) : (
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={4}
+            alignItems={{ xs: 'center', sm: 'flex-start' }}
+          >
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h2" fontWeight={700} color="text.primary">
+                {averageRating.toFixed(1)}
+              </Typography>
+              <Rating value={averageRating} precision={0.1} readOnly size="medium" sx={{ mb: 1 }} />
+              <Typography variant="body2" color="text.secondary">
+                {totalReviews.toLocaleString()} {totalReviews === 1 ? 'review' : 'reviews'}
+              </Typography>
+            </Box>
 
-        <Box sx={{ flex: 1, width: '100%' }}>
-          {ratingDistribution.map((item) => (
-            <Stack key={item.stars} direction="row" alignItems="center" spacing={2} sx={{ mb: 1 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ width: 60 }}>
-                {item.stars} stars
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={item.percentage}
-                sx={{
-                  flex: 1,
-                  height: 8,
-                  borderRadius: 4,
-                  bgcolor: '#e4e4e7',
-                  '& .MuiLinearProgress-bar': { bgcolor: '#f59e0b', borderRadius: 4 },
-                }}
-              />
-              <Typography variant="body2" color="text.secondary" sx={{ width: 40 }}>
-                {item.percentage}%
-              </Typography>
-            </Stack>
-          ))}
-        </Box>
+            <Box sx={{ flex: 1, width: '100%' }}>
+              {ratingDistribution.map((item) => (
+                <Stack key={item.stars} direction="row" alignItems="center" spacing={2} sx={{ mb: 1 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ width: 60 }}>
+                    {item.stars} stars
+                  </Typography>
+                  <LinearProgress
+                    variant="determinate"
+                    value={item.percentage}
+                    sx={{
+                      flex: 1,
+                      height: 8,
+                      borderRadius: 4,
+                      bgcolor: '#e4e4e7',
+                      '& .MuiLinearProgress-bar': { bgcolor: '#f59e0b', borderRadius: 4 },
+                    }}
+                  />
+                  <Typography variant="body2" color="text.secondary" sx={{ width: 40 }}>
+                    {item.percentage}%
+                  </Typography>
+                </Stack>
+              ))}
+            </Box>
+          </Stack>
+        )}
       </Stack>
 
       {/* Reviews List */}
-      {reviews.length === 0 ? (
+      {summaryStatus === 'loading' || summaryStatus === 'error' ? null : summaryStatus === 'empty' ? null : reviews.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
           No reviews yet. Be the first to share your experience!
         </Typography>
