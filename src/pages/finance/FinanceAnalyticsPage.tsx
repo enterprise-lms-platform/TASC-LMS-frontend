@@ -6,21 +6,14 @@ import {
   Typography,
   Paper,
   Grid,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   LinearProgress,
   Avatar,
   Chip,
-  CircularProgress,
 } from '@mui/material';
 import {
   AttachMoney as RevenueIcon,
-  TrendingUp as GrowthIcon,
   People as SubscribersIcon,
   CreditCard as TransactionsIcon,
-  Star as StarIcon,
   AccountBalanceWallet as WalletIcon,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
@@ -39,7 +32,6 @@ const headerSx = { p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor
 
 const FinanceAnalyticsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [timePeriod, setTimePeriod] = useState('30days');
 
   const { data: transactionsData, isLoading: transactionsLoading } = useQuery({
     queryKey: ['transactions', 'finance'],
@@ -69,30 +61,32 @@ const FinanceAnalyticsPage: React.FC = () => {
 
     const activeSubscriptions = subscriptions.filter((s) => s.status === 'active');
 
-    // Calculate monthly growth
-    const recentTransactions = completedTransactions.slice(0, Math.min(30, completedTransactions.length));
-    const midpoint = Math.floor(recentTransactions.length / 2);
-    const firstHalf = recentTransactions.slice(0, midpoint).reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-    const secondHalf = recentTransactions.slice(midpoint).reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-    const monthlyGrowth = firstHalf > 0 ? Math.round(((secondHalf - firstHalf) / firstHalf) * 100) : 0;
-
     const gatewayTotals: Record<string, number> = {};
     completedTransactions.forEach((t) => {
       const method = t.payment_method || 'Other';
       gatewayTotals[method] = (gatewayTotals[method] || 0) + (parseFloat(t.amount) || 0);
     });
     const totalGatewayAmount = Object.values(gatewayTotals).reduce((a, b) => a + b, 0) || 1;
+    const methodColors: Record<string, string> = {
+      credit_card: '#6366f1',
+      debit_card: '#10b981',
+      mobile_money: '#f59e0b',
+      bank_transfer: '#ef4444',
+      paypal: '#8b5cf6',
+      google_pay: '#0ea5e9',
+      apple_pay: '#71717a',
+      other: '#a3a3a3',
+    };
 
     return {
       totalRevenue,
       activeSubscriptions: activeSubscriptions.length,
       totalTransactions: completedTransactions.length,
-      monthlyGrowth,
       gatewayBreakdown: Object.entries(gatewayTotals).map(([name, amount]) => ({
         name: name.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
         amount,
         percentage: Math.round((amount / totalGatewayAmount) * 100),
-        color: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'][Math.floor(Math.random() * 5)],
+        color: methodColors[name] || methodColors.other,
       })).sort((a, b) => b.amount - a.amount),
     };
   }, [transactions, subscriptions]);
@@ -147,7 +141,6 @@ const FinanceAnalyticsPage: React.FC = () => {
         name,
         revenue: `$${data.revenue.toFixed(0)}`,
         enrollments: data.enrollments,
-        rating: (4 + Math.random()).toFixed(1),
       }))
       .sort((a, b) => parseFloat(b.revenue.replace('$', '')) - parseFloat(a.revenue.replace('$', '')))
       .slice(0, 5);
@@ -168,28 +161,18 @@ const FinanceAnalyticsPage: React.FC = () => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
             <Box>
               <Typography variant="h5" fontWeight={700}>Financial Analytics</Typography>
-              <Typography variant="body2" color="text.secondary">Deep dive into revenue, subscriptions, and payment trends</Typography>
+              <Typography variant="body2" color="text.secondary">Transaction and invoice analytics from current backend data</Typography>
             </Box>
-            <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>Period</InputLabel>
-              <Select value={timePeriod} onChange={(e) => setTimePeriod(e.target.value)} label="Period">
-                <MenuItem value="7days">Last 7 days</MenuItem>
-                <MenuItem value="30days">Last 30 days</MenuItem>
-                <MenuItem value="90days">Last 90 days</MenuItem>
-                <MenuItem value="6months">Last 6 months</MenuItem>
-                <MenuItem value="year">This Year</MenuItem>
-              </Select>
-            </FormControl>
           </Box>
 
           {isLoading && <LinearProgress sx={{ mb: 2 }} />}
 
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {[
-              { label: 'Total Revenue', value: `$${kpis.totalRevenue.toLocaleString()}`, icon: <RevenueIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-              { label: 'Monthly Growth', value: `${kpis.monthlyGrowth >= 0 ? '+' : ''}${kpis.monthlyGrowth}%`, icon: <GrowthIcon />, bgcolor: kpis.monthlyGrowth >= 0 ? '#f0fdf4' : '#fee2e2', iconBg: kpis.monthlyGrowth >= 0 ? '#86efac' : '#fca5a5', color: kpis.monthlyGrowth >= 0 ? '#14532d' : '#7f1d1d', subColor: kpis.monthlyGrowth >= 0 ? '#166534' : '#991b1b' },
+              { label: 'Completed Transaction Revenue', value: `$${kpis.totalRevenue.toLocaleString()}`, icon: <RevenueIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
               { label: 'Active Subscribers', value: kpis.activeSubscriptions.toLocaleString(), icon: <SubscribersIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-              { label: 'Total Transactions', value: kpis.totalTransactions.toLocaleString(), icon: <TransactionsIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+              { label: 'Completed Transactions', value: kpis.totalTransactions.toLocaleString(), icon: <TransactionsIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
+              { label: 'Pending Invoices', value: invoices.filter((i) => i.status === 'pending').length.toLocaleString(), icon: <WalletIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
             ].map((kpi) => (
               <Grid size={{ xs: 12, sm: 6, md: 3 }} key={kpi.label}>
                 <Paper elevation={0} sx={{ bgcolor: kpi.bgcolor, borderRadius: '20px', p: 3, position: 'relative', height: '100%', minHeight: { xs: 110, md: 160 }, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', transition: 'transform 0.2s', cursor: 'pointer', '&:hover': { transform: 'translateY(-4px)' } }}>
@@ -239,7 +222,7 @@ const FinanceAnalyticsPage: React.FC = () => {
             <Grid size={{ xs: 12, md: 5, lg: 4 }}>
               <Paper elevation={0} sx={cardSx}>
                 <Box sx={headerSx}>
-                  <Typography fontWeight={700}>Payment Methods</Typography>
+                  <Typography fontWeight={700}>Completed Transaction Methods</Typography>
                 </Box>
                 <Box sx={{ p: 3 }}>
                   {kpis.gatewayBreakdown.length > 0 ? kpis.gatewayBreakdown.map((gw) => (
@@ -284,7 +267,7 @@ const FinanceAnalyticsPage: React.FC = () => {
             <Grid size={{ xs: 12, md: 7, lg: 8 }}>
               <Paper elevation={0} sx={cardSx}>
                 <Box sx={headerSx}>
-                  <Typography fontWeight={700}>Top Courses by Revenue</Typography>
+                  <Typography fontWeight={700}>Top Courses by Transaction Revenue</Typography>
                 </Box>
                 <Box sx={{ overflow: 'auto' }}>
                   {topCourses.length > 0 ? topCourses.map((course, i) => (
@@ -296,10 +279,6 @@ const FinanceAnalyticsPage: React.FC = () => {
                       </Box>
                       <Box sx={{ textAlign: 'right', minWidth: 80 }}>
                         <Typography variant="body2" fontWeight={700} color="primary.main">{course.revenue}</Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 50 }}>
-                        <StarIcon sx={{ fontSize: 16, color: '#f59e0b' }} />
-                        <Typography variant="body2" fontWeight={600}>{course.rating}</Typography>
                       </Box>
                     </Box>
                   )) : (

@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import {
-  Box, CssBaseline, Toolbar, Typography, Paper, Grid, Chip, LinearProgress,
+  Box, CssBaseline, Toolbar, Typography, Paper, Grid, LinearProgress,
   Select, MenuItem, FormControl, InputLabel, Button, CircularProgress,
 } from '@mui/material';
 import {
   FileDownload as ExportIcon,
-  TrendingUp as TrendIcon,
   AttachMoney as RevenueIcon,
-  People as UsersIcon,
-  Repeat as RecurringIcon,
+  CreditCard as TransactionsIcon,
+  CalendarMonth as CalendarIcon,
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
 import { useRevenueStats, useCoursesByCategory } from '../../services/learning.services';
 import { useTransactions } from '../../hooks/usePayments';
+import type { PaginatedResponse, Transaction } from '../../types/types';
 
 const cardSx = {
   borderRadius: '1rem',
@@ -31,15 +31,55 @@ const FinanceRevenueReportsPage: React.FC = () => {
   const { data: stats, isLoading } = useRevenueStats(period);
   const { data: categories } = useCoursesByCategory();
   const { data: transactions } = useTransactions();
+  const transactionsList: Transaction[] = Array.isArray(transactions)
+    ? transactions
+    : (transactions as PaginatedResponse<Transaction> | undefined)?.results ?? [];
 
   const monthlyBreakdown = stats?.monthly || [];
   const maxRevenue = Math.max(...monthlyBreakdown.map((m) => parseFloat(m.revenue) || 0), 1);
 
+  const completedTransactions = transactionsList.filter((t) => t.status === 'completed');
+  const averageMonthlyRevenue = monthlyBreakdown.length > 0
+    ? monthlyBreakdown.reduce((sum, m) => sum + (parseFloat(m.revenue) || 0), 0) / monthlyBreakdown.length
+    : 0;
+
   const revenueKpis = [
-    { label: 'Total Revenue', value: stats?.total_revenue ? `$${parseFloat(stats.total_revenue).toLocaleString()}` : '$0', change: '+15.3%', icon: <RevenueIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-    { label: 'Recurring Revenue', value: stats?.total_revenue ? `$${(parseFloat(stats.total_revenue) * 0.75).toLocaleString()}` : '$0', change: '+22.1%', icon: <RecurringIcon />, bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
-    { label: 'Avg Rev / User', value: (() => { const txns = transactions || []; const uniqueUsers = new Set(txns.map(t => t.user).filter(Boolean)).size; const total = parseFloat(stats?.total_revenue || '0'); return uniqueUsers > 0 ? `$${Math.round(total / uniqueUsers).toLocaleString()}` : '$0'; })(), change: '+8.4%', icon: <UsersIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-    { label: 'Growth Rate', value: monthlyBreakdown.length > 0 ? `${monthlyBreakdown[monthlyBreakdown.length - 1].growth_percent || 0}%` : '0%', change: '+3.2%', icon: <TrendIcon />, bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
+    {
+      label: 'Total Completed Transaction Revenue',
+      value: stats?.total_revenue ? `$${parseFloat(stats.total_revenue).toLocaleString()}` : '$0',
+      icon: <RevenueIcon />,
+      bgcolor: '#dcfce7',
+      iconBg: '#4ade80',
+      color: '#14532d',
+      subColor: '#166534',
+    },
+    {
+      label: 'Average Monthly Revenue',
+      value: `$${averageMonthlyRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+      icon: <CalendarIcon />,
+      bgcolor: '#f0fdf4',
+      iconBg: '#86efac',
+      color: '#14532d',
+      subColor: '#166534',
+    },
+    {
+      label: 'Completed Transactions',
+      value: completedTransactions.length.toLocaleString(),
+      icon: <TransactionsIcon />,
+      bgcolor: '#fff3e0',
+      iconBg: '#ffa424',
+      color: '#7c2d12',
+      subColor: '#9a3412',
+    },
+    {
+      label: 'Reported Months',
+      value: monthlyBreakdown.length.toString(),
+      icon: <CalendarIcon />,
+      bgcolor: '#f4f4f5',
+      iconBg: '#a1a1aa',
+      color: '#27272a',
+      subColor: '#3f3f46',
+    },
   ];
 
   return (
@@ -68,7 +108,7 @@ const FinanceRevenueReportsPage: React.FC = () => {
               </FormControl>
               <Button size="small" variant="contained" startIcon={<ExportIcon />}
                 onClick={() => {
-                  const csvData = `Period,Revenue,Growth\n${monthlyBreakdown.map(m => `${m.month},${m.revenue},${m.growth_percent}%`).join('\n')}`;
+                  const csvData = `Period,Revenue,Growth\n${monthlyBreakdown.map(m => `${m.month},${m.revenue},${m.growth_percent ?? ''}`).join('\n')}`;
                   const blob = new Blob([csvData], { type: 'text/csv' });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
@@ -103,8 +143,7 @@ const FinanceRevenueReportsPage: React.FC = () => {
                         bgcolor: kpi.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', '& svg': { fontSize: 18 },
                       }}>{kpi.icon}</Box>
                       <Typography variant="h4" sx={{ fontWeight: 700, color: kpi.color, fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2rem' }, lineHeight: 1, mb: 0.5 }}>{kpi.value}</Typography>
-                      <Typography variant="body2" sx={{ color: kpi.subColor, fontWeight: 500, fontSize: '0.8rem', opacity: 0.8, mb: 0.5 }}>{kpi.label}</Typography>
-                      <Chip label={kpi.change} size="small" sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, bgcolor: 'rgba(16,185,129,0.15)', color: '#10b981' }} />
+                      <Typography variant="body2" sx={{ color: kpi.subColor, fontWeight: 500, fontSize: '0.8rem', opacity: 0.8 }}>{kpi.label}</Typography>
                     </Paper>
                   </Grid>
                 ))}
@@ -115,7 +154,7 @@ const FinanceRevenueReportsPage: React.FC = () => {
                 <Grid size={{ xs: 12, md: 7, lg: 8 }}>
                   <Paper elevation={0} sx={cardSx}>
                     <Box sx={{ ...headerSx, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography fontWeight={700}>Monthly Revenue Breakdown</Typography>
+                      <Typography fontWeight={700}>Monthly Transaction Revenue</Typography>
                     </Box>
                     <Box sx={{ p: 3, display: 'flex', alignItems: 'flex-end', gap: 2, height: 280 }}>
                       {monthlyBreakdown.map((m) => (
@@ -152,7 +191,7 @@ const FinanceRevenueReportsPage: React.FC = () => {
                           bank_transfer: 'Bank Transfer', paypal: 'PayPal', google_pay: 'Google Pay',
                           apple_pay: 'Apple Pay', other: 'Other',
                         };
-                        const txns = transactions || [];
+                        const txns = transactionsList.filter((t) => t.status === 'completed');
                         const gwMap = new Map<string, number>();
                         let gwTotal = 0;
                         for (const t of txns) {
@@ -197,7 +236,7 @@ const FinanceRevenueReportsPage: React.FC = () => {
               {/* Revenue by Course Category */}
               <Paper elevation={0} sx={cardSx}>
                 <Box sx={{ ...headerSx, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography fontWeight={700}>Revenue by Course Category</Typography>
+                      <Typography fontWeight={700}>Course Category Distribution</Typography>
                 </Box>
                 <Grid container>
                   {categories?.map((cat, i, arr) => (
