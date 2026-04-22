@@ -7,12 +7,10 @@ import {
 import {
   Search as SearchIcon,
   FileDownload as ExportIcon,
-  Add as AddIcon,
   Visibility as ViewIcon,
   Receipt as InvoiceIcon,
   Send as SendIcon,
 } from '@mui/icons-material';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
 import { useInvoices } from '../../hooks/usePayments';
@@ -38,39 +36,7 @@ const FinanceInvoicesPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
-  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
-
-  const queryClient = useQueryClient();
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [newInvoice, setNewInvoice] = useState({
-    customer_name: '',
-    customer_email: '',
-    due_date: '',
-  });
-  const [lineItems, setLineItems] = useState([{ description: '', quantity: 1, unit_price: '' }]);
-
-  const { mutate: createInvoice, isPending: isCreating } = useMutation({
-    mutationFn: (data: any) => invoiceApi.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['payments'] });
-      setCreateModalOpen(false);
-      setNewInvoice({ customer_name: '', customer_email: '', due_date: '' });
-      setLineItems([{ description: '', quantity: 1, unit_price: '' }]);
-    }
-  });
-
-  const handleCreate = () => {
-    const total = lineItems.reduce((acc, item) => acc + (Number(item.quantity) * Number(item.unit_price)), 0);
-    createInvoice({
-      ...newInvoice,
-      subtotal: total.toString(),
-      total_amount: total.toString(),
-      tax_amount: '0',
-      status: 'pending',
-      issue_date: new Date().toISOString().split('T')[0],
-      items: lineItems,
-    });
-  };
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   const { data: invoices, isLoading } = useInvoices();
   const invoicesList: Invoice[] = Array.isArray(invoices)
@@ -79,14 +45,25 @@ const FinanceInvoicesPage: React.FC = () => {
 
   const filtered = invoicesList.filter((inv) => {
     if (statusFilter !== 'all' && inv.status !== statusFilter) return false;
-    const name = inv.user_email || '';
-    const id = inv.invoice_number || '';
-    if (search && !name.toLowerCase().includes(search.toLowerCase()) && !id.toLowerCase().includes(search.toLowerCase())) return false;
+    const invoiceNumber = inv.invoice_number || '';
+    const customerEmail = inv.customer_email || '';
+    const customerName = inv.customer_name || '';
+    const invoiceType = inv.invoice_type || '';
+    const searchTerm = search.toLowerCase();
+    if (
+      search
+      && !invoiceNumber.toLowerCase().includes(searchTerm)
+      && !customerEmail.toLowerCase().includes(searchTerm)
+      && !customerName.toLowerCase().includes(searchTerm)
+      && !invoiceType.toLowerCase().includes(searchTerm)
+    ) {
+      return false;
+    }
     return true;
   });
 
   const totalOutstanding = invoicesList.filter((i) => i.status === 'pending' || i.status === 'overdue')
-    .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+    .reduce((sum, i) => sum + (parseFloat(i.remaining_amount) || 0), 0);
 
   const handleEmailReceipt = async (id: number) => {
     try {
@@ -114,7 +91,23 @@ const FinanceInvoicesPage: React.FC = () => {
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button size="small" variant="outlined" startIcon={<ExportIcon />}
                 onClick={() => {
-                  const csvData = invoicesList.map(inv => `${inv.invoice_number},${inv.user_email},${inv.amount},${inv.status}`).join('\n');
+                  const rows = filtered.map((inv) => [
+                    inv.invoice_number,
+                    inv.customer_name || '',
+                    inv.customer_email || '',
+                    inv.invoice_type,
+                    inv.total_amount,
+                    inv.paid_amount,
+                    inv.currency,
+                    inv.status,
+                    inv.issue_date || '',
+                    inv.due_date || '',
+                    inv.paid_at || '',
+                  ].join(','));
+                  const csvData = [
+                    'invoice_number,customer_name,customer_email,invoice_type,total_amount,paid_amount,currency,status,issue_date,due_date,paid_at',
+                    ...rows,
+                  ].join('\n');
                   const blob = new Blob([csvData], { type: 'text/csv' });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
@@ -128,11 +121,6 @@ const FinanceInvoicesPage: React.FC = () => {
                 sx={{ textTransform: 'none', borderColor: 'divider', color: 'text.secondary' }}>
                 Export
               </Button>
-              <Button size="small" variant="contained" startIcon={<AddIcon />}
-                onClick={() => setCreateModalOpen(true)}
-                sx={{ textTransform: 'none', borderRadius: 2, boxShadow: 'none', '&:hover': { boxShadow: '0 2px 8px rgba(255,164,36,0.3)' } }}>
-                New Invoice
-              </Button>
             </Box>
           </Box>
 
@@ -141,7 +129,7 @@ const FinanceInvoicesPage: React.FC = () => {
             {[
               { label: 'Total Invoices', value: invoicesList.length.toString(), icon: <InvoiceIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
               { label: 'Paid', value: invoicesList.filter((i) => i.status === 'paid').length.toString(), icon: <ViewIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-              { label: 'Outstanding', value: `$${totalOutstanding.toLocaleString()}`, icon: <ExportIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+              { label: 'Outstanding', value: totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), icon: <ExportIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
               { label: 'Overdue', value: invoicesList.filter((i) => i.status === 'overdue').length.toString(), icon: <SendIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
             ].map((s) => (
               <Grid size={{ xs: 6, sm: 6, md: 3 }} key={s.label}>
@@ -168,7 +156,7 @@ const FinanceInvoicesPage: React.FC = () => {
           {/* Filters */}
           <Paper elevation={0} sx={{ ...cardSx, mb: 3 }}>
             <Box sx={{ p: 2, px: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-              <TextField size="small" placeholder="Search invoices..." value={search} onChange={(e) => setSearch(e.target.value)}
+              <TextField size="small" placeholder="Search by invoice, customer, or type..." value={search} onChange={(e) => setSearch(e.target.value)}
                 InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 18, color: 'text.disabled' }} /></InputAdornment> }}
                 sx={{ flex: 1, minWidth: 200, '& .MuiOutlinedInput-root': { borderRadius: '50px', bgcolor: 'rgba(0,0,0,0.02)' } }}
               />
@@ -193,6 +181,12 @@ const FinanceInvoicesPage: React.FC = () => {
             </Box>
             {isLoading ? (
               <Box sx={{ p: 4, textAlign: 'center' }}><CircularProgress size={32} /></Box>
+            ) : filtered.length === 0 ? (
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  No invoices found for the current filters.
+                </Typography>
+              </Box>
             ) : filtered.map((inv, i) => (
               <Box key={inv.id} sx={{
                 display: 'flex', alignItems: 'center', gap: 2, p: 2, px: 3,
@@ -205,12 +199,17 @@ const FinanceInvoicesPage: React.FC = () => {
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography variant="body2" fontWeight={700}>{inv.invoice_number}</Typography>
-                    <Typography variant="body2" fontWeight={500} noWrap>— {inv.user_email}</Typography>
+                    <Typography variant="body2" fontWeight={500} noWrap>— {inv.customer_email || inv.customer_name || 'No customer'}</Typography>
                   </Box>
-                  <Typography variant="caption" color="text.secondary">Generated {new Date(inv.created_at).toLocaleDateString()} · Due {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {inv.invoice_type} · Issued {new Date(inv.issue_date).toLocaleDateString()} · Due {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'} · Paid {inv.paid_at ? new Date(inv.paid_at).toLocaleDateString() : 'N/A'}
+                  </Typography>
                 </Box>
                 <Typography variant="body2" fontWeight={700} sx={{ minWidth: 70, textAlign: 'right', fontFamily: 'monospace' }}>
-                  ${inv.amount}
+                  {inv.total_amount} {inv.currency}
+                </Typography>
+                <Typography variant="caption" sx={{ minWidth: 70, textAlign: 'right', fontFamily: 'monospace', color: 'text.secondary' }}>
+                  paid {inv.paid_amount}
                 </Typography>
                 <Chip label={inv.status} size="small" sx={{
                   height: 22, fontSize: '0.7rem', fontWeight: 600, textTransform: 'capitalize',
@@ -232,50 +231,28 @@ const FinanceInvoicesPage: React.FC = () => {
               </Box>
             ))}
           </Paper>
-          {/* Create Invoice Modal */}
-          <Dialog open={createModalOpen} onClose={() => setCreateModalOpen(false)} maxWidth="sm" fullWidth>
-            <DialogTitle sx={{ fontWeight: 700 }}>Create New Invoice</DialogTitle>
+          {/* Invoice details modal */}
+          <Dialog open={!!selectedInvoice} onClose={() => setSelectedInvoice(null)} maxWidth="sm" fullWidth>
+            <DialogTitle sx={{ fontWeight: 700 }}>Invoice Details</DialogTitle>
             <DialogContent dividers>
-              <Grid container spacing={2} sx={{ mt: 0 }}>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth size="small" label="Customer Name" value={newInvoice.customer_name} onChange={e => setNewInvoice({...newInvoice, customer_name: e.target.value})} />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth size="small" label="Customer Email" type="email" value={newInvoice.customer_email} onChange={e => setNewInvoice({...newInvoice, customer_email: e.target.value})} />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField fullWidth size="small" label="Due Date" type="date" InputLabelProps={{ shrink: true }} value={newInvoice.due_date} onChange={e => setNewInvoice({...newInvoice, due_date: e.target.value})} />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant="subtitle2" sx={{ mb: 1, mt: 1, fontWeight: 600 }}>Line Items</Typography>
-                  {lineItems.map((item, index) => (
-                    <Box key={index} sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                      <TextField fullWidth size="small" placeholder="Description" value={item.description} onChange={e => {
-                        const newItems = [...lineItems];
-                        newItems[index].description = e.target.value;
-                        setLineItems(newItems);
-                      }} />
-                      <TextField size="small" placeholder="Qty" type="number" sx={{ width: 80 }} value={item.quantity} onChange={e => {
-                        const newItems = [...lineItems];
-                        newItems[index].quantity = Number(e.target.value);
-                        setLineItems(newItems);
-                      }} />
-                      <TextField size="small" placeholder="Price" type="number" sx={{ width: 100 }} value={item.unit_price} onChange={e => {
-                        const newItems = [...lineItems];
-                        newItems[index].unit_price = e.target.value;
-                        setLineItems(newItems);
-                      }} />
-                    </Box>
-                  ))}
-                  <Button size="small" onClick={() => setLineItems([...lineItems, { description: '', quantity: 1, unit_price: '' }])}>+ Add Item</Button>
-                </Grid>
-              </Grid>
+              {selectedInvoice && (
+                <Box sx={{ display: 'grid', gap: 1.25 }}>
+                  <Typography variant="body2"><strong>Invoice:</strong> {selectedInvoice.invoice_number}</Typography>
+                  <Typography variant="body2"><strong>Customer:</strong> {selectedInvoice.customer_name || 'N/A'}</Typography>
+                  <Typography variant="body2"><strong>Email:</strong> {selectedInvoice.customer_email || 'N/A'}</Typography>
+                  <Typography variant="body2"><strong>Type:</strong> {selectedInvoice.invoice_type}</Typography>
+                  <Typography variant="body2"><strong>Status:</strong> {selectedInvoice.status}</Typography>
+                  <Typography variant="body2"><strong>Total:</strong> {selectedInvoice.total_amount} {selectedInvoice.currency}</Typography>
+                  <Typography variant="body2"><strong>Paid:</strong> {selectedInvoice.paid_amount} {selectedInvoice.currency}</Typography>
+                  <Typography variant="body2"><strong>Issue Date:</strong> {new Date(selectedInvoice.issue_date).toLocaleDateString()}</Typography>
+                  <Typography variant="body2"><strong>Due Date:</strong> {selectedInvoice.due_date ? new Date(selectedInvoice.due_date).toLocaleDateString() : 'N/A'}</Typography>
+                  <Typography variant="body2"><strong>Paid At:</strong> {selectedInvoice.paid_at ? new Date(selectedInvoice.paid_at).toLocaleString() : 'N/A'}</Typography>
+                  <Typography variant="body2"><strong>Linked Payment:</strong> {selectedInvoice.payment ? 'Yes' : 'No'}</Typography>
+                </Box>
+              )}
             </DialogContent>
             <DialogActions sx={{ p: 2 }}>
-              <Button onClick={() => setCreateModalOpen(false)} color="inherit">Cancel</Button>
-              <Button variant="contained" disabled={isCreating} onClick={handleCreate}>
-                {isCreating ? 'Creating...' : 'Create Invoice'}
-              </Button>
+              <Button onClick={() => setSelectedInvoice(null)} color="inherit">Close</Button>
             </DialogActions>
           </Dialog>
         </Box>
