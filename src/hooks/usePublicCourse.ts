@@ -43,7 +43,7 @@ export const usePublicCourse = (slug: string) => {
 
 export const useCourseReviews = (courseId: number) => {
   return useQuery({
-    queryKey: ['course-reviews', courseId],
+    queryKey: ['course-reviews', 'summary', courseId],
     queryFn: () => courseReviewApi.getSummary(courseId).then((r) => r.data),
     enabled: !!courseId && courseId > 0,
   });

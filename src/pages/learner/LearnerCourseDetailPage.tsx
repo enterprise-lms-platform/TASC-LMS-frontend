@@ -16,7 +16,7 @@ import { publicCourseApi } from '../../services/public.services';
 import type { CourseList, SessionProgress, Subscription } from '../../types/types';
 
 import CourseDetailHero from '../../components/learner/course/CourseDetailHero';
-import type { CourseHeroData } from '../../components/learner/course/CourseDetailHero';
+import type { CourseHeroData, CourseHeroReviewsSummary } from '../../components/learner/course/CourseDetailHero';
 import WhatYouLearn from '../../components/learner/course/WhatYouLearn';
 import CourseCurriculum from '../../components/learner/course/CourseCurriculum';
 import type { Module } from '../../components/learner/course/CourseCurriculum';
@@ -24,7 +24,7 @@ import CourseRequirements from '../../components/learner/course/CourseRequiremen
 import CourseInstructor from '../../components/learner/course/CourseInstructor';
 import type { InstructorData } from '../../components/learner/course/CourseInstructor';
 import CourseReviews from '../../components/learner/course/CourseReviews';
-import type { RatingDistribution, Review } from '../../components/learner/course/CourseReviews';
+import type { CourseReviewsSummaryStatus, RatingDistribution, Review } from '../../components/learner/course/CourseReviews';
 import CourseFAQ from '../../components/learner/course/CourseFAQ';
 import CourseSidebar from '../../components/learner/course/CourseSidebar';
 
@@ -45,7 +45,12 @@ const LearnerCourseDetailPage: React.FC = () => {
   }, [courseId]);
 
   const { data: course, isLoading: courseLoading, isError: courseError } = useCourse(courseNumericId, { enabled: !!courseId });
-  const { data: reviewData } = useCourseReviews(courseNumericId);
+  const {
+    data: reviewData,
+    isPending: reviewsPending,
+    isError: reviewsError,
+    isSuccess: reviewsSuccess,
+  } = useCourseReviews(courseNumericId);
   const { data: sessionProgressRaw } = useQuery({
     queryKey: ['learner', 'course-detail', 'session-progress', courseNumericId],
     queryFn: () => sessionProgressApi.getAll({ course: courseNumericId }).then((r) => r.data),
@@ -103,14 +108,38 @@ const LearnerCourseDetailPage: React.FC = () => {
   const hasSubscription = subscriptionStatus?.has_active_subscription ?? false;
   const subscriptionPlans = (subscriptionsResponse ?? []) as Subscription[];
 
+  const courseReviewsSummaryStatus: CourseReviewsSummaryStatus = useMemo(() => {
+    if (reviewsPending) return 'loading';
+    if (reviewsError) return 'error';
+    if (reviewsSuccess && reviewData) {
+      return reviewData.total === 0 ? 'empty' : 'ready';
+    }
+    return 'loading';
+  }, [reviewsPending, reviewsError, reviewsSuccess, reviewData]);
+
+  const reviewsSummaryForHero: CourseHeroReviewsSummary = useMemo(() => {
+    if (courseReviewsSummaryStatus === 'loading') return { status: 'loading' };
+    if (courseReviewsSummaryStatus === 'error') return { status: 'error' };
+    if (courseReviewsSummaryStatus === 'empty') return { status: 'empty' };
+    if (courseReviewsSummaryStatus === 'ready' && reviewData && reviewData.total > 0) {
+      return { status: 'ready', average: reviewData.average, total: reviewData.total };
+    }
+    return { status: 'loading' };
+  }, [courseReviewsSummaryStatus, reviewData]);
+
+  const courseLearnerReviewsForInstructor = useMemo(() => {
+    if (courseReviewsSummaryStatus === 'ready' && reviewData && reviewData.total > 0) {
+      return { average: reviewData.average, total: reviewData.total };
+    }
+    return undefined;
+  }, [courseReviewsSummaryStatus, reviewData]);
+
   const courseHeroData: CourseHeroData | null = useMemo(() => {
     if (!course) return null;
     return {
       title: course.title,
       description: course.short_description || course.subtitle || '',
       category: course.category?.name || 'General',
-      rating: reviewData?.average || 0,
-      reviewCount: reviewData?.total || 0,
       studentCount: course.enrollment_count || 0,
       level: course.level || 'All Levels',
       duration: course.duration_hours ? `${course.duration_hours} hours` : 'Self-paced',
@@ -120,7 +149,7 @@ const LearnerCourseDetailPage: React.FC = () => {
       projects: 0,
       hasCertificate: course.certificate_on_completion || false,
     };
-  }, [course, reviewData]);
+  }, [course]);
 
   const curriculumModules: Module[] = useMemo(() => {
     if (!course?.sessions?.length) return [];
@@ -174,30 +203,31 @@ const LearnerCourseDetailPage: React.FC = () => {
       initials,
       avatar: course.instructor?.avatar || undefined,
       bio: 'Experienced instructor dedicated to helping students achieve their learning goals.',
-      rating: reviewData?.average || 0,
       courseCount: 0,
       studentCount: String(course.enrollment_count || 0),
     };
-  }, [course, reviewData]);
+  }, [course]);
 
   const reviewDistribution: RatingDistribution[] = useMemo(() => {
-    if (!reviewData?.distribution?.length) return [
-      { stars: 5, percentage: 0 },
-      { stars: 4, percentage: 0 },
-      { stars: 3, percentage: 0 },
-      { stars: 2, percentage: 0 },
-      { stars: 1, percentage: 0 },
-    ];
+    if (courseReviewsSummaryStatus !== 'ready' || !reviewData?.distribution?.length || !reviewData.total) {
+      return [
+        { stars: 5, percentage: 0 },
+        { stars: 4, percentage: 0 },
+        { stars: 3, percentage: 0 },
+        { stars: 2, percentage: 0 },
+        { stars: 1, percentage: 0 },
+      ];
+    }
 
     const total = reviewData.distribution.reduce((a: number, b: number) => a + b, 0) || 1;
     return [5, 4, 3, 2, 1].map((stars, idx) => ({
       stars,
       percentage: total > 0 ? Math.round((reviewData.distribution[idx] || 0) / total * 100) : 0,
     }));
-  }, [reviewData]);
+  }, [courseReviewsSummaryStatus, reviewData]);
 
   const reviewsList: Review[] = useMemo(() => {
-    if (!reviewData?.reviews?.length) return [];
+    if (courseReviewsSummaryStatus !== 'ready' || !reviewData?.reviews?.length) return [];
     return reviewData.reviews.map((r) => {
       const name = r.user_name || 'Anonymous';
       const initials = name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'AN';
@@ -211,7 +241,7 @@ const LearnerCourseDetailPage: React.FC = () => {
         content: r.content,
       };
     });
-  }, [reviewData]);
+  }, [courseReviewsSummaryStatus, reviewData]);
 
   const learnings = course?.learning_objectives_list?.length
     ? course.learning_objectives_list
@@ -434,6 +464,7 @@ const LearnerCourseDetailPage: React.FC = () => {
 
         <CourseDetailHero
           course={courseHeroData}
+          reviewsSummary={reviewsSummaryForHero}
           onEnroll={handleEnroll}
           onPreview={handlePreview}
           hasSubscription={hasSubscription}
@@ -470,13 +501,15 @@ const LearnerCourseDetailPage: React.FC = () => {
               {instructorData && (
                 <CourseInstructor
                   instructor={instructorData}
+                  courseLearnerReviews={courseLearnerReviewsForInstructor}
                 />
               )}
 
               <CourseReviews
                 courseId={courseNumericId}
-                averageRating={reviewData?.average || 0}
-                totalReviews={reviewData?.total || 0}
+                summaryStatus={courseReviewsSummaryStatus}
+                averageRating={reviewData?.average ?? 0}
+                totalReviews={reviewData?.total ?? 0}
                 ratingDistribution={reviewDistribution}
                 reviews={reviewsList}
               />

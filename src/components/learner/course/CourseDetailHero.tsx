@@ -16,8 +16,9 @@ export interface CourseHeroData {
   title: string;
   description: string;
   category: string;
-  rating: number;
-  reviewCount: number;
+  /** Legacy meta; prefer `reviewsSummary` on CourseDetailHero when provided. */
+  rating?: number;
+  reviewCount?: number;
   studentCount: number;
   level: string;
   duration: string;
@@ -28,8 +29,17 @@ export interface CourseHeroData {
   hasCertificate: boolean;
 }
 
+/** Learner course detail: summary of approved course reviews from the catalogue API. */
+export type CourseHeroReviewsSummary =
+  | { status: 'loading' }
+  | { status: 'error'; message?: string }
+  | { status: 'empty' }
+  | { status: 'ready'; average: number; total: number };
+
 interface CourseDetailHeroProps {
   course: CourseHeroData;
+  /** When set, controls hero rating line (avoids misleading zeros while loading or on error). */
+  reviewsSummary?: CourseHeroReviewsSummary;
   onEnroll?: () => void;
   onPreview?: () => void;
   hasSubscription?: boolean;
@@ -42,8 +52,11 @@ interface CourseDetailHeroProps {
   } | null;
 }
 
+const REVIEWS_UNAVAILABLE = 'Reviews are temporarily unavailable.';
+
 const CourseDetailHero: React.FC<CourseDetailHeroProps> = ({
   course,
+  reviewsSummary,
   onEnroll,
   onPreview,
   hasSubscription = false,
@@ -51,6 +64,42 @@ const CourseDetailHero: React.FC<CourseDetailHeroProps> = ({
   isLoadingSubscription = false,
   subscriptionOffer = null,
 }) => {
+  const renderReviewsMeta = () => {
+    if (reviewsSummary) {
+      if (reviewsSummary.status === 'loading') {
+        return (
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <CircularProgress size={18} sx={{ color: 'rgba(255,255,255,0.85)' }} />
+            <Typography variant="body2">Loading reviews…</Typography>
+          </Stack>
+        );
+      }
+      if (reviewsSummary.status === 'error') {
+        return (
+          <Typography variant="body2" sx={{ opacity: 0.95 }}>
+            {reviewsSummary.message?.trim() || REVIEWS_UNAVAILABLE}
+          </Typography>
+        );
+      }
+      if (reviewsSummary.status === 'empty') {
+        return <Typography variant="body2">No reviews yet.</Typography>;
+      }
+      return (
+        <Typography variant="body2">
+          {reviewsSummary.average.toFixed(1)} ({reviewsSummary.total.toLocaleString()}{' '}
+          {reviewsSummary.total === 1 ? 'review' : 'reviews'})
+        </Typography>
+      );
+    }
+    const r = course.rating ?? 0;
+    const c = course.reviewCount ?? 0;
+    return (
+      <Typography variant="body2">
+        {r.toFixed(1)} ({c.toLocaleString()} reviews)
+      </Typography>
+    );
+  };
+
   return (
     <Box
       sx={{
@@ -147,9 +196,7 @@ const CourseDetailHero: React.FC<CourseDetailHeroProps> = ({
             >
               <Stack direction="row" alignItems="center" spacing={1}>
                 <StarIcon sx={{ fontSize: 18, opacity: 0.8 }} />
-                <Typography variant="body2">
-                  {course.rating} ({course.reviewCount.toLocaleString()} reviews)
-                </Typography>
+                {renderReviewsMeta()}
               </Stack>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <PeopleIcon sx={{ fontSize: 18, opacity: 0.8 }} />
