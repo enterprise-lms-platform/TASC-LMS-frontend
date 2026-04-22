@@ -258,6 +258,39 @@ export const userSubscriptionApi = {
     apiClient.post<UserSubscription>(`${BASE_PATH}/user-subscriptions/${id}/renew/`),
 };
 
+export interface FinanceDashboardOverview {
+  currency: string;
+  kpis: {
+    total_collected_revenue: string;
+    collected_revenue_this_month: string;
+    pending_invoices_count: number;
+    pending_invoices_amount: string;
+    active_subscribers: number;
+  };
+  revenue_trend: Array<{
+    month: string;
+    collected_revenue: string;
+  }>;
+  recent_payment_events: Array<{
+    payment_id: string;
+    created_at: string;
+    completed_at: string | null;
+    status: string;
+    amount: string;
+    currency: string;
+    payment_method: string;
+    provider_order_id: string | null;
+    provider_payment_id: string | null;
+    user_email: string | null;
+    description: string;
+  }>;
+}
+
+export const financeDashboardApi = {
+  getOverview: () =>
+    apiClient.get<FinanceDashboardOverview>(`${BASE_PATH}/finance/dashboard-overview/`),
+};
+
 // PESAPAL
 export interface PesapalInitiateRequest {
   amount: string;

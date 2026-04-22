@@ -17,6 +17,7 @@ import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
 import { useInvoices } from '../../hooks/usePayments';
 import { invoiceApi } from '../../services/payments.services';
+import type { Invoice, PaginatedResponse } from '../../types/types';
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   paid: { bg: 'rgba(16,185,129,0.1)', color: '#10b981' },
@@ -72,8 +73,11 @@ const FinanceInvoicesPage: React.FC = () => {
   };
 
   const { data: invoices, isLoading } = useInvoices();
+  const invoicesList: Invoice[] = Array.isArray(invoices)
+    ? invoices
+    : (invoices as PaginatedResponse<Invoice> | undefined)?.results ?? [];
 
-  const filtered = (invoices || []).filter((inv) => {
+  const filtered = invoicesList.filter((inv) => {
     if (statusFilter !== 'all' && inv.status !== statusFilter) return false;
     const name = inv.user_email || '';
     const id = inv.invoice_number || '';
@@ -81,7 +85,7 @@ const FinanceInvoicesPage: React.FC = () => {
     return true;
   });
 
-  const totalOutstanding = (invoices || []).filter((i) => i.status === 'pending' || i.status === 'overdue')
+  const totalOutstanding = invoicesList.filter((i) => i.status === 'pending' || i.status === 'overdue')
     .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
 
   const handleEmailReceipt = async (id: number) => {
@@ -110,7 +114,7 @@ const FinanceInvoicesPage: React.FC = () => {
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button size="small" variant="outlined" startIcon={<ExportIcon />}
                 onClick={() => {
-                  const csvData = (invoices || []).map(inv => `${inv.invoice_number},${inv.user_email},${inv.amount},${inv.status}`).join('\n');
+                  const csvData = invoicesList.map(inv => `${inv.invoice_number},${inv.user_email},${inv.amount},${inv.status}`).join('\n');
                   const blob = new Blob([csvData], { type: 'text/csv' });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
@@ -135,10 +139,10 @@ const FinanceInvoicesPage: React.FC = () => {
           {/* Summary */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {[
-              { label: 'Total Invoices', value: (invoices || []).length.toString(), icon: <InvoiceIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
-              { label: 'Paid', value: (invoices || []).filter((i) => i.status === 'paid').length.toString(), icon: <ViewIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+              { label: 'Total Invoices', value: invoicesList.length.toString(), icon: <InvoiceIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
+              { label: 'Paid', value: invoicesList.filter((i) => i.status === 'paid').length.toString(), icon: <ViewIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
               { label: 'Outstanding', value: `$${totalOutstanding.toLocaleString()}`, icon: <ExportIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-              { label: 'Overdue', value: (invoices || []).filter((i) => i.status === 'overdue').length.toString(), icon: <SendIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
+              { label: 'Overdue', value: invoicesList.filter((i) => i.status === 'overdue').length.toString(), icon: <SendIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
             ].map((s) => (
               <Grid size={{ xs: 6, sm: 6, md: 3 }} key={s.label}>
                 <Paper elevation={0} sx={{

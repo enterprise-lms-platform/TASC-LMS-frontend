@@ -10,24 +10,20 @@ import {
   Skeleton,
 } from '@mui/material';
 import {
-  FileDownload as ExportIcon,
-  FilterList as FilterIcon,
   Visibility as ViewIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { transactionApi } from '../../services/payments.services';
-import type { PaginatedResponse } from '../../types/types';
+import { useFinanceDashboardOverview } from '../../hooks/usePayments';
 
 interface TransactionResult {
-  id: number;
-  invoice?: number | null;
+  payment_id: string;
   amount?: string | number;
   status?: string;
   payment_method?: string;
   created_at?: string;
-  user_name?: string;
-  user_email?: string;
+  user_email?: string | null;
+  provider_order_id?: string | null;
+  provider_payment_id?: string | null;
   description?: string;
 }
 
@@ -39,23 +35,13 @@ const statusColors: Record<string, { bg: string; color: string }> = {
 };
 
 const methodColors: Record<string, { bg: string; color: string }> = {
-  'mpesa': { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
-  'card': { bg: 'rgba(99, 102, 241, 0.1)', color: '#6366f1' },
-  'mtn_momo': { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' },
-  'airtel': { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' },
+  pesapal: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981' },
 };
 
 const TransactionsTable: React.FC = () => {
   const navigate = useNavigate();
-
-  const { data: txnRaw, isLoading } = useQuery({
-    queryKey: ['finance', 'transactions', 'recent'],
-    queryFn: () => transactionApi.getAll({ limit: 5 }).then(r => r.data),
-  });
-
-  const transactions: TransactionResult[] = Array.isArray(txnRaw)
-    ? txnRaw
-    : (txnRaw as PaginatedResponse<TransactionResult> | undefined)?.results ?? [];
+  const { data, isLoading } = useFinanceDashboardOverview();
+  const transactions: TransactionResult[] = data?.recent_payment_events || [];
 
   return (
     <Paper
@@ -81,27 +67,15 @@ const TransactionsTable: React.FC = () => {
           alignItems: 'center',
         }}
       >
-        <Typography fontWeight={700}>Recent Transactions</Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<ExportIcon />}
-            onClick={() => navigate('/finance/reports')}
-            sx={{ borderColor: 'divider', color: 'text.secondary', textTransform: 'none', fontSize: '0.75rem' }}
-          >
-            Export
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<FilterIcon />}
-            onClick={() => navigate('/finance/transactions')}
-            sx={{ borderColor: 'divider', color: 'text.secondary', textTransform: 'none', fontSize: '0.75rem' }}
-          >
-            Filter
-          </Button>
-        </Box>
+        <Typography fontWeight={700}>Recent Payment Events</Typography>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={() => navigate('/finance/payments')}
+          sx={{ borderColor: 'divider', color: 'text.secondary', textTransform: 'none', fontSize: '0.75rem' }}
+        >
+          View All
+        </Button>
       </Box>
 
       {/* Row-based list */}
@@ -115,20 +89,20 @@ const TransactionsTable: React.FC = () => {
         ))
       ) : transactions.length === 0 ? (
         <Box sx={{ p: 3, textAlign: 'center' }}>
-          <Typography variant="body2" color="text.secondary">No recent transactions</Typography>
+          <Typography variant="body2" color="text.secondary">No recent payment events</Typography>
         </Box>
       ) : (
         transactions.map((txn, i) => {
-          const initials = (txn.user_name || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+          const initials = (txn.user_email || 'user').slice(0, 2).toUpperCase();
           const status = (txn.status || 'pending').toLowerCase();
           const method = (txn.payment_method || '').toLowerCase();
           const sc = statusColors[status] || statusColors.pending;
           const mc = methodColors[method] || { bg: 'grey.100', color: 'text.secondary' };
-          const amount = typeof txn.amount === 'number' ? `$${txn.amount.toFixed(2)}` : txn.amount || '$0.00';
+          const amount = typeof txn.amount === 'number' ? txn.amount.toFixed(2) : txn.amount || '0.00';
 
           return (
             <Box
-              key={txn.id}
+              key={txn.payment_id}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
@@ -144,8 +118,8 @@ const TransactionsTable: React.FC = () => {
                 {initials}
               </Avatar>
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="body2" fontWeight={600} noWrap>{txn.user_name || `TXN-${txn.id}`}</Typography>
-                <Typography variant="caption" color="text.secondary">{txn.description || `Invoice #${txn.invoice || txn.id}`}</Typography>
+                <Typography variant="body2" fontWeight={600} noWrap>{txn.user_email || `Payment ${txn.payment_id}`}</Typography>
+                <Typography variant="caption" color="text.secondary">{txn.description || txn.provider_order_id || txn.provider_payment_id || txn.payment_id}</Typography>
               </Box>
               <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, minWidth: 80 }}>
                 {txn.created_at ? new Date(txn.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
@@ -165,7 +139,7 @@ const TransactionsTable: React.FC = () => {
                 />
               )}
               <Typography variant="body2" fontWeight={700} sx={{ minWidth: 70, textAlign: 'right', fontFamily: 'monospace' }}>
-                {amount}
+                {`UGX ${amount}`}
               </Typography>
               <Chip
                 label={status.charAt(0).toUpperCase() + status.slice(1)}
@@ -178,7 +152,7 @@ const TransactionsTable: React.FC = () => {
                   color: sc.color,
                 }}
               />
-              <IconButton size="small" onClick={() => navigate('/finance/transactions')}
+              <IconButton size="small" onClick={() => navigate('/finance/payments')}
                 sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'flex' } }}>
                 <ViewIcon fontSize="small" />
               </IconButton>

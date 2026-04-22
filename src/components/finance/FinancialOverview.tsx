@@ -6,54 +6,25 @@ import {
   HourglassEmpty as PendingIcon,
   People as SubscribersIcon,
 } from '@mui/icons-material';
-import { useQuery } from '@tanstack/react-query';
-import { transactionApi, invoiceApi, userSubscriptionApi } from '../../services/payments.services';
-import type { PaginatedResponse } from '../../types/types';
+import { useFinanceDashboardOverview } from '../../hooks/usePayments';
 
-const formatCurrency = (amount: number) => {
-  if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
-  if (amount >= 1_000) return `$${(amount / 1_000).toFixed(1)}K`;
-  return `$${amount.toFixed(0)}`;
+const formatCurrency = (amount: string | number, currency: string) => {
+  const value = Number(amount || 0);
+  return `${currency} ${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 };
 
 const FinancialOverview: React.FC = () => {
-  const { data: txData, isLoading: lt } = useQuery({
-    queryKey: ['finance', 'transactions', 'overview'],
-    queryFn: () => transactionApi.getAll({ page_size: 200 }).then(r => r.data),
-  });
-  const { data: invoicesData, isLoading: li } = useQuery({
-    queryKey: ['finance', 'invoices', 'pending'],
-    queryFn: () => invoiceApi.getAll({ status: 'pending' }).then(r => r.data),
-  });
-  const { data: subsData, isLoading: ls } = useQuery({
-    queryKey: ['finance', 'subscriptions', 'active'],
-    queryFn: () => userSubscriptionApi.getAll({ status: 'active' }).then(r => r.data),
-  });
-
-  const transactions = (txData as PaginatedResponse<{ amount?: string; created_at?: string }> | undefined)?.results ?? [];
-  const totalRevenue = transactions.reduce((sum, t) => sum + (parseFloat(t.amount || '0') || 0), 0);
-
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const monthlyTx = transactions.filter(t => (t.created_at || '') >= monthStart);
-  const monthlyRevenue = monthlyTx.reduce((sum, t) => sum + (parseFloat(t.amount || '0') || 0), 0);
-
-  const pendingInvoices = (invoicesData as PaginatedResponse<{ total_amount?: string }> | undefined)?.results ?? [];
-  const pendingTotal = pendingInvoices.reduce((sum, inv) => sum + (parseFloat(inv.total_amount || '0') || 0), 0);
-
-  const activeSubs = (subsData as PaginatedResponse<unknown> | undefined)?.count
-    ?? (subsData as PaginatedResponse<unknown> | undefined)?.results?.length ?? 0;
-
-  const isLoading = lt || li || ls;
+  const { data, isLoading } = useFinanceDashboardOverview();
+  const currency = data?.currency || 'UGX';
 
   const stats = [
-    { label: 'Total Revenue', value: formatCurrency(totalRevenue), icon: <RevenueIcon />,
+    { label: 'Total Collected Revenue', value: formatCurrency(data?.kpis?.total_collected_revenue || '0', currency), icon: <RevenueIcon />,
       bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-    { label: 'Monthly Revenue', value: formatCurrency(monthlyRevenue), icon: <MonthlyIcon />,
+    { label: 'Collected Revenue (This Month)', value: formatCurrency(data?.kpis?.collected_revenue_this_month || '0', currency), icon: <MonthlyIcon />,
       bgcolor: '#f4f4f5', iconBg: '#a1a1aa', color: '#27272a', subColor: '#3f3f46' },
-    { label: 'Pending Payments', value: formatCurrency(pendingTotal), icon: <PendingIcon />,
+    { label: 'Pending Invoices', value: `${data?.kpis?.pending_invoices_count ?? 0} (${formatCurrency(data?.kpis?.pending_invoices_amount || '0', currency)})`, icon: <PendingIcon />,
       bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-    { label: 'Active Subscribers', value: activeSubs.toLocaleString(), icon: <SubscribersIcon />,
+    { label: 'Active Subscribers', value: `${data?.kpis?.active_subscribers ?? 0}`, icon: <SubscribersIcon />,
       bgcolor: '#f0fdf4', iconBg: '#86efac', color: '#14532d', subColor: '#166534' },
   ];
 

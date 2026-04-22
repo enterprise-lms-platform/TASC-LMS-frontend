@@ -5,9 +5,7 @@ import TopBar from '../../components/finance/TopBar';
 import WelcomeBanner from '../../components/finance/WelcomeBanner';
 import FinancialOverview from '../../components/finance/FinancialOverview';
 import RevenueChart from '../../components/finance/RevenueChart';
-import PaymentMethodsChart from '../../components/finance/PaymentMethodsChart';
 import TransactionsTable from '../../components/finance/TransactionsTable';
-import PaymentMethods from '../../components/finance/PaymentMethods';
 import RecentInvoices from '../../components/finance/RecentInvoices';
 import QuickActions from '../../components/finance/QuickActions';
 
@@ -53,11 +51,8 @@ const FinanceDashboard: React.FC = () => {
 
         {/* Charts Section */}
         <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: 4 }}>
-          <Grid size={{ xs: 12, lg: 8 }}>
+          <Grid size={{ xs: 12 }}>
             <RevenueChart />
-          </Grid>
-          <Grid size={{ xs: 12, lg: 4 }}>
-            <PaymentMethodsChart />
           </Grid>
         </Grid>
 
@@ -68,7 +63,6 @@ const FinanceDashboard: React.FC = () => {
           </Grid>
           <Grid size={{ xs: 12, lg: 4 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <PaymentMethods />
               <RecentInvoices />
             </Box>
           </Grid>
