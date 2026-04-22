@@ -152,7 +152,7 @@ const TransactionsTable: React.FC = () => {
                   color: sc.color,
                 }}
               />
-              <IconButton size="small" onClick={() => navigate('/finance/payments')}
+              <IconButton size="small" onClick={() => navigate(`/finance/payments/${txn.payment_id}`)}
                 sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'flex' } }}>
                 <ViewIcon fontSize="small" />
               </IconButton>

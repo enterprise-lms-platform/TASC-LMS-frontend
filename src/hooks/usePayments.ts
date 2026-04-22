@@ -155,6 +155,13 @@ export const useFinancePayments = (params?: FinancePaymentParams) =>
     }),
   });
 
+export const useFinancePayment = (paymentId?: string) =>
+  useQuery({
+    queryKey: ['finance', 'payments', 'detail', paymentId],
+    queryFn: () => financePaymentApi.getById(paymentId as string).then((r) => r.data),
+    enabled: !!paymentId,
+  });
+
 export const useFinanceDashboardOverview = () =>
   useQuery({
     queryKey: ['finance', 'dashboard-overview'],

@@ -23,6 +23,7 @@ const FinanceDashboard              = lazy(() => import('../pages/finance/Financ
 const FinanceAnalyticsPage          = lazy(() => import('../pages/finance/FinanceAnalyticsPage'));
 const FinanceAlertsPage             = lazy(() => import('../pages/finance/FinanceAlertsPage'));
 const FinancePaymentsPage           = lazy(() => import('../pages/finance/FinancePaymentsPage'));
+const FinancePaymentDetailPage      = lazy(() => import('../pages/finance/FinancePaymentDetailPage'));
 const FinanceInvoicesPage           = lazy(() => import('../pages/finance/FinanceInvoicesPage'));
 const FinanceRevenueReportsPage     = lazy(() => import('../pages/finance/FinanceRevenueReportsPage'));
 const FinanceSubscriptionsPage      = lazy(() => import('../pages/finance/FinanceSubscriptionsPage'));
@@ -41,6 +42,7 @@ const FinanceProfilePage           = lazy(() => import('../pages/finance/Finance
 export const financeRoutes = (queryClient: QueryClient): RouteObject[] => [
   { path: '/finance', element: <SW><PR><FinanceDashboard /></PR></SW>, errorElement: <ErrorPage />, loader: async () => financeLoaders.financeDashboardLoader(queryClient) },
   { path: '/finance/payments', element: <SW><PR><FinancePaymentsPage /></PR></SW>, loader: async () => financeLoaders.financePaymentsLoader(queryClient) },
+  { path: '/finance/payments/:paymentId', element: <SW><PR><FinancePaymentDetailPage /></PR></SW>, loader: async () => financeLoaders.financeRouteLoader(queryClient) },
   { path: '/finance/invoices', element: <SW><PR><FinanceInvoicesPage /></PR></SW>, loader: async () => financeLoaders.financeInvoicesLoader(queryClient) },
   { path: '/finance/subscriptions', element: <SW><PR><FinanceSubscriptionsPage /></PR></SW>, loader: async () => financeLoaders.financeSubscriptionsLoader(queryClient) },
   { path: '/finance/analytics', element: <SW><PR><FinanceAnalyticsPage /></PR></SW>, loader: async () => financeLoaders.financeRouteLoader(queryClient) },

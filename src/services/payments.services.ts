@@ -131,6 +131,8 @@ export const transactionApi = {
 export const financePaymentApi = {
   getAll: (params?: FinancePaymentParams) =>
     apiClient.get<FinancePaymentRecord[]>(`${BASE_PATH}/finance/payments/`, { params }),
+  getById: (id: string) =>
+    apiClient.get<FinancePaymentRecord>(`${BASE_PATH}/finance/payments/${id}/`),
   refund: (id: string | number, remarks?: string) =>
     apiClient.post<{ success: boolean; message: string }>(`${BASE_PATH}/pesapal/${id}/refund/`, { remarks }),
 };
