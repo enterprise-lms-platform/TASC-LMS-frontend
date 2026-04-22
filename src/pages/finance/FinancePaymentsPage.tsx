@@ -14,14 +14,13 @@ import {
   PhoneAndroid as MpesaIcon,
   SimCard as MtnIcon,
   Wifi as AirtelIcon,
-  Refresh as RetryIcon,
   Undo as RefundIcon,
 } from '@mui/icons-material';
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
-import { useTransactions } from '../../hooks/usePayments';
-import { transactionApi } from '../../services/payments.services';
-import type { PaginatedResponse, Transaction } from '../../types/types';
+import { useFinancePayments } from '../../hooks/usePayments';
+import { financePaymentApi, type FinancePaymentRecord } from '../../services/payments.services';
+import type { PaginatedResponse } from '../../types/types';
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   completed: { bg: 'rgba(16,185,129,0.1)', color: '#10b981' },
@@ -51,33 +50,20 @@ const FinancePaymentsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
-  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
-  const [actionTarget, setActionTarget] = useState<{ type: 'retry' | 'refund'; txn: Transaction } | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<FinancePaymentRecord | null>(null);
+  const [actionTarget, setActionTarget] = useState<{ type: 'refund'; payment: FinancePaymentRecord } | null>(null);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' });
 
   const queryClient = useQueryClient();
-  const { data: transactions, isLoading } = useTransactions();
-  const transactionsList: Transaction[] = Array.isArray(transactions)
-    ? transactions
-    : (transactions as PaginatedResponse<Transaction> | undefined)?.results ?? [];
-
-  const retryMutation = useMutation({
-    mutationFn: (id: number) => transactionApi.retry(id).then((r) => r.data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      setSnackbar({ open: true, message: 'Transaction reset for retry.', severity: 'success' });
-      setActionTarget(null);
-    },
-    onError: () => {
-      setSnackbar({ open: true, message: 'Failed to retry transaction.', severity: 'error' });
-      setActionTarget(null);
-    },
-  });
+  const { data: payments, isLoading } = useFinancePayments();
+  const paymentsList: FinancePaymentRecord[] = Array.isArray(payments)
+    ? payments
+    : (payments as PaginatedResponse<FinancePaymentRecord> | undefined)?.results ?? [];
 
   const refundMutation = useMutation({
-    mutationFn: ({ id, remarks }: { id: number; remarks?: string }) => transactionApi.refund(id, remarks).then((r) => r.data),
+    mutationFn: ({ id, remarks }: { id: string; remarks?: string }) => financePaymentApi.refund(id, remarks).then((r) => r.data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'payments'] });
       setSnackbar({ open: true, message: 'Refund requested successfully.', severity: 'success' });
       setActionTarget(null);
     },
@@ -89,8 +75,24 @@ const FinancePaymentsPage: React.FC = () => {
 
   const exportMutation = useMutation({
     mutationFn: async () => {
-      const response = await transactionApi.exportCSV({ status: statusFilter !== 'all' ? statusFilter : undefined });
-      const url = URL.createObjectURL(response.data as Blob);
+      const rows = filtered.map((p) => [
+        p.id,
+        p.user_email || '',
+        p.amount,
+        p.currency,
+        p.status,
+        p.payment_method,
+        p.provider_order_id || '',
+        p.provider_payment_id || '',
+        p.created_at,
+        p.completed_at || '',
+      ]);
+      const csvData = [
+        ['Payment ID', 'User Email', 'Amount', 'Currency', 'Status', 'Payment Method', 'Provider Order ID', 'Provider Payment ID', 'Created At', 'Completed At'],
+        ...rows,
+      ].map((row) => row.join(',')).join('\n');
+      const blob = new Blob([csvData], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = 'payments.csv';
@@ -101,11 +103,20 @@ const FinancePaymentsPage: React.FC = () => {
     },
   });
 
-  const filtered = transactionsList.filter((p) => {
+  const filtered = paymentsList.filter((p) => {
     if (statusFilter !== 'all' && p.status !== statusFilter) return false;
     const name = p.user_email || '';
-    const id = p.transaction_id || '';
-    if (search && !name.toLowerCase().includes(search.toLowerCase()) && !id.toLowerCase().includes(search.toLowerCase())) return false;
+    const id = p.id || '';
+    const providerOrder = p.provider_order_id || '';
+    const providerPayment = p.provider_payment_id || '';
+    const term = search.toLowerCase();
+    if (
+      search
+      && !name.toLowerCase().includes(term)
+      && !id.toLowerCase().includes(term)
+      && !providerOrder.toLowerCase().includes(term)
+      && !providerPayment.toLowerCase().includes(term)
+    ) return false;
     return true;
   });
 
@@ -122,7 +133,7 @@ const FinancePaymentsPage: React.FC = () => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
             <Box>
               <Typography variant="h5" fontWeight={700}>All Payments</Typography>
-              <Typography variant="body2" color="text.secondary">Manage and track all payment transactions</Typography>
+              <Typography variant="body2" color="text.secondary">Manage and track payment attempts and outcomes</Typography>
             </Box>
             <Button size="small" variant="contained" startIcon={<ExportIcon />}
               onClick={() => exportMutation.mutate()}
@@ -135,10 +146,10 @@ const FinancePaymentsPage: React.FC = () => {
           {/* Status Summary */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {[
-              { label: 'Total Payments', value: transactionsList.length.toString(), icon: <CardIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
-              { label: 'Completed', value: transactionsList.filter((p) => p.status === 'completed').length.toString(), icon: <ViewIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
-              { label: 'Pending', value: transactionsList.filter((p) => p.status === 'pending').length.toString(), icon: <MpesaIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
-              { label: 'Failed', value: transactionsList.filter((p) => p.status === 'failed').length.toString(), icon: <AirtelIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
+              { label: 'Total Payments', value: paymentsList.length.toString(), icon: <CardIcon />, bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
+              { label: 'Completed', value: paymentsList.filter((p) => p.status === 'completed').length.toString(), icon: <ViewIcon />, bgcolor: '#dcfce7', iconBg: '#4ade80', color: '#14532d', subColor: '#166534' },
+              { label: 'Pending', value: paymentsList.filter((p) => p.status === 'pending').length.toString(), icon: <MpesaIcon />, bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
+              { label: 'Failed', value: paymentsList.filter((p) => p.status === 'failed').length.toString(), icon: <AirtelIcon />, bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
             ].map((s) => (
               <Grid size={{ xs: 6, sm: 6, md: 3 }} key={s.label}>
                 <Paper elevation={0} sx={{
@@ -165,7 +176,7 @@ const FinancePaymentsPage: React.FC = () => {
           <Paper elevation={0} sx={{ ...cardSx, mb: 3 }}>
             <Box sx={{ p: 2, px: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
               <TextField
-                size="small" placeholder="Search by email or ID..." value={search} onChange={(e) => setSearch(e.target.value)}
+                size="small" placeholder="Search by email, payment ID, provider refs..." value={search} onChange={(e) => setSearch(e.target.value)}
                 InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 18, color: 'text.disabled' }} /></InputAdornment> }}
                 sx={{ flex: 1, minWidth: 200, '& .MuiOutlinedInput-root': { borderRadius: '50px', bgcolor: 'rgba(0,0,0,0.02)' } }}
               />
@@ -176,6 +187,8 @@ const FinancePaymentsPage: React.FC = () => {
                   <MenuItem value="completed">Completed</MenuItem>
                   <MenuItem value="pending">Pending</MenuItem>
                   <MenuItem value="failed">Failed</MenuItem>
+                  <MenuItem value="cancelled">Cancelled</MenuItem>
+                  <MenuItem value="refunded">Refunded</MenuItem>
                 </Select>
               </FormControl>
             </Box>
@@ -184,59 +197,69 @@ const FinancePaymentsPage: React.FC = () => {
           {/* Payments List */}
           <Paper elevation={0} sx={cardSx}>
             <Box sx={{ p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography fontWeight={700}>Transactions</Typography>
+              <Typography fontWeight={700}>Payment Events</Typography>
               <Typography variant="caption" color="text.secondary">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</Typography>
             </Box>
             {isLoading ? (
               <Box sx={{ p: 4, textAlign: 'center' }}><CircularProgress size={32} /></Box>
+            ) : filtered.length === 0 ? (
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary">No payments found.</Typography>
+              </Box>
             ) : filtered.map((p, i) => (
               <Box key={p.id} sx={{
-                display: 'flex', alignItems: 'center', gap: 2, p: 2, px: 3,
+                display: 'grid',
+                gridTemplateColumns: '1fr 180px 120px 120px 100px 80px',
+                alignItems: 'center',
+                columnGap: 2,
+                p: 2, px: 3,
                 borderBottom: i < filtered.length - 1 ? 1 : 0, borderColor: 'divider',
                 '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' },
               }}>
-                <Avatar sx={{ width: 36, height: 36, fontSize: '0.75rem', bgcolor: 'primary.main' }}>
-                  {(p.user_email || 'U').charAt(0).toUpperCase()}
-                </Avatar>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="body2" fontWeight={600} noWrap>{p.user_email}</Typography>
-                  <Typography variant="caption" color="text.secondary">{p.transaction_id} · {p.provider}</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
+                  <Avatar sx={{ width: 36, height: 36, fontSize: '0.75rem', bgcolor: 'primary.main' }}>
+                    {(p.user_email || 'U').charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="body2" fontWeight={600} noWrap>{p.user_email}</Typography>
+                    <Typography variant="caption" color="text.secondary">{p.provider_order_id || p.provider_payment_id || p.id} · {p.payment_method}</Typography>
+                  </Box>
                 </Box>
-                <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, minWidth: 90 }}>
-                  {new Date(p.created_at).toLocaleDateString()}
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'left', whiteSpace: 'nowrap' }}
+                >
+                  {new Date(p.created_at).toLocaleString()}
                 </Typography>
-                <Chip icon={getMethodIcon(p.provider)} label={p.provider} size="small" variant="outlined" sx={{
+                <Chip icon={getMethodIcon(p.payment_method)} label={p.payment_method} size="small" variant="outlined" sx={{
                   display: { xs: 'none', md: 'flex' }, height: 24, fontSize: '0.7rem', fontWeight: 500,
                 }} />
-                <Typography variant="body2" fontWeight={700} sx={{ minWidth: 70, textAlign: 'right', fontFamily: 'monospace' }}>
-                  ${p.amount}
+                <Typography variant="body2" fontWeight={700} sx={{ textAlign: 'right', fontFamily: 'monospace' }}>
+                  {`${p.currency} ${p.amount}`}
                 </Typography>
-                <Chip label={p.status} size="small" sx={{
-                  height: 22, fontSize: '0.7rem', fontWeight: 600, textTransform: 'capitalize',
-                  bgcolor: statusColors[p.status]?.bg || 'rgba(0,0,0,0.05)',
-                  color: statusColors[p.status]?.color || 'text.secondary',
-                }} />
-                {p.status === 'failed' && (
-                  <Tooltip title="Retry payment">
-                    <IconButton size="small" onClick={() => setActionTarget({ type: 'retry', txn: p })}
-                      sx={{ color: '#f59e0b', '&:hover': { bgcolor: 'rgba(245,158,11,0.08)' } }}>
-                      <RetryIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                )}
-                {p.status === 'completed' && (
-                  <Tooltip title="Refund payment">
-                    <IconButton size="small" onClick={() => setActionTarget({ type: 'refund', txn: p })}
-                      sx={{ color: '#ef4444', '&:hover': { bgcolor: 'rgba(239,68,68,0.08)' } }}>
-                      <RefundIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                )}
-                <IconButton size="small"
-                  onClick={() => setSelectedTransaction(p)}
-                  sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'flex' }, '&:hover': { color: 'primary.main' } }}>
-                  <ViewIcon fontSize="small" />
-                </IconButton>
+                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                  <Chip label={p.status} size="small" sx={{
+                    height: 22, fontSize: '0.7rem', fontWeight: 600, textTransform: 'capitalize',
+                    bgcolor: statusColors[p.status]?.bg || 'rgba(0,0,0,0.05)',
+                    color: statusColors[p.status]?.color || 'text.secondary',
+                  }} />
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+                  {p.status === 'completed' && p.payment_method === 'pesapal' && (
+                    <Tooltip title="Refund payment">
+                      <IconButton size="small" onClick={() => setActionTarget({ type: 'refund', payment: p })}
+                        sx={{ color: '#ef4444', '&:hover': { bgcolor: 'rgba(239,68,68,0.08)' } }}>
+                        <RefundIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  <IconButton size="small"
+                    onClick={() => setSelectedPayment(p)}
+                    sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'flex' }, '&:hover': { color: 'primary.main' } }}>
+                    <ViewIcon fontSize="small" />
+                  </IconButton>
+                </Box>
               </Box>
             ))}
       </Paper>
@@ -244,12 +267,10 @@ const FinancePaymentsPage: React.FC = () => {
       </Box>
 
       <Dialog open={!!actionTarget} onClose={() => setActionTarget(null)}>
-        <DialogTitle>{actionTarget?.type === 'retry' ? 'Retry Payment' : 'Refund Payment'}</DialogTitle>
+        <DialogTitle>Refund Payment</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            {actionTarget?.type === 'retry'
-              ? `Reset transaction ${actionTarget.txn.transaction_id} so the user can re-attempt payment?`
-              : `Request a refund for transaction ${actionTarget?.txn.transaction_id}? This will revoke the associated enrollment.`}
+            {`Request a refund for payment ${actionTarget?.payment.id}? This will revoke the associated enrollment/subscription access.`}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -257,20 +278,14 @@ const FinancePaymentsPage: React.FC = () => {
           <Button
             onClick={() => {
               if (!actionTarget) return;
-              if (actionTarget.type === 'retry') {
-                retryMutation.mutate(actionTarget.txn.id);
-              } else {
-                refundMutation.mutate({ id: actionTarget.txn.id });
-              }
+              refundMutation.mutate({ id: actionTarget.payment.id });
             }}
-            color={actionTarget?.type === 'refund' ? 'error' : 'primary'}
+            color="error"
             variant="contained"
-            disabled={retryMutation.isPending || refundMutation.isPending}
+            disabled={refundMutation.isPending}
             sx={{ textTransform: 'none', fontWeight: 600 }}
           >
-            {retryMutation.isPending || refundMutation.isPending
-              ? actionTarget?.type === 'retry' ? 'Retrying...' : 'Refunding...'
-              : actionTarget?.type === 'retry' ? 'Retry' : 'Refund'}
+            {refundMutation.isPending ? 'Refunding...' : 'Refund'}
           </Button>
         </DialogActions>
       </Dialog>
