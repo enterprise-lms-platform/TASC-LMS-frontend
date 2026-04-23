@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Paper, Typography, Button, Chip } from '@mui/material';
-import { Warning as WarningIcon, Renew as RenewIcon } from '@mui/icons-material';
+import { Warning as WarningIcon, Autorenew as RenewIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useMySubscription } from '../../hooks/usePayments';
 
@@ -11,7 +11,7 @@ const SubscriptionExpiryAlert: React.FC = () => {
     if (!sub || !sub.has_active_subscription) return null;
 
     const isExpiringSoon = sub.days_remaining !== undefined && sub.days_remaining !== null && sub.days_remaining <= 30;
-    const isInGrace = sub.in_grace_period;
+    const isInGrace = !!sub.grace_period?.in_grace_period;
     const isExpired = sub.status === 'expired' || (!sub.has_active_subscription);
 
     if (!isExpiringSoon && !isInGrace && !isExpired) return null;
@@ -22,7 +22,7 @@ const SubscriptionExpiryAlert: React.FC = () => {
                 bgcolor: 'rgba(239,68,68,0.08)',
                 borderColor: '#ef4444',
                 title: 'Subscription in Grace Period',
-                description: `Your subscription has expired. You have ${sub.grace_days_remaining ?? 0} grace days remaining before access is revoked.`,
+                description: `Your subscription has expired. You have ${sub.grace_period?.grace_days_remaining ?? 0} grace days remaining before access is revoked.`,
                 chipColor: '#ef4444' as const,
                 chipLabel: 'Grace Period',
             };
