@@ -9,6 +9,7 @@ import {
   subscriptionApi,
   userSubscriptionApi,
   financeDashboardApi,
+  financeAnalyticsApi,
   pesapalApi,
   type InvoiceParams,
   type TransactionParams,
@@ -166,6 +167,12 @@ export const useFinanceDashboardOverview = () =>
   useQuery({
     queryKey: ['finance', 'dashboard-overview'],
     queryFn: () => financeDashboardApi.getOverview().then((r) => r.data),
+  });
+
+export const useFinanceAnalyticsOverview = (months: 6 | 12 = 6) =>
+  useQuery({
+    queryKey: ['finance', 'analytics-overview', months],
+    queryFn: () => financeAnalyticsApi.getOverview({ months }).then((r) => r.data),
   });
 
 export const useTransaction = (id: number) =>
