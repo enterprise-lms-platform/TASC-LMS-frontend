@@ -347,7 +347,6 @@ const MembersPage: React.FC = () => {
         </Snackbar>
         </Box>
         </Box>
-    </Box>
   );
 };
 

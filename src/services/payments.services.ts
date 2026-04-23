@@ -324,6 +324,49 @@ export const financeDashboardApi = {
     apiClient.get<FinanceDashboardOverview>(`${BASE_PATH}/finance/dashboard-overview/`),
 };
 
+export interface FinanceAnalyticsOverview {
+  as_of: string;
+  currency: string;
+  window: {
+    months: number;
+    from_month: string;
+    to_month: string;
+  };
+  payment_kpis: {
+    total_collected_revenue: string;
+    collected_revenue_this_month: string;
+    payment_completion_rate_pct: number;
+    failed_payments_count: number;
+  };
+  revenue_trend: Array<{
+    month: string;
+    collected_revenue: string;
+  }>;
+  payment_outcomes: {
+    completed: number;
+    pending: number;
+    failed: number;
+    cancelled: number;
+    refunded: number;
+    total: number;
+  };
+  invoice_insights: {
+    pending_invoices_count: number;
+    pending_invoices_amount: string;
+    overdue_invoices_count: number;
+  };
+  subscription_insights: {
+    active: number;
+    cancelled: number;
+    expired: number;
+  };
+}
+
+export const financeAnalyticsApi = {
+  getOverview: (params?: { months?: 6 | 12 }) =>
+    apiClient.get<FinanceAnalyticsOverview>(`${BASE_PATH}/finance/analytics-overview/`, { params }),
+};
+
 // PESAPAL
 export interface PesapalInitiateRequest {
   amount: string;
