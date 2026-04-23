@@ -10,6 +10,7 @@ import {
   userSubscriptionApi,
   financeDashboardApi,
   financeAnalyticsApi,
+  financeAlertsApi,
   pesapalApi,
   type InvoiceParams,
   type TransactionParams,
@@ -173,6 +174,12 @@ export const useFinanceAnalyticsOverview = (months: 6 | 12 = 6) =>
   useQuery({
     queryKey: ['finance', 'analytics-overview', months],
     queryFn: () => financeAnalyticsApi.getOverview({ months }).then((r) => r.data),
+  });
+
+export const useFinanceAlerts = () =>
+  useQuery({
+    queryKey: ['finance', 'alerts'],
+    queryFn: () => financeAlertsApi.getAll().then((r) => r.data),
   });
 
 export const useTransaction = (id: number) =>

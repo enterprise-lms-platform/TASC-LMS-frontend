@@ -1,35 +1,21 @@
 import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Box, CssBaseline, Toolbar, Typography, Paper, Chip, IconButton, Button, Switch, FormControlLabel, Grid,
+  Box, CssBaseline, Toolbar, Typography, Paper, Chip, Button, Grid, LinearProgress,
 } from '@mui/material';
 import {
   Warning as WarningIcon,
   Error as ErrorIcon,
   Info as InfoIcon,
   CheckCircle as SuccessIcon,
-  Delete as DeleteIcon,
-  MarkEmailRead as MarkReadIcon,
   NotificationsActive as BellIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from '../../components/finance/Sidebar';
 import TopBar from '../../components/finance/TopBar';
-import { alertsApi } from '../../services/alerts.services';
+import { useFinanceAlerts } from '../../hooks/usePayments';
+import type { FinanceAlertItem } from '../../services/payments.services';
 
-type AlertSeverity = 'critical' | 'warning' | 'info' | 'success';
-
-interface Alert {
-  id: string;
-  title: string;
-  message: string;
-  severity: AlertSeverity;
-  time: string;
-  read: boolean;
-}
-
-const alertsData: Alert[] = [];
-
-const severityConfig: Record<AlertSeverity, { icon: React.ReactNode; color: string; bg: string }> = {
+const severityConfig: Record<'critical' | 'warning' | 'info' | 'success', { icon: React.ReactNode; color: string; bg: string }> = {
   critical: { icon: <ErrorIcon sx={{ fontSize: 20 }} />, color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
   warning: { icon: <WarningIcon sx={{ fontSize: 20 }} />, color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
   info: { icon: <InfoIcon sx={{ fontSize: 20 }} />, color: '#6366f1', bg: 'rgba(99,102,241,0.08)' },
@@ -47,25 +33,11 @@ const headerSx = { p: 2, px: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor
 
 const FinanceAlertsPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { data, isLoading } = useFinanceAlerts();
+  const alertsData: FinanceAlertItem[] = data?.alerts ?? [];
 
-  const markAllReadMutation = useMutation({
-    mutationFn: () => alertsApi.markAllAsRead(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alerts'] });
-    },
-  });
-
-  const deleteAlertMutation = useMutation({
-    mutationFn: (alertId: string) => alertsApi.delete(alertId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['alerts'] });
-    },
-  });
-
-  const filtered = showUnreadOnly ? alertsData.filter((a) => !a.read) : alertsData;
-  const unreadCount = alertsData.filter((a) => !a.read).length;
+  const formatTime = (value: string) => new Date(value).toLocaleString();
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -82,26 +54,18 @@ const FinanceAlertsPage: React.FC = () => {
               <BellIcon sx={{ color: 'primary.main' }} />
               <Box>
                 <Typography variant="h5" fontWeight={700}>Alerts & Notifications</Typography>
-                <Typography variant="body2" color="text.secondary">{unreadCount} unread alert{unreadCount !== 1 ? 's' : ''}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {data?.summary.total ?? 0} active finance alert{(data?.summary.total ?? 0) !== 1 ? 's' : ''}
+                </Typography>
               </Box>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              <FormControlLabel
-                control={<Switch size="small" checked={showUnreadOnly} onChange={(e) => setShowUnreadOnly(e.target.checked)} />}
-                label={<Typography variant="body2">Unread only</Typography>}
-              />
-              <Button size="small" variant="outlined" startIcon={<MarkReadIcon />}
-                onClick={() => markAllReadMutation.mutate()}
-                disabled={markAllReadMutation.isPending}
-                sx={{ textTransform: 'none', fontSize: '0.8rem', borderColor: 'divider', color: 'text.secondary' }}>
-                {markAllReadMutation.isPending ? 'Marking...' : 'Mark all read'}
-              </Button>
             </Box>
           </Box>
 
+          {isLoading && <LinearProgress sx={{ mb: 2 }} />}
+
           {/* Severity Summary — matches Overview stat cards */}
           {(() => {
-            const sevCards: { sev: AlertSeverity; bgcolor: string; iconBg: string; color: string; subColor: string }[] = [
+            const sevCards: { sev: 'critical' | 'warning' | 'info' | 'success'; bgcolor: string; iconBg: string; color: string; subColor: string }[] = [
               { sev: 'critical', bgcolor: 'rgba(239,68,68,0.08)', iconBg: '#ef4444', color: '#991b1b', subColor: '#b91c1c' },
               { sev: 'warning', bgcolor: '#fff3e0', iconBg: '#ffa424', color: '#7c2d12', subColor: '#9a3412' },
               { sev: 'info', bgcolor: 'rgba(99,102,241,0.08)', iconBg: '#6366f1', color: '#312e81', subColor: '#4338ca' },
@@ -110,7 +74,7 @@ const FinanceAlertsPage: React.FC = () => {
             return (
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 {sevCards.map((card) => {
-                  const count = alertsData.filter((a) => a.severity === card.sev).length;
+                  const count = data?.summary?.[card.sev] ?? 0;
                   const cfg = severityConfig[card.sev];
                   return (
                     <Grid size={{ xs: 6, sm: 6, md: 3 }} key={card.sev}>
@@ -141,21 +105,21 @@ const FinanceAlertsPage: React.FC = () => {
           <Paper elevation={0} sx={cardSx}>
             <Box sx={headerSx}>
               <Typography fontWeight={700}>All Alerts</Typography>
-              <Typography variant="caption" color="text.secondary">{filtered.length} alert{filtered.length !== 1 ? 's' : ''}</Typography>
+              <Typography variant="caption" color="text.secondary">{alertsData.length} alert{alertsData.length !== 1 ? 's' : ''}</Typography>
             </Box>
-            {filtered.length === 0 ? (
+            {alertsData.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
                 <BellIcon sx={{ fontSize: 48, color: 'grey.300', mb: 1 }} />
-                <Typography variant="body2">No alerts — alerts feed pending backend implementation</Typography>
-                <Typography variant="caption">Backend task: add financial alerts/notifications endpoint</Typography>
+                <Typography variant="body2">No finance alerts at the moment.</Typography>
+                <Typography variant="caption">This feed shows only real aggregate alerts from payments, invoices, and subscriptions.</Typography>
               </Box>
-            ) : filtered.map((alert, i) => {
+            ) : alertsData.map((alert, i) => {
               const cfg = severityConfig[alert.severity];
               return (
                 <Box key={alert.id} sx={{
                   display: 'flex', alignItems: 'flex-start', gap: 2, p: 2, px: 3,
-                  borderBottom: i < filtered.length - 1 ? 1 : 0, borderColor: 'divider',
-                  bgcolor: alert.read ? 'transparent' : 'rgba(255,164,36,0.02)',
+                  borderBottom: i < alertsData.length - 1 ? 1 : 0, borderColor: 'divider',
+                  bgcolor: 'transparent',
                   '&:hover': { bgcolor: 'rgba(255,164,36,0.04)' },
                 }}>
                   <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: cfg.bg, color: cfg.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, mt: 0.25 }}>
@@ -163,21 +127,24 @@ const FinanceAlertsPage: React.FC = () => {
                   </Box>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
-                      <Typography variant="body2" fontWeight={alert.read ? 500 : 700} noWrap>{alert.title}</Typography>
-                      {!alert.read && <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'primary.main', flexShrink: 0 }} />}
+                      <Typography variant="body2" fontWeight={700} noWrap>{alert.title}</Typography>
                     </Box>
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', mb: 0.5 }}>{alert.message}</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Chip label={alert.severity} size="small" sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, bgcolor: cfg.bg, color: cfg.color, textTransform: 'capitalize' }} />
-                      <Typography variant="caption" color="text.disabled">{alert.time}</Typography>
+                      <Typography variant="caption" color="text.disabled">{formatTime(alert.created_at)}</Typography>
                     </Box>
                   </Box>
-                  <IconButton size="small"
-                    onClick={() => deleteAlertMutation.mutate(alert.id)}
-                    disabled={deleteAlertMutation.isPending}
-                    sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}>
-                    <DeleteIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
+                  {alert.action?.route && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => navigate(alert.action?.route || '/finance')}
+                      sx={{ textTransform: 'none', whiteSpace: 'nowrap' }}
+                    >
+                      {alert.action.label}
+                    </Button>
+                  )}
                 </Box>
               );
             })}
