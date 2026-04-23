@@ -367,6 +367,40 @@ export const financeAnalyticsApi = {
     apiClient.get<FinanceAnalyticsOverview>(`${BASE_PATH}/finance/analytics-overview/`, { params }),
 };
 
+export interface FinanceAlertItem {
+  id: string;
+  severity: 'critical' | 'warning' | 'info' | 'success';
+  category: 'payment' | 'invoice' | 'subscription';
+  code: string;
+  title: string;
+  message: string;
+  metric_value: number;
+  metric_unit: string;
+  amount?: string | null;
+  currency?: string;
+  action?: {
+    label: string;
+    route: string;
+  };
+  created_at: string;
+}
+
+export interface FinanceAlertsResponse {
+  as_of: string;
+  summary: {
+    total: number;
+    critical: number;
+    warning: number;
+    info: number;
+    success: number;
+  };
+  alerts: FinanceAlertItem[];
+}
+
+export const financeAlertsApi = {
+  getAll: () => apiClient.get<FinanceAlertsResponse>(`${BASE_PATH}/finance/alerts/`),
+};
+
 // PESAPAL
 export interface PesapalInitiateRequest {
   amount: string;
